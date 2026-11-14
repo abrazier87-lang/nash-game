@@ -1,0 +1,9 @@
+{
+  "name": "Story Shelf",
+  "short_name": "Story Shelf",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6e7cf",
+  "theme_color": "#f6e7cf"
+}
