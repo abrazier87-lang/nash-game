@@ -28,6 +28,7 @@
   .book .pic { font-size:74px; line-height:1.1; }
   .book .name { font-size:21px; font-weight:bold; line-height:1.15; }
   .book .ages { font-size:14px; opacity:.9; }
+  .book .medal { position:absolute; top:-14px; right:-10px; font-size:44px; line-height:1; }
   .book.soon { background:#cbbfae; cursor:default; }
   .book.soon .pic { opacity:.6; }
   .gear { position:fixed; top:10px; right:10px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.75); font-size:24px; opacity:.6; z-index:5; }
@@ -52,8 +53,8 @@
    ===================================================================== */
 const BOOKS = [
   { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", color: "#58b368", file: "Pips%20Lost%20Eggs.html" },
-  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", color: "#ff5a5f", file: "dots-busy-train.html" },
-  { grade: "Grade 1",      ages: "Ages 6-7" },
+  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", color: "#ff5a5f", file: "dots-busy-train.html", medal: "k" },
+  { grade: "Grade 1",      ages: "Ages 6-7",   name: "Dr. Somebody's Space Balloon", pic: "🦉", color: "#4b3aa8", file: "grade1-space.html", medal: "g1" },
   { grade: "Grade 2",      ages: "Ages 7-8" },
   { grade: "Grade 3",      ages: "Ages 8-9" },
   { grade: "Grade 4",      ages: "Ages 9-10" },
@@ -68,6 +69,7 @@ function drawWho() {
   $("who").innerHTML = `<b>Who is playing?</b>` +
     list.map(p => `<button class="chip${cur && cur.id === p.id ? " on" : ""}" data-id="${p.id}">${Kit.esc(p.name)}</button>`).join("") +
     `<button class="chip add" data-add="1">+ Add a name</button>`;
+  if ($("shelf").firstChild) drawShelf(); // medals belong to whoever is playing
 }
 $("who").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
@@ -77,9 +79,14 @@ $("who").addEventListener("click", e => {
   drawWho();
 });
 
-$("shelf").innerHTML = BOOKS.map(b => b.file
-  ? `<a class="book" href="${b.file}" style="--c:${b.color}"><span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
-  : `<div class="book soon"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
+// A medal shows on a book once the child who is playing has finished that story.
+function drawShelf() {
+  const medals = Kit.stamps();
+  $("shelf").innerHTML = BOOKS.map(b => b.file
+    ? `<a class="book" href="${b.file}" style="--c:${b.color}">${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
+    : `<div class="book soon"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
+}
+drawShelf();
 
 // ---------- grown-ups (press and hold the gear) ----------
 function openGrown() {

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Dr. Somebody's Space Balloon</title>
+<link rel="stylesheet" href="shared/kit.css">
+<style>
+  /* Space look: dark sky, stars, standing on a moon. */
+  :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
+  .sub { color:#fff; }
+  h1 { font-size:7.4vmin; padding:0 14vmin; }
+  .spacedust { position:absolute; inset:0; opacity:.75; background-image:radial-gradient(#fff 1px, transparent 1.6px), radial-gradient(#fff 1.4px, transparent 2px), radial-gradient(#ffe9a8 1px, transparent 1.6px);
+    background-size:90px 90px, 170px 170px, 130px 130px; background-position:0 0, 40px 70px, 90px 20px; }
+  .ringed { position:absolute; top:5vmin; right:7vmin; width:15vmin; height:15vmin; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffd9a0, #ff9f43); }
+  .ringed::after { content:""; position:absolute; left:-5vmin; right:-5vmin; top:5.6vmin; height:3.4vmin; border:.9vmin solid rgba(255,233,168,.85); border-radius:50%; transform:rotate(-18deg); }
+  .host.big { width:34vmin; height:28vmin; }
+  /* how many star crystals the balloon has */
+  .progress { display:flex; align-items:center; gap:2vmin; margin-top:2.5vmin; background:rgba(255,255,255,.14); border-radius:5vmin; padding:1vmin 4vmin; }
+  .balloon { width:15vmin; height:19vmin; }
+  .slot { width:11vmin; height:11vmin; border-radius:50%; font-size:7vmin; line-height:11vmin; text-align:center; position:relative; background:rgba(255,255,255,.92); }
+  .slot.empty { background:none; border:.8vmin dashed rgba(255,255,255,.7); }
+  .slot i { position:absolute; right:-1.5vmin; bottom:-1.5vmin; font-size:4.4vmin; line-height:1; font-style:normal; }
+  .stickers { color:#fff; }
+  #finaleArt { display:flex; align-items:flex-end; gap:2vmin; font-size:9vmin; }
+  #finaleArt .balloon { width:30vmin; height:38vmin; animation:floaty 2.4s ease-in-out infinite; }
+  @keyframes floaty { 50% { transform:translateY(-4vmin); } }
+  /* tens and ones blocks */
+  .blocks { display:flex; gap:2.5vmin; align-items:flex-end; }
+  .rods { display:flex; gap:.7vmin; }
+  .rod { display:block; width:1.9vmin; height:19vmin; border-radius:.4vmin; background:repeating-linear-gradient(#4d9de0 0 1.7vmin, #2f6fab 1.7vmin 1.9vmin); }
+  .cubes { display:grid; grid-template-columns:repeat(2, 1.9vmin); gap:.5vmin; align-content:end; }
+  .cube { display:block; width:1.9vmin; height:1.9vmin; border-radius:.4vmin; background:#ff9f43; }
+  .sum { font-size:10vmin; white-space:nowrap; } .sum.long { font-size:7.5vmin; } .sum b { color:#ff8a3d; }
+  .clockbox { width:22vmin; height:22vmin; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js"></script>
+<script src="shared/story.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY'S SPACE BALLOON  -  the Grade 1 game
+   Story: Dr. Somebody is an owl inventor who is so forgetful that nobody
+   (not even the doctor) remembers their real name. Their time machine is
+   a hot-air balloon with a giant clock on it. On its first trip it
+   floated all the way up to space! It needs 4 star crystals to fly home.
+   Every planet has a crystal, guarded by a friendly space friend.
+   The engine that runs the game is in shared/story.js.
+   ===================================================================== */
+
+// ---------- pictures ----------
+const OWL = `<svg viewBox="0 0 200 160"><ellipse cx="84" cy="152" rx="12" ry="5" fill="#ff9f43"/><ellipse cx="116" cy="152" rx="12" ry="5" fill="#ff9f43"/>
+  <ellipse cx="100" cy="108" rx="44" ry="46" fill="#9c6b3f"/><ellipse cx="100" cy="116" rx="26" ry="32" fill="#f3dfb8"/>
+  <path d="M58 92 Q52 130 66 150 L88 150 Q74 120 80 84 Z" fill="#fff"/><path d="M142 92 Q148 130 134 150 L112 150 Q126 120 120 84 Z" fill="#fff"/>
+  <ellipse cx="54" cy="108" rx="10" ry="24" fill="#7a4f2a" transform="rotate(12 54 108)"/><ellipse cx="146" cy="108" rx="10" ry="24" fill="#7a4f2a" transform="rotate(-12 146 108)"/>
+  <polygon points="62,34 70,6 88,26" fill="#7a4f2a"/><polygon points="138,34 130,6 112,26" fill="#7a4f2a"/>
+  <ellipse cx="100" cy="50" rx="44" ry="36" fill="#9c6b3f"/><rect x="58" y="43" width="84" height="8" fill="#39405a"/>
+  <circle cx="80" cy="48" r="19" fill="#d9a400"/><circle cx="120" cy="48" r="19" fill="#d9a400"/><circle cx="80" cy="48" r="14" fill="#fff"/><circle cx="120" cy="48" r="14" fill="#fff"/>
+  <circle cx="83" cy="50" r="6" fill="#2b2d42"/><circle cx="117" cy="50" r="6" fill="#2b2d42"/><polygon points="92,63 108,63 100,77" fill="#ff9f43"/></svg>`;
+const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
+  <path d="M80 6 C58 20 50 60 56 96 C60 118 72 134 80 140 C88 134 100 118 104 96 C110 60 102 20 80 6 Z" fill="#ffd23f"/>
+  <circle cx="80" cy="70" r="34" fill="#fff" stroke="#39405a" stroke-width="5"/>
+  <g stroke="#39405a" stroke-width="4" stroke-linecap="round"><line x1="80" y1="42" x2="80" y2="48"/><line x1="80" y1="92" x2="80" y2="98"/><line x1="52" y1="70" x2="58" y2="70"/><line x1="102" y1="70" x2="108" y2="70"/></g>
+  <line x1="80" y1="70" x2="80" y2="50" stroke="#39405a" stroke-width="5" stroke-linecap="round"/><line x1="80" y1="70" x2="97" y2="79" stroke="#ff5a5f" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#39405a"/>
+  <line x1="56" y1="130" x2="62" y2="162" stroke="#c9a37a" stroke-width="3"/><line x1="104" y1="130" x2="98" y2="162" stroke="#c9a37a" stroke-width="3"/>
+  <circle cx="80" cy="154" r="13" fill="#9c6b3f"/><circle cx="75" cy="152" r="5" fill="#fff"/><circle cx="85" cy="152" r="5" fill="#fff"/><circle cx="75" cy="152" r="2" fill="#2b2d42"/><circle cx="85" cy="152" r="2" fill="#2b2d42"/>
+  <rect x="56" y="160" width="48" height="32" rx="7" fill="#c48a4a"/><rect x="56" y="160" width="48" height="7" rx="3" fill="#9c6830"/></svg>`;
+// a clock face showing h o'clock (m = 0) or half past h (m = 30)
+function clock(h, m) {
+  const ha = ((h % 12) + m / 60) * 30, ma = m * 6;
+  const nums = Array.from({ length: 12 }, (_, i) => { const n = i + 1, a = n * 30 * Math.PI / 180; return `<text x="${(50 + 38 * Math.sin(a)).toFixed(1)}" y="${(53.5 - 38 * Math.cos(a)).toFixed(1)}" font-size="10" text-anchor="middle" fill="#2b2d42" font-weight="bold">${n}</text>`; }).join("");
+  return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="#fff" stroke="#d9a400" stroke-width="5"/>${nums}
+    <line x1="50" y1="50" x2="50" y2="31" stroke="#2b2d42" stroke-width="5" stroke-linecap="round" transform="rotate(${ha} 50 50)"/>
+    <line x1="50" y1="50" x2="50" y2="20" stroke="#ff5a5f" stroke-width="3" stroke-linecap="round" transform="rotate(${ma} 50 50)"/><circle cx="50" cy="50" r="3.5" fill="#2b2d42"/></svg>`;
+}
+const timeText = (h, m) => `${h}:${m ? "30" : "00"}`;
+const timeSaid = (h, m) => m ? `half past ${h}` : `${h} o'clock`;
+const blocks = n => `<div class="blocks"><div class="rods">${`<i class="rod"></i>`.repeat(Math.floor(n / 10))}</div><div class="cubes">${`<i class="cube"></i>`.repeat(n % 10)}</div></div>`;
+
+// ---------- words ----------
+const W1 = [["cat", "🐱"], ["dog", "🐶"], ["pig", "🐷"], ["sun", "☀️"], ["hat", "🎩"], ["bus", "🚌"], ["bed", "🛏️"], ["fox", "🦊"], ["bug", "🐛"], ["hen", "🐔"], ["pen", "🖊️"], ["map", "🗺️"], ["box", "📦"], ["bat", "🦇"], ["ant", "🐜"], ["egg", "🥚"]];
+const W2 = [["frog", "🐸"], ["fish", "🐟"], ["duck", "🦆"], ["star", "⭐"], ["ship", "🚢"], ["moon", "🌙"], ["tree", "🌳"], ["cake", "🎂"], ["bell", "🔔"], ["drum", "🥁"], ["sock", "🧦"], ["ring", "💍"], ["milk", "🥛"], ["book", "📖"],
+  ["boat", "⛵"], ["bear", "🐻"], ["leaf", "🍃"], ["hand", "✋"], ["shoe", "👟"], ["rain", "🌧️"], ["snow", "❄️"], ["corn", "🌽"]];
+const W3 = [["rocket", "🚀"], ["planet", "🪐"], ["robot", "🤖"], ["tiger", "🐯"], ["apple", "🍎"], ["pizza", "🍕"], ["rabbit", "🐰"], ["spider", "🕷️"], ["flower", "🌼"], ["turtle", "🐢"], ["monkey", "🐵"], ["banana", "🍌"],
+  ["carrot", "🥕"], ["pencil", "✏️"], ["dragon", "🐉"], ["castle", "🏰"], ["guitar", "🎸"], ["cookie", "🍪"], ["candle", "🕯️"]];
+const VOWELS = "aeiou", CONS = "bcdfghlmnprst";
+const SOUND_ALIKE = { sun: "o", pen: "i", c: "k", k: "c" }; // wrong letters that would sound right, so they are never offered
+const SENTENCES = [
+  ["I can ___ a ball.", "kick", ["blue", "cat", "under"]], ["The sun is ___.", "hot", ["run", "desk", "eat"]], ["A fish can ___.", "swim", ["read", "hat", "soft"]],
+  ["I ___ my mom.", "love", ["green", "chair", "seven"]], ["The dog can ___ fast.", "run", ["red", "book", "happy"]], ["We read a ___.", "book", ["jump", "tall", "sing"]],
+  ["The cat sat on the ___.", "mat", ["ran", "big", "sing"]], ["Birds can ___ in the sky.", "fly", ["eat", "bed", "cold"]], ["I drink ___.", "milk", ["shoes", "jump", "tall"]],
+  ["The moon comes out at ___.", "night", ["lunch", "green", "hop"]], ["A frog can ___.", "hop", ["read", "pink", "door"]], ["I put on my ___.", "shoes", ["swim", "loud", "fast"]],
+  ["The rocket goes ___.", "up", ["cat", "eat", "sad"]], ["My hat is ___.", "red", ["run", "jump", "sing"]], ["I see a ___ in the sky.", "star", ["fork", "sock", "desk"]],
+  ["We ___ at the park.", "play", ["blue", "chair", "moon"]], ["The baby is ___.", "small", ["swim", "fork", "jump"]], ["I eat an ___.", "apple", ["under", "happy", "run"]]
+];
+const wordCard = (w, color) => `<span class="word${w.length > 4 ? " long" : ""}"${color ? ` style="color:${color}"` : ""}>${w}</span>`;
+
+// ---------- the planets (mini-games) ----------
+// Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again }.
+const GAMES = {
+  read: {
+    name: "Word World", icon: "📖", intro: "Let's read!",
+    makeQuestion(step) {
+      const pool = step === 1 ? W1 : step === 2 ? W1.concat(W2) : W2.concat(W3);
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const t = pick(pool);
+      if (step === 4) { // see the picture, find its word among words that start the same way
+        const alike = shuffle(pool.filter(w => w !== t && w[0][0] === t[0][0])), rest = shuffle(pool.filter(w => w !== t && w[0][0] !== t[0][0]));
+        const others = alike.concat(rest).slice(0, count - 1), cols = shuffle(INK);
+        return { bubble: emo(t[1]), key: t[0], say: "Which word matches the picture?", yay: `Yes! That word is, ${t[0]}!`,
+          choices: shuffle(others.concat([t])).map((w, i) => ({ html: wordCard(w[0], cols[i]), ok: w === t, wrong: `That word is, ${w[0]}.` })) };
+      }
+      const others = shuffle(pool.filter(w => w !== t)).slice(0, count - 1);
+      return { bubble: big(t[0], t[0].length > 4 ? 9 : 12), key: t[0], say: "Read the word. Which picture matches?", yay: `Yes! The word is, ${t[0]}!`,
+        choices: shuffle(others.concat([t])).map(w => ({ html: emo(w[1]), ok: w === t, wrong: `That picture is, ${w[0]}.` })) };
+    }
+  },
+  spell: {
+    name: "Spelling Star", icon: "✏️", intro: "Let's spell!",
+    makeQuestion(step) {
+      const t = pick(step === 4 ? W2 : W1), w = t[0], isV = c => VOWELS.includes(c);
+      let at;
+      if (step === 1) at = 0; else if (step === 2) at = w.length - 1;
+      else if (step === 3) { const cvc = W1.filter(x => isV(x[0][1]) && !isV(x[0][0]) && !isV(x[0][2])); return this.build(pick(cvc), 1, 3); }
+      else at = pick([...w].map((c, i) => isV(c) ? -1 : i).filter(i => i >= 0)); // step 4: a missing consonant in a longer word
+      return this.build(t, at, step === 4 ? 4 : 3);
+    },
+    build(t, at, count) {
+      const w = t[0], L = w[at], banned = (SOUND_ALIKE[w] || "") + (SOUND_ALIKE[L] || "") + L;
+      const others = shuffle([...(VOWELS.includes(L) ? VOWELS : CONS)].filter(c => !banned.includes(c))).slice(0, count - 1), cols = shuffle(INK);
+      return { bubble: emo(t[1], "mid") + tiles([...w].map((c, i) => i === at ? "?" : c)), key: w + at,
+        say: `${cap(w)}. Which letter is missing?`, yay: `Yes! ${w.toUpperCase().split("").join(", ")}. That spells, ${w}!`, pause: 3600,
+        choices: shuffle(others.concat(L)).map((c, i) => ({ html: `<span style="color:${cols[i]}">${c}</span>`, ok: c === L, wrong: `Not the letter ${c.toUpperCase()}.` })) };
+    }
+  },
+  sentence: {
+    name: "Sentence Station", icon: "💬", intro: "Let's finish the sentence!",
+    makeQuestion(step) {
+      const [s, a, wrongs] = pick(SENTENCES), count = step === 1 ? 2 : step === 4 ? 4 : 3, cols = shuffle(INK);
+      const full = w => s.replace("___", w), aloud = step <= 2; // steps 1 and 2 read the sentence out loud; after that they read it themselves
+      return { bubble: `<div class="sentence">${s.replace("___", "<u>&nbsp;</u>")}</div>`, key: s,
+        say: aloud ? `${s.replace("___", "blank")} Which word fits?` : "Read the sentence. Which word fits?", again: "Try another word.", yay: `Yes! ${full(a)}`, pause: 3200,
+        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === a, wrong: `${full(w)} That does not sound right.` })) };
+    }
+  },
+  plus: {
+    name: "Plus Planet", icon: "➕", intro: "Let's add!",
+    makeQuestion(step) {
+      if (step === 4) { // three numbers
+        let a, b, c; do { a = 1 + rand(9); b = 1 + rand(9); c = 1 + rand(9); } while (a + b + c > 20);
+        return { bubble: `<span class="sum long">${a} + ${b} + ${c} = <b>?</b></span>`, say: `What is ${a} plus ${b} plus ${c}?`, yay: `Yes! ${a} plus ${b} plus ${c} is ${a + b + c}!`, pause: 3200, choices: numCards(a + b + c, 0, 20, 4) };
+      }
+      if (step === 3) { // the missing number
+        const total = 6 + rand(15), a = Math.max(1, total - 10) + rand(Math.min(10, total - 1) - Math.max(1, total - 10) + 1), b = total - a;
+        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, pause: 3000, choices: numCards(b, 0, 20, 4) };
+      }
+      let a, b;
+      if (step === 1) { const sum = 2 + rand(9); a = 1 + rand(sum - 1); b = sum - a; }
+      else { a = 2 + rand(9); const lo = Math.max(2, 11 - a); b = lo + rand(10 - lo + 1); }
+      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, pause: 2800, choices: numCards(a + b, 0, 20) };
+    }
+  },
+  minus: {
+    name: "Minus Moon", icon: "➖", intro: "Let's take away!",
+    makeQuestion(step) {
+      if (step === 4) { // taking away tens from a bigger number
+        const b = 10 * (1 + rand(3)), a = b + 1 + rand(99 - b), ans = a - b;
+        return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${ans}!`, pause: 3000, choices: numCards(ans, 0, 99, 4, [ans + 10, ans - 10, ans + 1]) };
+      }
+      if (step === 3) { // the missing number
+        const a = 6 + rand(15), b = 1 + rand(Math.min(10, a - 1)), c = a - b;
+        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, pause: 3000, choices: numCards(b, 0, 20, 4) };
+      }
+      const a = step === 1 ? 2 + rand(9) : 11 + rand(10), b = 1 + rand(step === 1 ? a : 10);
+      return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, pause: 2800, choices: numCards(a - b, 0, 20) };
+    }
+  },
+  tens: {
+    name: "Tens Tower", icon: "🧱", intro: "Let's count tens and ones! A long stick is ten. A little block is one.",
+    makeQuestion(step) {
+      const n = step === 1 ? 11 + rand(9) : step === 2 ? 20 + rand(31) : 21 + rand(79), t = Math.floor(n / 10), o = n % 10;
+      const flip = o * 10 + t, near = (flip !== n && flip >= 10 ? [flip] : []).concat([n + 10, n - 10, n + 1, n - 1]);
+      const parts = `${t} ten${t === 1 ? "" : "s"} and ${o} one${o === 1 ? "" : "s"}`;
+      return { bubble: step === 4 ? `<div class="sentence">${parts}</div>` : blocks(n), key: n,
+        say: step === 4 ? `Which number has ${parts}?` : "How many blocks? Count the tens, then the ones.", yay: `Yes! ${parts} make ${n}!`, pause: 3400,
+        choices: numCards(n, 10, 99, step === 1 ? 3 : 4, near) };
+    }
+  },
+  clock: {
+    name: "Clock Comet", icon: "🕒", intro: "My favourite! Let's tell the time. The short hand shows the hour.",
+    makeQuestion(step) {
+      const h = 1 + rand(12), m = step === 1 ? 0 : step === 2 ? 30 : pick([0, 30]), next = h % 12 + 1, before = (h + 10) % 12 + 1;
+      if (step === 4) { // read the time, find the clock
+        const opts = [[h, m], [h, 30 - m], [next, m]];
+        return { bubble: big(timeText(h, m), 11), key: h + ":" + m, say: `Which clock shows ${timeSaid(h, m)}?`, yay: `Yes! That clock shows ${timeSaid(h, m)}!`, pause: 3000,
+          choices: shuffle(opts).map(o => ({ html: `<div class="art">${clock(o[0], o[1])}</div>`, ok: o[0] === h && o[1] === m, wrong: `That clock shows ${timeSaid(o[0], o[1])}.` })) };
+      }
+      const opts = step === 1 ? [[h, 0], [next, 0], [before, 0]] : step === 2 ? [[h, 30], [next, 30], [h, 0]] : [[h, m], [h, 30 - m], [next, m], [before, m]];
+      return { bubble: `<div class="clockbox">${clock(h, m)}</div>`, key: h + ":" + m, say: "What time does the clock show?", yay: `Yes! It is ${timeSaid(h, m)}!`, pause: 3000,
+        choices: shuffle(opts).map(o => ({ html: `<span style="font-size:${opts.length === 4 ? 7 : 9}vmin">${timeText(o[0], o[1])}</span>`, ok: o[0] === h && o[1] === m, wrong: `That says ${timeSaid(o[0], o[1])}.` })) };
+    }
+  },
+  skip: {
+    name: "Skip-Count Rings", icon: "🪐", intro: "Let's skip count!",
+    makeQuestion(step) {
+      const back = step === 4, by = step === 1 ? 10 : step === 2 ? 5 : step === 3 ? 2 : pick([10, 5]), word = { 10: "tens", 5: "fives", 2: "twos" }[by];
+      const start = back ? by * (4 + rand(by === 10 ? 7 : 9)) : by * (1 + rand(by === 10 ? 6 : by === 5 ? 15 : 20));
+      const d = back ? -by : by, seq = [start, start + d, start + 2 * d], ans = start + 3 * d;
+      return { bubble: tiles(seq.concat("?")), key: seq.join(), say: `Count ${back ? "backwards " : ""}by ${word}. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3400,
+        choices: numCards(ans, 0, 120, 3, [ans + by, ans - by, ans + 1, ans - 1].filter(k => !seq.includes(k))) };
+    }
+  }
+};
+
+// ---------- the story ----------
+const slots = list => list.map(e => e ? `<div class="slot">${e}<i>💎</i></div>` : `<div class="slot empty"></div>`).join("");
+window.Story = StoryGame({
+  title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
+  host: OWL, saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5,
+  scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,
+  games: GAMES, gameIds: ["read", "spell", "sentence", "plus", "minus", "tens", "clock", "skip"],
+  stepNames: {
+    read: ["read short words, 2 pictures", "read short words, 3 pictures", "read longer words", "pick the word for a picture"],
+    spell: ["missing first letter", "missing last letter", "missing middle vowel", "missing letter in a 4-letter word"],
+    sentence: ["read aloud, 2 words", "read aloud, 3 words", "reads it alone, 3 words", "reads it alone, 4 words"],
+    plus: ["adding to 10", "adding to 20", "find the missing number", "adding three numbers"],
+    minus: ["taking away within 10", "taking away within 20", "find the missing number", "taking away tens (to 99)"],
+    tens: ["teen numbers with blocks", "blocks up to 50", "blocks up to 99", "tens and ones in words"],
+    clock: ["o'clock", "half past", "o'clock and half past", "pick the right clock"],
+    skip: ["count by tens", "count by fives", "count by twos", "count backwards by tens and fives"]
+  },
+  rewards: [["robot", "🤖"], ["alien", "👽"], ["rocket", "🚀"], ["satellite", "🛰️"], ["comet", "☄️"], ["flying saucer", "🛸"], ["shooting star", "🌠"], ["moon", "🌙"], ["telescope", "🔭"], ["little star", "🌟"]],
+  progress: list => `<div class="balloon">${BALLOON}</div>` + slots(list),
+  finaleTitle: "Ready to fly!", stickersLabel: "Space friends:",
+  finaleArt: list => `<div class="balloon">${BALLOON}</div>` + list.map(e => `<span class="pop">${e}</span>`).join(""),
+  lines: {
+    hello: name => `Hello${name ? ", " + name : ""}! I am Doctor... um... Doctor Somebody! I forgot my name again. My clock balloon floated all the way up to space! I need four star crystals to fly home. Tap a planet to find one.`,
+    start: "We need four star crystals to fly home. Tap a planet to find one.",
+    left: n => `We need ${NUM[n]} more star crystal${n === 1 ? "" : "s"}. Tap a planet!`,
+    won: who => `You did it! The ${who} has a star crystal for us. Tap the ${who}!`,
+    boarded: who => `Thank you, ${who}! One more star crystal for the clock balloon!`,
+    finale: name => `Tick tock! The clock balloon is full of star power! Thank you${name ? ", " + name : ""}! Now, where was I going? I forget!`,
+    again: "Oh dear. I floated back up to space! Let's find more star crystals.",
+    replay: "Great job! You did it again!",
+    test: name => `Hello${name ? ", " + name : ""}! I am Doctor Somebody. Tick tock!`
+  }
+});
+</script>
+</body>
+</html>

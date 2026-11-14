@@ -74,6 +74,17 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .choice.dim { opacity:.35; }
 .choice .emoji { font-size:calc(var(--cs, 30vmin) * .58); line-height:1.25; }
 
+/* extras used by the Grade 1+ story games */
+.bubble .emoji.mid { font-size:11vmin; }
+.bubble .tile.s, .bubble .q.s { width:auto; min-width:8.5vmin; height:10vmin; padding:0 1.2vmin; font-size:6vmin; line-height:8.4vmin; }
+.bubble .sentence { font-size:4.8vmin; line-height:1.35; max-width:52vmin; text-align:center; }
+.bubble .sentence u { text-decoration:none; display:inline-block; min-width:9vmin; border-bottom:.8vmin dashed #ff8a3d; }
+.choice .art { width:80%; height:80%; }
+.choice .word { font-size:8vmin; } .choice .word.long { font-size:5.6vmin; }
+.stage { width:46vmin; height:46vmin; font-size:34vmin; line-height:46vmin; text-align:center; }
+.stickers { display:flex; gap:.6vmin; margin-top:1.5vmin; height:6vmin; align-items:center; font-size:4.6vmin; }
+.stickers small { font-size:2.6vmin; font-weight:bold; margin-right:1vmin; }
+
 /* confetti */
 .confetti { position:absolute; top:-5vmin; width:2.4vmin; height:3.4vmin; border-radius:.5vmin; animation:fall linear forwards; pointer-events:none; z-index:8; }
 @keyframes fall { to { transform:translateY(115vh) rotate(720deg); } }

@@ -45,6 +45,11 @@ const Kit = (() => {
   }
   const save = (base, S) => put(saveKey(base), S);
 
+  // ---------- medals (a child earns one the first time they finish a game's story) ----------
+  const stampKey = () => { const p = currentPlayer(); return "storyShelf.stamps" + (p ? "." + p.id : ""); };
+  const stamps = () => get(stampKey(), []);
+  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); } }
+
   // ---------- settings shared by the newer games ----------
   const settings = Object.assign({ voice: true, sound: true, voiceName: "" }, get("storyShelf.settings", {}));
   const saveSettings = () => put("storyShelf.settings", settings);
@@ -125,6 +130,6 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  return { players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, settings, saveSettings,
+  return { players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

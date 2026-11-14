@@ -392,7 +392,7 @@ function showFinale() {
   setTimeout(() => $("finaleGo").classList.add("show"), 3000);
 }
 $("finaleGo").addEventListener("click", () => {
-  sfx.tap(); S.aboard = {}; S.trips++; save();
+  sfx.tap(); S.aboard = {}; S.trips++; save(); Kit.stamp("k");
   showMap("The train is back! More animals want a ride. Tap a station!");
 });
 
