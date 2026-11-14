@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pip's Eggs">
+<title>Pip's Lost Eggs</title>
+<style>
+  :root { --sky1:#9be3ff; --sky2:#e8fbff; --grass:#7ed67a; --grass2:#55b85c; --ink:#2b2d42; --card:#fffdf5; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; overflow:hidden; background:var(--sky1);
+    font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif; color:var(--ink);
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation; overscroll-behavior:none; }
+  #app { position:fixed; inset:0; background:linear-gradient(var(--sky1),var(--sky2) 60%); overflow:hidden; overflow:clip; }
+  .layer { position:absolute; inset:0; overflow:hidden; overflow:clip; pointer-events:none; }
+  #fx { z-index:8; }
+  /* scenery */
+  .hill { position:absolute; left:-10%; right:-10%; bottom:-22vmin; height:50vmin; background:var(--grass); border-radius:50% 50% 0 0; }
+  .hill.back { bottom:-12vmin; left:30%; right:-40%; height:56vmin; background:var(--grass2); }
+  .sun { position:absolute; top:4vmin; right:6vmin; width:16vmin; height:16vmin; border-radius:50%; background:#ffd84d; box-shadow:0 0 0 3vmin rgba(255,216,77,.3); }
+  .cloud { position:absolute; top:10vmin; left:-30vmin; width:26vmin; height:8vmin; background:#fff; border-radius:8vmin; opacity:.85; animation:drift 70s linear infinite; }
+  .cloud::before { content:""; position:absolute; left:5vmin; top:-4vmin; width:12vmin; height:10vmin; background:#fff; border-radius:50%; }
+  .cloud.c2 { top:24vmin; animation-duration:100s; animation-delay:-40s; transform:scale(.7); }
+  @keyframes drift { to { left:110vw; } }
+
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; padding:2vmin; }
+  .screen.on { display:flex; }
+  button { font:inherit; color:inherit; border:none; background:none; padding:0; margin:0; cursor:pointer; touch-action:manipulation; }
+  svg { display:block; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .m { fill:var(--m,#58b368); } .d { fill:var(--d,#2f7d44); } .b { fill:#fff3c9; } .e { fill:#fff; } .p { fill:#2b2d42; }
+  .shadow svg * { fill:#39405a !important; stroke:#39405a !important; }
+
+  h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shadow:0 .6vmin 0 #2f7d44, 0 1vmin 2vmin rgba(0,0,0,.25); letter-spacing:.2vmin; }
+  .sub { font-size:3.2vmin; margin:0 0 2vmin; text-align:center; }
+  .bigbtn { width:30vmin; height:30vmin; border-radius:50%; background:#ff8a3d; box-shadow:0 1.6vmin 0 #c85a12, 0 3vmin 4vmin rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center; animation:pulse 1.6s ease-in-out infinite; }
+  .bigbtn:active { transform:translateY(1vmin); box-shadow:0 .6vmin 0 #c85a12; }
+  .bigbtn .tri { width:0; height:0; border-left:12vmin solid #fff; border-top:8vmin solid transparent; border-bottom:8vmin solid transparent; margin-left:3vmin; }
+  @keyframes pulse { 50% { transform:scale(1.07); } }
+  @keyframes bounce { 0%,100% { transform:translateY(0); } 40% { transform:translateY(-5vmin) rotate(-4deg); } 70% { transform:translateY(0) rotate(3deg); } }
+  @keyframes wobble { 0%,100% { transform:rotate(0); } 25% { transform:rotate(-7deg); } 75% { transform:rotate(7deg); } }
+  @keyframes pop { 0% { transform:scale(.3); opacity:0; } 70% { transform:scale(1.15); opacity:1; } 100% { transform:scale(1); } }
+  .bounce { animation:bounce .7s ease; } .wobble { animation:wobble .35s ease 2; } .pop { animation:pop .5s ease both; }
+
+  .corner { position:absolute; top:2vmin; width:11vmin; height:11vmin; border-radius:50%; background:rgba(255,255,255,.75); font-size:6vmin; line-height:11vmin; text-align:center; z-index:5; }
+  .corner.left { left:2vmin; } .corner.right { right:2vmin; opacity:.55; font-size:5vmin; }
+  .corner.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
+
+  /* title */
+  #title .pip { width:34vmin; height:28vmin; }
+  /* map */
+  #map .places { display:flex; gap:3vmin; flex-wrap:wrap; justify-content:center; align-items:flex-end; }
+  .place { width:29vmin; height:34vmin; border-radius:5vmin; background:var(--card); box-shadow:0 1.2vmin 0 rgba(0,0,0,.18); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; border:1vmin solid #fff; }
+  .place:active { transform:translateY(.8vmin); }
+  .place .pic { width:20vmin; height:20vmin; }
+  .place .name { font-size:2.8vmin; font-weight:bold; margin-top:1vmin; }
+  .place .badge { position:absolute; top:-3vmin; right:-3vmin; width:11vmin; height:11vmin; }
+  .place.done { background:#eaffd9; border-color:#7ed67a; }
+  .nest { display:flex; gap:2vmin; align-items:flex-end; justify-content:center; margin-top:3vmin; background:#c48a4a; border-radius:3vmin 3vmin 12vmin 12vmin; padding:1.5vmin 5vmin 2.5vmin; box-shadow:inset 0 -2vmin 0 #9c6830; }
+  .nest .slot { width:11vmin; height:12vmin; }
+  .nest .slot.empty { border:.8vmin dashed rgba(255,255,255,.7); border-radius:50%; }
+  .nest .pipslot { width:15vmin; height:13vmin; }
+  .family { display:flex; gap:.5vmin; margin-top:1.5vmin; height:7vmin; align-items:flex-end; }
+  .family div { width:7vmin; height:6vmin; }
+
+  /* game */
+  #game { justify-content:space-between; padding-top:3vmin; padding-bottom:4vmin; }
+  .stars { display:flex; gap:1.5vmin; height:9vmin; align-items:center; }
+  .star { width:8vmin; height:8vmin; opacity:.3; filter:grayscale(1); transition:all .3s; font-size:7vmin; line-height:8vmin; text-align:center; }
+  .star.got { opacity:1; filter:none; transform:scale(1.15); }
+  .ask { display:flex; align-items:center; justify-content:center; gap:2vmin; }
+  .ask .pip { width:26vmin; height:22vmin; }
+  .bubble { min-width:26vmin; height:26vmin; border-radius:6vmin; background:#fff; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; gap:1vmin; padding:2vmin 3vmin; position:relative; font-weight:bold; }
+  .bubble::before { content:""; position:absolute; left:-3.5vmin; top:55%; border:2.2vmin solid transparent; border-right-color:#fff; border-left:none; }
+  .bubble .art { width:20vmin; height:20vmin; }
+  .bubble .art.small3 { width:19vmin; height:20vmin; margin:0 -3vmin; }
+  .choices { display:flex; gap:3vmin; justify-content:center; align-items:center; flex-wrap:wrap; width:100%; }
+  .choice { width:var(--cs,30vmin); height:var(--cs,30vmin); border-radius:5vmin; background:var(--card); border:1vmin solid #fff; box-shadow:0 1.4vmin 0 rgba(0,0,0,.18); display:flex; align-items:center; justify-content:center; font-size:14vmin; font-weight:bold; flex-direction:column; }
+  .choice:active { transform:translateY(.8vmin); }
+  .choice .art { width:78%; height:78%; }
+  .choice.right { background:#d6ffc4; border-color:#55b85c; }
+  .choice.dim { opacity:.35; }
+  .dots { display:flex; gap:1.2vmin; height:3vmin; }
+  .dots i { width:3vmin; height:3vmin; border-radius:50%; background:#ff8a3d; }
+
+  /* hatch + finale */
+  #hatch .stage, #finale .stage { width:46vmin; height:46vmin; }
+  #hatch .go, #finale .go { margin-top:3vmin; width:20vmin; height:20vmin; visibility:hidden; }
+  #hatch .go.show, #finale .go.show { visibility:visible; }
+  .row { display:flex; gap:2vmin; align-items:flex-end; justify-content:center; }
+  #finale .row div { width:22vmin; height:19vmin; }
+  .confetti { position:absolute; top:-5vmin; width:2.4vmin; height:3.4vmin; border-radius:.5vmin; animation:fall linear forwards; pointer-events:none; z-index:8; }
+  @keyframes fall { to { transform:translateY(115vh) rotate(720deg); } }
+
+  /* grown-ups */
+  #grown { position:absolute; inset:0; background:rgba(43,45,66,.6); display:none; align-items:center; justify-content:center; z-index:20; }
+  #grown.on { display:flex; }
+  #grown .panel { background:#fff; border-radius:16px; padding:22px 26px; width:min(560px,92vw); max-height:92vh; overflow:auto; font-size:16px; }
+  #grown h2 { margin:0 0 6px; } #grown p { margin:6px 0; line-height:1.4; }
+  #grown .line { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-top:1px solid #eee; }
+  #grown .pm { display:flex; align-items:center; gap:8px; }
+  #grown button { background:#eef3ff; border-radius:10px; padding:10px 16px; font-weight:bold; min-width:44px; }
+  #grown button.warn { background:#ffe3e0; } #grown button.main { background:#58b368; color:#fff; }
+  #grown .soon { color:#888; }
+  #grown .foot { display:flex; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="layer"><div class="sun"></div><div class="cloud"></div><div class="cloud c2"></div>
+  <div class="hill back"></div><div class="hill"></div></div>
+  <div class="layer" id="fx"></div>
+
+  <div class="screen on" id="title">
+    <h1>Pip's Lost Eggs</h1>
+    <p class="sub">A dinosaur adventure for Nash</p>
+    <div class="pip" id="titlePip"></div>
+    <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button>
+  </div>
+
+  <div class="screen" id="map">
+    <div class="places" id="places"></div>
+    <div class="nest" id="nest"></div>
+    <div class="family" id="family"></div>
+  </div>
+
+  <div class="screen" id="game">
+    <div class="stars" id="stars"></div>
+    <div class="ask">
+      <button class="pip" id="gamePip" aria-label="Say it again"></button>
+      <div class="bubble" id="bubble"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="screen" id="hatch">
+    <button class="stage" id="hatchStage" aria-label="Tap the egg"></button>
+    <button class="bigbtn go" id="hatchGo" aria-label="Keep going"><span class="tri"></span></button>
+  </div>
+
+  <div class="screen" id="finale">
+    <h1>All the eggs are home!</h1>
+    <div class="row" id="finaleRow"></div>
+    <button class="bigbtn go" id="finaleGo" aria-label="Play again"><span class="tri"></span></button>
+  </div>
+
+  <button class="corner left" id="homeBtn" aria-label="Back to the valley" style="display:none">🏠</button>
+  <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+
+  <div id="grown"><div class="panel" id="grownPanel"></div></div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   PIP'S LOST EGGS  -  an original learning game for Nash
+   Everything (pictures, voice, sounds, saving) lives in this one file.
+   ===================================================================== */
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const rand = n => Math.floor(Math.random() * n);
+const pick = arr => arr[rand(arr.length)];
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+// ---------- saved progress (kept on this device) ----------
+const SAVE_KEY = "pipsLostEggs.v1";
+const fresh = () => ({ skill: { colors: 1, shadows: 1, sizes: 1 }, found: {}, friends: [], clutches: 0, auto: true, voice: true, sound: true });
+let S = fresh();
+try { const raw = localStorage.getItem(SAVE_KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+
+// ---------- voice (the device's built-in talking voice) ----------
+let voice = null;
+function chooseVoice() {
+  if (!("speechSynthesis" in window)) return;
+  const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+  voice = vs.find(v => /Samantha|Aria|Jenny|Zira|Google US English|Karen/i.test(v.name)) || vs[0] || null;
+}
+if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
+let lastSaid = "";
+function say(text) {
+  lastSaid = text;
+  if (!S.voice || !("speechSynthesis" in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.lang = "en-US"; u.rate = 0.85; u.pitch = 1.25;
+    setTimeout(() => speechSynthesis.speak(u), 60);
+  } catch (e) {}
+}
+
+// ---------- little sounds (made by the computer, no sound files) ----------
+let AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === "suspended") AC.resume(); return AC; }
+function tone(freq, start, len, type, vol) {
+  const ac = audio(); if (!ac || !S.sound) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || "sine"; o.frequency.value = freq;
+  const t = ac.currentTime + start;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + len + 0.05);
+}
+const sfx = {
+  tap:   () => tone(520, 0, .08, "triangle", .12),
+  yes:   () => { tone(523, 0, .15, "triangle"); tone(659, .12, .15, "triangle"); tone(784, .24, .25, "triangle"); },
+  oops:  () => { tone(300, 0, .18, "sine", .12); tone(250, .12, .22, "sine", .12); },
+  crack: () => { tone(900, 0, .05, "square", .08); tone(600, .05, .06, "square", .08); },
+  party: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .13, .22, "triangle")); }
+};
+
+// ---------- pictures (drawn with simple shapes, all original) ----------
+const COLORS = {
+  red:    ["#ff5a5f", "#c7383d"], blue:   ["#4d9de0", "#2f6fab"], yellow: ["#ffd23f", "#d9a400"],
+  green:  ["#58b368", "#2f7d44"], orange: ["#ff9f43", "#d6741a"], purple: ["#a06cd5", "#7445a8"],
+  pink:   ["#ff8fb1", "#d85f85"], teal:   ["#3fc1c9", "#22919a"]
+};
+const svg = (inner, c, vb) => `<svg viewBox="${vb || "0 0 200 160"}" style="--m:${c[0]};--d:${c[1]}">${inner}</svg>`;
+const ART = {
+  pip: c => svg(`<path class="d" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z"/><rect class="d" x="80" y="136" width="18" height="20" rx="8"/><rect class="d" x="108" y="136" width="18" height="20" rx="8"/>
+    <ellipse class="m" cx="100" cy="104" rx="38" ry="42"/><ellipse class="b" cx="109" cy="112" rx="22" ry="28"/><ellipse class="d" cx="136" cy="98" rx="12" ry="6"/>
+    <ellipse class="m" cx="118" cy="48" rx="36" ry="30"/><ellipse class="m" cx="146" cy="57" rx="20" ry="15"/>
+    <circle class="e" cx="128" cy="40" r="8"/><circle class="p" cx="130" cy="41" r="4"/><circle class="p" cx="158" cy="52" r="1.8"/>
+    <path d="M138 64 Q150 72 162 62" fill="none" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/>`, c),
+  longneck: c => svg(`<path class="d" d="M42 98 Q12 100 4 78 Q26 96 52 86 Z"/><rect class="d" x="55" y="114" width="17" height="38" rx="7"/><rect class="d" x="100" y="114" width="17" height="38" rx="7"/>
+    <ellipse class="m" cx="85" cy="100" rx="50" ry="30"/><path class="m" d="M112 88 Q134 60 139 24 L160 28 Q156 72 130 108 Z"/><ellipse class="m" cx="156" cy="24" rx="21" ry="14"/>
+    <circle class="e" cx="161" cy="20" r="5"/><circle class="p" cx="162" cy="20" r="2.5"/>`, c),
+  spiky: c => svg(`<polygon class="d" points="58,76 71,42 85,70"/><polygon class="d" points="84,68 100,30 116,68"/><polygon class="d" points="115,70 129,42 142,77"/>
+    <path class="m" d="M46 98 Q14 94 4 116 Q30 116 52 116 Z"/><rect class="d" x="64" y="118" width="17" height="32" rx="7"/><rect class="d" x="120" y="118" width="17" height="32" rx="7"/>
+    <ellipse class="m" cx="100" cy="100" rx="60" ry="32"/><ellipse class="m" cx="168" cy="112" rx="23" ry="14"/>
+    <circle class="e" cx="174" cy="107" r="5"/><circle class="p" cx="175" cy="107" r="2.5"/>`, c),
+  horned: c => svg(`<path class="m" d="M36 94 Q10 94 4 110 Q24 113 42 112 Z"/><rect class="d" x="52" y="118" width="17" height="32" rx="7"/><rect class="d" x="104" y="118" width="17" height="32" rx="7"/>
+    <ellipse class="m" cx="85" cy="100" rx="55" ry="32"/><circle class="d" cx="138" cy="78" r="31"/><ellipse class="m" cx="160" cy="96" rx="27" ry="19"/>
+    <polygon class="b" points="148,80 153,46 162,80"/><polygon class="b" points="168,82 177,52 180,86"/><polygon class="b" points="182,92 198,80 188,102"/>
+    <circle class="e" cx="162" cy="94" r="5"/><circle class="p" cx="163" cy="94" r="2.5"/>`, c),
+  egg: c => svg(`<ellipse class="b" cx="100" cy="84" rx="46" ry="60"/><circle class="m" cx="82" cy="60" r="9"/><circle class="m" cx="118" cy="92" r="12"/><circle class="m" cx="86" cy="112" r="7"/>`, c),
+  leaf: c => svg(`<path class="m" d="M100 14 Q170 64 100 146 Q30 64 100 14 Z"/><path d="M100 30 L100 156" stroke="${c[1]}" stroke-width="6" stroke-linecap="round"/>`, c),
+  berry: c => svg(`<circle class="m" cx="100" cy="92" r="56"/><circle cx="80" cy="72" r="12" fill="#fff" opacity=".55"/><path d="M100 40 Q96 22 108 12" stroke="#6b4a2b" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="122" cy="30" rx="18" ry="9" fill="#58b368" transform="rotate(-20 122 30)"/>`, c),
+  bush: c => svg(`<circle fill="#55b85c" cx="60" cy="100" r="46"/><circle fill="#55b85c" cx="140" cy="100" r="46"/><circle fill="#7ed67a" cx="100" cy="76" r="54"/>
+    <circle fill="#ff5a5f" cx="70" cy="80" r="11"/><circle fill="#4d9de0" cx="112" cy="58" r="11"/><circle fill="#ffd23f" cx="132" cy="102" r="11"/><circle fill="#ff5a5f" cx="94" cy="114" r="11"/>`, c),
+  cave: c => svg(`<path fill="#9aa0b5" d="M10 152 Q10 30 100 22 Q190 30 190 152 Z"/><path fill="#39405a" d="M52 152 Q52 70 100 66 Q148 70 148 152 Z"/><circle fill="#fff" cx="88" cy="110" r="6"/><circle fill="#fff" cx="112" cy="110" r="6"/>`, c),
+  meadow: c => svg(`<g transform="translate(-6 10) scale(.72)">${ART.longneck(c).replace(/<\/?svg[^>]*>/g, "")}</g><g transform="translate(118 92) scale(.38)" style="--m:${COLORS.orange[0]};--d:${COLORS.orange[1]}">${ART.longneck(COLORS.orange).replace(/<\/?svg[^>]*>/g, "")}</g>`, c)
+};
+const DINOS = ["longneck", "spiky", "horned", "pip"];
+const DINO_NAMES = { longneck: "long neck dinosaur", spiky: "spiky dinosaur", horned: "horned dinosaur", pip: "little dinosaur", egg: "egg", leaf: "leaf" };
+const FRIEND_COLORS = ["blue", "orange", "purple", "pink", "teal", "yellow", "red"];
+const PIP = () => ART.pip(COLORS.green);
+
+// ---------- screens ----------
+let current = "title";
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  current = id;
+  $("homeBtn").style.display = (id === "game") ? "" : "none";
+  $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+}
+function animate(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function confetti(n) {
+  const cols = Object.values(COLORS).map(c => c[0]);
+  for (let i = 0; i < (n || 40); i++) {
+    const c = document.createElement("div"); c.className = "confetti";
+    c.style.left = rand(100) + "vw"; c.style.background = pick(cols);
+    c.style.animationDuration = (1.6 + Math.random() * 1.8) + "s"; c.style.animationDelay = (Math.random() * .6) + "s";
+    $("fx").appendChild(c); setTimeout(() => c.remove(), 4500);
+  }
+}
+
+// ---------- the three mini-games ----------
+// Each game has 4 difficulty steps. makeQuestion(step) returns:
+//   { bubble: picture/words shown in Pip's speech bubble, say: what Pip says,
+//     choices: [{ html, ok, name }], yay: what Pip says when right, size: optional card size }
+const GAMES = {
+  colors: {
+    name: "Berry Bush", icon: "bush", intro: "Pip is hungry! Find the berry Pip wants.",
+    makeQuestion(step) {
+      const pool = step === 1 ? ["red", "blue", "yellow"] : step === 2 ? ["red", "blue", "yellow", "green"] : ["red", "blue", "yellow", "green", "orange", "purple"];
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const names = shuffle(pool).slice(0, count), target = names[0];
+      return {
+        bubble: `<div class="art">${ART.berry(COLORS[target])}</div>`,
+        say: `Pip wants the ${target} berry!`, yay: `Yum! ${target}!`,
+        choices: shuffle(names).map(n => ({ html: `<div class="art">${ART.berry(COLORS[n])}</div>`, ok: n === target, name: n }))
+      };
+    }
+  },
+  shadows: {
+    name: "Shadow Cave", icon: "cave", intro: "Who is hiding in the cave? Match the shadow!",
+    makeQuestion(step) {
+      let kinds;
+      if (step === 1) kinds = [pick(DINOS), pick(["egg", "leaf"])];
+      else if (step === 2) kinds = shuffle(DINOS).slice(0, 2).concat(pick(["egg", "leaf"]));
+      else kinds = shuffle(DINOS).slice(0, step === 3 ? 3 : 4);
+      const target = step === 1 ? kinds[rand(2)] : kinds[0];
+      const cols = shuffle(["blue", "orange", "purple", "red", "teal", "green"]);
+      return {
+        bubble: `<div class="art shadow">${ART[target](COLORS.green)}</div>`,
+        say: "Who made this shadow?", yay: `Yes! It's the ${DINO_NAMES[target]}!`,
+        choices: shuffle(kinds).map((k, i) => ({ html: `<div class="art">${ART[k](COLORS[cols[i]])}</div>`, ok: k === target, name: DINO_NAMES[k] }))
+      };
+    }
+  },
+  sizes: {
+    name: "Big and Small", icon: "meadow", intro: "Some dinosaurs are big. Some are small!",
+    makeQuestion(step) {
+      const kind = pick(["longneck", "spiky", "horned"]), col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
+      const card = pct => `<div class="art" style="width:${pct}%;height:${pct}%">${ART[kind](col)}</div>`;
+      if (step === 4) { // counting 1, 2, 3
+        const n = 1 + rand(3), words = ["", "One", "Two", "Three"];
+        return {
+          bubble: Array(n).fill(`<div class="art small3">${ART.egg(col)}</div>`).join(""),
+          say: "How many eggs?", yay: `${words[n]}! ${words.slice(1, n + 1).join(", ")}.`,
+          choices: [1, 2, 3].map(k => ({ html: `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`, ok: k === n, name: words[k].toLowerCase() }))
+        };
+      }
+      if (step === 3) {
+        const big = rand(2) === 0, word = big ? "biggest" : "smallest";
+        return {
+          bubble: `<span style="font-size:${big ? 7 : 4}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `That's the ${word} one!`,
+          choices: shuffle([[95, "biggest"], [62, "middle"], [34, "smallest"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" }))
+        };
+      }
+      const big = step === 1 ? true : rand(2) === 0, word = big ? "big" : "small";
+      return {
+        bubble: `<span style="font-size:${big ? 9 : 4.5}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `Yes! That one is ${word}!`,
+        choices: shuffle([[95, "big"], [40, "small"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" }))
+      };
+    }
+  }
+};
+const GAME_IDS = Object.keys(GAMES);
+const STARS_TO_WIN = 4;
+
+let G = null; // the game being played right now
+function startGame(id) {
+  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "" };
+  $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
+  $("gamePip").innerHTML = PIP();
+  show("game");
+  nextQuestion(GAMES[id].intro + " ");
+}
+function nextQuestion(lead) {
+  let q, tries = 0;
+  do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 6 && q.say + q.bubble === G.lastSay);
+  G.lastSay = q.say + q.bubble;
+  G.q = q; G.first = true; G.busy = false;
+  $("bubble").innerHTML = q.bubble; animate($("bubble"), "pop");
+  const box = $("choices"); box.innerHTML = "";
+  box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
+  q.choices.forEach(ch => {
+    const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
+    b.addEventListener("click", () => choose(b, ch));
+    box.appendChild(b);
+  });
+  say((lead || "") + q.say);
+}
+async function choose(btn, ch) {
+  if (!G || G.busy || btn.classList.contains("dim")) return;
+  if (ch.ok) {
+    G.busy = true; sfx.yes();
+    btn.classList.add("right"); animate($("gamePip"), "bounce");
+    [...$("choices").children].forEach(b => { if (b !== btn) b.classList.add("dim"); });
+    G.stars++; $("stars").children[G.stars - 1].classList.add("got");
+    say(G.q.yay);
+    adjust(G.first);
+    await wait(2100);
+    if (!G) return;
+    if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
+  } else {
+    sfx.oops(); G.first = false;
+    animate(btn, "wobble"); btn.classList.add("dim");
+    say(`That is the ${ch.name}. ${G.q.say}`);
+  }
+}
+// Quietly make the game harder after 3 right in a row, easier after 2 hard questions in a row.
+function adjust(firstTry) {
+  if (!S.auto) return;
+  if (firstTry) { G.streak++; G.rough = 0; if (G.streak >= 3 && S.skill[G.id] < 4) { S.skill[G.id]++; G.streak = 0; } }
+  else { G.rough++; G.streak = 0; if (G.rough >= 2 && S.skill[G.id] > 1) { S.skill[G.id]--; G.rough = 0; } }
+  save();
+}
+function finishGame() {
+  const id = G.id; G = null;
+  if (S.found[id]) { // already rescued this egg: just celebrate
+    sfx.party(); confetti(30); say("Great job! You did it again!");
+    setTimeout(showMap, 2600);
+  } else startHatch(id);
+}
+
+// ---------- hatching an egg ----------
+let H = null;
+function startHatch(id) {
+  const colorName = FRIEND_COLORS[S.friends.length % FRIEND_COLORS.length];
+  const kind = pick(["longneck", "spiky", "horned", "pip"]);
+  H = { id, colorName, kind, taps: 0, done: false };
+  $("hatchStage").innerHTML = ART.egg(COLORS[colorName]);
+  $("hatchGo").classList.remove("show");
+  show("hatch"); sfx.party(); confetti(25); animate($("hatchStage"), "pop");
+  say("You found an egg! Tap the egg!");
+}
+$("hatchStage").addEventListener("click", () => {
+  if (!H || H.done) return;
+  H.taps++; sfx.crack(); animate($("hatchStage"), "wobble");
+  if (H.taps >= 3) {
+    H.done = true;
+    S.found[H.id] = { color: H.colorName, kind: H.kind };
+    S.friends.push({ color: H.colorName, kind: H.kind }); save();
+    $("hatchStage").innerHTML = ART[H.kind](COLORS[H.colorName]); animate($("hatchStage"), "pop");
+    sfx.party(); confetti(50);
+    say(`Hello, baby dinosaur! A ${H.colorName} ${DINO_NAMES[H.kind]}!`);
+    setTimeout(() => $("hatchGo").classList.add("show"), 1200);
+  }
+});
+$("hatchGo").addEventListener("click", () => {
+  sfx.tap(); H = null;
+  if (GAME_IDS.every(id => S.found[id])) showFinale(); else showMap();
+});
+
+// ---------- the big finish ----------
+function showFinale() {
+  $("finaleRow").innerHTML = `<div>${PIP()}</div>` + GAME_IDS.map(id => `<div class="pop">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>`).join("");
+  $("finaleGo").classList.remove("show");
+  show("finale"); sfx.party(); confetti(80);
+  say("Hooray! All the eggs are home! Pip is so happy. Thank you!");
+  setTimeout(() => $("finaleGo").classList.add("show"), 2500);
+}
+$("finaleGo").addEventListener("click", () => {
+  sfx.tap(); S.found = {}; S.clutches++; save();
+  showMap("Oh no! More eggs rolled away! Let's find them!");
+});
+
+// ---------- the valley (map) ----------
+function showMap(line) {
+  if (GAME_IDS.every(id => S.found[id])) { showFinale(); return; } // all eggs home: go to the celebration
+  $("places").innerHTML = "";
+  GAME_IDS.forEach(id => {
+    const g = GAMES[id], b = document.createElement("button");
+    b.className = "place" + (S.found[id] ? " done" : "");
+    b.innerHTML = `<div class="pic">${ART[g.icon](COLORS.blue)}</div><div class="name">${g.name}</div>` +
+      (S.found[id] ? `<div class="badge">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>` : `<div class="badge">${ART.egg(COLORS.teal)}</div>`);
+    b.addEventListener("click", () => { sfx.tap(); startGame(id); });
+    $("places").appendChild(b);
+  });
+  $("nest").innerHTML = `<div class="pipslot">${PIP()}</div>` + GAME_IDS.map(id =>
+    S.found[id] ? `<div class="slot">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>` : `<div class="slot empty"></div>`).join("");
+  const earlier = S.friends.slice(0, S.friends.length - GAME_IDS.filter(id => S.found[id]).length).slice(-12);
+  $("family").innerHTML = earlier.map(f => `<div>${ART[f.kind](COLORS[f.color])}</div>`).join("");
+  show("map");
+  const left = GAME_IDS.filter(id => !S.found[id]).length;
+  say(line || (left === 3 ? "Pip's eggs rolled away! Tap a place to find an egg." : left === 1 ? "One more egg to find! Tap a place." : `${left} more eggs to find! Tap a place.`));
+}
+
+// ---------- buttons ----------
+$("titlePip").innerHTML = PIP();
+$("playBtn").addEventListener("click", () => { audio(); sfx.tap(); showMap(); });
+$("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); say(G.q.say); } });
+$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+
+// ---------- grown-ups corner (press and hold the gear for 2 seconds) ----------
+let holdTimer = null;
+const gb = $("grownBtn");
+const startHold = e => { e.preventDefault(); gb.classList.add("holding"); holdTimer = setTimeout(openGrown, 1500); };
+const endHold = () => { gb.classList.remove("holding"); clearTimeout(holdTimer); };
+gb.addEventListener("pointerdown", startHold); gb.addEventListener("pointerup", endHold); gb.addEventListener("pointerleave", endHold); gb.addEventListener("pointercancel", endHold);
+gb.addEventListener("contextmenu", e => e.preventDefault());
+function openGrown() {
+  endHold(); if ("speechSynthesis" in window) speechSynthesis.cancel();
+  const stepNames = { colors: ["2 colors", "3 colors", "3 of 6 colors", "4 colors"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"], sizes: ["find big", "big or small", "biggest / smallest of 3", "count 1 to 3"] };
+  $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
+    <p><b>Stage: Hatchling (ages 2-3).</b> <span class="soon">Explorer (4-5) and Ranger (6+) are not built yet.</span></p>
+    <p>Eggs hatched so far: <b>${S.friends.length}</b> &nbsp;|&nbsp; Full adventures finished: <b>${S.clutches}</b></p>
+    ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${stepNames[id][S.skill[id] - 1]}</small></div>
+      <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
+    <div class="line"><div>Adjust difficulty automatically</div><button data-act="auto">${S.auto ? "On" : "Off"}</button></div>
+    <div class="line"><div>Pip's talking voice</div><button data-act="voice">${S.voice ? "On" : "Off"}</button></div>
+    <div class="line"><div>Sound effects</div><button data-act="sound">${S.sound ? "On" : "Off"}</button></div>
+    <div class="foot"><button class="warn" data-act="reset">Start over (erase progress)</button><button class="main" data-act="close">Done</button></div>`;
+  $("grown").classList.add("on");
+}
+$("grownPanel").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
+  if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
+  if (act === "auto") S.auto = !S.auto;
+  if (act === "voice") S.voice = !S.voice;
+  if (act === "sound") S.sound = !S.sound;
+  if (act === "reset") { if (!confirm("Erase all of Nash's progress and start over?")) return; S = fresh(); }
+  save();
+  if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }
+  if (act === "reset") { $("grown").classList.remove("on"); show("title"); return; }
+  openGrown();
+});
+
+// Stop pinch-zoom and double-tap zoom so little fingers can't shrink the game.
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("dblclick", e => e.preventDefault());
+</script>
+</body>
+</html>
