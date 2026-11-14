@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css">
+<link rel="stylesheet" href="shared/kit.css?v=5">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -40,11 +40,12 @@
   <h1 class="shelfTitle">Story Shelf</h1>
   <div class="who" id="who"></div>
   <div class="shelf" id="shelf"></div>
+  <p id="version" style="text-align:center;margin:44px 0 0;font-size:13px;color:#a08a6c"></p>
 </div>
 <button class="gear" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 
-<script src="shared/kit.js"></script>
+<script src="shared/kit.js?v=5"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -92,7 +93,7 @@ drawShelf();
 function openGrown() {
   Kit.hush();
   const voices = Kit.englishVoices(), v = Kit.currentVoice(), list = Kit.players();
-  $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
+  $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p>Each child gets their own saved progress on this device. Progress does not move between devices.</p>
     ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <div class="line"><div>Talking voice (for the newer games)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
@@ -117,6 +118,7 @@ $("grownPanel").addEventListener("change", e => {
   if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
 });
 drawWho();
+$("version").textContent = "Version " + Kit.VERSION;
 </script>
 </body>
 </html>
