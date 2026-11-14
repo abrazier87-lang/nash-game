@@ -14,7 +14,7 @@ const NUM = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eig
 const INK = ["#ff5a5f", "#4d9de0", "#58b368", "#ff9f43", "#a06cd5", "#3fc1c9"];
 const big = (text, size, color) => `<span style="font-size:${size || 12}vmin${color ? ";color:" + color : ""}">${text}</span>`;
 const emo = (e, cls) => `<span class="emoji${cls ? " " + cls : ""}">${e}</span>`;
-const tiles = arr => arr.map(x => x === "?" ? `<div class="q s">?</div>` : `<div class="tile s">${x}</div>`).join("");
+const tiles = arr => { const sz = arr.some(x => String(x).length > 2) ? "s xs" : "s"; return arr.map(x => x === "?" ? `<div class="q ${sz}">?</div>` : `<div class="tile ${sz}">${x}</div>`).join(""); }; // smaller boxes for big numbers
 // Number answer cards: the right answer plus close wrong ones. "near" can list the wrong answers to prefer.
 function numCards(n, lo, hi, count, near) {
   count = count || 3;
@@ -195,7 +195,7 @@ function StoryGame(C) {
   function showMap(line) {
     const on = got();
     if (on.length >= NEED) { showFinale(); return; }
-    $("places").innerHTML = "";
+    $("places").innerHTML = ""; $("places").classList.toggle("many", GAME_IDS.length > 8); $("progress").classList.toggle("many", NEED > 4); // smaller cards when a grade has lots of places
     GAME_IDS.forEach(id => {
       const g = GAMES[id], b = document.createElement("button");
       b.className = "place" + (S.aboard[id] ? " done" : "");
@@ -213,7 +213,7 @@ function StoryGame(C) {
 
   // ---------- buttons ----------
   $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); showMap(got().length || S.trips ? undefined : C.lines.hello(NAME)); });
-  $("gameHost").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameHost"), "wobble"); say(G.q.say); } });
+  $("gameHost").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameHost"), "wobble"); say(G.q.help || G.q.say); } }); // tap the host to hear it again ("help" is a fuller version, if the question has one)
   $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
   $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });
 

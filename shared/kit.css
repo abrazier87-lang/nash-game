@@ -77,6 +77,7 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 /* extras used by the Grade 1+ story games */
 .bubble .emoji.mid { font-size:11vmin; }
 .bubble .tile.s, .bubble .q.s { width:auto; min-width:8.5vmin; height:10vmin; padding:0 1.2vmin; font-size:6vmin; line-height:8.4vmin; }
+.bubble .tile.xs, .bubble .q.xs { min-width:6.4vmin; height:8.6vmin; padding:0 .7vmin; font-size:4.1vmin; line-height:7vmin; border-width:.6vmin; }
 .bubble .sentence { font-size:4.8vmin; line-height:1.35; max-width:52vmin; text-align:center; }
 .bubble .sentence u { text-decoration:none; display:inline-block; min-width:9vmin; border-bottom:.8vmin dashed #ff8a3d; }
 .choice .art { width:80%; height:80%; }
@@ -97,6 +98,17 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 @keyframes floaty { 50% { transform:translateY(-4vmin); } }
 .sum { font-size:10vmin; white-space:nowrap; } .sum.long { font-size:7.5vmin; } .sum b { color:#ff8a3d; }
 .clockbox { width:22vmin; height:22vmin; }
+/* a grade with more than 8 places: smaller cards, 6 across on a wide screen or 4 across on a tall one */
+.places.many { grid-template-columns:repeat(6, auto); gap:2vmin; }
+.places.many .place { width:19vmin; height:21vmin; border-radius:3.5vmin; }
+.places.many .place .pic { width:15vmin; height:11vmin; font-size:6vmin; }
+.places.many .place .name { font-size:2.1vmin; }
+@media (max-aspect-ratio: 13/10) { .places.many { grid-template-columns:repeat(4, auto); } }
+.progress.many { gap:1.6vmin; }
+.progress.many .balloon { width:12vmin; height:15vmin; }
+.progress.many .slot { width:8.6vmin; height:8.6vmin; font-size:5.4vmin; line-height:8.6vmin; }
+.progress.many .slot i { font-size:3.4vmin; right:-1.2vmin; bottom:-1.2vmin; }
+#finaleArt { flex-wrap:wrap; justify-content:center; max-width:96vw; }
 /* a taller speech bubble for a short passage to read */
 .bubble.tall { height:auto; min-height:26vmin; max-width:64vmin; }
 .bubble .passage { font-size:3.4vmin; line-height:1.35; font-weight:normal; text-align:left; }
