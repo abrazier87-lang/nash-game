@@ -62,6 +62,15 @@ const timeSaid = (h, m) => m === 0 ? `${h} o'clock` : m === 30 ? `half past ${h}
    rewards: [[name, picture]], finaleTitle, stickersLabel,
    progress(list) and finaleArt(list): pictures of how far along the story is,
    lines: what the host says - hello(name), start, left(n), won(who), boarded(who), finale(name), again, replay, test(name) */
+// Shrinks the writing on an answer card when a long number or word would not fit (for example 1,250).
+function fitText(card) {
+  if (card.firstElementChild || !card.clientWidth) return; // cards holding pictures or styled text look after themselves
+  const cs = getComputedStyle(card), pen = fitText.pen || (fitText.pen = document.createElement("canvas").getContext("2d"));
+  pen.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const wide = pen.measureText(card.textContent).width, room = card.clientWidth * 0.84;
+  if (wide > room) card.style.fontSize = (parseFloat(cs.fontSize) * room / wide / (Math.min(innerWidth, innerHeight) / 100)).toFixed(2) + "vmin";
+}
+
 function StoryGame(C) {
   const { say, sfx, animate, confetti } = Kit;
   const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
@@ -119,7 +128,7 @@ function StoryGame(C) {
     q.choices.forEach(ch => {
       const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
       b.addEventListener("click", () => choose(b, ch));
-      box.appendChild(b);
+      box.appendChild(b); fitText(b);
     });
     say((lead || "") + q.say);
   }
