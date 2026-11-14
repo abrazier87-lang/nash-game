@@ -92,6 +92,13 @@ const Kit = (() => {
       } catch (e) { resolve(false); }
     });
   }
+  // Says a line and waits until it is really over. Two safeguards, because some tablets report "finished" too early:
+  // the voice must say it has finished, AND enough time must have passed for a line of that length.
+  async function sayAndWait(text, quietPause) {
+    const longEnough = wait(700 + text.length * 75);
+    if (!(await say(text))) return wait(quietPause); // voice is off: just a short pause
+    await longEnough; await wait(600);
+  }
   const hush = () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); };
 
   // ---------- little sounds (made by the computer, no sound files) ----------
@@ -140,6 +147,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  return { players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "5"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, sayAndWait, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

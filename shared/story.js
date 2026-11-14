@@ -131,9 +131,9 @@ function StoryGame(C) {
       animate($("gameHost"), "bounce");
       el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
       G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-      const spoken = say(q.yay);
+      const spoken = Kit.sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
       adjust(G.first);
-      if (await spoken) await wait(600); else await wait(q.pause || 2500); // wait for the voice to finish; with the voice off, a short pause
+      await spoken;
       if (!G || G.q !== q) return;
       if (G.stars >= STARS) finishGame(); else nextQuestion();
     } else {
@@ -221,7 +221,7 @@ function StoryGame(C) {
   function openGrown() {
     Kit.hush();
     const voices = Kit.englishVoices(), v = Kit.currentVoice();
-    $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
+    $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
       <p><b>${C.gradeLabel}.</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
       <div class="line"><div>${C.hostName}'s voice<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
       <p>Places won so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Times the story was finished: <b>${S.trips}</b></p>
