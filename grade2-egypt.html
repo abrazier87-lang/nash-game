@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Egypt</title>
-<link rel="stylesheet" href="shared/kit.css?v=9">
+<link rel="stylesheet" href="shared/kit.css?v=10">
 <style>
   /* Desert look: blue sky fading to sand, pyramids, dunes. */
   :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
@@ -15,10 +15,11 @@
   .pyr { position:absolute; bottom:20vmin; left:4%; width:48vmin; height:32vmin; background:#dba74a; clip-path:polygon(50% 0, 100% 100%, 0 100%); }
   .pyr::after { content:""; position:absolute; inset:0; background:#b98630; clip-path:polygon(50% 0, 100% 100%, 50% 100%); }
   .pyr.p2 { left:auto; right:16%; bottom:24vmin; width:30vmin; height:20vmin; }
-  /* market tokens */
+  /* Canadian coins */
   .toks { display:flex; flex-wrap:wrap; gap:.8vmin; max-width:46vmin; justify-content:center; align-items:center; }
-  .tok { display:inline-flex; width:6.4vmin; height:6.4vmin; border-radius:50%; align-items:center; justify-content:center; font-size:3vmin; font-style:normal; font-weight:bold; border:.5vmin solid rgba(0,0,0,.22); background:#ffd23f; }
-  .tok.t5 { background:#cfd6e4; } .tok.t1 { background:#d98b4f; width:5vmin; height:5vmin; font-size:2.6vmin; } .tok.t25 { background:#7fd6a0; width:7.6vmin; height:7.6vmin; }
+  .coin { display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-style:normal; font-weight:bold; border:.5vmin solid rgba(0,0,0,.25); background:#cfd6e4; font-size:2.3vmin; width:6vmin; height:6vmin; }
+  .coin.c10 { width:5vmin; height:5vmin; font-size:1.9vmin; } .coin.c25 { width:7vmin; height:7vmin; } .coin.c100 { width:7.6vmin; height:7.6vmin; background:#e2b84a; }
+  .coin.c200 { width:8.2vmin; height:8.2vmin; background:radial-gradient(circle, #e2b84a 0 46%, #cfd6e4 49%); }
   /* rows of stones */
   .stones { display:grid; gap:.3vmin .5vmin; font-size:3.3vmin; line-height:1.15; }
   .groups { display:flex; flex-wrap:wrap; justify-content:center; max-width:46vmin; gap:1.2vmin; font-size:3vmin; } .groups div { display:grid; grid-template-columns:repeat(2, auto); gap:.2vmin; padding:.8vmin; border:.5vmin dashed #c9a37a; border-radius:2vmin; align-content:center; }
@@ -28,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=9"></script>
-<script src="shared/story.js?v=9"></script>
+<script src="shared/kit.js?v=10"></script>
+<script src="shared/story.js?v=10"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -51,7 +52,15 @@ const wordCard = (w, color) => `<span style="font-size:${w.length <= 4 ? 8 : w.l
 const ansCard = text => `<span class="ans">${text}</span>`;
 const uniqTimes = opts => opts.filter((o, i) => opts.findIndex(p => p[0] === o[0] && p[1] === o[1]) === i);
 const sumCards = ans => numCards(ans, 0, 200, 4, [ans + 10, ans - 10, ans + 1, ans - 1]);
-const tok = v => `<i class="tok t${v}">${v}</i>`;
+// Canadian coins. Amounts are kept in cents: 325 means $3.25.
+const coin = c => `<i class="coin c${c}">${c < 100 ? c + "¢" : "$" + c / 100}</i>`;
+const fmt = c => c < 100 ? `${c}¢` : c % 100 ? `$${(c / 100).toFixed(2)}` : `$${c / 100}`;                        // how an amount is written
+const moneySaid = c => { const d = Math.floor(c / 100), r = c % 100; return d ? `${d} dollar${d > 1 ? "s" : ""}${r ? ` and ${r} cents` : ""}` : `${r} cents`; }; // how it is said
+// Money answer cards: the right amount and three believable wrong ones (always real coin amounts, never odd cents).
+function moneyCards(c, list) {
+  const wrong = shuffle([...new Set(list.concat([c + 5, c + 10, c + 15]))].filter(x => x >= 5 && x !== c)).slice(0, 3);
+  return wrong.concat(c).sort((a, b) => a - b).map(x => ({ html: `<span style="font-size:6vmin">${fmt(x)}</span>`, ok: x === c, wrong: `That is ${moneySaid(x)}.` }));
+}
 
 // ---------- words and facts ----------
 const OPPOSITES = [["hot", "cold"], ["big", "small"], ["up", "down"], ["fast", "slow"], ["happy", "sad"], ["day", "night"], ["wet", "dry"], ["open", "closed"], ["full", "empty"], ["hard", "soft"], ["early", "late"], ["loud", "quiet"],
@@ -122,20 +131,25 @@ const GAMES = {
       return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, choices: sumCards(a - b) };
     }
   },
-  tokens: {
-    name: "Market Tokens", icon: "🪙", intro: "Welcome to the market! A gold token is worth 10. A silver token is worth 5. A copper token is worth 1.",
+  tokens: { // the Canadian coins game (it keeps its old short name, "tokens", so saved progress still works)
+    name: "Market Coins", icon: "🪙", intro: "I brought my coins from home in Canada! A nickel is 5 cents. A dime is 10 cents. A quarter is 25 cents.",
     makeQuestion(step) {
-      let q = 0, t, f, o, n;
+      if (step === 4 && rand(2)) { // change from a loonie
+        const cost = 5 * (4 + rand(15)), change = 100 - cost, thing = pick(["fig", "loaf of bread", "clay pot", "bunch of grapes"]);
+        const text = `A ${thing} costs ${fmt(cost)}. You pay with a loonie, which is $1. How much change do you get?`;
+        return { bubble: `<div class="passage">${text}</div>`, tall: true, key: "change" + cost, say: `A ${thing} costs ${moneySaid(cost)}. You pay with a loonie, which is 1 dollar. How much change do you get?`, yay: `Yes! ${cap(moneySaid(change))} change.`,
+          choices: moneyCards(change, [change + 10, change - 10, change + 5, change - 5, cost]) };
+      }
+      let t = 0, l = 0, q = 0, d, n, c, count;
       do {
-        if (step === 1) { t = 1 + rand(5); f = 0; o = rand(6); }
-        else if (step === 2) { t = rand(4); f = 1 + rand(3); o = rand(5); }
-        else if (step === 3) { t = 1 + rand(6); f = rand(4); o = rand(5); }
-        else { q = 1 + rand(3); t = rand(3); f = rand(2); o = rand(5); } // step 4 adds a green token worth 25
-        n = q * 25 + t * 10 + f * 5 + o;
-      } while (n > 99 || q + t + f + o < 2);
-      return { bubble: `<div class="toks">${tok(25).repeat(q)}${tok(10).repeat(t)}${tok(5).repeat(f)}${tok(1).repeat(o)}</div>`, key: [q, t, f, o].join(),
-        say: (step === 4 ? "A green token is worth 25. " : "") + "How much are these tokens worth altogether?", again: "How much are these tokens worth altogether?", yay: `Yes! That makes ${n}!`,
-        choices: numCards(n, 1, 120, 4, [n + 10, n - 10, n + 5, n - 5, n + 1, n - 1]) };
+        if (step === 1) { d = rand(5); n = rand(5); }                                  // nickels and dimes
+        else if (step === 2) { q = rand(4); d = rand(4); n = rand(3); }                // adds quarters, still under a dollar
+        else { t = rand(2); l = rand(3); q = rand(4); d = rand(3); n = rand(2); }      // adds loonies and toonies
+        c = t * 200 + l * 100 + q * 25 + d * 10 + n * 5; count = t + l + q + d + n;
+      } while (count < 2 || count > 9 || (step <= 2 ? c > 95 : c < 100 || c > 500) || (step === 2 && q === 0));
+      return { bubble: `<div class="toks">${coin(200).repeat(t)}${coin(100).repeat(l)}${coin(25).repeat(q)}${coin(10).repeat(d)}${coin(5).repeat(n)}</div>`, key: [t, l, q, d, n].join(),
+        say: (step >= 3 ? "A loonie is 1 dollar. A toonie is 2 dollars. " : "") + "How much money is this?", again: "How much money is this?", yay: `Yes! That is ${moneySaid(c)}.`,
+        choices: moneyCards(c, step <= 2 ? [c + 5, c - 5, c + 10, c - 10, c + 25] : [c + 25, c - 25, c + 100, c - 100, c + 10, c + 5]) };
     }
   },
   time: {
@@ -229,7 +243,7 @@ window.Story = StoryGame({
   stepNames: {
     add: ["two digits plus one digit", "two digits plus two digits", "adding with carrying", "find the missing number"],
     sub: ["two digits minus one digit", "two digits minus two digits", "taking away with borrowing", "find the missing number"],
-    tokens: ["tens and ones", "tens, fives and ones", "bigger amounts", "adds a token worth 25"],
+    tokens: ["nickels and dimes", "adds quarters (under a dollar)", "adds loonies and toonies", "bigger amounts and change from a loonie"],
     time: ["quarter past, half past, quarter to", "to the nearest 5 minutes", "pick the right clock", "what time will it be later"],
     words: ["opposites", "words that mean the same", "both kinds, 4 choices", "naming, action and describing words"],
     scribe: ["spelling common words", "spelling tricky words", "more than one (plurals)", "yesterday words (past tense)"],
