@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Dr. Somebody in Ancient Egypt</title>
+<link rel="stylesheet" href="shared/kit.css">
+<style>
+  /* Desert look: blue sky fading to sand, pyramids, dunes. */
+  :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
+  h1 { font-size:7.4vmin; padding:0 14vmin; }
+  .pyr { position:absolute; bottom:20vmin; left:4%; width:48vmin; height:32vmin; background:#dba74a; clip-path:polygon(50% 0, 100% 100%, 0 100%); }
+  .pyr::after { content:""; position:absolute; inset:0; background:#b98630; clip-path:polygon(50% 0, 100% 100%, 50% 100%); }
+  .pyr.p2 { left:auto; right:16%; bottom:24vmin; width:30vmin; height:20vmin; }
+  /* market tokens */
+  .toks { display:flex; flex-wrap:wrap; gap:.8vmin; max-width:46vmin; justify-content:center; align-items:center; }
+  .tok { display:inline-flex; width:6.4vmin; height:6.4vmin; border-radius:50%; align-items:center; justify-content:center; font-size:3vmin; font-style:normal; font-weight:bold; border:.5vmin solid rgba(0,0,0,.22); background:#ffd23f; }
+  .tok.t5 { background:#cfd6e4; } .tok.t1 { background:#d98b4f; width:5vmin; height:5vmin; font-size:2.6vmin; } .tok.t25 { background:#7fd6a0; width:7.6vmin; height:7.6vmin; }
+  /* rows of stones */
+  .stones { display:grid; gap:.3vmin .5vmin; font-size:3.3vmin; line-height:1.15; }
+  .groups { display:flex; gap:2.4vmin; font-size:4vmin; } .groups div { display:grid; grid-template-columns:repeat(2, auto); gap:.2vmin; padding:.8vmin; border:.5vmin dashed #c9a37a; border-radius:2vmin; align-content:center; }
+  .clockbox.small { width:17vmin; height:17vmin; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js"></script>
+<script src="shared/story.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY IN ANCIENT EGYPT  -  the Grade 2 game
+   Story: the clock balloon lands in ancient Egypt, thousands of years
+   ago. A sandstorm blows four golden gears out of the clock. Win at a
+   place and an animal friend brings a gear back. Four gears fix the clock.
+   The engine that runs the game is in shared/story.js.
+   ===================================================================== */
+
+// Dr. Somebody dressed for Egypt: a blue and gold striped head cloth.
+const HOST = owl(
+  `<path d="M60 30 L44 100 L70 104 L76 60 Z" fill="#2f6fab"/><path d="M140 30 L156 100 L130 104 L124 60 Z" fill="#2f6fab"/>
+   <g stroke="#ffd23f" stroke-width="4"><line x1="55" y1="56" x2="75" y2="60"/><line x1="51" y1="74" x2="73" y2="78"/><line x1="47" y1="91" x2="71" y2="95"/><line x1="145" y1="56" x2="125" y2="60"/><line x1="149" y1="74" x2="127" y2="78"/><line x1="153" y1="91" x2="129" y2="95"/></g>`,
+  `<path d="M58 36 Q100 0 142 36 L140 26 Q100 -6 60 26 Z" fill="#ffd23f"/><circle cx="100" cy="14" r="5" fill="#ff5a5f"/>`);
+
+// ---------- helpers ----------
+const wordCard = (w, color) => `<span style="font-size:${w.length <= 4 ? 8 : w.length <= 6 ? 6 : w.length <= 8 ? 4.8 : 4}vmin${color ? ";color:" + color : ""}">${w}</span>`;
+const ansCard = text => `<span class="ans">${text}</span>`;
+const uniqTimes = opts => opts.filter((o, i) => opts.findIndex(p => p[0] === o[0] && p[1] === o[1]) === i);
+const sumCards = ans => numCards(ans, 0, 200, 4, [ans + 10, ans - 10, ans + 1, ans - 1]);
+const tok = v => `<i class="tok t${v}">${v}</i>`;
+
+// ---------- words and facts ----------
+const OPPOSITES = [["hot", "cold"], ["big", "small"], ["up", "down"], ["fast", "slow"], ["happy", "sad"], ["day", "night"], ["wet", "dry"], ["open", "closed"], ["full", "empty"], ["hard", "soft"], ["early", "late"], ["loud", "quiet"],
+  ["light", "dark"], ["tall", "short"], ["clean", "dirty"], ["near", "far"], ["young", "old"], ["strong", "weak"]];
+const SAME = [["big", "large"], ["small", "tiny"], ["happy", "glad"], ["fast", "quick"], ["begin", "start"], ["end", "finish"], ["shout", "yell"], ["jump", "leap"], ["cold", "chilly"], ["angry", "mad"], ["smart", "clever"], ["quiet", "silent"],
+  ["pretty", "beautiful"], ["gift", "present"], ["rock", "stone"], ["boat", "ship"]];
+const KINDS = {
+  noun: { words: ["pyramid", "river", "king", "boat", "sand", "cat", "temple", "crown"], ask: "a naming word", why: "It names a person, place or thing. It is a noun." },
+  verb: { words: ["run", "dig", "swim", "build", "carry", "climb", "write", "sail"], ask: "an action word", why: "It is something you do. It is a verb." },
+  adjective: { words: ["golden", "tall", "dusty", "ancient", "heavy", "shiny", "brave", "huge"], ask: "a describing word", why: "It tells us what something is like. It is an adjective." }
+};
+const SPELL_EASY = [["rain", "rane", "rayn"], ["boat", "bote", "bowt"], ["tree", "trea", "trie"], ["cake", "caik", "kake"], ["night", "nite", "niht"], ["play", "plai", "pley"], ["green", "grean", "grene"], ["snow", "sno", "snoe"],
+  ["moon", "mune", "moun"], ["bird", "berd", "burd"], ["sheep", "sheap", "shepe"], ["light", "lite", "lihgt"]];
+const SPELL_TRICKY = [["friend", "frend", "freind"], ["because", "becuz", "becaus"], ["people", "peple", "peeple"], ["said", "sed", "sayed"], ["school", "skool", "scool"], ["again", "agen", "agian"], ["little", "littel", "litle"],
+  ["water", "watter", "woter"], ["would", "woud", "wuld"], ["they", "thay", "thei"], ["were", "wer", "wur"], ["once", "wunce", "onse"], ["every", "evry", "everey"], ["laugh", "laff", "lagh"]];
+const PLURALS = [["box", "boxes", "boxs", "boxies"], ["baby", "babies", "babys", "babyes"], ["fox", "foxes", "foxs", "foxies"], ["city", "cities", "citys", "cityes"], ["dish", "dishes", "dishs", "dishies"], ["cat", "cats", "cates", "caties"],
+  ["bus", "buses", "buss", "busies"], ["puppy", "puppies", "puppys", "puppyes"], ["wish", "wishes", "wishs", "wishies"], ["mouse", "mice", "mouses", "mices"], ["foot", "feet", "foots", "feets"], ["child", "children", "childs", "childrens"],
+  ["tooth", "teeth", "tooths", "teeths"], ["leaf", "leaves", "leafs", "leafes"]];
+const PAST = [["run", "ran", "runned", "ranned"], ["jump", "jumped", "jumpt", "jamp"], ["go", "went", "goed", "wented"], ["eat", "ate", "eated", "ated"], ["see", "saw", "seed", "sawed"], ["make", "made", "maked", "mades"],
+  ["swim", "swam", "swimmed", "swammed"], ["write", "wrote", "writed", "wroted"], ["carry", "carried", "carryed", "carred"], ["stop", "stopped", "stoped", "stopt"], ["build", "built", "builded", "builted"], ["find", "found", "finded", "fand"],
+  ["give", "gave", "gived", "gaved"], ["sing", "sang", "singed", "sanged"]];
+// [what the scroll says, the question, the right answer, three wrong answers]
+const SCROLLS = [
+  ["The Nile is a very long river in Egypt. People grew their food next to it.", "Where did people grow food?", "next to the Nile", ["on the pyramids", "in the sea", "on the moon"]],
+  ["The pyramids are huge buildings made of stone blocks. They were built for the kings of Egypt.", "Who were the pyramids built for?", "the kings", ["the cats", "the farmers", "the crocodiles"]],
+  ["A king of ancient Egypt was called a pharaoh. The pharaoh wore a special crown.", "What was a king of Egypt called?", "a pharaoh", ["a scribe", "a sphinx", "a sailor"]],
+  ["Egyptians loved cats. Cats kept mice away from the food.", "Why were cats helpful?", "they kept mice away", ["they built pyramids", "they carried water", "they wrote letters"]],
+  ["Egyptian writing used little pictures. The pictures are called hieroglyphs.", "What are hieroglyphs?", "picture writing", ["stone blocks", "river boats", "golden crowns"]],
+  ["A scribe was a person who could read and write. Scribes went to school for many years.", "What could a scribe do?", "read and write", ["fly a balloon", "swim the Nile", "grow wheat"]],
+  ["Egyptians wrote on paper made from a plant. The plant was called papyrus.", "What was the paper made from?", "a plant", ["a rock", "a fish", "sand"]],
+  ["The Sphinx is a giant statue. It has the body of a lion and the head of a person.", "What kind of body does the Sphinx have?", "a lion's body", ["a bird's body", "a fish's body", "a snake's body"]],
+  ["Every year the Nile flooded. The flood left rich, dark mud that was good for growing plants.", "What did the flood leave behind?", "rich mud", ["gold coins", "big stones", "snow"]],
+  ["Egypt is hot and dry. Most of the land is desert, covered in sand.", "What covers most of the land?", "sand", ["snow", "forest", "grass"]],
+  ["Egyptians used boats to travel on the Nile. The boats had big sails to catch the wind.", "What helped the boats move?", "the wind", ["the sand", "an engine", "the moon"]],
+  ["Workers moved the heavy pyramid stones on wooden sleds. Many people pulled each sled with ropes.", "What did workers use to move the stones?", "wooden sleds", ["trucks", "balloons", "wagons with engines"]],
+  ["Egyptians told the time with the sun. A stick's shadow moved as the sun crossed the sky.", "What did they use to tell the time?", "a shadow from the sun", ["a wrist watch", "a phone", "a bell"]],
+  ["Farmers in Egypt grew wheat. They used the wheat to make bread.", "What was the wheat used for?", "making bread", ["building boats", "making paper", "feeding crocodiles"]]
+];
+
+// ---------- the places (mini-games) ----------
+// Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again, tall }.
+const GAMES = {
+  add: {
+    name: "Pyramid Sums", icon: "🔺", intro: "Let's add big numbers!",
+    makeQuestion(step) {
+      let a, b;
+      if (step === 4) { // the missing number
+        b = 5 + rand(36); a = 10 + rand(91 - b); const total = a + b;
+        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, choices: sumCards(b) };
+      }
+      if (step === 1) { const o = rand(9); a = (1 + rand(8)) * 10 + o; b = 1 + rand(9 - o); }               // 34 + 5
+      else if (step === 2) { const at = 1 + rand(7), ao = rand(9); a = at * 10 + ao; b = (1 + rand(8 - at)) * 10 + rand(10 - ao); } // 34 + 25
+      else { const ao = 2 + rand(8), at = 1 + rand(6); a = at * 10 + ao; b = rand(8 - at) * 10 + (10 - ao) + rand(ao); }             // 37 + 28 (carrying)
+      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, choices: sumCards(a + b) };
+    }
+  },
+  sub: {
+    name: "Nile Take-Away", icon: "🐊", intro: "Let's take away big numbers!",
+    makeQuestion(step) {
+      let a, b;
+      if (step === 4) { // the missing number
+        a = 20 + rand(80); b = 5 + rand(Math.min(36, a - 5)); const c = a - b;
+        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, choices: sumCards(b) };
+      }
+      if (step === 1) { const o = 1 + rand(9); a = (1 + rand(9)) * 10 + o; b = 1 + rand(o); }                 // 47 - 5
+      else if (step === 2) { const at = 2 + rand(8), ao = 1 + rand(9); a = at * 10 + ao; b = (1 + rand(at - 1)) * 10 + rand(ao + 1); } // 47 - 25
+      else { const ao = rand(9), at = 2 + rand(8); a = at * 10 + ao; b = rand(at) * 10 + ao + 1 + rand(9 - ao); }                       // 42 - 17 (borrowing)
+      return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, choices: sumCards(a - b) };
+    }
+  },
+  tokens: {
+    name: "Market Tokens", icon: "🪙", intro: "Welcome to the market! A gold token is worth 10. A silver token is worth 5. A copper token is worth 1.",
+    makeQuestion(step) {
+      let q = 0, t, f, o, n;
+      do {
+        if (step === 1) { t = 1 + rand(5); f = 0; o = rand(6); }
+        else if (step === 2) { t = rand(4); f = 1 + rand(3); o = rand(5); }
+        else if (step === 3) { t = 1 + rand(6); f = rand(4); o = rand(5); }
+        else { q = 1 + rand(3); t = rand(3); f = rand(2); o = rand(5); } // step 4 adds a green token worth 25
+        n = q * 25 + t * 10 + f * 5 + o;
+      } while (n > 99 || q + t + f + o < 2);
+      return { bubble: `<div class="toks">${tok(25).repeat(q)}${tok(10).repeat(t)}${tok(5).repeat(f)}${tok(1).repeat(o)}</div>`, key: [q, t, f, o].join(),
+        say: (step === 4 ? "A green token is worth 25. " : "") + "How much are these tokens worth altogether?", again: "How much are these tokens worth altogether?", yay: `Yes! That makes ${n}!`,
+        choices: numCards(n, 1, 120, 4, [n + 10, n - 10, n + 5, n - 5, n + 1, n - 1]) };
+    }
+  },
+  time: {
+    name: "Sundial Time", icon: "🕰️", intro: "Long ago, people in Egypt told the time with the sun. We can use a clock!",
+    makeQuestion(step) {
+      const h = 1 + rand(12), next = h % 12 + 1;
+      const textCards = (opts, h0, m0) => shuffle(uniqTimes(opts)).map(o => ({ html: `<span style="font-size:7vmin">${timeText(o[0], o[1])}</span>`, ok: o[0] === h0 && o[1] === m0, wrong: `That says ${timeSaid(o[0], o[1])}.` }));
+      if (step === 4) { // what time will it be a little later?
+        const m = pick([0, 15, 30]), plus = pick([15, 30, 60]), total = m + plus, h2 = (h - 1 + Math.floor(total / 60)) % 12 + 1, m2 = total % 60, label = plus === 60 ? "1 hour" : plus + " minutes";
+        return { bubble: `<div class="col"><div class="clockbox small">${clock(h, m)}</div><div class="cap">+ ${label}</div></div>`, tall: true, key: [h, m, plus].join(),
+          say: `The clock shows ${timeSaid(h, m)}. What time will it be in ${label}?`, yay: `Yes! It will be ${timeSaid(h2, m2)}!`,
+          choices: textCards([[h2, m2], [h, m], [h2 % 12 + 1, m2], [h2, (m2 + 15) % 60]], h2, m2) };
+      }
+      if (step === 1) { // quarter past, half past, quarter to
+        const m = pick([15, 45, 15, 45, 30]);
+        return { bubble: `<div class="clockbox">${clock(h, m)}</div>`, key: h + ":" + m, say: "What time does the clock show?", yay: `Yes! It is ${timeSaid(h, m)}. We write it ${h} ${m}.`,
+          choices: textCards([[h, m], [h, (m + 30) % 60], [next, m]], h, m) };
+      }
+      const m = 5 * (1 + rand(11)), mixedUp = [m / 5, (h % 12) * 5]; // mixedUp: what you get if you swap the two hands
+      if (step === 2) return { bubble: `<div class="clockbox">${clock(h, m)}</div>`, key: h + ":" + m, say: "What time does the clock show?", yay: `Yes! It is ${timeSaid(h, m)}!`,
+        choices: textCards([[h, m], mixedUp, [h, (m + 5) % 60], [next, m]], h, m) };
+      return { bubble: big(timeText(h, m), 11), key: h + ":" + m, say: `Which clock shows ${timeSaid(h, m)}?`, yay: `Yes! That clock shows ${timeSaid(h, m)}!`, // step 3: pick the clock
+        choices: shuffle(uniqTimes([[h, m], mixedUp, [h, (m + 15) % 60]])).map(o => ({ html: `<div class="art">${clock(o[0], o[1])}</div>`, ok: o[0] === h && o[1] === m, wrong: `That clock shows ${timeSaid(o[0], o[1])}.` })) };
+    }
+  },
+  words: {
+    name: "Hieroglyph Words", icon: "📜", intro: "Let's learn about words!",
+    makeQuestion(step) {
+      const cols = shuffle(INK);
+      if (step === 4) { // naming words, action words, describing words
+        const kind = pick(Object.keys(KINDS)), cards = Object.keys(KINDS).map(k => ({ w: pick(KINDS[k].words), k }));
+        return { bubble: `<div class="sentence">${KINDS[kind].ask}</div>`, key: kind + cards.map(c => c.w).join(), say: `Which one is ${KINDS[kind].ask}?`, yay: `Yes! ${KINDS[kind].why}`, pause: 3200,
+          choices: shuffle(cards).map((c, i) => ({ html: wordCard(c.w, cols[i]), ok: c.k === kind, wrong: `${cap(c.w)} is ${KINDS[c.k].ask}.` })) };
+      }
+      const opp = step === 1 ? true : step === 2 ? false : rand(2) === 0, list = opp ? OPPOSITES : SAME, count = step === 3 ? 4 : 3;
+      const pair = shuffle(pick(list)), [w, a] = pair;
+      // Leave out any word linked to the question (big - small - tiny - large...), so there is only ever one right answer.
+      const all = OPPOSITES.concat(SAME), linked = new Set([w, a]);
+      for (let i = 0; i < 3; i++) all.forEach(p => { if (linked.has(p[0]) || linked.has(p[1])) { linked.add(p[0]); linked.add(p[1]); } });
+      const wrongs = shuffle([...new Set(all.flat())].filter(x => !linked.has(x))).slice(0, count - 1);
+      return { bubble: `<div class="col">${big(w, 8)}<div class="cap">${opp ? "opposite" : "means the same"}</div></div>`, key: w + opp,
+        say: opp ? `Which word is the opposite of ${w}?` : `Which word means the same as ${w}?`, yay: opp ? `Yes! ${cap(a)} is the opposite of ${w}!` : `Yes! ${cap(a)} means the same as ${w}!`,
+        choices: shuffle(wrongs.concat(a)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === a, wrong: opp ? `${cap(x)} is not the opposite of ${w}.` : `${cap(x)} does not mean the same as ${w}.` })) };
+    }
+  },
+  scribe: {
+    name: "Scribe School", icon: "✍️", intro: "A scribe had to spell every word the right way. Let's try!",
+    makeQuestion(step) {
+      const cols = shuffle(INK), cards = (right, wrongs, msg) => shuffle(wrongs.concat(right)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === right, wrong: msg }));
+      if (step <= 2) { const [w, x, y] = pick(step === 1 ? SPELL_EASY : SPELL_TRICKY);
+        return { bubble: big("👂", 12), key: w, say: `Which one spells, ${w}, the right way?`, yay: `Yes! ${w.toUpperCase().split("").join(", ")}. That spells, ${w}!`, choices: cards(w, [x, y], "That is not how we spell it.") }; }
+      if (step === 3) { const [one, many, x, y] = pick(PLURALS);
+        return { bubble: `<div class="sentence">one ${one}<br>two <u>&nbsp;</u></div>`, key: one, say: `One ${one}. Two what? Pick the right spelling.`, yay: `Yes! One ${one}, two ${many}.`, choices: cards(many, [x, y], "Not quite.") }; }
+      const [now, then, x, y] = pick(PAST);
+      return { bubble: `<div class="sentence">Today I ${now}.<br>Yesterday I <u>&nbsp;</u>.</div>`, key: now, say: `Today I ${now}. Yesterday I, blank. Pick the right word.`, yay: `Yes! Today I ${now}. Yesterday I ${then}.`, choices: cards(then, [x, y], "Not quite.") };
+    }
+  },
+  scroll: {
+    name: "Explorer's Scroll", icon: "🏺", intro: "Let's read about ancient Egypt!",
+    makeQuestion(step) {
+      const [text, ask, a, wrongs] = pick(SCROLLS), count = step === 1 ? 2 : step === 4 ? 4 : 3, aloud = step <= 2; // steps 1 and 2 read the scroll out loud
+      return { bubble: `<div class="passage">${text}<b>${ask}</b></div>`, tall: true, key: ask,
+        say: aloud ? `${text} ${ask}` : `Read the scroll. ${ask}`, again: ask, yay: `Yes! ${cap(a)}.`,
+        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map(x => ({ html: ansCard(x), ok: x === a, wrong: "Not quite. Look at the scroll again." })) };
+    }
+  },
+  rows: {
+    name: "Stone Rows", icon: "🧱", intro: "The pyramids were built from rows and rows of stones. Let's count them the quick way!",
+    makeQuestion(step) {
+      if (step === 1) { // equal groups
+        const g = 2 + rand(3), k = pick([2, 5]), n = g * k;
+        return { bubble: `<div class="groups">${`<div style="${k === 5 ? "grid-template-columns:repeat(3,auto)" : ""}">${"<span>🧱</span>".repeat(k)}</div>`.repeat(g)}</div>`, key: g + "x" + k,
+          say: `${g} groups of ${k}. How many stones altogether?`, yay: `Yes! ${g} groups of ${k} make ${n}!`, choices: numCards(n, 1, 100, 4, [n + k, n - k, g + k, n + 1]) };
+      }
+      const r = 2 + rand(4), c = step === 2 ? 2 + rand(4) : pick([2, 3, 4, 5, 10]), n = r * c, near = [n + c, n - c, n + r, r + c, n + 1];
+      if (step === 2) return { bubble: `<div class="stones" style="grid-template-columns:repeat(${c}, auto)">${"<span>🧱</span>".repeat(n)}</div>`, key: r + "x" + c,
+        say: `${r} rows of ${c}. How many stones altogether?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
+      if (step === 3) return { bubble: `<span class="sum${r > 3 ? " long" : ""}">${Array(r).fill(c).join(" + ")} = <b>?</b></span>`, key: r + "x" + c,
+        say: `What is ${Array(r).fill(c).join(" plus ")}?`, yay: `Yes! ${r} lots of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
+      return { bubble: `<div class="sentence">${r} rows of ${c} stones</div>`, key: r + "x" + c, say: `A wall has ${r} rows of ${c} stones. How many stones is that?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
+    }
+  }
+};
+
+// ---------- the story ----------
+window.Story = StoryGame({
+  title: "Dr. Somebody in Ancient Egypt", sub: "A Grade 2 adventure", gradeLabel: "Grade 2 (ages 7-8)", hostName: "Dr. Somebody",
+  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5,
+  scenery: `<div class="sun"></div><div class="cloud c2"></div><div class="pyr"></div><div class="pyr p2"></div><div class="hill back"></div><div class="hill"></div>`,
+  games: GAMES, gameIds: ["add", "sub", "tokens", "time", "words", "scribe", "scroll", "rows"],
+  stepNames: {
+    add: ["two digits plus one digit", "two digits plus two digits", "adding with carrying", "find the missing number"],
+    sub: ["two digits minus one digit", "two digits minus two digits", "taking away with borrowing", "find the missing number"],
+    tokens: ["tens and ones", "tens, fives and ones", "bigger amounts", "adds a token worth 25"],
+    time: ["quarter past, half past, quarter to", "to the nearest 5 minutes", "pick the right clock", "what time will it be later"],
+    words: ["opposites", "words that mean the same", "both kinds, 4 choices", "naming, action and describing words"],
+    scribe: ["spelling common words", "spelling tricky words", "more than one (plurals)", "yesterday words (past tense)"],
+    scroll: ["read aloud, 2 answers", "read aloud, 3 answers", "reads it alone, 3 answers", "reads it alone, 4 answers"],
+    rows: ["equal groups with pictures", "rows of stones", "adding the same number again and again", "rows in words only"]
+  },
+  rewards: [["cat", "🐈"], ["crocodile", "🐊"], ["hippo", "🦛"], ["frog", "🐸"], ["duck", "🦆"], ["fish", "🐟"], ["scorpion", "🦂"], ["snake", "🐍"], ["lion", "🦁"], ["monkey", "🐒"], ["beetle", "🪲"]],
+  progress: list => `<div class="balloon">${BALLOON}</div>` + slots(list, "⚙️"),
+  finaleTitle: "The clock is fixed!", stickersLabel: "Egypt friends:",
+  finaleArt: list => `<div class="balloon">${BALLOON}</div>` + list.map(e => `<span class="pop">${e}</span>`).join(""),
+  lines: {
+    hello: name => `Hello${name ? ", " + name : ""}! Doctor Somebody here. At least, I think that is my name. The clock balloon has landed in ancient Egypt, thousands of years ago! But a sandstorm blew four golden gears out of my clock. Tap a place to help me find one.`,
+    start: "We need four golden gears to fix the clock balloon. Tap a place to find one.",
+    left: n => `We need ${NUM[n]} more golden gear${n === 1 ? "" : "s"}. Tap a place!`,
+    won: who => `You did it! The ${who} found a golden gear. Tap the ${who}!`,
+    boarded: who => `Thank you, ${who}! One more golden gear for the clock!`,
+    finale: name => `Tick tock! The clock is fixed! Thank you${name ? ", " + name : ""}! Goodbye, Egypt! Now, when was I going next? I forget!`,
+    again: "Oh no. Another sandstorm! The gears have blown away again. Let's find them.",
+    replay: "Great job! You did it again!",
+    test: name => `Hello${name ? ", " + name : ""}! I am Doctor Somebody, in ancient Egypt. Tick tock!`
+  }
+});
+</script>
+</body>
+</html>

@@ -85,6 +85,24 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .stickers { display:flex; gap:.6vmin; margin-top:1.5vmin; height:6vmin; align-items:center; font-size:4.6vmin; }
 .stickers small { font-size:2.6vmin; font-weight:bold; margin-right:1vmin; }
 
+/* Dr. Somebody stories: the clock balloon strip on the map, and the big finish */
+.host.big { width:34vmin; height:28vmin; }
+.progress { display:flex; align-items:center; gap:2vmin; margin-top:2.5vmin; background:var(--strip, rgba(255,255,255,.14)); border-radius:5vmin; padding:1vmin 4vmin; }
+.balloon { width:15vmin; height:19vmin; }
+.slot { width:11vmin; height:11vmin; border-radius:50%; font-size:7vmin; line-height:11vmin; text-align:center; position:relative; background:rgba(255,255,255,.92); }
+.slot.empty { background:none; border:.8vmin dashed var(--strip-line, rgba(255,255,255,.7)); }
+.slot i { position:absolute; right:-1.5vmin; bottom:-1.5vmin; font-size:4.4vmin; line-height:1; font-style:normal; }
+#finaleArt { display:flex; align-items:flex-end; gap:2vmin; font-size:9vmin; }
+#finaleArt .balloon { width:30vmin; height:38vmin; animation:floaty 2.4s ease-in-out infinite; }
+@keyframes floaty { 50% { transform:translateY(-4vmin); } }
+.sum { font-size:10vmin; white-space:nowrap; } .sum.long { font-size:7.5vmin; } .sum b { color:#ff8a3d; }
+.clockbox { width:22vmin; height:22vmin; }
+/* a taller speech bubble for a short passage to read */
+.bubble.tall { height:auto; min-height:26vmin; max-width:64vmin; }
+.bubble .passage { font-size:3.4vmin; line-height:1.35; font-weight:normal; text-align:left; }
+.bubble .passage b { display:block; margin-top:1.2vmin; }
+.choice .ans { font-size:3.5vmin; line-height:1.25; padding:0 1.6vmin; text-align:center; }
+
 /* confetti */
 .confetti { position:absolute; top:-5vmin; width:2.4vmin; height:3.4vmin; border-radius:.5vmin; animation:fall linear forwards; pointer-events:none; z-index:8; }
 @keyframes fall { to { transform:translateY(115vh) rotate(720deg); } }

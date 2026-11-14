@@ -17,25 +17,13 @@
     background-size:90px 90px, 170px 170px, 130px 130px; background-position:0 0, 40px 70px, 90px 20px; }
   .ringed { position:absolute; top:5vmin; right:7vmin; width:15vmin; height:15vmin; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffd9a0, #ff9f43); }
   .ringed::after { content:""; position:absolute; left:-5vmin; right:-5vmin; top:5.6vmin; height:3.4vmin; border:.9vmin solid rgba(255,233,168,.85); border-radius:50%; transform:rotate(-18deg); }
-  .host.big { width:34vmin; height:28vmin; }
-  /* how many star crystals the balloon has */
-  .progress { display:flex; align-items:center; gap:2vmin; margin-top:2.5vmin; background:rgba(255,255,255,.14); border-radius:5vmin; padding:1vmin 4vmin; }
-  .balloon { width:15vmin; height:19vmin; }
-  .slot { width:11vmin; height:11vmin; border-radius:50%; font-size:7vmin; line-height:11vmin; text-align:center; position:relative; background:rgba(255,255,255,.92); }
-  .slot.empty { background:none; border:.8vmin dashed rgba(255,255,255,.7); }
-  .slot i { position:absolute; right:-1.5vmin; bottom:-1.5vmin; font-size:4.4vmin; line-height:1; font-style:normal; }
   .stickers { color:#fff; }
-  #finaleArt { display:flex; align-items:flex-end; gap:2vmin; font-size:9vmin; }
-  #finaleArt .balloon { width:30vmin; height:38vmin; animation:floaty 2.4s ease-in-out infinite; }
-  @keyframes floaty { 50% { transform:translateY(-4vmin); } }
   /* tens and ones blocks */
   .blocks { display:flex; gap:2.5vmin; align-items:flex-end; }
   .rods { display:flex; gap:.7vmin; }
   .rod { display:block; width:1.9vmin; height:19vmin; border-radius:.4vmin; background:repeating-linear-gradient(#4d9de0 0 1.7vmin, #2f6fab 1.7vmin 1.9vmin); }
   .cubes { display:grid; grid-template-columns:repeat(2, 1.9vmin); gap:.5vmin; align-content:end; }
   .cube { display:block; width:1.9vmin; height:1.9vmin; border-radius:.4vmin; background:#ff9f43; }
-  .sum { font-size:10vmin; white-space:nowrap; } .sum.long { font-size:7.5vmin; } .sum b { color:#ff8a3d; }
-  .clockbox { width:22vmin; height:22vmin; }
 </style>
 </head>
 <body class="game">
@@ -56,32 +44,6 @@
    ===================================================================== */
 
 // ---------- pictures ----------
-const OWL = `<svg viewBox="0 0 200 160"><ellipse cx="84" cy="152" rx="12" ry="5" fill="#ff9f43"/><ellipse cx="116" cy="152" rx="12" ry="5" fill="#ff9f43"/>
-  <ellipse cx="100" cy="108" rx="44" ry="46" fill="#9c6b3f"/><ellipse cx="100" cy="116" rx="26" ry="32" fill="#f3dfb8"/>
-  <path d="M58 92 Q52 130 66 150 L88 150 Q74 120 80 84 Z" fill="#fff"/><path d="M142 92 Q148 130 134 150 L112 150 Q126 120 120 84 Z" fill="#fff"/>
-  <ellipse cx="54" cy="108" rx="10" ry="24" fill="#7a4f2a" transform="rotate(12 54 108)"/><ellipse cx="146" cy="108" rx="10" ry="24" fill="#7a4f2a" transform="rotate(-12 146 108)"/>
-  <polygon points="62,34 70,6 88,26" fill="#7a4f2a"/><polygon points="138,34 130,6 112,26" fill="#7a4f2a"/>
-  <ellipse cx="100" cy="50" rx="44" ry="36" fill="#9c6b3f"/><rect x="58" y="43" width="84" height="8" fill="#39405a"/>
-  <circle cx="80" cy="48" r="19" fill="#d9a400"/><circle cx="120" cy="48" r="19" fill="#d9a400"/><circle cx="80" cy="48" r="14" fill="#fff"/><circle cx="120" cy="48" r="14" fill="#fff"/>
-  <circle cx="83" cy="50" r="6" fill="#2b2d42"/><circle cx="117" cy="50" r="6" fill="#2b2d42"/><polygon points="92,63 108,63 100,77" fill="#ff9f43"/></svg>`;
-const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
-  <path d="M80 6 C58 20 50 60 56 96 C60 118 72 134 80 140 C88 134 100 118 104 96 C110 60 102 20 80 6 Z" fill="#ffd23f"/>
-  <circle cx="80" cy="70" r="34" fill="#fff" stroke="#39405a" stroke-width="5"/>
-  <g stroke="#39405a" stroke-width="4" stroke-linecap="round"><line x1="80" y1="42" x2="80" y2="48"/><line x1="80" y1="92" x2="80" y2="98"/><line x1="52" y1="70" x2="58" y2="70"/><line x1="102" y1="70" x2="108" y2="70"/></g>
-  <line x1="80" y1="70" x2="80" y2="50" stroke="#39405a" stroke-width="5" stroke-linecap="round"/><line x1="80" y1="70" x2="97" y2="79" stroke="#ff5a5f" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#39405a"/>
-  <line x1="56" y1="130" x2="62" y2="162" stroke="#c9a37a" stroke-width="3"/><line x1="104" y1="130" x2="98" y2="162" stroke="#c9a37a" stroke-width="3"/>
-  <circle cx="80" cy="154" r="13" fill="#9c6b3f"/><circle cx="75" cy="152" r="5" fill="#fff"/><circle cx="85" cy="152" r="5" fill="#fff"/><circle cx="75" cy="152" r="2" fill="#2b2d42"/><circle cx="85" cy="152" r="2" fill="#2b2d42"/>
-  <rect x="56" y="160" width="48" height="32" rx="7" fill="#c48a4a"/><rect x="56" y="160" width="48" height="7" rx="3" fill="#9c6830"/></svg>`;
-// a clock face showing h o'clock (m = 0) or half past h (m = 30)
-function clock(h, m) {
-  const ha = ((h % 12) + m / 60) * 30, ma = m * 6;
-  const nums = Array.from({ length: 12 }, (_, i) => { const n = i + 1, a = n * 30 * Math.PI / 180; return `<text x="${(50 + 38 * Math.sin(a)).toFixed(1)}" y="${(53.5 - 38 * Math.cos(a)).toFixed(1)}" font-size="10" text-anchor="middle" fill="#2b2d42" font-weight="bold">${n}</text>`; }).join("");
-  return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="#fff" stroke="#d9a400" stroke-width="5"/>${nums}
-    <line x1="50" y1="50" x2="50" y2="31" stroke="#2b2d42" stroke-width="5" stroke-linecap="round" transform="rotate(${ha} 50 50)"/>
-    <line x1="50" y1="50" x2="50" y2="20" stroke="#ff5a5f" stroke-width="3" stroke-linecap="round" transform="rotate(${ma} 50 50)"/><circle cx="50" cy="50" r="3.5" fill="#2b2d42"/></svg>`;
-}
-const timeText = (h, m) => `${h}:${m ? "30" : "00"}`;
-const timeSaid = (h, m) => m ? `half past ${h}` : `${h} o'clock`;
 const blocks = n => `<div class="blocks"><div class="rods">${`<i class="rod"></i>`.repeat(Math.floor(n / 10))}</div><div class="cubes">${`<i class="cube"></i>`.repeat(n % 10)}</div></div>`;
 
 // ---------- words ----------
@@ -220,10 +182,9 @@ const GAMES = {
 };
 
 // ---------- the story ----------
-const slots = list => list.map(e => e ? `<div class="slot">${e}<i>💎</i></div>` : `<div class="slot empty"></div>`).join("");
 window.Story = StoryGame({
   title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
-  host: OWL, saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5,
+  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5,
   scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["read", "spell", "sentence", "plus", "minus", "tens", "clock", "skip"],
   stepNames: {
@@ -237,7 +198,7 @@ window.Story = StoryGame({
     skip: ["count by tens", "count by fives", "count by twos", "count backwards by tens and fives"]
   },
   rewards: [["robot", "🤖"], ["alien", "👽"], ["rocket", "🚀"], ["satellite", "🛰️"], ["comet", "☄️"], ["flying saucer", "🛸"], ["shooting star", "🌠"], ["moon", "🌙"], ["telescope", "🔭"], ["little star", "🌟"]],
-  progress: list => `<div class="balloon">${BALLOON}</div>` + slots(list),
+  progress: list => `<div class="balloon">${BALLOON}</div>` + slots(list, "💎"),
   finaleTitle: "Ready to fly!", stickersLabel: "Space friends:",
   finaleArt: list => `<div class="balloon">${BALLOON}</div>` + list.map(e => `<span class="pop">${e}</span>`).join(""),
   lines: {
