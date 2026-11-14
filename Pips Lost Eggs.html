@@ -84,6 +84,24 @@
   .dots { display:flex; gap:1.2vmin; height:3vmin; }
   .dots i { width:3vmin; height:3vmin; border-radius:50%; background:#ff8a3d; }
 
+  /* eight places in the valley: four across, two rows */
+  #map .places { display:grid; grid-template-columns:repeat(4, auto); gap:2.5vmin; }
+  .place { width:21vmin; height:24vmin; border-radius:4vmin; }
+  .place .pic { width:14vmin; height:13vmin; display:flex; align-items:center; justify-content:center; font-weight:bold; }
+  .place .name { font-size:2.3vmin; }
+  .place .badge { top:-2vmin; right:-2vmin; width:8vmin; height:8vmin; }
+  .nest { margin-top:2.5vmin; }
+  /* newer games */
+  .bubble .art.small5 { width:14vmin; height:15vmin; margin:0 -2.2vmin; }
+  .bubble .seq { width:10vmin; height:10vmin; }
+  .bubble .q { width:10vmin; height:10vmin; border:.8vmin dashed #ff8a3d; border-radius:2vmin; font-size:7vmin; line-height:8.4vmin; text-align:center; color:#ff8a3d; }
+  .emoji { font-size:calc(var(--cs, 30vmin) * .58); line-height:1.25; }
+  .bodypip { width:62vmin; height:52vmin; }
+  .bodypip svg, .bodypip svg * { pointer-events:auto; cursor:pointer; }
+  .bodypip .hit { fill:transparent; stroke:transparent; pointer-events:all; }
+  .bodypip .glow > :not(.hit) { stroke:#ffd23f; stroke-width:5; }
+  #grown select { font:inherit; padding:6px; margin-top:4px; max-width:300px; border-radius:8px; }
+
   /* hatch + finale */
   #hatch .stage, #finale .stage { width:46vmin; height:46vmin; }
   #hatch .go, #finale .go { margin-top:3vmin; width:20vmin; height:20vmin; visibility:hidden; }
@@ -167,17 +185,35 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- saved progress (kept on this device) ----------
 const SAVE_KEY = "pipsLostEggs.v1";
-const fresh = () => ({ skill: { colors: 1, shadows: 1, sizes: 1 }, found: {}, friends: [], clutches: 0, auto: true, voice: true, sound: true });
+const fresh = () => ({ skill: { colors: 1, shapes: 1, count: 1, patterns: 1, shadows: 1, sizes: 1, body: 1, sounds: 1 }, found: {}, friends: [], clutches: 0, auto: true, voice: true, sound: true, voiceName: "" });
 let S = fresh();
-try { const raw = localStorage.getItem(SAVE_KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) {}
+try {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (raw) { const old = JSON.parse(raw); S = Object.assign(fresh(), old); S.skill = Object.assign(fresh().skill, old.skill || {}); } // keeps old progress when new games are added
+} catch (e) {}
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 
 // ---------- voice (the device's built-in talking voice) ----------
+// The game looks through the voices this device has and picks the most natural-sounding female one.
+// Grown-ups can choose a different one in the grown-ups panel.
 let voice = null;
+function voiceScore(v) {
+  const n = v.name + " " + (v.voiceURI || "");
+  let s = 0;
+  if (/premium|enhanced|natural|neural/i.test(n)) s += 50;
+  if (/Ava|Zoe|Allison|Samantha|Susan|Joelle|Nicky|Noelle|Aria|Jenny|Michelle|Ana\b|Sonia|Libby|Karen|Serena|Moira|Tessa|Google US English|Zira|Female/i.test(n)) s += 20;
+  if (/^en.US/i.test(v.lang)) s += 5;
+  if (/David|Mark\b|Guy\b|Daniel|Alex\b|Aaron|Tom\b|Evan|Nathan|Arthur|Oliver|Ryan|Christopher|Eric\b|Roger|Steffan|Brian|Andrew|Gordon|Rishi|\bMale/i.test(n)) s -= 30;
+  if (/compact|eloquence|Eddy|Flo\b|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Albert|Bad News|Good News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Kathy|Ralph|Fred/i.test(n)) s -= 40;
+  return s;
+}
+function englishVoices() {
+  if (!("speechSynthesis" in window)) return [];
+  return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+}
 function chooseVoice() {
-  if (!("speechSynthesis" in window)) return;
-  const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
-  voice = vs.find(v => /Samantha|Aria|Jenny|Zira|Google US English|Karen/i.test(v.name)) || vs[0] || null;
+  const vs = englishVoices();
+  voice = vs.find(v => v.name === S.voiceName) || vs[0] || null;
 }
 if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
 let lastSaid = "";
@@ -188,7 +224,7 @@ function say(text) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
-    u.lang = "en-US"; u.rate = 0.85; u.pitch = 1.25;
+    u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05; // gentle and unhurried, close to the voice's natural sound
     setTimeout(() => speechSynthesis.speak(u), 60);
   } catch (e) {}
 }
@@ -268,7 +304,34 @@ function confetti(n) {
   }
 }
 
-// ---------- the three mini-games ----------
+// ---------- extra pictures for the newer games ----------
+const SHAPE_NAMES = ["circle", "square", "triangle", "star", "heart", "rectangle", "oval", "diamond"];
+const STAR_POINTS = Array.from({ length: 10 }, (_, i) => { const r = i % 2 ? 19 : 46, a = Math.PI * i / 5 - Math.PI / 2; return (50 + r * Math.cos(a)).toFixed(1) + "," + (53 + r * Math.sin(a)).toFixed(1); }).join(" ");
+const SHAPE_DRAW = {
+  circle: `<circle cx="50" cy="50" r="42"/>`, square: `<rect x="10" y="10" width="80" height="80" rx="5"/>`,
+  triangle: `<polygon points="50,8 94,90 6,90"/>`, star: `<polygon points="${STAR_POINTS}"/>`,
+  heart: `<path d="M50 90 C8 58 4 30 24 18 C38 10 50 22 50 34 C50 22 62 10 76 18 C96 30 92 58 50 90 Z"/>`,
+  rectangle: `<rect x="4" y="27" width="92" height="46" rx="5"/>`, oval: `<ellipse cx="50" cy="50" rx="46" ry="28"/>`,
+  diamond: `<polygon points="50,4 88,50 50,96 12,50"/>`
+};
+const shapeArt = (name, c) => `<svg viewBox="0 0 100 100"><g fill="${c[0]}" stroke="${c[1]}" stroke-width="4" stroke-linejoin="round">${SHAPE_DRAW[name]}</g></svg>`;
+const ANIMALS = [
+  { name: "cow", pic: "🐮", sound: "moo" }, { name: "dog", pic: "🐶", sound: "woof woof" }, { name: "cat", pic: "🐱", sound: "meow" }, { name: "duck", pic: "🦆", sound: "quack quack" },
+  { name: "sheep", pic: "🐑", sound: "baa" }, { name: "pig", pic: "🐷", sound: "oink oink" },
+  { name: "frog", pic: "🐸", sound: "ribbit" }, { name: "lion", pic: "🦁", sound: "roar" }, { name: "horse", pic: "🐴", sound: "neigh" }, { name: "chicken", pic: "🐔", sound: "cluck cluck" }
+];
+// A big Pip whose body parts can each be tapped (the see-through "hit" shapes make small parts easier to tap).
+const bodyPip = c => svg(`
+  <g data-part="tail"><path class="d" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z"/><path class="hit" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z" stroke-width="14"/></g>
+  <g data-part="feet"><rect class="d" x="80" y="136" width="18" height="20" rx="8"/><rect class="d" x="108" y="136" width="18" height="20" rx="8"/><rect class="hit" x="74" y="140" width="58" height="20"/></g>
+  <g data-part="tummy"><ellipse class="m" cx="100" cy="104" rx="38" ry="42"/><ellipse class="b" cx="109" cy="112" rx="22" ry="28"/></g>
+  <g data-part="arm"><ellipse class="d" cx="136" cy="98" rx="12" ry="6"/><ellipse class="hit" cx="138" cy="98" rx="17" ry="11"/></g>
+  <g data-part="head"><ellipse class="m" cx="118" cy="48" rx="36" ry="30"/><ellipse class="m" cx="146" cy="57" rx="20" ry="15"/></g>
+  <g data-part="eye"><circle class="e" cx="128" cy="40" r="8"/><circle class="p" cx="130" cy="41" r="4"/><circle class="hit" cx="128" cy="40" r="13"/></g>
+  <g data-part="nose"><circle class="p" cx="158" cy="52" r="2.5"/><circle class="hit" cx="158" cy="49" r="8"/></g>
+  <g data-part="mouth"><path d="M138 64 Q150 72 162 62" fill="none" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/><path class="hit" d="M136 62 Q150 76 165 60 L165 72 Q150 84 136 72 Z"/></g>`, c, "6 6 166 154");
+
+// ---------- the mini-games ----------
 // Each game has 4 difficulty steps. makeQuestion(step) returns:
 //   { bubble: picture/words shown in Pip's speech bubble, say: what Pip says,
 //     choices: [{ html, ok, name }], yay: what Pip says when right, size: optional card size }
@@ -307,19 +370,13 @@ const GAMES = {
     makeQuestion(step) {
       const kind = pick(["longneck", "spiky", "horned"]), col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
       const card = pct => `<div class="art" style="width:${pct}%;height:${pct}%">${ART[kind](col)}</div>`;
-      if (step === 4) { // counting 1, 2, 3
-        const n = 1 + rand(3), words = ["", "One", "Two", "Three"];
-        return {
-          bubble: Array(n).fill(`<div class="art small3">${ART.egg(col)}</div>`).join(""),
-          say: "How many eggs?", yay: `${words[n]}! ${words.slice(1, n + 1).join(", ")}.`,
-          choices: [1, 2, 3].map(k => ({ html: `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`, ok: k === n, name: words[k].toLowerCase() }))
-        };
-      }
-      if (step === 3) {
+      if (step >= 3) { // three sizes, then four sizes
         const big = rand(2) === 0, word = big ? "biggest" : "smallest";
+        const sizes = step === 3 ? [95, 62, 34] : [95, 74, 54, 34];
+        const target = big ? sizes[0] : sizes[sizes.length - 1], opposite = big ? sizes[sizes.length - 1] : sizes[0];
         return {
           bubble: `<span style="font-size:${big ? 7 : 4}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `That's the ${word} one!`,
-          choices: shuffle([[95, "biggest"], [62, "middle"], [34, "smallest"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" }))
+          choices: shuffle(sizes).map(s => ({ html: card(s), ok: s === target, wrong: s === opposite ? `That is the ${big ? "smallest" : "biggest"} one.` : "Not that one." }))
         };
       }
       const big = step === 1 ? true : rand(2) === 0, word = big ? "big" : "small";
@@ -328,10 +385,114 @@ const GAMES = {
         choices: shuffle([[95, "big"], [40, "small"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" }))
       };
     }
+  },
+
+  // ----- counting -----
+  count: {
+    name: "Egg Count", icon: () => `<span style="font-size:5.6vmin;color:#ff8a3d;white-space:nowrap">1 2 3</span>`, intro: "Let's count with Pip!",
+    makeQuestion(step) {
+      const max = step + 1; // step 1 counts to 2, step 4 counts to 5
+      const n = 1 + rand(max), words = ["", "One", "Two", "Three", "Four", "Five"];
+      const thing = pick([["egg", "eggs"], ["leaf", "leaves"], ["berry", "berries"]]);
+      const col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
+      let nums = [];
+      for (let k = 1; k <= max; k++) nums.push(k);
+      if (nums.length > 3) { nums = shuffle(nums.filter(k => k !== n)).slice(0, 2).concat(n).sort((a, b) => a - b); }
+      return {
+        bubble: Array(n).fill(`<div class="art ${n >= 4 ? "small5" : "small3"}">${ART[thing[0]](col)}</div>`).join(""),
+        say: `How many ${thing[1]}?`, yay: `${words[n]}! ${words.slice(1, n + 1).join(", ")}.`, pause: 1900 + n * 550,
+        choices: nums.map(k => ({ html: `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`, ok: k === n, wrong: `That is ${words[k].toLowerCase()}.` }))
+      };
+    }
+  },
+
+  // ----- shapes -----
+  shapes: {
+    name: "Shape Rocks", icon: () => `<svg viewBox="0 0 200 160"><circle cx="50" cy="55" r="38" fill="#ff5a5f"/><rect x="105" y="20" width="72" height="72" rx="6" fill="#4d9de0"/><polygon points="100,80 150,152 50,152" fill="#ffd23f"/></svg>`,
+    intro: "Let's find shapes!",
+    makeQuestion(step) {
+      const pool = step === 1 ? ["circle", "square", "triangle"] : step === 2 ? ["circle", "square", "triangle", "star", "heart"] : SHAPE_NAMES;
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const names = shuffle(pool).slice(0, count), target = names[0];
+      const cols = shuffle(["red", "blue", "yellow", "green", "orange", "purple"]);
+      const an = /^[aeiou]/.test(target) ? "An" : "A";
+      return {
+        // step 4 shows only the word, so he has to know the shape by its name
+        bubble: step === 4 ? `<span style="font-size:6vmin">${target}</span>` : `<div class="art">${shapeArt(target, ["#aab0c6", "#8d93ab"])}</div>`,
+        say: `Find the ${target}!`, yay: `Yes! ${an} ${target}!`,
+        choices: shuffle(names).map((n, i) => ({ html: `<div class="art">${shapeArt(n, COLORS[cols[i]])}</div>`, ok: n === target, name: n }))
+      };
+    }
+  },
+
+  // ----- patterns -----
+  patterns: {
+    name: "Pattern Path", icon: () => `<svg viewBox="0 0 200 160"><circle cx="28" cy="80" r="21" fill="#ff5a5f"/><circle cx="76" cy="80" r="21" fill="#4d9de0"/><circle cx="124" cy="80" r="21" fill="#ff5a5f"/><circle cx="172" cy="80" r="21" fill="none" stroke="#ff8a3d" stroke-width="5" stroke-dasharray="9 7"/></svg>`,
+    intro: "Look at the pattern!",
+    makeQuestion(step) {
+      let things;
+      if (step === 2) { // different things instead of colors
+        things = shuffle([
+          { name: "egg", art: ART.egg(COLORS.teal), wrong: "That is the egg." }, { name: "leaf", art: ART.leaf(COLORS.green), wrong: "That is the leaf." },
+          { name: "dinosaur", art: ART.spiky(COLORS.purple), wrong: "That is the dinosaur." }, { name: "berry", art: ART.berry(COLORS.red), wrong: "That is the berry." }]);
+      } else {
+        things = shuffle(["red", "blue", "yellow", "green", "orange", "purple"]).map(c => ({ name: c, art: ART.berry(COLORS[c]), wrong: `That is ${c}.` }));
+      }
+      const [A, B, C] = things;
+      const seq = step === 4 ? [A, A, B, A, A] : [A, B, A, B]; // step 4: two-then-one pattern
+      const answer = step === 4 ? B : A;
+      const options = step <= 2 ? [A, B] : [A, B, C];
+      return {
+        bubble: seq.map(t => `<div class="seq">${t.art}</div>`).join("") + `<div class="q">?</div>`,
+        say: `${seq.map(t => t.name).join(", ")}. What comes next?`, yay: `Yes! ${answer.name} comes next!`, pause: 2600,
+        choices: shuffle(options).map(t => ({ html: `<div class="art">${t.art}</div>`, ok: t === answer, wrong: t.wrong }))
+      };
+    }
+  },
+
+  // ----- body parts (tap the right part of a big Pip) -----
+  body: {
+    name: "Pip's Body", icon: () => PIP(), intro: "Let's find Pip's body parts!",
+    makeQuestion(step) {
+      const pool = ["head", "tummy", "tail"].concat(step >= 2 ? ["feet", "eye"] : [], step >= 3 ? ["arm", "nose"] : [], step >= 4 ? ["mouth"] : []);
+      const part = pick(pool);
+      return {
+        bubble: `<span style="font-size:7vmin">${part}</span>`,
+        say: part === "feet" ? "Where are Pip's feet?" : `Where is Pip's ${part}?`,
+        yay: part === "tail" ? "That's Pip's tail! Wag, wag, wag!" : part === "feet" ? "Those are Pip's feet! Where are your feet?" : `That's Pip's ${part}! Where is your ${part}?`,
+        pause: 3800,
+        render(box) {
+          box.innerHTML = `<div class="bodypip pop">${bodyPip(COLORS.green)}</div>`;
+          box.firstChild.addEventListener("click", e => {
+            const g = e.target.closest("[data-part]"); if (!g) return;
+            const p = g.dataset.part;
+            choose(g, { ok: p === part, wrong: p === "feet" ? "Those are Pip's feet." : `That is Pip's ${p}.` }, true);
+          });
+        }
+      };
+    }
+  },
+
+  // ----- animal sounds -----
+  sounds: {
+    name: "Animal Sounds", icon: () => `<span style="font-size:10vmin;line-height:1.2">🐮</span>`, intro: "Pip's animal friends are here! Listen!",
+    makeQuestion(step) {
+      const pool = ANIMALS.slice(0, step === 1 ? 4 : step === 2 ? 6 : ANIMALS.length);
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const picks = shuffle(pool).slice(0, count), t = picks[0];
+      const Sound = t.sound.charAt(0).toUpperCase() + t.sound.slice(1);
+      return {
+        bubble: `<span style="font-size:5vmin">🔊 ${Sound}!</span>`,
+        say: `${Sound}! ${Sound}! Who says ${t.sound}?`, yay: `Yes! The ${t.name} says ${t.sound}!`, pause: 2900,
+        choices: shuffle(picks).map(a => ({ html: `<span class="emoji">${a.pic}</span>`, ok: a === t, wrong: `That is the ${a.name}. The ${a.name} says ${a.sound}.` }))
+      };
+    }
   }
 };
-const GAME_IDS = Object.keys(GAMES);
+const GAME_IDS = ["colors", "shapes", "count", "patterns", "shadows", "sizes", "body", "sounds"]; // the order of places in the valley
+const NEST_SIZE = 3; // eggs needed to finish one adventure
 const STARS_TO_WIN = 4;
+const foundList = () => Object.values(S.found);
 
 let G = null; // the game being played right now
 function startGame(id) {
@@ -348,30 +509,36 @@ function nextQuestion(lead) {
   G.q = q; G.first = true; G.busy = false;
   $("bubble").innerHTML = q.bubble; animate($("bubble"), "pop");
   const box = $("choices"); box.innerHTML = "";
-  box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
-  q.choices.forEach(ch => {
-    const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
-    b.addEventListener("click", () => choose(b, ch));
-    box.appendChild(b);
-  });
+  if (q.render) q.render(box); // a game can draw its own picture to tap (the body parts game does)
+  else {
+    box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
+    q.choices.forEach(ch => {
+      const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
+      b.addEventListener("click", () => choose(b, ch));
+      box.appendChild(b);
+    });
+  }
   say((lead || "") + q.say);
 }
-async function choose(btn, ch) {
-  if (!G || G.busy || btn.classList.contains("dim")) return;
+// el = what was tapped. "part" is true when it is a part of a bigger picture rather than a card.
+async function choose(el, ch, part) {
+  if (!G || G.busy || el.classList.contains("dim")) return;
+  const q = G.q, box = $("choices");
   if (ch.ok) {
     G.busy = true; sfx.yes();
-    btn.classList.add("right"); animate($("gamePip"), "bounce");
-    [...$("choices").children].forEach(b => { if (b !== btn) b.classList.add("dim"); });
+    animate($("gamePip"), "bounce");
+    if (part) { el.classList.add("glow"); animate(box.firstChild, "bounce"); }
+    else { el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); }
     G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-    say(G.q.yay);
+    say(q.yay);
     adjust(G.first);
-    await wait(2100);
-    if (!G) return;
+    await wait(q.pause || 2100);
+    if (!G || G.q !== q) return;
     if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
   } else {
     sfx.oops(); G.first = false;
-    animate(btn, "wobble"); btn.classList.add("dim");
-    say(`That is the ${ch.name}. ${G.q.say}`);
+    if (part) animate(box.firstChild, "wobble"); else { animate(el, "wobble"); el.classList.add("dim"); }
+    say(`${ch.wrong || `That is the ${ch.name}.`} ${q.say}`);
   }
 }
 // Quietly make the game harder after 3 right in a row, easier after 2 hard questions in a row.
@@ -415,12 +582,12 @@ $("hatchStage").addEventListener("click", () => {
 });
 $("hatchGo").addEventListener("click", () => {
   sfx.tap(); H = null;
-  if (GAME_IDS.every(id => S.found[id])) showFinale(); else showMap();
+  if (foundList().length >= NEST_SIZE) showFinale(); else showMap();
 });
 
-// ---------- the big finish ----------
+// ---------- the big finish (when the nest is full) ----------
 function showFinale() {
-  $("finaleRow").innerHTML = `<div>${PIP()}</div>` + GAME_IDS.map(id => `<div class="pop">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>`).join("");
+  $("finaleRow").innerHTML = `<div>${PIP()}</div>` + foundList().slice(0, NEST_SIZE).map(f => `<div class="pop">${ART[f.kind](COLORS[f.color])}</div>`).join("");
   $("finaleGo").classList.remove("show");
   show("finale"); sfx.party(); confetti(80);
   say("Hooray! All the eggs are home! Pip is so happy. Thank you!");
@@ -433,22 +600,23 @@ $("finaleGo").addEventListener("click", () => {
 
 // ---------- the valley (map) ----------
 function showMap(line) {
-  if (GAME_IDS.every(id => S.found[id])) { showFinale(); return; } // all eggs home: go to the celebration
+  const home = foundList();
+  if (home.length >= NEST_SIZE) { showFinale(); return; } // nest is full: go to the celebration
   $("places").innerHTML = "";
   GAME_IDS.forEach(id => {
     const g = GAMES[id], b = document.createElement("button");
     b.className = "place" + (S.found[id] ? " done" : "");
-    b.innerHTML = `<div class="pic">${ART[g.icon](COLORS.blue)}</div><div class="name">${g.name}</div>` +
+    b.innerHTML = `<div class="pic">${typeof g.icon === "function" ? g.icon() : ART[g.icon](COLORS.blue)}</div><div class="name">${g.name}</div>` +
       (S.found[id] ? `<div class="badge">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>` : `<div class="badge">${ART.egg(COLORS.teal)}</div>`);
     b.addEventListener("click", () => { sfx.tap(); startGame(id); });
     $("places").appendChild(b);
   });
-  $("nest").innerHTML = `<div class="pipslot">${PIP()}</div>` + GAME_IDS.map(id =>
-    S.found[id] ? `<div class="slot">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>` : `<div class="slot empty"></div>`).join("");
-  const earlier = S.friends.slice(0, S.friends.length - GAME_IDS.filter(id => S.found[id]).length).slice(-12);
+  $("nest").innerHTML = `<div class="pipslot">${PIP()}</div>` + Array.from({ length: NEST_SIZE }, (_, i) =>
+    home[i] ? `<div class="slot">${ART[home[i].kind](COLORS[home[i].color])}</div>` : `<div class="slot empty"></div>`).join("");
+  const earlier = S.friends.slice(0, Math.max(0, S.friends.length - home.length)).slice(-12);
   $("family").innerHTML = earlier.map(f => `<div>${ART[f.kind](COLORS[f.color])}</div>`).join("");
   show("map");
-  const left = GAME_IDS.filter(id => !S.found[id]).length;
+  const left = NEST_SIZE - home.length;
   say(line || (left === 3 ? "Pip's eggs rolled away! Tap a place to find an egg." : left === 1 ? "One more egg to find! Tap a place." : `${left} more eggs to find! Tap a place.`));
 }
 
@@ -467,9 +635,16 @@ gb.addEventListener("pointerdown", startHold); gb.addEventListener("pointerup", 
 gb.addEventListener("contextmenu", e => e.preventDefault());
 function openGrown() {
   endHold(); if ("speechSynthesis" in window) speechSynthesis.cancel();
-  const stepNames = { colors: ["2 colors", "3 colors", "3 of 6 colors", "4 colors"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"], sizes: ["find big", "big or small", "biggest / smallest of 3", "count 1 to 3"] };
+  const stepNames = {
+    colors: ["2 colors", "3 colors", "3 of 6 colors", "4 colors"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"],
+    sizes: ["find big", "big or small", "biggest / smallest of 3", "biggest / smallest of 4"], count: ["count to 2", "count to 3", "count to 4", "count to 5"],
+    shapes: ["circle, square, triangle", "adds star and heart", "8 shapes", "8 shapes, by name only"], patterns: ["2 colors taking turns", "2 things taking turns", "3 choices", "two-then-one pattern"],
+    body: ["head, tummy, tail", "adds feet and eye", "adds arm and nose", "adds mouth"], sounds: ["4 animals, 2 choices", "6 animals, 3 choices", "10 animals, 3 choices", "10 animals, 4 choices"]
+  };
+  const voices = englishVoices();
   $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
-    <p><b>Stage: Hatchling (ages 2-3).</b> <span class="soon">Explorer (4-5) and Ranger (6+) are not built yet.</span></p>
+    <p><b>Stage: Hatchling (ages 2-3).</b> <span class="soon">Explorer (4-5) and Ranger (6+) are not built yet.</span> <small class="soon">Version 2</small></p>
+    <div class="line"><div>Pip's voice<br><select id="voicePick">${voices.length ? voices.map(v => `<option value="${v.name.replace(/"/g, "&quot;")}"${voice && v.name === voice.name ? " selected" : ""}>${v.name}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <p>Eggs hatched so far: <b>${S.friends.length}</b> &nbsp;|&nbsp; Full adventures finished: <b>${S.clutches}</b></p>
     ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${stepNames[id][S.skill[id] - 1]}</small></div>
       <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
@@ -482,6 +657,7 @@ function openGrown() {
 $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act, id = t.dataset.id;
+  if (act === "test") { const was = S.voice; S.voice = true; say("Hi Nash! I'm Pip. Let's find the eggs!"); S.voice = was; return; }
   if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
   if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
   if (act === "auto") S.auto = !S.auto;
@@ -492,6 +668,10 @@ $("grownPanel").addEventListener("click", e => {
   if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }
   if (act === "reset") { $("grown").classList.remove("on"); show("title"); return; }
   openGrown();
+});
+
+$("grownPanel").addEventListener("change", e => {
+  if (e.target.id === "voicePick") { S.voiceName = e.target.value; chooseVoice(); save(); }
 });
 
 // Stop pinch-zoom and double-tap zoom so little fingers can't shrink the game.
