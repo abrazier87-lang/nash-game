@@ -132,7 +132,7 @@
 
   <div class="screen on" id="title">
     <h1>Pip's Lost Eggs</h1>
-    <p class="sub">A dinosaur adventure for Nash</p>
+    <p class="sub" id="titleSub">A dinosaur adventure</p>
     <div class="pip" id="titlePip"></div>
     <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button>
   </div>
@@ -164,6 +164,7 @@
   </div>
 
   <button class="corner left" id="homeBtn" aria-label="Back to the valley" style="display:none">🏠</button>
+  <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
   <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
 
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
@@ -184,7 +185,11 @@ const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- saved progress (kept on this device) ----------
-const SAVE_KEY = "pipsLostEggs.v1";
+// Who is playing? (picked on the book shelf page). The first child added keeps the original saved progress.
+let PLAYER = null;
+try { const cur = localStorage.getItem("storyShelf.current"); PLAYER = JSON.parse(localStorage.getItem("storyShelf.players") || "[]").find(p => p.id === cur) || null; } catch (e) {}
+const NAME = PLAYER ? PLAYER.name : "";
+const SAVE_KEY = "pipsLostEggs.v1" + (PLAYER && PLAYER.id !== "p1" ? "." + PLAYER.id : "");
 const fresh = () => ({ skill: { colors: 1, shapes: 1, count: 1, patterns: 1, shadows: 1, sizes: 1, body: 1, sounds: 1 }, found: {}, friends: [], clutches: 0, auto: true, voice: true, sound: true, voiceName: "" });
 let S = fresh();
 try {
@@ -292,6 +297,7 @@ function show(id) {
   current = id;
   $("homeBtn").style.display = (id === "game") ? "" : "none";
   $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+  $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
 }
 function animate(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 function confetti(n) {
@@ -622,6 +628,8 @@ function showMap(line) {
 
 // ---------- buttons ----------
 $("titlePip").innerHTML = PIP();
+if (NAME) $("titleSub").textContent = "A dinosaur adventure for " + NAME;
+$("shelfBtn").addEventListener("click", () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); location.href = "index.html"; });
 $("playBtn").addEventListener("click", () => { audio(); sfx.tap(); showMap(); });
 $("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); say(G.q.say); } });
 $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
@@ -657,13 +665,13 @@ function openGrown() {
 $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act, id = t.dataset.id;
-  if (act === "test") { const was = S.voice; S.voice = true; say("Hi Nash! I'm Pip. Let's find the eggs!"); S.voice = was; return; }
+  if (act === "test") { const was = S.voice; S.voice = true; say(`Hi${NAME ? " " + NAME : ""}! I'm Pip. Let's find the eggs!`); S.voice = was; return; }
   if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
   if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
   if (act === "auto") S.auto = !S.auto;
   if (act === "voice") S.voice = !S.voice;
   if (act === "sound") S.sound = !S.sound;
-  if (act === "reset") { if (!confirm("Erase all of Nash's progress and start over?")) return; S = fresh(); }
+  if (act === "reset") { if (!confirm("Erase this game's progress and start over?")) return; S = fresh(); }
   save();
   if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }
   if (act === "reset") { $("grown").classList.remove("on"); show("title"); return; }

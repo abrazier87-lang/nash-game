@@ -1,10 +1,114 @@
 <!DOCTYPE html>
-<!-- This tiny page just forwards to the game, so the web link can be short. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Pip's Lost Eggs</title>
-<meta http-equiv="refresh" content="0; url=Pips%20Lost%20Eggs.html">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Story Shelf">
+<title>Story Shelf</title>
+<link rel="stylesheet" href="shared/kit.css">
+<style>
+  /* The bookshelf: one "book" per grade. */
+  body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
+  .wrap { max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
+  .shelfTitle { font-size:clamp(34px,7vw,64px); color:#8a4f1d; text-align:center; margin:6px 0 4px; text-shadow:0 3px 0 #fff; letter-spacing:1px; }
+  .who { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; margin:14px 0 22px; font-size:20px; }
+  .who b { margin-right:4px; }
+  .chip { background:#fff; border-radius:999px; padding:10px 20px; font-weight:bold; font-size:20px; box-shadow:0 4px 0 rgba(0,0,0,.15); border:3px solid #fff; }
+  .chip.on { background:#ffd84d; border-color:#ff8a3d; }
+  .chip.add { background:#eaffd9; }
+  .shelf { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:26px 18px; }
+  .book { position:relative; height:250px; border-radius:8px 16px 16px 8px; background:var(--c,#58b368); color:#fff; text-align:center; padding:14px 12px 12px 26px;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-shadow:0 8px 0 rgba(0,0,0,.2), 0 20px 0 -6px #c48a4a, 0 26px 0 -6px #9c6830; text-decoration:none; }
+  .book::before { content:""; position:absolute; left:0; top:0; bottom:0; width:16px; background:rgba(0,0,0,.18); border-radius:8px 0 0 8px; }
+  .book:active { transform:translateY(4px); }
+  .book .grade { font-size:19px; font-weight:bold; background:rgba(255,255,255,.25); border-radius:999px; padding:4px 14px; }
+  .book .pic { font-size:74px; line-height:1.1; }
+  .book .name { font-size:21px; font-weight:bold; line-height:1.15; }
+  .book .ages { font-size:14px; opacity:.9; }
+  .book.soon { background:#cbbfae; cursor:default; }
+  .book.soon .pic { opacity:.6; }
+  .gear { position:fixed; top:10px; right:10px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.75); font-size:24px; opacity:.6; z-index:5; }
+  .gear.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
+</style>
 </head>
-<body><a href="Pips%20Lost%20Eggs.html">Play Pip's Lost Eggs</a></body>
+<body>
+<div class="wrap">
+  <h1 class="shelfTitle">Story Shelf</h1>
+  <div class="who" id="who"></div>
+  <div class="shelf" id="shelf"></div>
+</div>
+<button class="gear" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+<div id="grown"><div class="panel" id="grownPanel"></div></div>
+
+<script src="shared/kit.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   THE STORY SHELF - the front page. Pick who is playing, then pick a book.
+   To add a new grade's game: fill in its "file" below.
+   ===================================================================== */
+const BOOKS = [
+  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", color: "#58b368", file: "Pips%20Lost%20Eggs.html" },
+  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", color: "#ff5a5f", file: "dots-busy-train.html" },
+  { grade: "Grade 1",      ages: "Ages 6-7" },
+  { grade: "Grade 2",      ages: "Ages 7-8" },
+  { grade: "Grade 3",      ages: "Ages 8-9" },
+  { grade: "Grade 4",      ages: "Ages 9-10" },
+  { grade: "Grade 5",      ages: "Ages 10-11" },
+  { grade: "Grade 6",      ages: "Ages 11-12" },
+  { grade: "Grade 7",      ages: "Ages 12-13" },
+  { grade: "Grade 8",      ages: "Ages 13-14" }
+];
+
+function drawWho() {
+  const cur = Kit.currentPlayer(), list = Kit.players();
+  $("who").innerHTML = `<b>Who is playing?</b>` +
+    list.map(p => `<button class="chip${cur && cur.id === p.id ? " on" : ""}" data-id="${p.id}">${Kit.esc(p.name)}</button>`).join("") +
+    `<button class="chip add" data-add="1">+ Add a name</button>`;
+}
+$("who").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  Kit.audio(); Kit.sfx.tap();
+  if (t.dataset.add) { const name = prompt("What is the child's name?"); if (name) { const p = Kit.addPlayer(name); if (p) Kit.say("Hi " + p.name + "!"); } }
+  else { Kit.setCurrent(t.dataset.id); Kit.say("Hi " + t.textContent + "! Pick a book."); }
+  drawWho();
+});
+
+$("shelf").innerHTML = BOOKS.map(b => b.file
+  ? `<a class="book" href="${b.file}" style="--c:${b.color}"><span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
+  : `<div class="book soon"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
+
+// ---------- grown-ups (press and hold the gear) ----------
+function openGrown() {
+  Kit.hush();
+  const voices = Kit.englishVoices(), v = Kit.currentVoice(), list = Kit.players();
+  $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
+    <p>Each child gets their own saved progress on this device. Progress does not move between devices.</p>
+    ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
+    <div class="line"><div>Talking voice (for the newer games)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+    <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
+    <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
+    <div class="foot"><span></span><button class="main" data-act="close">Done</button></div>`;
+  $("grown").classList.add("on");
+}
+Kit.hold($("grownBtn"), openGrown);
+$("grownPanel").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const act = t.dataset.act;
+  if (act === "test") { Kit.say("Hello! Pick a book to play.", true); return; }
+  if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
+  if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
+  if (act === "sound") Kit.settings.sound = !Kit.settings.sound;
+  Kit.saveSettings(); drawWho();
+  if (act === "close") { $("grown").classList.remove("on"); return; }
+  openGrown();
+});
+$("grownPanel").addEventListener("change", e => {
+  if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
+});
+drawWho();
+</script>
+</body>
 </html>

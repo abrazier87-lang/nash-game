@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dot's Train">
+<title>Dot's Busy Train</title>
+<link rel="stylesheet" href="shared/kit.css">
+<style>
+  :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
+  #title .host { width:34vmin; height:28vmin; }
+  /* the train */
+  .train { display:flex; align-items:flex-end; gap:.8vmin; margin-top:3vmin; padding:0 3vmin; border-bottom:1.2vmin solid #6b4a2b; }
+  .engine { width:26vmin; height:21vmin; }
+  .car { width:15vmin; height:16vmin; position:relative; }
+  .car .box { position:absolute; left:0; right:0; bottom:2.6vmin; height:7vmin; border-radius:1.5vmin; box-shadow:inset 0 -1.5vmin 0 rgba(0,0,0,.15); }
+  .car .rider { position:absolute; left:0; right:0; bottom:8.6vmin; text-align:center; font-size:8vmin; line-height:1; }
+  .car .rider.empty { font-size:5vmin; bottom:10vmin; color:rgba(43,45,66,.35); font-weight:bold; }
+  .car i { position:absolute; bottom:0; width:5.4vmin; height:5.4vmin; border-radius:50%; background:#8d93ab; border:1.4vmin solid #39405a; }
+  .car i.w1 { left:1.4vmin; } .car i.w2 { right:1.4vmin; }
+  .stickers { display:flex; gap:.6vmin; margin-top:1.5vmin; height:6vmin; align-items:center; font-size:4.6vmin; }
+  .stickers small { font-size:2.6vmin; font-weight:bold; margin-right:1vmin; }
+  /* picking up a passenger */
+  #board .stage { width:46vmin; height:46vmin; font-size:34vmin; line-height:46vmin; text-align:center; }
+  /* the big finish */
+  #finale .train { border-bottom:none; animation:arrive 2.4s ease-out both; }
+  @keyframes arrive { from { transform:translateX(-130vw); } to { transform:translateX(0); } }
+  .word { font-size:9vmin; } .word.long { font-size:7vmin; }
+</style>
+</head>
+<body class="game">
+<div id="app">
+  <div class="layer"><div class="sun"></div><div class="cloud"></div><div class="cloud c2"></div>
+  <div class="hill back"></div><div class="hill"></div></div>
+  <div class="layer" id="fx"></div>
+
+  <div class="screen on" id="title">
+    <h1>Dot's Busy Train</h1>
+    <p class="sub" id="titleSub">A kindergarten adventure</p>
+    <div class="host" id="titleDot"></div>
+    <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button>
+  </div>
+
+  <div class="screen" id="map">
+    <div class="places" id="places"></div>
+    <div class="train" id="train"></div>
+    <div class="stickers" id="stickers"></div>
+  </div>
+
+  <div class="screen" id="game">
+    <div class="stars" id="stars"></div>
+    <div class="ask">
+      <button class="host" id="gameDot" aria-label="Say it again"></button>
+      <div class="bubble" id="bubble"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="screen" id="board">
+    <button class="stage" id="boardStage" aria-label="Tap the animal"></button>
+    <button class="bigbtn go" id="boardGo" aria-label="Keep going"><span class="tri"></span></button>
+  </div>
+
+  <div class="screen" id="finale">
+    <h1>Off to the fair!</h1>
+    <div class="train" id="finaleTrain"></div>
+    <button class="bigbtn go" id="finaleGo" aria-label="Play again"><span class="tri"></span></button>
+  </div>
+
+  <button class="corner left" id="homeBtn" aria-label="Back to the stations" style="display:none">🏠</button>
+  <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
+  <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+
+  <div id="grown"><div class="panel" id="grownPanel"></div></div>
+</div>
+
+<script src="shared/kit.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DOT'S BUSY TRAIN  -  the Kindergarten game
+   Story: Dot (Pip's cousin) drives a train. The animals want to go to
+   the fair. Win at a station and an animal gets on. Fill the train and
+   off it goes!
+   The shared parts (voice, sounds, saving, names) come from shared/kit.js.
+   ===================================================================== */
+const { say, sfx, animate, confetti } = Kit;
+const PLAYER = Kit.currentPlayer();
+const NAME = PLAYER ? PLAYER.name : "";
+
+// ---------- saved progress (kept on this device, one copy per child) ----------
+const SAVE = "dotsBusyTrain.v1";
+const fresh = () => ({ skill: { letters: 1, sounds: 1, rhymes: 1, words: 1, count: 1, moreless: 1, order: 1, adding: 1 }, aboard: {}, stickers: [], trips: 0, auto: true });
+let S = Kit.load(SAVE, fresh);
+const save = () => Kit.save(SAVE, S);
+
+// ---------- pictures ----------
+const DOT = `<svg viewBox="0 0 200 160" style="--m:#a06cd5;--d:#7445a8"><path class="d" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z"/><rect class="d" x="80" y="136" width="18" height="20" rx="8"/><rect class="d" x="108" y="136" width="18" height="20" rx="8"/>
+  <ellipse class="m" cx="100" cy="104" rx="38" ry="42"/><ellipse class="b" cx="109" cy="112" rx="22" ry="28"/><ellipse class="d" cx="136" cy="98" rx="12" ry="6"/>
+  <ellipse class="m" cx="118" cy="48" rx="36" ry="30"/><ellipse class="m" cx="146" cy="57" rx="20" ry="15"/>
+  <circle class="e" cx="128" cy="42" r="8"/><circle class="p" cx="130" cy="43" r="4"/><circle class="p" cx="158" cy="52" r="1.8"/>
+  <path d="M138 64 Q150 72 162 62" fill="none" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/>
+  <path d="M84 32 Q116 -8 150 30 Z" fill="#4d9de0"/><rect x="134" y="24" width="36" height="8" rx="4" fill="#2f6fab"/></svg>`;
+const ENGINE = `<svg viewBox="0 0 200 160"><circle cx="150" cy="20" r="9" fill="#fff" opacity=".9"/><circle cx="166" cy="6" r="6" fill="#fff" opacity=".7"/>
+  <rect x="138" y="36" width="22" height="36" rx="3" fill="#39405a"/><rect x="132" y="30" width="34" height="10" rx="4" fill="#39405a"/>
+  <rect x="66" y="68" width="112" height="56" rx="14" fill="#ff5a5f"/><rect x="66" y="92" width="112" height="8" fill="#ffd23f"/>
+  <rect x="16" y="34" width="66" height="90" rx="8" fill="#c7383d"/><rect x="10" y="26" width="78" height="12" rx="5" fill="#39405a"/>
+  <rect x="26" y="46" width="46" height="38" rx="6" fill="#cfefff"/>
+  <ellipse cx="45" cy="68" rx="15" ry="13" fill="#a06cd5"/><ellipse cx="59" cy="72" rx="9" ry="7" fill="#a06cd5"/><circle cx="50" cy="65" r="4" fill="#fff"/><circle cx="51" cy="65" r="2" fill="#2b2d42"/><path d="M31 60 Q45 46 59 59 Z" fill="#4d9de0"/>
+  <polygon points="178,124 198,124 178,98" fill="#39405a"/>
+  <circle cx="46" cy="132" r="20" fill="#39405a"/><circle cx="46" cy="132" r="8" fill="#8d93ab"/>
+  <circle cx="106" cy="136" r="16" fill="#39405a"/><circle cx="106" cy="136" r="6" fill="#8d93ab"/>
+  <circle cx="152" cy="136" r="16" fill="#39405a"/><circle cx="152" cy="136" r="6" fill="#8d93ab"/></svg>`;
+const CAR_COLORS = ["#4d9de0", "#58b368", "#ffd23f", "#a06cd5"];
+const PASSENGERS = [["lion", "🦁"], ["elephant", "🐘"], ["monkey", "🐵"], ["panda", "🐼"], ["penguin", "🐧"], ["giraffe", "🦒"], ["koala", "🐨"],
+  ["tiger", "🐯"], ["zebra", "🦓"], ["rabbit", "🐰"], ["fox", "🦊"], ["bear", "🐻"], ["frog", "🐸"], ["pig", "🐷"]];
+const trainHTML = riders => riders.map((r, i) => `<div class="car">${r ? `<span class="rider">${r}</span>` : `<span class="rider empty">?</span>`}<div class="box" style="background:${CAR_COLORS[i % CAR_COLORS.length]}"></div><i class="w1"></i><i class="w2"></i></div>`).reverse().join("") + `<div class="engine">${ENGINE}</div>`;
+
+// ---------- little helpers for building questions ----------
+const NUM = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+const INK = ["#ff5a5f", "#4d9de0", "#58b368", "#ff9f43", "#a06cd5", "#3fc1c9"];
+const big = (text, size, color) => `<span style="font-size:${size || 12}vmin${color ? ";color:" + color : ""}">${text}</span>`;
+const emo = e => `<span class="emoji">${e}</span>`;
+const group = (e, n, size) => `<div class="grid5" style="font-size:${size}vmin">${`<span>${e}</span>`.repeat(n)}</div>`;
+// three number cards: the right answer and two close neighbours
+function numberCards(n, lo, hi) {
+  const near = shuffle([n - 2, n - 1, n + 1, n + 2].filter(k => k >= lo && k <= hi)).slice(0, 2);
+  return near.concat(n).sort((a, b) => a - b).map(k => ({ html: String(k), ok: k === n, wrong: `That is ${NUM[k]}.` }));
+}
+const THINGS = [["apple", "apples", "🍎"], ["star", "stars", "⭐"], ["fish", "fish", "🐟"], ["ball", "balls", "⚽"], ["flower", "flowers", "🌼"], ["balloon", "balloons", "🎈"]];
+
+// words that start with the same sound (each letter makes one clear sound here)
+const STARTS = {
+  B: [["bear", "🐻"], ["bee", "🐝"], ["banana", "🍌"], ["bus", "🚌"], ["book", "📖"], ["boat", "⛵"]],
+  C: [["cat", "🐱"], ["cow", "🐮"], ["car", "🚗"], ["cake", "🎂"], ["carrot", "🥕"]],
+  D: [["dog", "🐶"], ["duck", "🦆"], ["door", "🚪"], ["donut", "🍩"]],
+  F: [["fish", "🐟"], ["fox", "🦊"], ["fire", "🔥"], ["foot", "🦶"], ["frog", "🐸"]],
+  H: [["hat", "🎩"], ["horse", "🐴"], ["house", "🏠"], ["heart", "❤️"], ["hammer", "🔨"]],
+  L: [["lion", "🦁"], ["leaf", "🍃"], ["lemon", "🍋"], ["ladybug", "🐞"]],
+  M: [["moon", "🌙"], ["mouse", "🐭"], ["monkey", "🐵"], ["milk", "🥛"], ["mushroom", "🍄"]],
+  P: [["pig", "🐷"], ["pizza", "🍕"], ["penguin", "🐧"], ["pencil", "✏️"], ["pumpkin", "🎃"]],
+  R: [["rabbit", "🐰"], ["rainbow", "🌈"], ["rocket", "🚀"], ["ring", "💍"], ["robot", "🤖"]],
+  S: [["sun", "☀️"], ["sock", "🧦"], ["snake", "🐍"], ["star", "⭐"], ["spider", "🕷️"]],
+  T: [["tiger", "🐯"], ["turtle", "🐢"], ["tomato", "🍅"], ["taco", "🌮"], ["tooth", "🦷"]]
+};
+const RHYMES = [[["cat", "🐱"], ["hat", "🎩"]], [["dog", "🐶"], ["frog", "🐸"]], [["bee", "🐝"], ["tree", "🌳"]], [["star", "⭐"], ["car", "🚗"]], [["moon", "🌙"], ["spoon", "🥄"]], [["fox", "🦊"], ["box", "📦"]],
+  [["cake", "🎂"], ["snake", "🐍"]], [["mouse", "🐭"], ["house", "🏠"]], [["bear", "🐻"], ["chair", "🪑"]], [["sock", "🧦"], ["clock", "⏰"]], [["goat", "🐐"], ["boat", "⛵"]], [["whale", "🐳"], ["snail", "🐌"]], [["king", "🤴"], ["ring", "💍"]]];
+const WORDS = [["I", "a", "the", "see", "go", "to", "me", "my", "we", "up"], ["and", "is", "it", "in", "can", "you", "like", "look", "big", "no"], ["he", "she", "was", "for", "are", "have", "said", "play", "come", "here"]];
+
+// ---------- the stations (mini-games) ----------
+// Each station has 4 difficulty steps. makeQuestion(step) returns:
+//   { bubble: what shows in Dot's speech bubble, say: what Dot says, yay: what Dot says when right,
+//     choices: [{ html, ok, wrong: what Dot says if this wrong card is tapped }], pause: optional wait in ms }
+const GAMES = {
+  letters: {
+    name: "Letter Station", icon: `<span style="color:#ff5a5f">A</span><span style="color:#4d9de0">b</span><span style="color:#58b368">C</span>`, intro: "Let's find letters!",
+    makeQuestion(step) {
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      let ls = shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")).slice(0, count);
+      if (step === 4 && rand(2) === 0) ls = shuffle(["B", "D", "P", "Q"]); // the little letters that look alike
+      const t = ls[0], lower = step >= 3, show = l => lower ? l.toLowerCase() : l, cols = shuffle(INK);
+      return {
+        bubble: step === 1 ? big(t, 16) : step === 4 ? big(t, 16) : big("👂", 12),
+        say: step === 4 ? `This is the big letter ${t}. Find the little letter ${t}.` : `Find the letter ${t}.`,
+        yay: `Yes! The letter ${t}!`,
+        choices: shuffle(ls).map((l, i) => ({ html: `<span style="color:${cols[i]}">${show(l)}</span>`, ok: l === t, wrong: `That is the letter ${l}.` }))
+      };
+    }
+  },
+  sounds: {
+    name: "Sound Station", icon: "👂", intro: "Listen to how the words start!",
+    makeQuestion(step) {
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const ls = shuffle(Object.keys(STARTS)).slice(0, count), L = ls[0];
+      const [model, answer] = shuffle(STARTS[L]);
+      const cards = [{ w: answer, L, ok: true }].concat(ls.slice(1).map(X => ({ w: pick(STARTS[X]), L: X, ok: false })));
+      const byLetter = step >= 3; // steps 3 and 4 show the letter instead of a picture
+      return {
+        bubble: byLetter ? big(`${L} ${L.toLowerCase()}`, 13) : emo(model[1]),
+        say: byLetter ? `Which one starts with the letter ${L}?` : `${cap(model[0])}. Which one starts like ${model[0]}?`,
+        yay: byLetter ? `Yes! ${cap(answer[0])} starts with ${L}!` : `Yes! ${cap(model[0])} and ${answer[0]} both start with ${L}!`, pause: 3000,
+        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])} starts with ${c.L}.` }))
+      };
+    }
+  },
+  rhymes: {
+    name: "Rhyme Station", icon: "🐱🎩", intro: "Rhyming words sound the same at the end!",
+    makeQuestion(step) {
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const pairs = shuffle(step === 1 ? RHYMES.slice(0, 6) : RHYMES).slice(0, count);
+      const [a, b] = shuffle(pairs[0]);
+      const cards = [{ w: b, ok: true }].concat(pairs.slice(1).map(p => ({ w: pick(p), ok: false })));
+      return {
+        bubble: emo(a[1]), say: `${cap(a[0])}. Which one rhymes with ${a[0]}?`, yay: `Yes! ${cap(a[0])}, ${b[0]}. They rhyme!`, pause: 2800,
+        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])} does not rhyme with ${a[0]}.` }))
+      };
+    }
+  },
+  words: {
+    name: "Word Station", icon: `<span style="font-size:6vmin;color:#a06cd5">the</span>`, intro: "Let's read some words!",
+    makeQuestion(step) {
+      const pool = step <= 2 ? WORDS[0] : step === 3 ? WORDS[0].concat(WORDS[1]) : WORDS[0].concat(WORDS[1], WORDS[2]);
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const ws = shuffle(pool).slice(0, count), t = ws[0], cols = shuffle(INK);
+      return {
+        bubble: step === 1 ? big(t, 11) : big("👂", 12), // step 1 shows the word to match; after that it is by ear
+        say: `Find the word, ${t}.`, yay: `Yes! That word is, ${t}!`,
+        choices: shuffle(ws).map((w, i) => ({ html: `<span class="word${w.length > 3 ? " long" : ""}" style="color:${cols[i]}">${w}</span>`, ok: w === t, wrong: `That word is, ${w}.` }))
+      };
+    }
+  },
+  count: {
+    name: "Counting Station", icon: `<span style="color:#ff8a3d">1 2 3</span>`, intro: "Let's count!",
+    makeQuestion(step) {
+      const max = [5, 10, 15, 20][step - 1], min = [1, 3, 8, 11][step - 1];
+      const n = min + rand(max - min + 1), th = pick(THINGS);
+      return {
+        bubble: group(th[2], n, n <= 5 ? 7 : n <= 10 ? 5.6 : 4.3), key: n,
+        say: `How many ${th[1]}?`, yay: n <= 5 ? `${cap(NUM[n])}! ${NUM.slice(1, n + 1).join(", ")}.` : `Yes! ${cap(NUM[n])} ${th[1]}!`, pause: n <= 5 ? 1900 + n * 550 : 2300,
+        choices: numberCards(n, 1, 20)
+      };
+    }
+  },
+  moreless: {
+    name: "More or Less", icon: "⚖️", intro: "Which has more? Which has fewer?",
+    makeQuestion(step) {
+      const more = step === 1 ? true : rand(2) === 0;
+      if (step === 4) { // numbers only, up to 20
+        const a = 1 + rand(20); let b; do { b = 1 + rand(20); } while (b === a);
+        const t = more ? Math.max(a, b) : Math.min(a, b), o = a + b - t, word = more ? "bigger" : "smaller";
+        return { bubble: big(word, 6), key: a + "," + b, say: `Which number is ${word}?`, yay: `Yes! ${t} is ${word} than ${o}.`, pause: 2800,
+          choices: shuffle([a, b]).map(k => ({ html: String(k), ok: k === t, wrong: `${k} is ${more ? "smaller" : "bigger"} than ${a + b - k}.` })) };
+      }
+      const top = step === 1 ? 5 : 10, gap = step === 3 ? 1 : 2 + rand(2);
+      const small = 1 + rand(top - gap), large = small + gap, th = pick(THINGS);
+      const t = more ? large : small, o = more ? small : large, word = more ? "more" : "fewer";
+      return { bubble: big(word, 7), key: small + "," + large + th[0], say: `Which group has ${word}?`, yay: `Yes! ${cap(NUM[t])} is ${word} than ${NUM[o]}.`, pause: 2800,
+        choices: shuffle([small, large]).map(k => ({ html: group(th[2], k, 3.8), ok: k === t, wrong: `That group has ${more ? "fewer" : "more"}.` })) };
+    }
+  },
+  order: {
+    name: "What's Next?", icon: `<span style="color:#3fc1c9">3 4 ?</span>`, intro: "Let's put numbers in order!",
+    makeQuestion(step) {
+      const tiles = (arr) => arr.map(x => x === "?" ? `<div class="q">?</div>` : `<div class="tile">${x}</div>`).join("");
+      if (step === 4 && rand(2) === 0) { // counting backwards
+        const a = 4 + rand(7), seq = [a, a - 1, a - 2], ans = a - 3;
+        return { bubble: tiles(seq.concat("?")), say: `Counting backwards. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3200, choices: numberCards(ans, 0, 20) };
+      }
+      if (step === 4) { // the missing number is in the middle
+        const a = 1 + rand(17), ans = a + 1;
+        return { bubble: tiles([a, "?", a + 2]), say: `${a}, something, ${a + 2}. Which number is missing?`, yay: `Yes! ${a}, ${ans}, ${a + 2}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
+      }
+      const top = [6, 10, 20][step - 1], a = (step === 3 ? 8 : 1) + rand(top - 3 - (step === 3 ? 7 : 0)), seq = [a, a + 1, a + 2], ans = a + 3;
+      return { bubble: tiles(seq.concat("?")), say: `${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
+    }
+  },
+  adding: {
+    name: "Adding Station", icon: `<span style="color:#58b368">2+1</span>`, intro: "Let's put groups together!",
+    makeQuestion(step) {
+      const th = pick(THINGS), away = step === 3 || (step === 4 && rand(2) === 0), top = step === 1 || step === 3 ? 5 : 10;
+      const size = top === 5 ? 6 : 4.4;
+      if (away) { // taking away: some of the pictures fade out
+        const a = 2 + rand(top - 1), b = 1 + rand(a - 1), ans = a - b;
+        return { bubble: `<div class="col"><div class="grid5" style="font-size:${size}vmin">${Array.from({ length: a }, (_, i) => `<span${i >= a - b ? ` class="gone"` : ""}>${th[2]}</span>`).join("")}</div><div class="cap">${a} − ${b}</div></div>`,
+          say: `${cap(NUM[a])} ${th[1]}. Take away ${NUM[b]}. How many are left?`, yay: `Yes! ${a} take away ${b} is ${ans}!`, pause: 3200, choices: numberCards(ans, 0, 10) };
+      }
+      const sum = 2 + rand(top - 1), a = 1 + rand(sum - 1), b = sum - a;
+      return { bubble: `<div class="col"><div class="rowx">${group(th[2], a, size)}${big("+", 6, "#ff8a3d")}${group(th[2], b, size)}</div>${step > 1 ? `<div class="cap">${a} + ${b}</div>` : ""}</div>`,
+        say: `${cap(NUM[a])} ${a === 1 ? th[0] : th[1]}, and ${NUM[b]} more. How many altogether?`, yay: `Yes! ${a} and ${b} make ${sum}!`, pause: 3200, choices: numberCards(sum, 0, 10) };
+    }
+  }
+};
+const GAME_IDS = ["letters", "sounds", "rhymes", "words", "count", "moreless", "order", "adding"]; // the order of the stations
+const STEP_NAMES = {
+  letters: ["match a big letter, 2 choices", "big letters by name", "little letters by name", "match big to little"],
+  sounds: ["starts like the picture, 2 choices", "starts like the picture, 3 choices", "starts with the letter, 3 choices", "starts with the letter, 4 choices"],
+  rhymes: ["2 choices", "3 choices", "3 choices, more words", "4 choices"],
+  words: ["match the word, 2 choices", "10 first words, by ear", "20 words, by ear", "30 words, 4 choices"],
+  count: ["count to 5", "count to 10", "count to 15", "count to 20"],
+  moreless: ["which has more, up to 5", "more or fewer, up to 10", "groups that are close", "bigger or smaller number, to 20"],
+  order: ["what comes next, to 6", "what comes next, to 10", "what comes next, to 20", "backwards and missing numbers"],
+  adding: ["adding to 5", "adding to 10", "taking away within 5", "adding and taking away within 10"]
+};
+const TRAIN_SIZE = 4;   // passengers needed to fill the train
+const STARS_TO_WIN = 5; // right answers needed to win at a station
+const riders = () => GAME_IDS.filter(id => S.aboard[id]).map(id => S.aboard[id]);
+
+// ---------- screens ----------
+let current = "title";
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  current = id;
+  $("homeBtn").style.display = (id === "game") ? "" : "none";
+  $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+  $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+}
+
+// ---------- playing a station ----------
+let G = null;
+function startGame(id) {
+  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "" };
+  $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
+  $("gameDot").innerHTML = DOT;
+  show("game");
+  nextQuestion(GAMES[id].intro + " ");
+}
+function nextQuestion(lead) {
+  let q, tries = 0;
+  do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last);
+  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble);
+  G.q = q; G.first = true; G.busy = false;
+  $("bubble").innerHTML = q.bubble; animate($("bubble"), "pop");
+  const box = $("choices"); box.innerHTML = "";
+  box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
+  q.choices.forEach(ch => {
+    const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
+    b.addEventListener("click", () => choose(b, ch));
+    box.appendChild(b);
+  });
+  say((lead || "") + q.say);
+}
+async function choose(el, ch) {
+  if (!G || G.busy || el.classList.contains("dim")) return;
+  const q = G.q, box = $("choices");
+  if (ch.ok) {
+    G.busy = true; sfx.yes();
+    animate($("gameDot"), "bounce");
+    el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
+    G.stars++; $("stars").children[G.stars - 1].classList.add("got");
+    say(q.yay);
+    adjust(G.first);
+    await wait(q.pause || 2300);
+    if (!G || G.q !== q) return;
+    if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
+  } else {
+    sfx.oops(); G.first = false;
+    animate(el, "wobble"); el.classList.add("dim");
+    say(`${ch.wrong} ${q.say}`);
+  }
+}
+// Quietly make a station harder after 3 right in a row, easier after 2 hard questions in a row.
+function adjust(firstTry) {
+  if (!S.auto) return;
+  if (firstTry) { G.streak++; G.rough = 0; if (G.streak >= 3 && S.skill[G.id] < 4) { S.skill[G.id]++; G.streak = 0; } }
+  else { G.rough++; G.streak = 0; if (G.rough >= 2 && S.skill[G.id] > 1) { S.skill[G.id]--; G.rough = 0; } }
+  save();
+}
+function finishGame() {
+  const id = G.id; G = null;
+  if (S.aboard[id]) { // this station's passenger is already on the train: just celebrate
+    sfx.party(); confetti(30); say("Great job! You did it again!");
+    setTimeout(showMap, 2600);
+  } else startBoard(id);
+}
+
+// ---------- a passenger gets on ----------
+let B = null;
+function startBoard(id) {
+  const taken = riders(), free = PASSENGERS.filter(p => !taken.includes(p[1]));
+  const who = pick(free);
+  B = { id, who, taps: 0, done: false };
+  $("boardStage").textContent = who[1];
+  $("boardGo").classList.remove("show");
+  show("board"); sfx.party(); confetti(25); animate($("boardStage"), "pop");
+  say(`You did it! The ${who[0]} wants a ride. Tap the ${who[0]}!`);
+}
+$("boardStage").addEventListener("click", () => {
+  if (!B || B.done) return;
+  B.taps++; sfx.tap(); animate($("boardStage"), "bounce");
+  if (B.taps >= 2) {
+    B.done = true;
+    S.aboard[B.id] = B.who[1]; S.stickers.push(B.who[1]); save();
+    sfx.whistle(); confetti(50);
+    say(`All aboard! The ${B.who[0]} is on the train!`);
+    setTimeout(() => $("boardGo").classList.add("show"), 1200);
+  }
+});
+$("boardGo").addEventListener("click", () => {
+  sfx.tap(); B = null;
+  if (riders().length >= TRAIN_SIZE) showFinale(); else showMap();
+});
+
+// ---------- the big finish (when the train is full) ----------
+function showFinale() {
+  $("finaleTrain").innerHTML = trainHTML(riders().slice(0, TRAIN_SIZE));
+  $("finaleGo").classList.remove("show");
+  show("finale"); sfx.chug(); sfx.whistle(); confetti(80);
+  say(`Choo choo! The train is full! Off to the fair we go! Thank you${NAME ? ", " + NAME : ""}!`);
+  setTimeout(() => $("finaleGo").classList.add("show"), 3000);
+}
+$("finaleGo").addEventListener("click", () => {
+  sfx.tap(); S.aboard = {}; S.trips++; save();
+  showMap("The train is back! More animals want a ride. Tap a station!");
+});
+
+// ---------- the stations (map) ----------
+function showMap(line) {
+  const on = riders();
+  if (on.length >= TRAIN_SIZE) { showFinale(); return; }
+  $("places").innerHTML = "";
+  GAME_IDS.forEach(id => {
+    const g = GAMES[id], b = document.createElement("button");
+    b.className = "place" + (S.aboard[id] ? " done" : "");
+    b.innerHTML = `<div class="pic">${g.icon}</div><div class="name">${g.name}</div>` + (S.aboard[id] ? `<div class="badge">${S.aboard[id]}</div>` : "");
+    b.addEventListener("click", () => { sfx.tap(); startGame(id); });
+    $("places").appendChild(b);
+  });
+  $("train").innerHTML = trainHTML(Array.from({ length: TRAIN_SIZE }, (_, i) => on[i] || null));
+  const earlier = S.stickers.slice(0, Math.max(0, S.stickers.length - on.length)).slice(-14);
+  $("stickers").innerHTML = earlier.length ? `<small>At the fair:</small>` + earlier.map(e => `<span>${e}</span>`).join("") : "";
+  show("map");
+  const left = TRAIN_SIZE - on.length;
+  say(line || (left === TRAIN_SIZE ? "The animals want to go to the fair! Tap a station to pick up a passenger." : left === 1 ? "One more seat on the train! Tap a station." : `${cap(NUM[left])} more seats on the train! Tap a station.`));
+}
+
+// ---------- buttons ----------
+$("titleDot").innerHTML = DOT;
+if (NAME) $("titleSub").textContent = "A kindergarten adventure for " + NAME;
+$("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); showMap(riders().length ? undefined : `Hi${NAME ? " " + NAME : ""}! I'm Dot. The animals want to go to the fair! Tap a station to pick up a passenger.`); });
+$("gameDot").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameDot"), "wobble"); say(G.q.say); } });
+$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+$("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });
+
+// ---------- grown-ups corner (press and hold the gear) ----------
+function openGrown() {
+  Kit.hush();
+  const voices = Kit.englishVoices(), v = Kit.currentVoice();
+  $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
+    <p><b>Kindergarten (ages 5-6).</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
+    <div class="line"><div>Dot's voice<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+    <p>Passengers picked up so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Full trains sent to the fair: <b>${S.trips}</b></p>
+    ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${STEP_NAMES[id][S.skill[id] - 1]}</small></div>
+      <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
+    <div class="line"><div>Adjust difficulty automatically</div><button data-act="auto">${S.auto ? "On" : "Off"}</button></div>
+    <div class="line"><div>Dot's talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
+    <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
+    <div class="foot"><button class="warn" data-act="reset">Start over (erase progress)</button><button class="main" data-act="close">Done</button></div>`;
+  $("grown").classList.add("on");
+}
+Kit.hold($("grownBtn"), openGrown);
+$("grownPanel").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  if (act === "test") { say(`Hi${NAME ? " " + NAME : ""}! I'm Dot. All aboard!`, true); return; }
+  if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
+  if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
+  if (act === "auto") S.auto = !S.auto;
+  if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
+  if (act === "sound") Kit.settings.sound = !Kit.settings.sound;
+  if (act === "reset") { if (!confirm("Erase this game's progress and start over?")) return; S = fresh(); }
+  save(); Kit.saveSettings();
+  if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }
+  if (act === "reset") { $("grown").classList.remove("on"); show("title"); return; }
+  openGrown();
+});
+$("grownPanel").addEventListener("change", e => {
+  if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
+});
+</script>
+</body>
+</html>
