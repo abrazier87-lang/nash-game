@@ -72,15 +72,25 @@ const Kit = (() => {
   }
   function chooseVoice() { const vs = englishVoices(); voice = vs.find(v => v.name === settings.voiceName) || vs[0] || null; }
   if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
+  // Says the words out loud. It hands back a promise that finishes when the voice has finished talking
+  // (true), or straight away if the voice is switched off (false), so a game can wait for the end of a line.
+  let talking = null;
   function say(text, force) {
-    if ((!settings.voice && !force) || !("speechSynthesis" in window)) return;
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      if (voice) u.voice = voice;
-      u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05;
-      setTimeout(() => speechSynthesis.speak(u), 60);
-    } catch (e) {}
+    return new Promise(resolve => {
+      if ((!settings.voice && !force) || !("speechSynthesis" in window)) return resolve(false);
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        if (voice) u.voice = voice;
+        u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05;
+        let finished = false;
+        const done = () => { if (!finished) { finished = true; resolve(true); } };
+        u.onend = done; u.onerror = done;
+        setTimeout(done, Math.max(8000, text.length * 260)); // safety net: some devices never report that they finished
+        talking = u; // keeps the browser from forgetting the line half way through
+        setTimeout(() => speechSynthesis.speak(u), 60);
+      } catch (e) { resolve(false); }
+    });
   }
   const hush = () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); };
 

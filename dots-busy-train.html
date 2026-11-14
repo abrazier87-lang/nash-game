@@ -330,9 +330,9 @@ async function choose(el, ch) {
     animate($("gameDot"), "bounce");
     el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
     G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-    say(q.yay);
+    const spoken = say(q.yay);
     adjust(G.first);
-    await wait(q.pause || 2300);
+    if (await spoken) await wait(600); else await wait(q.pause || 2300); // wait for the voice to finish; with the voice off, a short pause
     if (!G || G.q !== q) return;
     if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
   } else {

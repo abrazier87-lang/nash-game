@@ -99,9 +99,9 @@ function StoryGame(C) {
       animate($("gameHost"), "bounce");
       el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
       G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-      say(q.yay);
+      const spoken = say(q.yay);
       adjust(G.first);
-      await wait(q.pause || 2500);
+      if (await spoken) await wait(600); else await wait(q.pause || 2500); // wait for the voice to finish; with the voice off, a short pause
       if (!G || G.q !== q) return;
       if (G.stars >= STARS) finishGame(); else nextQuestion();
     } else {
