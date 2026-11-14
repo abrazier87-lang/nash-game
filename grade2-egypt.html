@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Egypt</title>
-<link rel="stylesheet" href="shared/kit.css">
+<link rel="stylesheet" href="shared/kit.css?v=6">
 <style>
   /* Desert look: blue sky fading to sand, pyramids, dunes. */
   :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
@@ -21,15 +21,15 @@
   .tok.t5 { background:#cfd6e4; } .tok.t1 { background:#d98b4f; width:5vmin; height:5vmin; font-size:2.6vmin; } .tok.t25 { background:#7fd6a0; width:7.6vmin; height:7.6vmin; }
   /* rows of stones */
   .stones { display:grid; gap:.3vmin .5vmin; font-size:3.3vmin; line-height:1.15; }
-  .groups { display:flex; gap:2.4vmin; font-size:4vmin; } .groups div { display:grid; grid-template-columns:repeat(2, auto); gap:.2vmin; padding:.8vmin; border:.5vmin dashed #c9a37a; border-radius:2vmin; align-content:center; }
+  .groups { display:flex; flex-wrap:wrap; justify-content:center; max-width:46vmin; gap:1.2vmin; font-size:3vmin; } .groups div { display:grid; grid-template-columns:repeat(2, auto); gap:.2vmin; padding:.8vmin; border:.5vmin dashed #c9a37a; border-radius:2vmin; align-content:center; }
   .clockbox.small { width:17vmin; height:17vmin; }
 </style>
 </head>
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js"></script>
-<script src="shared/story.js"></script>
+<script src="shared/kit.js?v=6"></script>
+<script src="shared/story.js?v=6"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -208,12 +208,12 @@ const GAMES = {
       if (step === 1) { // equal groups
         const g = 2 + rand(3), k = pick([2, 5]), n = g * k;
         return { bubble: `<div class="groups">${`<div style="${k === 5 ? "grid-template-columns:repeat(3,auto)" : ""}">${"<span>🧱</span>".repeat(k)}</div>`.repeat(g)}</div>`, key: g + "x" + k,
-          say: `${g} groups of ${k}. How many stones altogether?`, yay: `Yes! ${g} groups of ${k} make ${n}!`, choices: numCards(n, 1, 100, 4, [n + k, n - k, g + k, n + 1]) };
+          tall: true, say: `${g} groups of ${k}. How many stones altogether?`, yay: `Yes! ${g} groups of ${k} make ${n}!`, choices: numCards(n, 1, 100, 4, [n + k, n - k, g + k, n + 1]) };
       }
       const r = 2 + rand(4), c = step === 2 ? 2 + rand(4) : pick([2, 3, 4, 5, 10]), n = r * c, near = [n + c, n - c, n + r, r + c, n + 1];
       if (step === 2) return { bubble: `<div class="stones" style="grid-template-columns:repeat(${c}, auto)">${"<span>🧱</span>".repeat(n)}</div>`, key: r + "x" + c,
         say: `${r} rows of ${c}. How many stones altogether?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
-      if (step === 3) return { bubble: `<span class="sum${r > 3 ? " long" : ""}">${Array(r).fill(c).join(" + ")} = <b>?</b></span>`, key: r + "x" + c,
+      if (step === 3) return { bubble: `<span class="sum" style="font-size:${Math.min(10, 95 / (r * (String(c).length + 3) + 1)).toFixed(1)}vmin">${Array(r).fill(c).join(" + ")} = <b>?</b></span>`, key: r + "x" + c,
         say: `What is ${Array(r).fill(c).join(" plus ")}?`, yay: `Yes! ${r} lots of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
       return { bubble: `<div class="sentence">${r} rows of ${c} stones</div>`, key: r + "x" + c, say: `A wall has ${r} rows of ${c} stones. How many stones is that?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
     }
