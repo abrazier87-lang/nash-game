@@ -123,6 +123,7 @@ function StoryGame(C) {
       <div class="choices" id="choices"></div></div>
     <div class="screen" id="board"><button class="stage" id="boardStage" aria-label="Tap it"></button>${play("boardGo")}</div>
     <div class="screen" id="finale"><h1>${C.finaleTitle}</h1><div id="finaleArt"></div>${play("finaleGo")}</div>
+    <div class="screen" id="scene"><div class="scenestage" id="sceneStage"></div><div class="scenecap" id="sceneCap"></div><button class="bigbtn sceneskip" id="sceneGo" aria-label="Keep going"><span class="tri"></span></button></div>
     <button class="corner left" id="homeBtn" aria-label="Back to the map" style="display:none">🏠</button>
     <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
     <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
@@ -236,8 +237,37 @@ function StoryGame(C) {
   function finishGame() {
     const id = G.id; G = null;
     if (S.aboard[id]) { sfx.party(); confetti(30); Promise.all([speak("replay", C.lines.replay), wait(2600)]).then(() => { if (current === "game") showMap(); }); } // back to the map once the host has finished // already won here this trip
-    else startBoard(id);
+    else if (C.celebrations) { // a short celebration scene first, with a fun fact about the place (a different one each time)
+      const facts = C.celebrations.facts, k = (S.factAt || 0) % facts.length; S.factAt = k + 1; save();
+      playScene([facts[k]], () => startBoard(id), true);
+    } else startBoard(id);
   }
+
+  // ---------- celebration scenes ----------
+  // A little animated scene: the clock balloon drifts across, pictures of the place pop up, and the host says a fun fact.
+  // C.celebrations = { art: { name: html }, facts: [{ say, show: [[art name, left %, bottom %, size vmin]] }], finale: [ ...the same, one per stop ] }
+  // The host's lines are recorded whole in C.sceneVoice (a missing one uses the device voice). The ▶ skips ahead at any time.
+  let SC = null;
+  async function playScene(stops, then, short) {
+    const me = SC = { then, done: false }, alive = () => SC === me && !me.done;
+    show("scene"); $("sceneGo").classList.toggle("show", true);
+    const stage = $("sceneStage"); stage.innerHTML = `<div class="sballoon${short ? "" : " slow"}">${BALLOON}</div>`; sfx.party(); confetti(short ? 30 : 15);
+    for (const stop of stops) {
+      if (!alive()) return;
+      stage.querySelectorAll(".sitem").forEach(e => e.classList.add("gone"));
+      (stop.show || []).forEach(([name, x, y, size, wide], i) => { // "wide" stretches a picture right across the bottom (a river, a road)
+        const d = document.createElement("div"); d.className = "sitem";
+        d.style.cssText = `left:${wide ? 0 : x}%;bottom:${y}%;width:${wide ? "100%" : size + "vmin"};height:${size}vmin;font-size:${(size * .85).toFixed(1)}vmin;animation-delay:${(i * .35).toFixed(2)}s`;
+        d.innerHTML = C.celebrations.art[name] || name; stage.appendChild(d); });
+      $("sceneCap").textContent = stop.say;
+      const said = Kit.settings.voice ? await (C.sceneVoice ? Kit.playClip(C.sceneVoice + Kit.clipName(stop.say) + ".mp3", stop.say) : Kit.say(stop.say)) : (await wait(1500 + stop.say.length * 45), true);
+      if (!said || !alive()) return;
+      await wait(700);
+    }
+    if (alive()) { await wait(short ? 600 : 1200); endScene(me); }
+  }
+  function endScene(me) { if (!me || me.done || SC !== me) return; me.done = true; SC = null; Kit.hush(); me.then(); }
+  $("sceneGo").addEventListener("click", () => { sfx.tap(); endScene(SC); });
 
   // ---------- the reward after winning a place ----------
   let B = null;
@@ -264,6 +294,7 @@ function StoryGame(C) {
 
   // ---------- the big finish ----------
   function showFinale() {
+    if (C.celebrations && C.celebrations.finale && !S.toured) { S.toured = true; save(); playScene(C.celebrations.finale, showFinale); return; } // first, a longer tour of the place
     $("finaleArt").innerHTML = C.finaleArt(got().slice(0, NEED));
     $("finaleGo").classList.remove("show");
     show("finale"); sfx.party(); confetti(80);
@@ -271,7 +302,7 @@ function StoryGame(C) {
     setTimeout(() => $("finaleGo").classList.add("show"), 3000);
   }
   $("finaleGo").addEventListener("click", () => {
-    sfx.tap(); S.aboard = {}; S.trips++; save(); Kit.stamp(C.medal);
+    sfx.tap(); S.aboard = {}; S.trips++; S.toured = false; save(); Kit.stamp(C.medal);
     showMap("again");
   });
 

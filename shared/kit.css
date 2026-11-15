@@ -164,3 +164,18 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 #grown select { font:inherit; padding:6px; margin-top:4px; max-width:300px; border-radius:8px; }
 #grown .line > div { min-width:0; flex:1 1 auto; } #grown .line > button { flex:0 0 auto; } #grown select { max-width:100%; } /* long voice names never push the buttons off a phone screen */
 #grown .foot { display:flex; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; }
+/* celebration scenes: the clock balloon drifts across, pictures of the place pop up, and the fun fact shows as a caption */
+#scene { justify-content:flex-start; padding:0; }
+.scenestage { position:absolute; inset:0; overflow:hidden; }
+.sballoon { position:absolute; top:6vh; left:-30vmin; width:24vmin; height:30vmin; animation:sdrift 9s linear forwards; }
+.sballoon.slow { animation-duration:30s; }
+@keyframes sdrift { 0% { left:-30vmin; transform:translateY(0); } 25% { transform:translateY(-2vmin); } 50% { transform:translateY(1.5vmin); } 75% { transform:translateY(-1vmin); } 100% { left:105vw; transform:translateY(0); } }
+.sitem { position:absolute; display:flex; align-items:flex-end; justify-content:center; font-size:calc(1em); opacity:0; animation:spop .6s ease forwards; transform-origin:50% 100%; }
+.sitem svg { width:100%; height:100%; overflow:visible; }
+.sitem .emo { font-size:inherit; line-height:1; }
+.sitem.gone { animation:sgone .5s ease forwards; }
+@keyframes spop { 0% { opacity:0; transform:scale(.3) translateY(4vmin); } 70% { opacity:1; transform:scale(1.08); } 100% { opacity:1; transform:scale(1); } }
+@keyframes sgone { to { opacity:0; transform:scale(.6); } }
+.scenecap { position:absolute; left:50%; transform:translateX(-50%); top:40vh; width:min(86vw, 120vmin); background:rgba(255,255,255,.92); border-radius:3vmin; padding:2vmin 3vmin; font-size:4.2vmin; line-height:1.3; font-weight:bold; text-align:center; box-shadow:0 1vmin 0 rgba(0,0,0,.12); z-index:3; }
+.bigbtn.sceneskip { position:absolute; right:3vmin; bottom:3vmin; width:15vmin; height:15vmin; z-index:4; }
+.bigbtn.sceneskip .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
