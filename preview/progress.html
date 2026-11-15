@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Progress Report</title>
+<style>
+  /* A plain, readable page for grown-ups (not a game screen). */
+  :root { --bg:#f6f1e7; --card:#fff; --ink:#2b2d42; --soft:#6b6f85; --line:#ece6da; --gold:#b98a00; --green:#2f8a45; --blue:#2f6fab; --orange:#c75f12; --grey:#8d90a3; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif; font-size:16px; line-height:1.4; }
+  .wrap { max-width:920px; margin:0 auto; padding:18px 16px 60px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  h1 { font-size:clamp(26px, 5vw, 36px); margin:4px 0; }
+  h2 { font-size:21px; margin:0 0 4px; }
+  h3 { font-size:16px; margin:0 0 6px; color:var(--soft); text-transform:uppercase; letter-spacing:.5px; }
+  .back { background:var(--card); border-radius:999px; padding:10px 18px; font-weight:bold; text-decoration:none; color:var(--ink); box-shadow:0 3px 0 rgba(0,0,0,.1); }
+  .who { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0 16px; }
+  .chip { font:inherit; font-weight:bold; background:var(--card); border:2px solid var(--card); border-radius:999px; padding:8px 16px; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.1); }
+  .chip.on { background:#ffe9a8; border-color:#e0a400; }
+  .summary { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; }
+  .tile, .list, section.game { background:var(--card); border-radius:14px; padding:14px 16px; box-shadow:0 3px 0 rgba(0,0,0,.06); }
+  .tile b { display:block; font-size:30px; line-height:1.1; }
+  .tile span { color:var(--soft); font-size:14px; }
+  .lists { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top:12px; }
+  .list ul { margin:0; padding-left:20px; } .list li { margin:4px 0; }
+  .list .none { color:var(--soft); margin:0; }
+  section.game { margin-top:16px; }
+  .game .note { color:var(--soft); font-size:14px; margin:0 0 6px; }
+  .row { display:grid; grid-template-columns:1.5fr 1.1fr 1.6fr; gap:12px; align-items:start; padding:12px 0; border-top:1px solid var(--line); }
+  .row .name { font-weight:bold; }
+  .row small { color:var(--soft); display:block; }
+  .bar { height:10px; border-radius:6px; background:#eee; overflow:hidden; margin:4px 0 2px; } .bar i { display:block; height:100%; }
+  .tag { display:inline-block; padding:2px 10px; border-radius:999px; font-size:13px; font-weight:bold; color:#fff; margin-bottom:3px; }
+  details { grid-column:1 / -1; margin-top:-4px; } summary { cursor:pointer; color:var(--blue); font-size:14px; }
+  details ul { margin:6px 0 0; padding-left:20px; font-size:14px; }
+  .empty { background:var(--card); border-radius:14px; padding:20px; }
+  .foot { color:var(--soft); font-size:13px; margin-top:22px; }
+  @media (max-width:600px) { .row { grid-template-columns:1fr; gap:4px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Progress Report</h1>
+    <a class="back" href="index.html">← Book shelf</a>
+  </header>
+  <div class="who" id="who"></div>
+  <div id="report"></div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="shared/kit.js?v=25"></script>
+<script>
+"use strict";
+/* =====================================================================
+   THE PROGRESS REPORT (for grown-ups)
+   Reads what the games note as each child plays (see "track" in shared/kit.js):
+   for every station, how many questions, how many were right first time,
+   the difficulty step, and the questions that needed another try.
+   Nothing here leaves the device.
+   ===================================================================== */
+const ORDER = ["pre", "k", "g1", "g2", "g3", "g4"]; // shelf order
+const keyFor = id => "storyShelf.progress" + (id ? "." + id : "");
+const read = id => { try { return JSON.parse(localStorage.getItem(keyFor(id)) || "null"); } catch (e) { return null; } };
+const esc = Kit.esc, pct = x => Math.round(x * 100) + "%";
+const dayName = d => new Date(d + "T12:00:00").toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+const dayKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+
+const kids = Kit.players().map(p => ({ id: p.id, name: p.name }));
+if (read(null)) kids.push({ id: null, name: "No name picked" });
+let chosen = (Kit.currentPlayer() || kids[0] || { id: null }).id;
+
+// How a station is going, from the last 20 answers.
+function judge(s) {
+  const rec = s.recent || [], n = rec.length, right = rec.filter(r => r[1]).length, rate = n ? right / n : 0;
+  const step = n ? rec[n - 1][0] : 1, firstStep = n ? rec[0][0] : 1;
+  const trend = step > firstStep ? " · stepped up ↑" : step < firstStep ? " · stepped down ↓" : "";
+  if (s.asked < 6) return { rate, step, trend, n, tag: "Just started", color: "var(--grey)", rank: 2, advice: "Not enough answers yet to tell. Keep playing." };
+  if (step === 4 && rate >= 0.8) return { rate, step, trend, n, tag: "Mastered", color: "var(--gold)", rank: 5, advice: "Mastered at the hardest step. Ready for the next book on the shelf." };
+  if (rate >= 0.8) return { rate, step, trend, n, tag: "Doing well", color: "var(--green)", rank: 4, advice: "Going well. The game makes it harder on its own." };
+  if (rate >= 0.6) return { rate, step, trend, n, tag: "Practising", color: "var(--blue)", rank: 3, advice: "Getting there. Short, regular play helps most." };
+  return { rate, step, trend, n, tag: "Needs help", color: "var(--orange)", rank: 1, advice: "Finding this hard. Try playing it together, or lower the step in that game's grown-ups panel." };
+}
+
+function render() {
+  $("who").innerHTML = kids.length
+    ? `<b>Child:</b>` + kids.map(k => `<button class="chip${k.id === chosen ? " on" : ""}" data-id="${k.id || ""}">${esc(k.name)}</button>`).join("")
+    : "";
+  const P = read(chosen), who = (kids.find(k => k.id === chosen) || { name: "this child" }).name;
+  if (!P || !Object.keys(P.games || {}).length) {
+    $("report").innerHTML = `<div class="empty"><h2>Nothing recorded yet for ${esc(who)}</h2><p>Answers are recorded from now on, as ${esc(who)} plays. Come back after a few games.</p>
+      ${kids.length ? "" : "<p>Tip: add each child's name on the book shelf, so each one gets their own report.</p>"}</div>`;
+    $("foot").textContent = "Everything in this report stays on this device.";
+    return;
+  }
+  // the last 7 days
+  const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return dayKey(d); });
+  const days = P.days || {}, playedDays = week.filter(d => days[d] > 0).length, weekQs = week.reduce((a, d) => a + (days[d] || 0), 0);
+  const all = [];
+  ORDER.concat(Object.keys(P.games).filter(g => !ORDER.includes(g))).forEach(g => {
+    const game = P.games[g]; if (!game) return;
+    Object.entries(game.stations).forEach(([id, s]) => all.push({ game: game.title, s, j: judge(s) }));
+  });
+  const recentAll = all.reduce((a, x) => a + x.j.n, 0), rightAll = all.reduce((a, x) => a + Math.round(x.j.rate * x.j.n), 0);
+  const ready = all.filter(x => x.s.asked >= 6);
+  const strong = ready.filter(x => x.j.rate >= 0.8).sort((a, b) => b.j.rank - a.j.rank || b.j.rate - a.j.rate).slice(0, 3);
+  const weak = ready.filter(x => x.j.rate < 0.8).sort((a, b) => a.j.rate - b.j.rate).slice(0, 3);
+  const item = x => `<li><b>${esc(x.s.name)}</b> <small>(${esc(x.game)})</small>: ${pct(x.j.rate)} right first time</li>`;
+
+  let html = `<div class="summary">
+      <div class="tile"><b>${playedDays} of 7</b><span>days played this week</span></div>
+      <div class="tile"><b>${weekQs}</b><span>questions answered this week</span></div>
+      <div class="tile"><b>${recentAll ? pct(rightAll / recentAll) : "–"}</b><span>right first time (recent answers)</span></div>
+    </div>
+    <div class="lists">
+      <div class="list"><h3>Strengths</h3>${strong.length ? `<ul>${strong.map(item).join("")}</ul>` : `<p class="none">Not enough answers yet.</p>`}</div>
+      <div class="list"><h3>Practise next</h3>${weak.length ? `<ul>${weak.map(item).join("")}</ul>` : `<p class="none">Nothing stands out as hard right now.</p>`}</div>
+    </div>`;
+  ORDER.concat(Object.keys(P.games).filter(g => !ORDER.includes(g))).forEach(g => {
+    const game = P.games[g]; if (!game) return;
+    html += `<section class="game"><h2>${esc(game.title)}</h2><p class="note">Based on each station's last 20 answers.</p>`;
+    Object.values(game.stations).forEach(s => {
+      const j = judge(s), tricky = Object.entries(s.missed || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      html += `<div class="row">
+          <div><div class="name">${esc(s.name)}</div><small>Step ${j.step} of 4${j.trend} · ${s.asked} answered${s.hints ? ` · 💡 ${s.hints} hint${s.hints === 1 ? "" : "s"} used` : ""} · last played ${s.last ? dayName(s.last) : "–"}</small></div>
+          <div><div class="bar"><i style="width:${pct(j.rate)};background:${j.color}"></i></div><small>${pct(j.rate)} right first time</small></div>
+          <div><span class="tag" style="background:${j.color}">${j.tag}</span><small>${j.advice}</small></div>
+          ${tricky.length ? `<details><summary>Tricky ones (${tricky.length})</summary><ul>${tricky.map(([t, n]) => `<li>${esc(t)} <small>needed another try ${n === 1 ? "once" : n + " times"}</small></li>`).join("")}</ul></details>` : ""}
+        </div>`;
+    });
+    html += `</section>`;
+  });
+  $("report").innerHTML = html;
+  const first = Object.keys(days).sort()[0];
+  const lb = Kit.lastBackup();
+  $("foot").textContent = `Recording started ${first ? dayName(first) : "today"}. Everything in this report stays on this device. Last backup: ${lb ? Kit.niceDate(lb) : "never"} (back up from the grown-ups panel on the book shelf).`;
+}
+$("who").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; chosen = b.dataset.id || null; render(); });
+render();
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>

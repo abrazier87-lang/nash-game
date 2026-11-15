@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Dr. Somebody in Ancient Rome</title>
+<link rel="stylesheet" href="shared/kit.css?v=25">
+<style>
+  /* Blue sky, olive hills, a temple and an aqueduct. */
+  :root { --sky1:#8fd3f4; --sky2:#fdebd0; --grass:#a9b665; --grass2:#7d9a4b; --title-shadow:#8e2f25; --strip:rgba(255,255,255,.45); --strip-line:rgba(90,100,40,.6); }
+  h1 { font-size:7.4vmin; padding:0 14vmin; }
+  .temple { position:absolute; left:6%; bottom:36vmin; width:30vmin; height:22vmin; }
+  .aqueduct { position:absolute; right:-2%; bottom:35vmin; width:62vmin; height:18vmin; }
+  .slot i { font-family:Georgia, serif; font-weight:bold; color:#8e2f25; }
+  .roman { font-family:Georgia, "Times New Roman", serif; letter-spacing:.15vmin; }
+  .frac { display:inline-flex; flex-direction:column; align-items:center; line-height:1; font-weight:bold; vertical-align:middle; }
+  .frac b { border-bottom:.6vmin solid currentColor; padding:0 1vmin .4vmin; font-weight:bold; color:inherit; }
+  .frac i { font-style:normal; padding-top:.4vmin; }
+  .eq { font-size:7.4vmin; white-space:nowrap; display:flex; align-items:center; gap:1.6vmin; } .eq em { font-style:normal; color:#ff8a3d; }
+  .strip { width:34vmin; height:6vmin; }
+  .shapebox { width:26vmin; height:22vmin; }
+  .graphbox { width:40vmin; height:27vmin; }
+  .chips { display:flex; gap:1vmin; flex-wrap:wrap; justify-content:center; max-width:56vmin; }
+  .chips div { min-width:7vmin; height:8.4vmin; padding:0 .8vmin; border-radius:2vmin; background:#eef3ff; border:.6vmin solid #c9d6ff; font-size:4.4vmin; line-height:7vmin; text-align:center; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=25"></script>
+<script src="shared/story.js?v=25"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY IN ANCIENT ROME  -  the Grade 4 game
+   Story: the clock balloon lands in ancient Rome, about two thousand
+   years ago. The Roman numerals have fallen off the clock face! Win at a
+   place and an animal friend brings one back. Six numerals fix the clock.
+   The engine that runs the game is in shared/story.js.
+   ===================================================================== */
+
+// Dr. Somebody dressed for Rome: a crown of green leaves and a red sash.
+const LEAVES = [-4, -3, -2, -1, 1, 2, 3, 4].map(i => { const x = 100 + i * 10.5, y = 16 + i * i * 1.3; return `<ellipse cx="${x}" cy="${y.toFixed(1)}" rx="7" ry="3.4" fill="#4c9f50" transform="rotate(${i * 14} ${x} ${y.toFixed(1)})"/>`; }).join("");
+const HOST = owl("", LEAVES + `<path d="M70 86 Q100 100 132 120 L126 132 Q96 112 66 98 Z" fill="#b03a2e"/>`);
+const TEMPLE = `<svg class="temple" viewBox="0 0 120 90"><polygon points="8,30 60,6 112,30" fill="#e9dcc3"/><rect x="10" y="30" width="100" height="6" fill="#d4c4a4"/>${[0, 1, 2, 3, 4].map(i => `<rect x="${18 + i * 19}" y="36" width="8" height="40" fill="#f3ead7"/>`).join("")}<rect x="8" y="76" width="104" height="8" fill="#d4c4a4"/></svg>`;
+const AQUEDUCT = `<svg class="aqueduct" viewBox="0 0 200 60"><path fill="#cdb89a" fill-rule="evenodd" d="M0 0 H200 V60 H0 Z ${[0, 1, 2, 3, 4].map(i => `M${8 + i * 40} 60 V32 A12 12 0 0 1 ${32 + i * 40} 32 V60 Z`).join(" ")}"/></svg>`;
+
+// ---------- helpers ----------
+const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");                       // 1250 is written 1,250
+const near = (ans, list) => numCards(ans, 0, 1000000, 4, list).map(c => ({ ...c, html: comma(c.html) }));
+const wordCard = (w, color) => `<span style="font-size:${w.length <= 4 ? 8 : w.length <= 6 ? 6 : w.length <= 8 ? 4.6 : w.length <= 11 ? 3.4 : 2.6}vmin${color ? ";color:" + color : ""}">${w}</span>`;
+const ansCard = text => `<span class="ans"${Math.max(...text.split(" ").map(w => w.length)) > 10 ? ` style="font-size:2.8vmin"` : ""}>${text}</span>`; // very long words get smaller writing
+const pickCards = (right, wrongs, make, msg) => shuffle(wrongs.concat([right])).map(x => ({ html: make(x), ok: x === right, wrong: typeof msg === "function" ? msg(x) : msg }));
+const passage = text => `<div class="passage">${text}</div>`;
+// pick-the-word questions: a sentence with a gap
+function gapQuestion(item, ask, count) {
+  const [s, a, wrongs] = item, full = w => s.replace("___", w);
+  return { bubble: `<div class="sentence">${s.replace("___", "<u>&nbsp;</u>")}</div>`, key: s, say: `${s.replace("___", "blank")} ${ask}`, again: ask, yay: `Yes! ${full(a)}`,
+    choices: pickCards(a, shuffle(wrongs).slice(0, count - 1), ansCard, "Not quite.") };
+}
+// Roman numerals: toRoman(27) gives ["XXVII", [10, 10, 5, 1, 1]]
+function toRoman(n) {
+  let s = ""; const parts = [];
+  for (const [v, r] of [[100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]) while (n >= v) { s += r; parts.push(v); n -= v; }
+  return [s, parts];
+}
+const roman = (s, size) => `<span class="roman" style="font-size:${size || (s.length <= 3 ? 14 : s.length <= 5 ? 10 : 7)}vmin">${s}</span>`;
+// fractions and decimals. Decimals are kept as a number of tenths: 23 means 2.3
+const PARTS = { 2: ["half", "halves"], 3: ["third", "thirds"], 4: ["quarter", "quarters"], 5: ["fifth", "fifths"], 6: ["sixth", "sixths"], 8: ["eighth", "eighths"], 9: ["ninth", "ninths"], 10: ["tenth", "tenths"], 12: ["twelfth", "twelfths"],
+  16: ["sixteenth", "sixteenths"], 20: ["twentieth", "twentieths"], 24: ["twenty-fourth", "twenty-fourths"], 100: ["hundredth", "hundredths"] };
+const fracSaid = (k, d) => `${k <= 20 ? NUM[k] : k} ${(PARTS[d] || ["over " + d, "over " + d])[k > 1 ? 1 : 0]}`;
+const frac = (k, d) => `<span class="frac"><b>${k}</b><i>${d}</i></span>`;
+const dec = t => (t / 10).toFixed(1), decSaid = t => `${Math.floor(t / 10)} point ${t % 10}`;
+function pie(d, k) {
+  const pt = a => `${(50 + 44 * Math.cos(a)).toFixed(1)},${(50 + 44 * Math.sin(a)).toFixed(1)}`;
+  let s = "";
+  for (let i = 0; i < d; i++) { const a0 = i / d * 2 * Math.PI - Math.PI / 2, a1 = (i + 1) / d * 2 * Math.PI - Math.PI / 2;
+    s += `<path d="M50,50 L${pt(a0)} A44,44 0 0 1 ${pt(a1)} Z" fill="${i < k ? "#ff9f43" : "#fff"}" stroke="#2b2d42" stroke-width="2.5" stroke-linejoin="round"/>`; }
+  return `<svg viewBox="0 0 100 100">${s}</svg>`;
+}
+function strip(d, k) { // a long bar cut into d equal parts, k of them orange
+  let s = "";
+  for (let i = 0; i < d; i++) s += `<rect x="${(2 + i * 196 / d).toFixed(1)}" y="2" width="${(196 / d).toFixed(1)}" height="30" fill="${i < k ? "#ff9f43" : "#fff"}" stroke="#2b2d42" stroke-width="2"/>`;
+  return `<div class="strip"><svg viewBox="0 0 200 34">${s}</svg></div>`;
+}
+// shapes
+const ngon = (n, r) => Array.from({ length: n }, (_, i) => { const a = i / n * 2 * Math.PI - Math.PI / 2 + (n % 2 ? 0 : Math.PI / n); return `${(50 + (r || 42) * Math.cos(a)).toFixed(1)},${(50 + (r || 42) * Math.sin(a)).toFixed(1)}`; }).join(" ");
+const SHAPES = { // name: [corner points, lines of symmetry]
+  square: ["16,16 84,16 84,84 16,84", 4], rectangle: ["6,28 94,28 94,72 6,72", 2], rhombus: ["50,8 82,50 50,92 18,50", 2], parallelogram: ["26,28 96,28 74,72 4,72", 0], trapezoid: ["32,28 68,28 92,72 8,72", 1],
+  pentagon: [ngon(5), 5], hexagon: [ngon(6), 6], octagon: [ngon(8), 8], "equilateral triangle": ["50,12 92,84 8,84", 3], "isosceles triangle": ["50,8 76,88 24,88", 1]
+};
+const shapeArt = name => `<div class="shapebox"><svg viewBox="0 0 100 100"><polygon points="${SHAPES[name][0]}" fill="#bfe1f6" stroke="#2f6fab" stroke-width="3" stroke-linejoin="round"/></svg></div>`;
+function angleArt(deg) {
+  const a = deg * Math.PI / 180, x = 50 + 46 * Math.cos(a), y = 80 - 46 * Math.sin(a), ax = 50 + 14 * Math.cos(a), ay = 80 - 14 * Math.sin(a);
+  const mark = deg === 90 ? `<path d="M62 80 V68 H50" fill="none" stroke="#ff8a3d" stroke-width="2.5"/>` : `<path d="M64 80 A14 14 0 0 0 ${ax.toFixed(1)} ${ay.toFixed(1)}" fill="none" stroke="#ff8a3d" stroke-width="2.5"/>`;
+  return `<div class="shapebox"><svg viewBox="0 22 100 66">${mark}<g stroke="#2f6fab" stroke-width="4" stroke-linecap="round"><line x1="50" y1="80" x2="96" y2="80"/><line x1="50" y1="80" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/></g></svg></div>`;
+}
+// A bar graph: one bar for each name. "scale" is how much each line on the side is worth.
+function barGraph(names, vals, scale) {
+  const top = Math.max(...vals), x0 = 18, y0 = 78, unit = 66 / top;
+  let s = "";
+  for (let i = 0; i <= top; i++) { const y = (y0 - i * unit).toFixed(1); s += `<line x1="${x0}" y1="${y}" x2="126" y2="${y}" stroke="#d9dbe6" stroke-width=".6"/><text x="${x0 - 2}" y="${+y + 2}" font-size="5.5" text-anchor="end" fill="#2b2d42">${i * scale}</text>`; }
+  names.forEach((n, i) => { const x = x0 + 5 + i * 27, h = vals[i] * unit; s += `<rect x="${x}" y="${(y0 - h).toFixed(1)}" width="18" height="${h.toFixed(1)}" fill="${INK[i]}"/><text x="${x + 9}" y="${y0 + 8}" font-size="6.4" text-anchor="middle" font-weight="bold" fill="#2b2d42">${n}</text>`; });
+  return `<svg viewBox="0 0 130 90">${s}<line x1="${x0}" y1="${y0}" x2="126" y2="${y0}" stroke="#2b2d42" stroke-width="1.2"/><line x1="${x0}" y1="${y0}" x2="${x0}" y2="8" stroke="#2b2d42" stroke-width="1.2"/></svg>`;
+}
+const chips = arr => `<div class="chips">${arr.map(x => `<div>${x}</div>`).join("")}</div>`;
+const clockText = mins => `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, "0")}`, clockSaid = mins => timeSaid(Math.floor(mins / 60), mins % 60);
+
+// ---------- words, grammar and facts ----------
+const COUNT_WORDS = [["How many wheels does a tricycle have?", 3, "Tri means three."], ["How many sides does an octagon have?", 8, "Oct means eight."], ["How many years are in a century?", 100, "Cent means one hundred."],
+  ["How many years are in a decade?", 10, "Dec means ten."], ["How many wheels does a unicycle have?", 1, "Uni means one."], ["How many legs does a quadruped walk on?", 4, "Quad means four."],
+  ["How many languages does a bilingual person speak?", 2, "Bi means two."], ["How many horns did a triceratops have?", 3, "Tri means three."], ["How many singers are in a duet?", 2, "Duo means two."],
+  ["How many babies are triplets?", 3, "Tri means three."], ["How many centimetres are in a metre?", 100, "Cent means one hundred."], ["How many wheels does a bicycle have?", 2, "Bi means two."],
+  ["How many arms does an octopus have?", 8, "Oct means eight."], ["How many events are in a decathlon?", 10, "Dec means ten."]];
+const ROOTS = [["aqua", "water", ["aquarium", "aquatic"]], ["port", "to carry", ["transport", "portable"]], ["spect", "to look", ["spectator", "inspect"]], ["scrib", "to write", ["scribble", "describe"]],
+  ["aud", "to hear", ["audience", "audio"]], ["ped", "foot", ["pedal", "pedestrian"]], ["dict", "to say", ["dictate", "dictionary"]], ["terr", "earth or land", ["territory", "terrain"]],
+  ["vis", "to see", ["visible", "vision"]], ["nav", "ship", ["navy", "navigate"]], ["mar", "the sea", ["marine", "submarine"]], ["sol", "the sun", ["solar", "solstice"]]];
+const ROOT_SENTENCES = [["The Romans built an ___ to carry water into the city.", "aqueduct", ["audience", "orbit", "manual"]], ["A ___ walks along the road on foot.", "pedestrian", ["spectator", "navigator", "scribe"]],
+  ["The ___ cheered at the chariot race.", "spectators", ["pedals", "aquariums", "dictionaries"]], ["The sailors used the stars to ___ their ship.", "navigate", ["dictate", "inspect", "describe"]],
+  ["The emperor would ___ his letters to a scribe.", "dictate", ["navigate", "pedal", "inspect"]], ["Carts were used to ___ grain to Rome.", "transport", ["inspect", "predict", "describe"]],
+  ["The ___ listened to the speech.", "audience", ["aquarium", "terrain", "vision"]], ["A ___ is one hundred years.", "century", ["decade", "pedal", "marine"]], ["___ panels turn sunlight into power.", "Solar", ["Marine", "Portable", "Audio"]],
+  ["The stars were ___ in the clear night sky.", "visible", ["portable", "aquatic", "audio"]], ["The soldiers crossed rough ___ to reach the fort.", "terrain", ["audio", "vision", "navy"]]];
+// [sentence, noun, verb, adjective, adverb]
+const SENTENCE_PARTS = [["The brave soldiers marched quickly.", "soldiers", "marched", "brave", "quickly"], ["A hungry lion roared loudly.", "lion", "roared", "hungry", "loudly"], ["The old senator spoke slowly.", "senator", "spoke", "old", "slowly"],
+  ["The fast chariots raced wildly.", "chariots", "raced", "fast", "wildly"], ["A young scribe wrote neatly.", "scribe", "wrote", "young", "neatly"], ["The tired builders worked carefully.", "builders", "worked", "tired", "carefully"],
+  ["The proud emperor waved grandly.", "emperor", "waved", "proud", "grandly"], ["A clever girl answered correctly.", "girl", "answered", "clever", "correctly"]];
+const JOINING = [["I wanted to see the race, ___ it rained.", "but", ["so", "because"]], ["She was tired, ___ she went to bed.", "so", ["but", "or"]], ["We stayed inside ___ it was cold.", "because", ["but", "or"]], ["You can walk ___ you can ride.", "or", ["because", "so"]],
+  ["He studied hard, ___ he passed the test.", "so", ["but", "or"]], ["The road was long, ___ the soldiers kept marching.", "but", ["so", "because"]], ["They cheered ___ their team won.", "because", ["but", "or"]],
+  ["Wait here ___ I come back.", "until", ["but", "so"]], ["I will help you ___ you ask nicely.", "if", ["but", "so"]]];
+const VERB_FORMS = [["Yesterday the Romans ___ a bridge.", "built", ["builded", "build"]], ["Last week she ___ a letter.", "wrote", ["writed", "written"]], ["The soldiers have ___ home.", "gone", ["went", "goed"]], ["He ___ the race yesterday.", "won", ["winned", "wins"]],
+  ["They ___ their lunch an hour ago.", "ate", ["eated", "eat"]], ["The emperor ___ a speech last night.", "gave", ["gived", "given"]], ["We ___ the mosaics last summer.", "saw", ["seen", "seed"]], ["The lion has ___ the meat.", "eaten", ["ate", "eated"]],
+  ["The children ___ to the market yesterday.", "ran", ["runned", "run"]], ["She ___ the answer straight away.", "knew", ["knowed", "known"]], ["Each of the boys ___ a toga.", "has", ["have", "having"]], ["The group of soldiers ___ marching.", "is", ["are", "am"]]];
+const WRITTEN_RIGHT = [["Marcus said, \"Follow me.\"", "Marcus said, Follow me.", "Marcus said \"follow me\"."], ["The girl's toga was white.", "The girls toga was white.", "The girls' toga, was white."],
+  ["We saw lions, bears and elephants.", "We saw lions bears and elephants.", "We saw, lions bears and elephants."], ["It's a long road to Rome.", "Its a long road to Rome.", "It's a long road to rome."],
+  ["Julia, the baker, sells bread.", "Julia the baker, sells bread.", "julia, the baker sells bread."], ["\"Where are you going?\" asked Livia.", "Where are you going? asked Livia.", "\"Where are you going\" asked Livia?"],
+  ["The soldiers' shields were heavy.", "The soldier's shields was heavy.", "The soldiers shields were heavy."], ["After the race, we ate figs.", "After the race we, ate figs.", "after the race, we ate figs"]];
+// [what the scroll says, the question, the right answer, three wrong answers]
+const SCROLLS = [
+  ["Rome began as a small village beside the River Tiber. Over hundreds of years it grew into a huge empire. At its largest, the empire stretched across three continents. Millions of people lived under Roman rule.", "How did Rome begin?", "as a small village", ["as a huge empire", "as an island", "as a desert camp"]],
+  ["The Romans built long, straight roads. The roads were made of layers of stone so they would last. Soldiers could march quickly along them. Some Roman roads are still used today.", "Why were the roads built from layers of stone?", "so they would last", ["so they looked pretty", "so carts would go slowly", "so rain would collect"]],
+  ["Aqueducts carried fresh water into Roman cities. The water flowed gently downhill through stone channels. Some aqueducts were built on tall arches to cross valleys. The water filled fountains and public baths.", "What did aqueducts carry?", "fresh water", ["soldiers", "grain", "stone blocks"]],
+  ["The Colosseum was a giant arena in Rome. It could hold about fifty thousand people. Crowds came to watch shows and contests. It had eighty entrances so people could get in and out quickly.", "Why did the Colosseum have so many entrances?", "so crowds could move quickly", ["to let in more light", "to keep animals out", "for decoration only"]],
+  ["Roman soldiers were called legionaries. They marched long distances carrying heavy packs. Each night they built a camp with a ditch and a wall. Their training made the army very strong.", "What did legionaries do each night?", "built a camp", ["sailed a ship", "planted crops", "wrote poems"]],
+  ["Romans spoke a language called Latin. Many English words come from Latin. French, Spanish and Italian grew out of Latin too. That is why some words look alike in those languages.", "Which languages grew out of Latin?", "French, Spanish and Italian", ["Chinese and Japanese", "only English", "Greek and Egyptian"]],
+  ["Wealthy Romans decorated their floors with mosaics. A mosaic is a picture made from tiny coloured tiles. Some mosaics showed animals, gods or sea creatures. Thousands of tiles were needed for one floor.", "What is a mosaic made from?", "tiny coloured tiles", ["painted cloth", "melted glass sheets", "carved wood"]],
+  ["Children from richer Roman families learned reading, writing and arithmetic. They wrote on wax tablets with a pointed stick. The wax could be smoothed over and used again. Papyrus, the paper of the time, was far too costly to waste.", "Why were wax tablets useful?", "they could be used again", ["they were very heavy", "they never melted", "they were made of gold"]],
+  ["Public baths were an important part of Roman life. People went there to wash, exercise and meet friends. The baths had hot rooms, warm rooms and cold pools. Hot air under the floors kept the rooms warm.", "How were the rooms kept warm?", "hot air under the floors", ["big wool blankets", "sunlight through the roof", "fires on the roof"]],
+  ["The Romans used letters for numbers. I stands for one, V for five and X for ten. We still see Roman numerals on some clocks. They are also used in the names of kings and queens.", "Where can we still see Roman numerals?", "on some clocks", ["on every coin", "only on road signs", "nowhere at all"]],
+  ["Mount Vesuvius is a volcano in Italy. In the year 79, it erupted and buried the town of Pompeii in ash. The ash kept buildings and objects safe for centuries. Today visitors can walk through the ancient streets.", "What buried the town of Pompeii?", "ash from a volcano", ["a great flood", "a sandstorm", "deep snow"]],
+  ["Romans ate their main meal in the late afternoon. Poor families ate bread, beans and porridge. Rich families held feasts with many courses. They often ate lying on couches around a low table.", "How did rich Romans often eat their feasts?", "lying on couches", ["standing in the street", "sitting on the floor", "riding in chariots"]]
+];
+
+// the Roman market: [one of it, lowest price, highest price, more than one]. Prices are in whole dollars (Ontario Grade 4 money).
+const MARKET = [["a loaf of bread", 2, 6, "loaves of bread"], ["a jar of olives", 3, 9, "jars of olives"], ["a bunch of grapes", 2, 7, "bunches of grapes"], ["a clay lamp", 5, 15, "clay lamps"],
+  ["a pair of sandals", 8, 20, "pairs of sandals"], ["a wool cloak", 15, 30, "wool cloaks"], ["a bag of figs", 2, 8, "bags of figs"], ["a jug of olive oil", 4, 12, "jugs of olive oil"],
+  ["a honey cake", 1, 5, "honey cakes"], ["a toy chariot", 6, 18, "toy chariots"]];
+// [money word, a story, why]
+const MONEY_WORDS = [["spending", "Marcus uses $12 to buy a toy chariot.", "Marcus uses his money to buy something."],
+  ["saving", "Livia puts $5 in her money box every week. She wants to buy a new cloak next month.", "Livia keeps her money for later."],
+  ["earning", "Julia sells bread at the market, and gets $20 for her work.", "Julia gets paid for her work."],
+  ["donating", "Felix gives $10 to help families who need food.", "Felix gives his money to help others."],
+  ["investing", "Aurelia uses her money to buy a second bread oven, so her bakery can sell more bread later.", "Aurelia uses money now, so she can make more money later."]];
+// ways to pay (in Canada today)
+const PAYING = [["cash", "You hand the seller coins and paper bills."], ["a debit card", "In Canada today, you tap a card, and the money comes straight out of your bank account."],
+  ["a credit card", "In Canada today, you tap a card, and the bank pays the store now. Later, you pay the bank back."]];
+
+// ---------- teaching helpers: lessons ("watch me do one"), hints and step-by-step explanations ----------
+const art = html => `<div class="lessonart">${html}</div>`;
+async function frames(L, list) { for (const [html, words] of list) { L.frame(art(html)); if (!(await L.say(words))) return false; } return true; }
+async function talkThrough(H, list) { for (const [html, words] of list) { H.show(art(html)); if (!(await H.say(words))) return false; } return true; }
+function pointTo(H, words) { const c = H.cards().find(c => c.ch.ok); if (c) H.glow(c.el, true); return H.say(words); }
+const STOP = new Set("the a an and of to in on is was were it its they them their what who why where which how did do does for with from that this there be by at as are has have".split(" "));
+function answerSentence(text, ask, ans) {
+  const sents = text.match(/[^.!?]+[.!?]/g) || [text], words = s => s.toLowerCase().replace(/'s\b/g, "").match(/[a-z]+/g) || [];
+  const keys = [...words(ans).map(w => [w, 2]), ...words(ask).map(w => [w, 1])].filter(([w]) => w.length > 2 && !STOP.has(w));
+  const score = s => { const ws = words(s); return keys.reduce((n, [k, v]) => n + (ws.some(w => w === k || w.startsWith(k.slice(0, Math.max(4, k.length - 2)))) ? v : 0), 0); };
+  return sents.map(s => s.trim()).reduce((best, s) => score(s) > score(best) ? s : best, sents[0].trim());
+}
+const passageHtml = (text, ask) => `<div class="passage">${(text.match(/[^.!?]+[.!?]/g) || [text]).map(s => `<span class="sent">${s.trim()}</span>`).join(" ")}${ask ? `<b>${ask}</b>` : ""}</div>`;
+const litSentence = (H, s) => { const el = [...H.bubble.querySelectorAll(".sent")].find(x => x.textContent === s); H.glow(el, true); return el; };
+const ROMAN_VAL = { I: 1, V: 5, X: 10, L: 50, C: 100 };
+const SHAPE_FACTS = { square: "It has 4 equal sides and 4 square corners.", rectangle: "It has 4 square corners, with 2 long sides and 2 short sides.", rhombus: "It has 4 equal sides, but its corners are not square.",
+  parallelogram: "Its opposite sides are parallel, and it leans over.", trapezoid: "It has just one pair of parallel sides.", pentagon: "It has 5 sides.", hexagon: "It has 6 sides.", octagon: "It has 8 sides." };
+const JOIN_MEANS = { but: "But shows a surprise, or something different.", so: "So shows what happened because of it.", because: "Because gives the reason.", or: "Or gives a choice.", until: "Until means up to the time that.", if: "If means only when something happens." };
+const placeSplit = n => [[1000, "thousands"], [100, "hundreds"], [10, "tens"], [1, "ones"]].map(([p, name]) => [Math.floor(n / p) % 10 * p, name]).filter(([v]) => v > 0);
+
+// ---------- the places (mini-games) ----------
+// Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again, tall, help,
+//   hint(H): a nudge on how to think about it,  explain(H): the worked answer, after a second wrong try }.
+// lesson(L, step): the "watch me do one" lesson on the first visit (and from the 📖 button).
+const GAMES = {
+  numerals: {
+    name: "Roman Numerals", icon: `<span class="roman">XII</span>`, intro: "Romans wrote numbers with letters. I is 1. V is 5. X is 10. A smaller letter in front means take it away, so I V is 4.",
+    lesson: L => frames(L, [
+      [roman("XIV", 12), "Watch me read a Roman numeral. X, I, V. I go from left to right."],
+      [`X = 10`, "X is 10."], [`IV = 4`, "Then I before V. A smaller letter in front means take it away. 5 take away 1 is 4."], [`10 + 4 = <b>14</b>`, "10 plus 4 makes 14!"]]),
+    makeQuestion(step) {
+      const n = step === 1 ? 1 + rand(12) : step === 2 ? 1 + rand(39) : step === 3 ? 40 + rand(61) : 1 + rand(100), [r, parts] = toRoman(n);
+      const read = `${r.split("").join(", ")}. ${parts.length > 1 ? `${parts.join(" plus ")} makes ${n}.` : `That's ${n}.`}`;
+      if (step === 4) { // see the number, find its numeral
+        const opts = [...new Set([n, n + (n % 5 === 4 ? 2 : n % 5 === 1 && n > 1 ? -2 : 1), n > 10 ? n - 10 : n + 10, n + 20, n > 1 ? n - 1 : n + 3])].filter(k => k > 0).slice(0, 4), longest = Math.max(...opts.map(k => toRoman(k)[0].length)), size = longest <= 3 ? 7 : longest <= 5 ? 5 : longest <= 6 ? 4 : 3;
+        return { bubble: big(n, 14), key: "r" + n, say: `Which Roman numeral shows ${n}?`, yay: `Yes! ${parts.join(" plus ")} makes ${n}.`, pause: 3000,
+          hint: H => H.say(`Break ${n} into parts: the tens, then the ones. Then write each part in Roman numerals.`),
+          explain: H => pointTo(H, `${n} is ${parts.join(" plus ")}. In Roman numerals that's ${r.split("").join(", ")}.`),
+          choices: shuffle(opts).map(k => ({ html: roman(toRoman(k)[0], size), ok: k === n, wrong: `That one is ${k}.` })) };
+      }
+      return { bubble: roman(r), key: n, say: (step === 3 ? "L is 50. C is 100. " : "") + "What number is this Roman numeral?", again: "What number is this Roman numeral?", yay: parts.length > 1 ? `Yes! ${parts.join(" plus ")} makes ${n}.` : `Yes! That is ${n}.`, pause: 3000,
+        hint: H => H.say("Go from left to right, and add up the letters. If a smaller letter comes before a bigger one, take it away."),
+        explain: H => pointTo(H, read),
+        choices: near(n, step === 1 ? [n + 1, n - 1, n + 2, n - 2] : [n + 1, n - 1, n + 10, n - 10, n + 2, n - 2].filter(k => k > 0)) };
+    }
+  },
+  multiply: {
+    name: "Legion Lines", icon: "🛡️", intro: "A Roman legion stood in neat rows. Let's multiply!",
+    lesson: L => frames(L, [
+      [`<span class="big">23 × 4</span>`, "Watch me multiply a big number. I split 23 into tens and ones: 20 and 3."],
+      [`20 × 4 = 80`, "20 times 4 is 80."], [`3 × 4 = 12`, "3 times 4 is 12."], [`80 + 12 = <b>92</b>`, "Then I add them. 80 plus 12 is 92!"]]),
+    makeQuestion(step) { // Grade 4 multiplies by one digit, and by 10, 100 and 1000 (two digits times two digits comes in Grade 5)
+      let a, b;
+      if (step === 1) { a = 6 + rand(4); b = rand(3) ? 2 + rand(8) : pick([10, 100]); }                              // tricky tables, and times 10 and 100
+      else if (step === 2) { do { a = 10 * (1 + rand(4)) + 1 + rand(4); b = 2 + rand(3); } while ((a % 10) * b > 9 || Math.floor(a / 10) * b > 9); } // 23 x 3 (no carrying)
+      else if (step === 3) { a = 12 + rand(88); b = 3 + rand(7); }                                                    // 47 x 6
+      else if (rand(2)) { a = 11 + rand(989); b = pick([10, 100, 1000]); }                                            // 47 x 100
+      else { a = 101 + rand(899); b = 2 + rand(5); }                                                                  // 325 x 4
+      const n = a * b, zeros = { 10: "one zero", 100: "two zeros", 1000: "three zeros" }[b];
+      return { bubble: `<span class="sum" style="font-size:9vmin">${a} × ${b} = <b>?</b></span>`, key: a + "x" + b, say: `What is ${a} times ${b}?`, yay: `Yes! ${a} times ${b} is ${comma(n)}!`, choices: near(n, [n + a, n - a, n + 10, n - 10, n + b, n + 100].filter(k => k > 0)),
+        hint: H => zeros ? H.say(`Times ${b} makes every digit worth ${b} times more. Write ${a}, then ${zeros}.`)
+          : a < 10 ? H.say(`Use a fact you know. What is ${a} times 5? Then add or take away ${a}s.`) : H.say(`Split ${a} into ${a >= 100 ? "hundreds, tens and ones" : "tens and ones"}. Multiply each part by ${b}, then add them up.`),
+        explain: async H => {
+          if (zeros) return pointTo(H, `${a} times ${b} is ${comma(n)}. Write ${a}, then ${zeros}.`);
+          if (a < 10) return (await talkThrough(H, [[`${a} × 5 = ${a * 5}`, `${a} times 5 is ${a * 5}.`], [`${a} × ${b} = <b>${n}</b>`, b > 5 ? `Then add ${b - 5} more ${a}s to get ${n}.` : b < 5 ? `Then take away ${5 - b} ${a}${5 - b > 1 ? "s" : ""} to get ${n}.` : `That's it!`]])) && pointTo(H, `So ${a} times ${b} is ${n}.`);
+          const parts = placeSplit(a), rows = parts.map(([v]) => [`${v} × ${b} = ${comma(v * b)}`, `${v} times ${b} is ${comma(v * b)}.`]);
+          return (await talkThrough(H, rows.concat([[`${parts.map(([v]) => comma(v * b)).join(" + ")} = <b>${comma(n)}</b>`, `Add them up, and that makes ${comma(n)}.`]]))) && pointTo(H, `So ${a} times ${b} is ${comma(n)}.`); } };
+    }
+  },
+  divide: {
+    name: "Aqueduct Sharing", icon: "💧", intro: "Aqueducts shared water out fairly. Let's divide!",
+    lesson: (L, step) => frames(L, step >= 3 ? [
+        [`<span class="big">17 ÷ 5</span>`, "Watch me divide when it doesn't share out evenly. 17 divided by 5."],
+        [`5 × 3 = 15`, "I find the biggest five times fact that fits. 5 times 3 is 15."], [`17 − 15 = 2`, "17 take away 15 leaves 2. That's the remainder."], [`<b>3 R 2</b>`, "So 17 divided by 5 is 3, remainder 2!"]]
+      : [[`<span class="big">84 ÷ 4</span>`, "Watch me divide a big number. I split 84 into 80 and 4."],
+        [`80 ÷ 4 = 20`, "80 divided by 4 is 20."], [`4 ÷ 4 = 1`, "4 divided by 4 is 1."], [`20 + 1 = <b>21</b>`, "20 and 1 make 21. So 84 divided by 4 is 21!"]]),
+    makeQuestion(step) {
+      if (step <= 2) { const b = step === 1 ? 2 + rand(8) : 2 + rand(5), q = step === 1 ? 2 + rand(9) : 11 + rand(Math.floor(99 / b) - 10), n = b * q; // facts, then 84 divided by 4
+        const qt = q - q % 10, qo = q % 10;
+        return { bubble: `<span class="sum">${n} ÷ ${b} = <b>?</b></span>`, key: n + "/" + b, say: `What is ${n} divided by ${b}?`, yay: `Yes! ${n} divided by ${b} is ${q}, because ${q} times ${b} is ${n}.`, choices: near(q, [q + 1, q - 1, q + 10, q - 10, q + 2].filter(k => k > 0)),
+          hint: H => step === 1 ? H.say(`Think of a times fact. ${b} times what makes ${n}?`) : H.say(`Split ${n} into two parts that ${b} divides easily, like ${qt * b} and ${qo * b}.`),
+          explain: async H => step === 1 ? pointTo(H, `${b} times ${q} is ${n}. So ${n} divided by ${b} is ${q}.`)
+            : (await talkThrough(H, [[`${qt * b} ÷ ${b} = ${qt}`, `${qt * b} divided by ${b} is ${qt}.`]].concat(qo ? [[`${qo * b} ÷ ${b} = ${qo}`, `${qo * b} divided by ${b} is ${qo}.`]] : []))) && pointTo(H, `${qt} and ${qo} make ${q}. So the answer is ${q}.`) }; }
+      const b = 2 + rand(8), q = 2 + rand(11), r = 1 + rand(b - 1), n = b * q + r;
+      const work = [[`${b} × ${q} = ${b * q}`, `The biggest ${b} times fact that fits is ${b} times ${q}, which is ${b * q}.`], [`${n} − ${b * q} = ${r}`, `${n} take away ${b * q} leaves ${r}. That's the remainder.`]];
+      if (step === 3) { // remainders
+        const opts = [[q, r], [q, r < b - 1 ? r + 1 : r - 1], [q + 1, r], [q - 1, r]].filter(o => o[1] > 0 && o[0] > 0), seen = new Set(), cards = opts.filter(o => !seen.has(o.join()) && seen.add(o.join()));
+        return { bubble: `<span class="sum">${n} ÷ ${b} = <b>?</b></span>`, key: n + "/" + b, say: `What is ${n} divided by ${b}? Give the remainder too. The remainder is what is left over.`, again: `What is ${n} divided by ${b}, with the remainder?`,
+          yay: `Yes! ${q} remainder ${r}. ${q} times ${b} is ${q * b}, and ${r} more makes ${n}.`, pause: 3600,
+          hint: H => H.say(`Find the biggest ${b} times fact that is not more than ${n}. Then see what is left over.`),
+          explain: async H => (await talkThrough(H, work)) && pointTo(H, `So it's ${q}, remainder ${r}.`),
+          choices: shuffle(cards).map(o => ({ html: `<span style="font-size:6.4vmin">${o[0]} R ${o[1]}</span>`, ok: o[0] === q && o[1] === r, wrong: `Check it. ${o[0]} times ${b}, plus ${o[1]}, is ${o[0] * b + o[1]}. We need ${n}.` })) };
+      }
+      const kind = rand(3), text = [ // what the remainder means depends on the story
+        `${n} soldiers need to cross a river. Each boat holds ${b} soldiers. How many boats are needed so that everyone gets across?`,
+        `${n} coins are shared equally among ${b} children. How many coins are left over?`,
+        `A loaf of bread costs ${b} coins. You have ${n} coins. How many loaves can you buy?`][kind], ans = [q + 1, r, q][kind];
+      const meaning = [`The ${r} soldiers left over still need a boat, so we need one more. ${q + 1} boats.`, `The question asks what is left over. That's ${r}.`, `The ${r} coins left over can't buy another loaf. So ${q} loaves.`][kind];
+      return { bubble: passage(text), tall: true, key: text, say: "Read the problem carefully. Tap me if you need help reading it.", again: "Read the problem again. Think about what the leftover means.", help: text,
+        yay: [`Yes! ${q} boats are full, and one more boat carries the last ${r}.`, `Yes! Each child gets ${q}, and ${r} are left over.`, `Yes! ${q} loaves. The last ${r} coins are not enough for another.`][kind], choices: near(ans, [q, q + 1, r, q - 1, q + 2].filter(k => k > 0)),
+        hint: H => H.say("First do the division and find the remainder. Then think: in this story, what does the leftover part mean?"),
+        explain: async H => (await talkThrough(H, work)) && pointTo(H, meaning) };
+    }
+  },
+  fractions: {
+    name: "Mosaic Fractions", icon: "🎨", intro: "A mosaic is made of many small parts. Let's work with fractions!",
+    lesson: (L, step) => frames(L, step === 4 ? [
+        [`${frac(1, 4)}, ${frac(2, 4)}, ${frac(3, 4)}, <b>?</b>`, "Watch me count by quarters. One quarter, two quarters, three quarters."],
+        [`${frac(4, 4)} = 1`, "Next comes four quarters. Four quarters make one whole!"], [`${frac(5, 4)}`, "And we can keep going past one whole. Five quarters!"]]
+      : [[`${strip(2, 1)}${strip(4, 2)}`, "Watch me! The top bar shows one half. The bottom bar is cut into quarters."],
+        [`${frac(1, 2)} = ${frac(2, 4)}`, "The orange parts are the same size. So one half is the same as two quarters."], [`${frac(1, 2)} → ×2 → ${frac(2, 4)}`, "Multiply the top and the bottom by the same number, and the fraction stays the same size!"]]),
+    makeQuestion(step) {
+      const cols = shuffle(INK);
+      if (step === 1) { // equal fractions
+        const [k, d] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [1, 5], [2, 5], [1, 6]]), m = pick([2, 3, 4].filter(x => PARTS[d * x] && d * x <= 12)), ans = k * m;
+        return { bubble: `<div class="col">${strip(d, k)}${strip(d * m, k * m)}<div class="eq">${frac(k, d)} = ${frac("<em>?</em>", d * m)}</div></div>`, tall: true, key: [k, d, m].join(),
+          say: `${cap(fracSaid(k, d))} is the same as how many ${PARTS[d * m][1]}? Look at the two bars.`, yay: `Yes! ${cap(fracSaid(k, d))} equals ${fracSaid(ans, d * m)}.`, choices: near(ans, [k, ans + 1, ans - 1, d * m, k + m].filter(x => x > 0)),
+          hint: H => H.say(`Count the orange parts in the bottom bar. Or think: ${d} times what makes ${d * m}? Multiply the top by that too.`),
+          explain: H => pointTo(H, `${d} times ${m} is ${d * m}. So multiply the top by ${m} too. ${k} times ${m} is ${ans}. ${cap(fracSaid(k, d))} equals ${fracSaid(ans, d * m)}.`) };
+      }
+      if (step === 2) { // which is bigger? (different bottom numbers)
+        const [A, B] = shuffle(pick([[[1, 2], [1, 3]], [[2, 3], [3, 4]], [[3, 5], [1, 2]], [[5, 8], [3, 4]], [[1, 4], [3, 8]], [[2, 5], [3, 10]], [[5, 6], [2, 3]], [[7, 10], [3, 5]], [[1, 3], [3, 8]], [[3, 4], [5, 6]]]));
+        const bigger = rand(2) === 0, val = f => f[0] / f[1], right = (val(A) > val(B)) === bigger ? A : B, other = right === A ? B : A, word = bigger ? "bigger" : "smaller";
+        return { bubble: big(word, 6), key: A.join("/") + B.join("/") + word, say: `Which fraction is ${word}?`, yay: `Yes! ${cap(fracSaid(...right))} is ${word} than ${fracSaid(...other)}.`,
+          hint: H => H.say("Look at the pictures. Which one has more of the circle coloured orange? Or think about how close each one is to a whole."),
+          explain: H => pointTo(H, `${cap(fracSaid(...(val(A) > val(B) ? A : B)))} covers more of the circle than ${fracSaid(...(val(A) > val(B) ? B : A))}. So ${fracSaid(...right)} is ${word}.`),
+          choices: [A, B].map(f => ({ html: `<div class="art" style="width:52%;height:52%">${pie(f[1], f[0])}</div><span style="font-size:4.4vmin;margin-top:1vmin">${frac(f[0], f[1])}</span>`, ok: f === right, wrong: `${cap(fracSaid(...f))} is ${bigger ? "smaller" : "bigger"}. Compare the orange parts.` })) };
+      }
+      if (step === 3) { // tenths as a fraction and as a decimal
+        const t = 1 + rand(9), hint = H => H.say("The first place after the decimal point is the tenths place.");
+        if (rand(2)) return { bubble: `<div class="eq">${frac(t, 10)} = <em>?</em></div>`, key: "f" + t, say: `What is ${fracSaid(t, 10)} as a decimal?`, yay: `Yes! ${cap(fracSaid(t, 10))} is ${decSaid(t)}.`, hint,
+          explain: H => pointTo(H, `${cap(fracSaid(t, 10))} means ${t} in the tenths place, just after the point. That's ${decSaid(t)}.`),
+          choices: pickCards(`0.${t}`, [`${t}.0`, `0.0${t}`, `1.${t}`], x => `<span style="font-size:7vmin">${x}</span>`, "Not quite. Tenths go just after the point.") };
+        const wrongs = [[t, 100], [1, t === 1 ? 2 : t], [t === 9 ? 8 : t + 1, 10]];
+        return { bubble: `<div class="eq">0.${t} = <em>?</em></div>`, key: "d" + t, say: `What is ${decSaid(t)} as a fraction?`, yay: `Yes! ${cap(decSaid(t))} is ${fracSaid(t, 10)}.`, hint,
+          explain: H => pointTo(H, `The ${t} is in the tenths place. So ${decSaid(t)} is ${fracSaid(t, 10)}.`),
+          choices: shuffle(wrongs.concat([[t, 10]])).map((f, i) => ({ html: `<span style="font-size:7vmin;color:${cols[i]}">${frac(f[0], f[1])}</span>`, ok: f[0] === t && f[1] === 10, wrong: "Not quite. The first place after the point is tenths." })) };
+      }
+      // step 4: counting by fractions (adding fractions comes in Grade 5)
+      const d = pick([2, 3, 4, 10]), s = 1 + rand(d + 1), seq = [s, s + 1, s + 2], k = s + 3;
+      const wrongs = [[k, d + 1], [k + 1, d], [s + 2, d]].filter((f, i, all) => !(f[0] === k && f[1] === d) && all.findIndex(g => g.join() === f.join()) === i);
+      return { bubble: `<div class="eq">${seq.map(x => frac(x, d)).join(", ")}, <em>?</em></div>`, key: "c" + s + "/" + d, say: `Count by ${PARTS[d][1]}. ${seq.map(x => fracSaid(x, d)).join(", ")}. What comes next?`, yay: `Yes! ${cap(fracSaid(k, d))}.`, pause: 3200,
+        hint: H => H.say(`Each step adds one more ${PARTS[d][0]}. The bottom number stays the same.`),
+        explain: H => pointTo(H, `${cap(fracSaid(s + 2, d))}, and one more ${PARTS[d][0]}, makes ${fracSaid(k, d)}.${k === d ? " That's one whole!" : k === 2 * d ? " That's two wholes!" : ""}`),
+        choices: shuffle(wrongs.concat([[k, d]])).map((f, i) => ({ html: `<span style="font-size:7vmin;color:${cols[i]}">${frac(f[0], f[1])}</span>`, ok: f[0] === k && f[1] === d, wrong: "Not quite. Add one more part. The bottom number stays the same." })) };
+    }
+  },
+  decimals: {
+    name: "Market Decimals", icon: "🏺", intro: "At the market, things are measured in tenths. The number after the point counts tenths.",
+    lesson: (L, step) => frames(L, step >= 3 ? [
+        [`<span class="big">2.3 + 1.5</span>`, "Watch me add decimals. I line up the points."],
+        [`2 + 1 = 3 &nbsp; 0.3 + 0.5 = 0.8`, "Add the whole numbers: 2 plus 1 is 3. Add the tenths: 3 tenths plus 5 tenths is 8 tenths."], [`<b>3.8</b>`, "So 2.3 plus 1.5 is 3.8!"]]
+      : [[strip(10, 7), "Watch me! This bar is cut into 10 equal parts. Each part is one tenth."],
+        [`7 tenths`, "7 parts are orange. That's 7 tenths."], [`<span class="big">0.7</span>`, "We write 7 tenths as zero point 7. The 7 goes just after the point!"]]),
+    makeQuestion(step) {
+      const decCards = (t, list) => { const wrong = shuffle([...new Set(list.concat([t + 2, t + 3, t + 11]))].filter(x => x > 0 && x !== t)).slice(0, 3); return wrong.concat(t).sort((a, b) => a - b).map(x => ({ html: `<span style="font-size:7vmin">${dec(x)}</span>`, ok: x === t, wrong: `That is ${decSaid(x)}.` })); };
+      if (step === 1) { const k = 1 + rand(9); // read tenths from a bar
+        return { bubble: strip(10, k), key: k, say: "The bar is cut into ten equal parts. What decimal is orange?", again: "What decimal is orange?", yay: `Yes! ${k} tenths is ${decSaid(k)}.`,
+          hint: H => H.say("Count the orange parts. Each part is one tenth. The tenths go just after the point."),
+          explain: H => pointTo(H, `${cap(NUM[k])} parts are orange. That's ${k} tenths, which we write as ${decSaid(k)}.`),
+          choices: pickCards(`0.${k}`, [`${k}.0`, `0.0${k}`, k === 5 ? "1.5" : `0.${10 - k}`], x => `<span style="font-size:7vmin">${x}</span>`, "Not quite. Count the orange tenths.") }; }
+      if (step === 2) { let a = 1 + rand(39), b; do { b = Math.max(1, a + pick([-12, -9, -3, -1, 1, 2, 8, 11])); } while (b === a); // which is bigger?
+        const bigger = rand(2) === 0, right = (a > b) === bigger ? a : b, other = right === a ? b : a, word = bigger ? "bigger" : "smaller", sameWhole = Math.floor(a / 10) === Math.floor(b / 10);
+        return { bubble: big(word, 6), key: a + "," + b + word, say: `Which decimal is ${word}?`, yay: `Yes! ${cap(decSaid(right))} is ${word} than ${decSaid(other)}.`,
+          hint: H => H.say("Look at the whole number first. If those are the same, look at the tenths."),
+          explain: H => pointTo(H, sameWhole ? `The whole numbers are both ${Math.floor(a / 10)}. So look at the tenths. ${cap(decSaid(right))} is ${word}.` : `Look at the whole numbers. ${Math.floor(right / 10)} is ${word} than ${Math.floor(other / 10)}. So ${decSaid(right)} is ${word}.`),
+          choices: shuffle([a, b]).map(x => ({ html: `<span style="font-size:10vmin">${dec(x)}</span>`, ok: x === right, wrong: `Look at the whole number first, then the tenths.` })) }; }
+      const plus = rand(2) === 0, b = 3 + rand(60), a = plus ? 12 + rand(140) : b + 4 + rand(120); // when taking away, the first number is always the bigger one
+      const ans = plus ? a + b : a - b, list = [ans + 1, ans - 1, ans + 10, ans - 10, plus ? a - b : a + b];
+      const hint = H => H.say("Line up the decimal points. Work with the tenths just like whole numbers, then put the point back.");
+      const explain = H => pointTo(H, `${cap(decSaid(a))} is ${a} tenths. ${cap(decSaid(b))} is ${b} tenths. ${a} ${plus ? "plus" : "take away"} ${b} is ${ans} tenths. That's ${decSaid(ans)}.`);
+      if (step === 3) return { bubble: `<span class="sum" style="font-size:8.6vmin">${dec(a)} ${plus ? "+" : "−"} ${dec(b)} = <b>?</b></span>`, key: [a, b, plus].join(), say: `What is ${decSaid(a)} ${plus ? "plus" : "minus"} ${decSaid(b)}?`, yay: `Yes! The answer is ${decSaid(ans)}.`, choices: decCards(ans, list), hint, explain };
+      const text = plus ? pick([`A merchant carries ${dec(a)} kilograms of olives and ${dec(b)} kilograms of figs. How many kilograms is that altogether?`, `One water pipe is ${dec(a)} metres long. Another pipe is ${dec(b)} metres longer. How long is the second pipe?`])
+        : pick([`A Roman road will be ${dec(a)} kilometres long. Workers have paved ${dec(b)} kilometres. How many kilometres are left to pave?`, `A jar holds ${dec(a)} litres of oil. The cook uses ${dec(b)} litres. How many litres are left?`]);
+      return { bubble: passage(text), tall: true, key: text, say: "Read the problem carefully. Tap me if you need help reading it.", again: "Read the problem again.", help: text, yay: `Yes! The answer is ${decSaid(ans)}.`, choices: decCards(ans, list),
+        hint: H => H.say(plus ? "Things are joined together, so add. Line up the decimal points." : "Some is used up or done, so take away. Line up the decimal points."), explain };
+    }
+  },
+  shapes: {
+    name: "Architect's Angles", icon: "📐", intro: "Roman builders studied shapes and angles. A right angle is a square corner. An acute angle is smaller. An obtuse angle is bigger.",
+    lesson: (L, step) => frames(L, step === 3 ? [
+        [shapeArt("rectangle"), "Watch me find lines of symmetry. A line of symmetry folds a shape into two matching halves."],
+        [`fold ↕ ✓ &nbsp; fold ↔ ✓`, "I can fold this rectangle top to bottom, and side to side. Both make matching halves."], [`<b>2</b> lines`, "A rectangle has 2 lines of symmetry!"]]
+      : [[angleArt(90), "Watch me! This is a right angle. It's a square corner, like the corner of a page."],
+        [angleArt(40), "This angle is smaller than a square corner. It's acute."], [angleArt(130), "This one is bigger than a square corner. It's obtuse."]]),
+    makeQuestion(step) {
+      if (step === 1) { const kind = pick(["acute", "right", "obtuse"]), deg = kind === "right" ? 90 : kind === "acute" ? 20 + rand(56) : 105 + rand(56), cols = shuffle(INK); // name the angle
+        const why = { acute: "It is smaller than a square corner.", right: "It is a square corner.", obtuse: "It is bigger than a square corner." };
+        return { bubble: angleArt(deg), key: deg, say: "Is this angle acute, right, or obtuse?", yay: `Yes! It is ${kind}. ${why[kind]}`, pause: 3000,
+          hint: H => H.say("Compare it with a square corner, like the corner of a book. Is it smaller, the same, or bigger?"),
+          explain: H => pointTo(H, `${why[kind]} So it's ${kind}.`),
+          choices: ["acute", "right", "obtuse"].map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === kind, wrong: `Not ${w}. Compare it with a square corner.` })) }; }
+      if (step === 2) { // name the shape. A square is also a rectangle and a rhombus, and both of those are parallelograms,
+        // so leave out any name that would also be right for the shape shown.
+        const ALSO = { square: ["rectangle", "rhombus", "parallelogram"], rectangle: ["parallelogram"], rhombus: ["parallelogram"] };
+        const t = pick(["square", "rectangle", "rhombus", "parallelogram", "trapezoid", "pentagon", "hexagon", "octagon"]);
+        const names = [t].concat(shuffle(["square", "rectangle", "rhombus", "parallelogram", "trapezoid", "pentagon", "hexagon", "octagon"].filter(n => n !== t && !(ALSO[t] || []).includes(n) && !(ALSO[n] || []).includes(t))).slice(0, 3));
+        return { bubble: shapeArt(t), key: t, say: "What is this shape called?", yay: `Yes! It is ${/^[aeio]/.test(t) ? "an" : "a"} ${t}.`,
+          hint: H => H.say("Count the sides first. Then look at the corners, and at which sides match."),
+          explain: H => pointTo(H, `${SHAPE_FACTS[t]} So it's ${/^[aeio]/.test(t) ? "an" : "a"} ${t}.`),
+          choices: shuffle(names).map(n => ({ html: wordCard(n), ok: n === t, wrong: `Not ${/^[aeio]/.test(n) ? "an" : "a"} ${n}. Count the sides and look at the corners.` })) }; }
+      if (step === 3) { const name = pick(Object.keys(SHAPES)), n = SHAPES[name][1]; // lines of symmetry
+        return { bubble: shapeArt(name), key: name, say: "How many lines of symmetry does this shape have? A line of symmetry folds the shape into two matching halves.", again: "How many lines of symmetry does it have?",
+          yay: n ? `Yes! ${cap(/^[aeio]/.test(name) ? "an" : "a")} ${name} has ${n} line${n > 1 ? "s" : ""} of symmetry.` : `Yes! A parallelogram has none. It never folds into matching halves.`, pause: 3400,
+          hint: H => H.say("Imagine folding the shape. Try top to bottom, side to side, and corner to corner. Which folds make matching halves?"),
+          explain: H => pointTo(H, n ? `${cap(/^[aeio]/.test(name) ? "an" : "a")} ${name} folds into matching halves ${n} different way${n > 1 ? "s" : ""}. That's ${n} line${n > 1 ? "s" : ""} of symmetry.` : "A parallelogram leans over, so no fold makes matching halves. It has none."),
+          choices: numCards(n, 0, 9, 4, [0, 1, 2, 3, 4, 5, 6, 8].filter(k => k !== n)) }; }
+      const w = 2 + rand(11), h = 2 + rand(11), A = w * h, P = 2 * (w + h), area = rand(2) === 0; // step 4: find the missing side
+      const text = area ? `A floor mosaic covers ${A} square metres. It is ${w} metres long. How many metres wide is it?` : `The fence around a garden is ${P} metres long. The garden is ${w} metres long. How many metres wide is it?`;
+      return { bubble: passage(text), tall: true, key: text, say: text, yay: area ? `Yes! ${A} divided by ${w} is ${h}.` : `Yes! Half of ${P} is ${w + h}. Take away ${w} to get ${h}.`, pause: 3400, choices: near(h, area ? [A - w, h + 1, h - 1, w] : [P - w, P / 2, P - 2 * w, h + 1].filter(k => k > 0)),
+        hint: H => H.say(area ? `Area is length times width. ${w} times what makes ${A}?` : "The fence goes around two lengths and two widths. Half the fence is one length plus one width."),
+        explain: async H => area ? pointTo(H, `${w} times ${h} is ${A}. So the width is ${h} metres.`)
+          : (await talkThrough(H, [[`${P} ÷ 2 = ${w + h}`, `Half of ${P} is ${w + h}. That's one length and one width.`], [`${w + h} − ${w} = <b>${h}</b>`, `${w + h} take away ${w} is ${h}.`]])) && pointTo(H, `So the width is ${h} metres.`) };
+    }
+  },
+  measure: {
+    name: "Roman Roads", icon: "📏", intro: "Roman roads had a stone marker for every mile. We measure in metres. There are 100 centimetres in a metre.",
+    lesson: L => frames(L, [
+      [`<span class="big">3 m = <b>?</b> cm</span>`, "Watch me change metres into centimetres. There are 100 centimetres in every metre."],
+      [`100 + 100 + 100`, "3 metres is 3 lots of 100 centimetres."], [`3 × 100 = <b>300</b> cm`, "3 times 100 is 300. So 3 metres is 300 centimetres! Smaller units means a bigger number."]]),
+    makeQuestion(step) {
+      const UNIT = { m: "metres", cm: "centimetres", km: "kilometres", mm: "millimetres", kg: "kilograms", g: "grams", L: "litres", mL: "millilitres" }, n = 1 + rand(9), one = (k, u) => k === 1 ? UNIT[u].slice(0, -1) : UNIT[u]; // "1 metre", not "1 metres"
+      const ask = (a, ua, b, ub, fact) => { const bigger = b > a, times = bigger ? b / a : a / b;
+        return { bubble: `<span class="sum" style="font-size:7.6vmin">${comma(a)} ${ua} = <b>?</b> ${ub}</span>`, key: a + ua + ub, say: `${comma(a)} ${one(a, ua)} is how many ${UNIT[ub]}? ${fact}`, again: `${comma(a)} ${one(a, ua)} is how many ${UNIT[ub]}?`, yay: `Yes! ${comma(a)} ${one(a, ua)} is ${comma(b)} ${one(b, ub)}.`, pause: 3200,
+          hint: H => H.say(`${fact} ${bigger ? "Changing to a smaller unit makes a bigger number, so multiply." : "Changing to a bigger unit makes a smaller number, so divide."}`),
+          explain: H => pointTo(H, `${fact} ${comma(a)} ${bigger ? "times" : "divided by"} ${comma(times)} is ${comma(b)}. So ${comma(a)} ${one(a, ua)} is ${comma(b)} ${one(b, ub)}.`),
+          choices: near(b, [b * 10, b / 10, b * 100, b / 100, b + 1, b + 10].filter(k => k > 0 && Number.isInteger(k))) }; };
+      if (step === 1) return rand(2) ? ask(n, "m", n * 100, "cm", "There are 100 centimetres in a metre.") : ask(n * 100, "cm", n, "m", "There are 100 centimetres in a metre.");
+      if (step === 2) return pick([() => ask(n, "km", n * 1000, "m", "There are 1000 metres in a kilometre."), () => ask(n * 1000, "m", n, "km", "There are 1000 metres in a kilometre."),
+        () => ask(n, "cm", n * 10, "mm", "There are 10 millimetres in a centimetre."), () => ask(n * 10, "mm", n, "cm", "There are 10 millimetres in a centimetre.")])();
+      if (step === 4) return pick([() => ask(n, "kg", n * 1000, "g", "There are 1000 grams in a kilogram."), () => ask(n * 1000, "g", n, "kg", "There are 1000 grams in a kilogram."),
+        () => ask(n, "L", n * 1000, "mL", "There are 1000 millilitres in a litre."), () => ask(n * 1000, "mL", n, "L", "There are 1000 millilitres in a litre.")])();
+      const start = 60 * (1 + rand(10)) + pick([0, 15, 30, 45]), mins = 5 * (4 + rand(17)), end = start + mins; // step 3: how long did it take?
+      const hour = Math.ceil(start / 60) * 60, jumps = hour > start && hour < end ? [[start, hour], [hour, end]] : [[start, end]];
+      const text = `A chariot race starts at ${clockText(start)} and ends at ${clockText(end)}. How many minutes long is the race?`;
+      return { bubble: passage(text), tall: true, key: text, say: `A chariot race starts at ${clockSaid(start)} and ends at ${clockSaid(end)}. How many minutes long is the race?`, yay: `Yes! The race is ${mins} minutes long.`, choices: near(mins, [mins + 40, mins - 40, mins + 5, mins - 5, mins + 10, mins + 60].filter(k => k > 0)),
+        hint: H => H.say("Count on from the start time. Jump to the next o'clock first, then count the minutes that are left."),
+        explain: async H => (await talkThrough(H, jumps.map(([x, y]) => [`${clockText(x)} → ${clockText(y)}: <b>${y - x}</b> min`, `From ${clockSaid(x)} to ${clockSaid(y)} is ${y - x} minutes.`]))) && pointTo(H, jumps.length > 1 ? `${jumps.map(([x, y]) => y - x).join(" plus ")} is ${mins} minutes.` : `So the race is ${mins} minutes long.`) };
+    }
+  },
+  data: {
+    name: "Senate Numbers", icon: "📊", intro: "The Roman Senate liked to count everything. Let's study the numbers!",
+    lesson: (L, step) => frames(L, step === 2 ? [
+        [chips([4, 7, 4, 2, 4, 9]), "Watch me find the mode. The mode is the number that shows up most often."],
+        [`4 appears 3 times`, "4 shows up three times. Every other number shows up just once."], [`mode = <b>4</b>`, "So the mode is 4!"]]
+      : step === 3 ? [
+        [chips([9, 3, 7, 1, 5]), "Watch me find the median. First, I put the numbers in order."],
+        [chips([1, 3, 5, 7, 9]), "1, 3, 5, 7, 9."], [`median = <b>5</b>`, "The median is the one in the middle. 5!"]]
+      : step === 4 ? [
+        [chips([4, 6, 8]), "Watch me find the mean. First, I add all the numbers. 4 plus 6 plus 8 is 18."],
+        [`18 ÷ 3 = <b>6</b>`, "Then I divide by how many numbers there are. There are 3. 18 divided by 3 is 6."], [`mean = <b>6</b>`, "So the mean is 6. It's like sharing the total out equally!"]]
+      : [[`<div class="graphbox" style="width:44vmin;height:30vmin;display:inline-block">${barGraph(["bread", "olives", "grapes", "fish"], [3, 5, 2, 4], 10)}</div>`, "Watch me read a bar graph. First, I check the numbers on the side. They count by tens."],
+        [`olives → 50 &nbsp; grapes → 20`, "The olives bar reaches 50. The grapes bar reaches 20."], [`50 − 20 = <b>30</b>`, "So 30 more baskets of olives were sold than grapes!"]]),
+    makeQuestion(step) {
+      if (step === 1) { const names = ["bread", "olives", "grapes", "fish"], vals = shuffle([1, 2, 3, 4, 5, 6, 7, 8]).slice(0, 4), scale = pick([5, 10, 25]), [i, j] = shuffle([0, 1, 2, 3]), a = vals[i] * scale, b = vals[j] * scale, more = rand(2) === 0; // read a graph
+        const hi = Math.max(a, b), lo = Math.min(a, b), hiName = a > b ? names[i] : names[j], loName = a > b ? names[j] : names[i];
+        return { bubble: `<div class="col"><div class="graphbox">${barGraph(names, vals, scale)}</div><div class="cap" style="font-size:3vmin">baskets sold at the market</div></div>`, tall: true, key: vals.join() + scale + i + j + more,
+          say: more ? `How many more baskets of ${hiName} than ${loName} were sold?` : `How many baskets of ${names[i]} and ${names[j]} were sold altogether?`, yay: more ? `Yes! ${hi} take away ${lo} is ${hi - lo}.` : `Yes! ${a} plus ${b} is ${a + b}.`,
+          hint: H => H.say(`The side counts by ${scale}s. Read both bars, then ${more ? "find the difference" : "add them"}.`),
+          explain: H => pointTo(H, `The ${names[i]} bar reaches ${a}. The ${names[j]} bar reaches ${b}. ${more ? `${hi} take away ${lo} is ${hi - lo}.` : `${a} plus ${b} is ${a + b}.`}`),
+          choices: near(more ? hi - lo : a + b, (more ? [hi, lo, hi + lo, hi - lo + scale] : [hi - lo, a + b + scale, a + b - scale, hi]).filter(k => k > 0)) }; }
+      if (step === 2) { const pool = shuffle([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), m = pool[0], list = shuffle([m, m, m].concat(pool.slice(1, 5))); // mode
+        return { bubble: `<div class="col">${chips(list)}<div class="cap">mode</div></div>`, tall: true, key: list.join(), say: "Which number is the mode? The mode is the number that shows up most often.", again: "Which number shows up most often?", yay: `Yes! ${m} shows up three times, more than any other.`, choices: near(m, pool.slice(1, 5)),
+          hint: H => H.say("Count how many times each number shows up."), explain: H => pointTo(H, `${m} shows up three times. The others show up only once. So the mode is ${m}.`) }; }
+      if (step === 3) { const list = shuffle(Array.from({ length: 30 }, (_, i) => i + 1)).slice(0, 5), sorted = list.slice().sort((a, b) => a - b), med = sorted[2]; // median
+        return { bubble: `<div class="col">${chips(list)}<div class="cap">median</div></div>`, tall: true, key: list.join(), say: "What is the median? Put the numbers in order, then find the one in the middle.", again: "Put them in order. Which number is in the middle?",
+          yay: `Yes! In order they are ${sorted.join(", ")}. ${med} is in the middle.`, pause: 4000, choices: near(med, [sorted[0], sorted[4], sorted[1], sorted[3]]),
+          hint: H => H.say("Write the numbers from smallest to biggest. Then find the middle one."),
+          explain: async H => (await talkThrough(H, [[chips(sorted), `In order: ${sorted.join(", ")}.`]])) && pointTo(H, `${med} is in the middle. So the median is ${med}.`) }; }
+      const count = 3 + rand(3), mean = 5 + rand(11), offs = shuffle({ 3: [[-2, 0, 2], [-3, 1, 2], [-4, 1, 3]], 4: [[-3, -1, 1, 3], [-2, -2, 1, 3], [-4, 0, 1, 3]], 5: [[-4, -2, 0, 2, 4], [-3, -1, 0, 1, 3], [-4, -1, 1, 2, 2]] }[count])[0]; // step 4: mean
+      const list = shuffle(offs.map(o => mean + o)), sum = list.reduce((a, b) => a + b, 0);
+      return { bubble: `<div class="col">${chips(list)}<div class="cap">mean</div></div>`, tall: true, key: list.join(), say: "What is the mean? Add all the numbers, then divide by how many numbers there are.", again: "Add them all up, then divide by how many there are.",
+        yay: `Yes! They add up to ${sum}. ${sum} divided by ${count} is ${mean}.`, pause: 4000, choices: near(mean, [sum, Math.max(...list), mean + 1, mean - 1, mean + 2]),
+        hint: H => H.say(`Add all ${count} numbers together. Then divide the total by ${count}.`),
+        explain: async H => (await talkThrough(H, [[`${list.join(" + ")} = ${sum}`, `Add them up. That makes ${sum}.`], [`${sum} ÷ ${count} = <b>${mean}</b>`, `There are ${count} numbers. ${sum} divided by ${count} is ${mean}.`]])) && pointTo(H, `So the mean is ${mean}.`) };
+    }
+  },
+  problems: {
+    name: "Forum Problems", icon: "🏟️", intro: "In the Forum, people solved problems together. Read each one carefully. Some need two steps!",
+    lesson: L => frames(L, [
+      [`<div class="passage">A merchant buys 3 jars of oil for 20 coins each. She pays with 100 coins. How much change does she get?</div>`, "Watch me solve a two step problem. What do I need to find? The change."],
+      [`3 × 20 = 60`, "Step one. 3 jars at 20 coins each costs 60 coins."], [`100 − 60 = <b>40</b>`, "Step two. She pays 100. 100 take away 60 is 40. Her change is 40 coins!"]]),
+    makeQuestion(step) {
+      let text, ans, trap = [], work;
+      const g = 3 + rand(7), k = 12 + rand(30);
+      if (step === 1) { // big numbers, one step
+        if (rand(2)) { const seats = pick([4000, 5000, 6000, 8000]), a = 1000 + rand(seats - 1500); text = `An arena has ${comma(seats)} seats. ${comma(a)} seats are full. How many seats are empty?`; ans = seats - a; trap = [seats + a, ans + 100, ans - 100, ans + 1000, ans + 10];
+          work = [[`${comma(seats)} − ${comma(a)} = <b>${comma(ans)}</b>`, `Some seats are full, so take them away. ${comma(seats)} take away ${comma(a)} is ${comma(ans)}.`]]; }
+        else { const a = 1200 + rand(4000), b = 1100 + rand(3500); text = `${comma(a)} people live in one town and ${comma(b)} live in the next town. How many people is that altogether?`; ans = a + b; trap = [ans + 100, ans - 100, ans + 1000, ans - 1000, ans + 10];
+          work = [[`${comma(a)} + ${comma(b)} = <b>${comma(ans)}</b>`, `Altogether means add. ${comma(a)} plus ${comma(b)} is ${comma(ans)}.`]]; } }
+      else if (step === 2) { // multiplying or dividing, one step
+        if (rand(2)) { text = `A legion marches ${k} kilometres each day. How far does it march in ${g} days?`; ans = k * g; trap = [k + g, ans + k, ans - k, ans + 10];
+          work = [[`${k} × ${g} = <b>${ans}</b>`, `The same distance each day, so multiply. ${k} times ${g} is ${ans}.`]]; }
+        else { const b = 3 + rand(6), q = 11 + rand(14); text = `A baker makes ${b * q} loaves and packs them into baskets of ${b}. How many baskets does the baker fill?`; ans = q; trap = [q + 1, q - 1, q + 10, b * q - b];
+          work = [[`${b * q} ÷ ${b} = <b>${q}</b>`, `Packed into equal baskets, so divide. ${b * q} divided by ${b} is ${q}.`]]; } }
+      else if (step === 3) { const kind = rand(3); // two steps
+        if (kind === 0) { const pay = k * g < 100 ? 100 : k * g < 200 ? 200 : 500; text = `A merchant buys ${g} jars of olive oil for ${k} coins each. She pays with ${pay} coins. How much change does she get?`; ans = pay - k * g; trap = [k * g, pay - k, ans + 10, ans - 10];
+          work = [[`${g} × ${k} = ${g * k}`, `Step one. ${g} jars at ${k} coins each costs ${g * k}.`], [`${pay} − ${g * k} = <b>${ans}</b>`, `Step two. ${pay} take away ${g * k} is ${ans}.`]]; }
+        else if (kind === 1) { const lost = 5 + rand(30); text = `${g} carts each carry ${k} stones. On the way, ${lost} stones fall off. How many stones arrive?`; ans = g * k - lost; trap = [g * k, g * k + lost, ans + 10, ans - 10];
+          work = [[`${g} × ${k} = ${g * k}`, `Step one. ${g} carts of ${k} is ${g * k} stones.`], [`${g * k} − ${lost} = <b>${ans}</b>`, `Step two. ${g * k} take away ${lost} is ${ans}.`]]; }
+        else { const t = 2 + rand(8); text = `A school has ${g} classes with ${k} pupils in each class, and ${t} teachers. How many people are in the school?`; ans = g * k + t; trap = [g * k, g + k + t, ans + 10, ans - 10];
+          work = [[`${g} × ${k} = ${g * k}`, `Step one. ${g} classes of ${k} is ${g * k} pupils.`], [`${g * k} + ${t} = <b>${ans}</b>`, `Step two. Add the ${t} teachers. That makes ${ans}.`]]; } }
+      else { const kind = rand(3); // step 4: harder two-step problems
+        if (kind === 0) { const a = 12 + rand(9), c = 5 + rand(6), na = 2 + rand(2), nc = 2 + rand(3), pay = 100; text = `A ticket costs ${a} coins for an adult and ${c} coins for a child. ${na} adults and ${nc} children pay with ${pay} coins. How much change do they get?`; ans = pay - (na * a + nc * c); trap = [na * a + nc * c, pay - a - c, ans + 10, ans - 10];
+          work = [[`${na} × ${a} + ${nc} × ${c} = ${na * a + nc * c}`, `Step one. The adults cost ${na * a}, and the children cost ${nc * c}. That's ${na * a + nc * c} altogether.`], [`${pay} − ${na * a + nc * c} = <b>${ans}</b>`, `Step two. ${pay} take away ${na * a + nc * c} is ${ans}.`]]; }
+        else if (kind === 1) { const d = 5 + rand(5), w = 2 + rand(3); text = `A runner trains ${d} kilometres every day. How far does the runner go in ${w} weeks?`; ans = d * 7 * w; trap = [d * w, d * 7, ans + d, ans - d];
+          work = [[`${w} × 7 = ${7 * w} days`, `Step one. A week has 7 days, so ${w} weeks is ${7 * w} days.`], [`${d} × ${7 * w} = <b>${ans}</b>`, `Step two. ${d} kilometres for ${7 * w} days is ${ans}.`]]; }
+        else { const per = 50 * (2 + rand(4)), days = 3 + rand(5), extra = 50 * (2 + rand(10)), total = per * days + extra; text = `A new road will be ${comma(total)} metres long. Workers pave ${per} metres each day. How many metres are left after ${days} days?`; ans = extra; trap = [per * days, total - per, ans + per, ans + 100];
+          work = [[`${per} × ${days} = ${comma(per * days)}`, `Step one. ${per} metres for ${days} days is ${comma(per * days)} metres paved.`], [`${comma(total)} − ${comma(per * days)} = <b>${comma(extra)}</b>`, `Step two. ${comma(total)} take away ${comma(per * days)} is ${comma(extra)}.`]]; } }
+      return { bubble: passage(text), tall: true, key: text, say: step === 1 ? text : "Read the problem carefully. Tap me if you need help reading it.", again: "Read the problem again.", help: text, yay: `Yes! The answer is ${comma(ans)}.`, choices: near(ans, trap.filter(x => x !== ans && x > 0)),
+        hint: H => H.say(step >= 3 ? "This one has two steps. What do you need to work out first? Then what do you do with that answer?" : "What happens in the story? Are things joined, taken away, repeated, or shared out?"),
+        explain: async H => (await talkThrough(H, work)) && pointTo(H, `So the answer is ${comma(ans)}.`) };
+    }
+  },
+  market: { // Ontario Grade 4 money: costs and change in whole dollars, ways to pay, spending and saving, and spotting a good deal
+    name: "Roman Market", icon: "💰", intro: "Welcome to the Roman market! I'll pay with the Canadian dollars I brought from home. Let's buy and sell!",
+    lesson: L => frames(L, [
+      [`🍞 $4 &nbsp; 🧀 $9`, "Watch me shop. Bread costs 4 dollars, and cheese costs 9 dollars. I add them. 4 plus 9 is 13 dollars."],
+      [`$13 → $20`, "I pay with a 20 dollar bill. To find my change, I count up from 13 to 20."],
+      [`$13 → $14, $15 … $20 = <b>$7</b>`, "14, 15, 16, 17, 18, 19, 20. That's 7 dollars. My change is 7 dollars!"]]),
+    makeQuestion(step) {
+      const cash = (ans, list) => numCards(ans, 1, 1000, 4, list.filter(x => x > 0 && x !== ans)).map(c => ({ ...c, html: `<span style="font-size:6.4vmin">$${c.html}</span>`, wrong: `That is ${c.html} dollars.` }));
+      const dollars = n => `${n} dollar${n === 1 ? "" : "s"}`;
+      const shop = shuffle(MARKET), [A, B, C] = shop, price = it => it[1] + rand(it[2] - it[1] + 1);
+      const ask = (text, said, ans, list, hint, work, yay) => ({ bubble: passage(text), tall: true, key: text, say: (said || text).replace(/(\d+) dollars bill/g, "$1 dollar bill"), help: text, again: "Read the problem again.", yay: yay || `Yes! ${cap(dollars(ans))}.`,
+        choices: cash(ans, list), hint: H => H.say(hint), explain: async H => (await talkThrough(H, work)) && pointTo(H, `So the answer is ${dollars(ans)}.`) });
+      if (step === 1) { // the cost of two or three things
+        const items = [A, B].concat(rand(2) ? [C] : []), ps = items.map(price), total = ps.reduce((a, b) => a + b, 0);
+        const list = items.map((it, i) => `${it[0]} for $${ps[i]}`), text = `You buy ${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}. How much do you spend altogether?`;
+        return ask(text, text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), total, [total + 1, total - 1, total + 10, total - 10, Math.max(...ps)], "Add up the prices of everything you buy.",
+          [[ps.map(p => `$${p}`).join(" + ") + ` = <b>$${total}</b>`, `${ps.join(" plus ")} is ${total}.`]]);
+      }
+      if (step === 2) { // buying or selling several of the same thing
+        const n = 2 + rand(5), p = price(A), sell = rand(2) === 0, total = n * p;
+        const text = sell ? `A merchant sells ${n} ${A[3]} for $${p} each. How much money does the merchant earn?` : `You buy ${n} ${A[3]}. Each one costs $${p}. How much do you spend?`;
+        return ask(text, text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), total, [n + p, total + p, total - p, total + 10], `${n} of them at ${dollars(p)} each. That's ${n} groups of ${p}. Multiply.`,
+          [[`${n} × $${p} = <b>$${total}</b>`, `${n} times ${p} is ${total}.`]], sell ? `Yes! The merchant earns ${dollars(total)}.` : undefined);
+      }
+      if (step === 3) { // change from cash
+        const ps = [price(A), price(B)], cost = ps[0] + ps[1], pay = cost < 20 ? 20 : cost < 50 ? 50 : 100, change = pay - cost, ten = Math.ceil(cost / 10) * 10;
+        const text = `You buy ${A[0]} for $${ps[0]} and ${B[0]} for $${ps[1]}. You pay with a $${pay} bill. How much change do you get?`;
+        return ask(text, text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), change, [cost, change + 1, change - 1, change + 10, pay - ps[0]], "First add the two prices. Then count up from that total to the bill you paid with.",
+          [[`$${ps[0]} + $${ps[1]} = $${cost}`, `Step one. ${ps[0]} plus ${ps[1]} is ${cost}.`]].concat(ten > cost && ten < pay ? [[`$${cost} → $${ten} → $${pay}`, `Step two. Count up from ${cost} to ${ten}, that's ${ten - cost}. Then ${ten} to ${pay}, that's ${pay - ten}.`]] : [[`$${cost} → $${pay}`, `Step two. Count up from ${cost} to ${pay}.`]]),
+          `Yes! Your change is ${dollars(change)}.`);
+      }
+      // step 4: money words, ways to pay, or which is the better deal
+      const kind = rand(3), cols = shuffle(INK);
+      if (kind === 0) { const [word, text, why] = pick(MONEY_WORDS), others = shuffle(MONEY_WORDS.filter(m => m[0] !== word).map(m => m[0])).slice(0, 3);
+        return { bubble: passage(text), tall: true, key: text, say: `${text} Is that spending, saving, earning, donating, or investing?`, again: "Which money word fits?", yay: `Yes! That's ${word}.`,
+          hint: H => H.say("Spending is buying. Saving is keeping money for later. Earning is getting paid. Donating is giving to help. Investing is using money to make more money later."),
+          explain: H => pointTo(H, `${why} So that's ${word}.`),
+          choices: shuffle(others.concat(word)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === word, wrong: `Not ${w}.` })) }; }
+      if (kind === 1) { const [way, text] = pick(PAYING), others = PAYING.filter(p => p[0] !== way).map(p => p[0]);
+        return { bubble: passage(text), tall: true, key: text, say: `${text} What is this way of paying called?`, again: "What is this way of paying called?", yay: `Yes! That's paying with ${way}.`,
+          hint: H => H.say("Cash is coins and bills. A debit card takes money straight from your bank account. With a credit card, the bank pays now, and you pay the bank back later."),
+          explain: H => pointTo(H, `${text} That's ${way}.`),
+          choices: shuffle(others.concat(way)).map(w => ({ html: ansCard(w), ok: w === way, wrong: `Not ${w}.` })) }; }
+      const each = [2 + rand(4), 0]; each[1] = each[0] + 1 + rand(3); const [cheap, dear] = shuffle([0, 1]).map(i => each[i]); // which pack costs less for each one?
+      const nA = 2 + rand(4), nB = 2 + rand(4), packA = { n: nA, cost: nA * cheap }, packB = { n: nB, cost: nB * dear }, best = cheap < dear ? "A" : "B", item = A[3];
+      const text = `Pack A has ${packA.n} ${item} for $${packA.cost}. Pack B has ${packB.n} ${item} for $${packB.cost}. Which pack costs less for each one?`;
+      return { bubble: passage(text), tall: true, key: text, say: text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), again: "Which pack costs less for each one?", yay: `Yes! Pack ${best} is the better deal.`,
+        hint: H => H.say("Work out the price of one, for each pack. Divide the cost by how many are in the pack."),
+        explain: async H => (await talkThrough(H, [[`A: $${packA.cost} ÷ ${packA.n} = $${cheap}`, `Pack A. ${packA.cost} divided by ${packA.n} is ${dollars(cheap)} each.`], [`B: $${packB.cost} ÷ ${packB.n} = $${dear}`, `Pack B. ${packB.cost} divided by ${packB.n} is ${dollars(dear)} each.`]])) && pointTo(H, `${cap(dollars(Math.min(cheap, dear)))} each is less. So pack ${best} is the better deal.`),
+        choices: ["A", "B"].map((p, i) => ({ html: wordCard("Pack " + p, cols[i]), ok: p === best, wrong: `Pack ${p} costs more for each one.` })) };
+    }
+  },
+  roots: {
+    name: "Latin Words", icon: "🔤", intro: "The Romans spoke Latin. Lots of English words have little pieces of Latin inside them!",
+    lesson: L => frames(L, [
+      [`<span class="big"><b>aqua</b>rium</span>`, "Watch me! Aquarium. Inside it is the Latin word part aqua."],
+      [`aqua = water`, "Aqua means water."], [`aquarium = a tank of <b>water</b> for fish`, "So an aquarium is a tank of water for fish. Word parts help us work out new words!"]]),
+    makeQuestion(step) {
+      if (step === 1) { const [ask, n, why] = pick(COUNT_WORDS); return { bubble: `<div class="sentence">${ask}</div>`, key: ask, say: ask, yay: `Yes! ${why}`, choices: near(n, [1, 2, 3, 4, 8, 10, 100].filter(k => k !== n)),
+        hint: H => H.say("Look at the start of the special word. Uni, bi, tri, quad, oct, dec and cent are all number parts."), explain: H => pointTo(H, `${why} So the answer is ${n}.`) }; } // number words
+      if (step === 4) { const item = pick(ROOT_SENTENCES), q = gapQuestion(item, "Which word fits?", 4);
+        q.hint = H => H.say("Look for a word part you know in each word. Which meaning fits the sentence?");
+        q.explain = H => pointTo(H, `${item[0].replace("___", item[1])} That makes sense!`);
+        return q; }
+      const picks = shuffle(ROOTS).slice(0, 4), [root, means, words] = picks[0];
+      if (step === 2) { const w = pick(words); // which word has this root?
+        return { bubble: `<div class="col">${big(root, 9)}<div class="cap">means ${means}</div></div>`, key: root + w, say: `The Latin word part, ${root.split("").join(" ")}, means ${means}. Which word is about that?`, again: `Which word is about ${means}?`, yay: `Yes! ${cap(w)} has ${root} in it.`,
+          hint: H => H.say(`Look inside each word for the letters ${root.split("").join(", ")}.`), explain: H => pointTo(H, `${cap(w)} has ${root.split("").join(", ")} in it. It's about ${means}.`),
+          choices: pickCards(w, picks.slice(1).map(p => pick(p[2])), ansCard, "Not quite. Look for the word part inside the word.") }; }
+      return { bubble: `<div class="col"><div class="sentence">${words.join(" &nbsp;·&nbsp; ")}</div><div class="cap">What does <b>${root}</b> mean?</div></div>`, tall: true, key: root, say: `${cap(words[0])} and ${words[1]} share a word part. What does it mean?`, yay: `Yes! ${cap(root)} means ${means}.`,
+        hint: H => H.say(`What do ${words[0]} and ${words[1]} have in common? Think about what each one is about.`),
+        explain: H => pointTo(H, `${cap(words[0])} and ${words[1]} are both about ${means}. So ${root.split("").join(", ")} means ${means}.`),
+        choices: pickCards(means, picks.slice(1).map(p => p[1]), ansCard, "Not quite. Think about what both words have in common.") };
+    }
+  },
+  grammar: {
+    name: "Orator's Grammar", icon: "🗣️", intro: "An orator was a great public speaker. Good speakers know their grammar!",
+    lesson: (L, step) => frames(L, step === 2 ? [
+        [`<div class="sentence">We stayed inside <u>&nbsp;</u> it was cold.</div>`, "Watch me pick a joining word. Each one does a different job."],
+        [`because = the reason`, "Because gives the reason. Why did we stay inside? It was cold."], [`<div class="sentence">We stayed inside <b>because</b> it was cold.</div>`, "We stayed inside because it was cold!"]]
+      : step === 4 ? [
+        [`<div class="sentence">Marcus said, "Follow me."</div>`, "Watch me check the punctuation. The words someone says go inside speech marks."],
+        [`said<b>,</b> "Follow me<b>."</b>`, "A comma comes before the speech marks. The period goes inside them."], [`✓`, "Every mark is in the right place!"]]
+      : [[`<div class="sentence">The brave soldiers marched quickly.</div>`, "Watch me find the parts of a sentence."],
+        [`soldiers = noun &nbsp; marched = verb`, "Soldiers names who. It's the noun. Marched is the action. It's the verb."], [`brave = adjective &nbsp; quickly = adverb`, "Brave describes the soldiers. It's an adjective. Quickly tells how they marched. It's an adverb."]]),
+    makeQuestion(step) {
+      const cols = shuffle(INK);
+      if (step === 1) { const [s, noun, verb, adj, adv] = pick(SENTENCE_PARTS), kinds = { noun: [noun, "the noun, the naming word", "a noun"], verb: [verb, "the verb, the action word", "a verb"], adjective: [adj, "the adjective, which describes the noun", "an adjective"], adverb: [adv, "the adverb, which tells how it was done", "an adverb"] };
+        const kind = pick(Object.keys(kinds)), right = kinds[kind][0], what = Object.fromEntries(Object.values(kinds).map(v => [v[0], v[2]]));
+        return { bubble: `<div class="col"><div class="sentence">${s}</div><div class="cap">${kind}</div></div>`, key: s + kind, say: `${s} Which word is ${kinds[kind][1]}?`, again: `Which word is ${kinds[kind][1]}?`, yay: `Yes! ${cap(right)} is ${what[right]}.`,
+          hint: H => H.say("A noun names. A verb is the action. An adjective describes a noun. An adverb tells how, and often ends in l y."),
+          explain: H => pointTo(H, `${cap(noun)} is the noun. ${cap(verb)} is the verb. ${cap(adj)} is the adjective. ${cap(adv)} is the adverb.`),
+          choices: shuffle([noun, verb, adj, adv]).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === right, wrong: `${cap(w)} is ${what[w]}.` })) }; }
+      if (step === 2 || step === 3) { const item = pick(step === 2 ? JOINING : VERB_FORMS), q = gapQuestion(item, step === 2 ? "Which joining word fits?" : "Which word fits?", 3), full = w => item[0].replace("___", w);
+        q.hint = step === 2 ? async H => { for (const c of H.cards()) { const w = c.el.textContent.trim(); if (!JOIN_MEANS[w]) continue; H.glow(c.el, true); const ok = await H.say(JOIN_MEANS[w]); H.glow(c.el, false); if (!ok) return false; } return H.say("Which job fits this sentence?"); }
+          : async H => { if (!(await H.say("Try each word in the sentence. Which one sounds right?"))) return false; for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(full(c.el.textContent.trim())); H.glow(c.el, false); if (!ok) return false; } return true; };
+        q.explain = H => pointTo(H, step === 2 ? `${full(item[1])} ${JOIN_MEANS[item[1]] || ""}` : `${full(item[1])} That's the right form.`);
+        return q; }
+      const [right, x, y] = pick(WRITTEN_RIGHT); // commas, apostrophes and speech marks
+      return { bubble: big("✒️", 12), key: right, say: "Which sentence is written correctly? Look at the commas, the apostrophes and the speech marks.", yay: "Yes! Every mark is in the right place.",
+        hint: H => H.say("Check the capital letters, the commas in lists, the apostrophes that show who owns something, and the speech marks around what people say."),
+        explain: H => pointTo(H, "This one has every capital letter, comma, apostrophe and speech mark in the right place."),
+        choices: pickCards(right, [x, y], ansCard, "Look again at the capital letters and the punctuation marks.") };
+    }
+  },
+  scroll: {
+    name: "Explorer's Scroll", icon: "📜", intro: "Let's read about ancient Rome!",
+    lesson: L => frames(L, [
+      [passageHtml("Aqueducts carried fresh water into Roman cities. The water flowed gently downhill through stone channels.", "What did aqueducts carry?"), "Watch me! Good readers read the question first. What did aqueducts carry?"],
+      [`<div class="passage"><span class="sent glow">Aqueducts carried fresh water into Roman cities.</span> The water flowed gently downhill through stone channels.</div>`, "Then I find the sentence that answers it. Aqueducts carried fresh water into Roman cities."],
+      [`<b>fresh water</b>`, "So the answer is fresh water!"]]),
+    makeQuestion(step) {
+      const [text, ask, a, wrongs] = pick(SCROLLS), aloud = step === 1, s = answerSentence(text, ask, a); // only step 1 reads the scroll out loud
+      return { bubble: passageHtml(text, ask), tall: true, key: ask, say: aloud ? `${text} ${ask}` : `Read the scroll. ${ask}`, again: ask, yay: `Yes! ${cap(a)}.`,
+        hint: H => { litSentence(H, s); return H.say("The answer is in the sentence that's lit up. Read it again."); },
+        explain: async H => { litSentence(H, s); return (await H.say(s)) && pointTo(H, `So the answer is: ${a}.`); },
+        choices: pickCards(a, shuffle(wrongs).slice(0, step <= 2 ? 2 : 3), ansCard, "Not quite. Look at the scroll again.") };
+    }
+  }
+};
+
+// ---------- celebration scenes: pictures of Rome, and fun facts (one after each place won; a tour at the very end) ----------
+const emoSvg = e => `<span class="emo" style="font-size:inherit">${e}</span>`;
+const ROME_ART = {
+  colosseum: `<svg viewBox="0 0 220 120"><path d="M10 118 V40 Q110 6 210 40 V118 Z" fill="#e3c9a0"/><path d="M10 40 Q110 6 210 40 V52 Q110 18 10 52 Z" fill="#cfae7c"/>
+    <g fill="#8a6a44">${[0, 1, 2].map(r => Array.from({ length: 9 }, (_, i) => `<path d="M${22 + i * 21} ${110 - r * 24} v-14 a7 7 0 0 1 14 0 v14 z"/>`).join("")).join("")}</g><path d="M150 118 V58 L210 40 V118 Z" fill="#d1b386" opacity=".6"/></svg>`,
+  aqueduct: `<svg viewBox="0 0 240 110"><rect x="0" y="10" width="240" height="14" fill="#cfae7c"/><g fill="#e3c9a0">${Array.from({ length: 6 }, (_, i) => `<path d="M${i * 40} 24 h40 v86 h-8 v-50 a12 12 0 0 0 -24 0 v50 h-8 z"/>`).join("")}</g><rect x="0" y="6" width="240" height="6" fill="#3fa9e0"/></svg>`,
+  temple: `<svg viewBox="0 0 160 120"><polygon points="80,8 154,40 6,40" fill="#efe6d4" stroke="#cbb994" stroke-width="2"/><rect x="10" y="40" width="140" height="8" fill="#e0d4bb"/><g fill="#f6efe1">${Array.from({ length: 6 }, (_, i) => `<rect x="${18 + i * 24}" y="48" width="12" height="58"/>`).join("")}</g><rect x="6" y="106" width="148" height="12" fill="#e0d4bb"/></svg>`,
+  road: `<svg viewBox="0 0 400 40" preserveAspectRatio="none"><rect width="400" height="40" fill="#a0a4b8"/><g fill="#8d93ab">${Array.from({ length: 30 }, (_, i) => `<rect x="${(i % 15) * 27 + (i > 14 ? 13 : 0)}" y="${i > 14 ? 21 : 2}" width="24" height="17" rx="3"/>`).join("")}</g></svg>`,
+  volcano: emoSvg("🌋"), shield: emoSvg("🛡️"), amphora: emoSvg("🏺"), grapes: emoSvg("🍇"), olive: emoSvg("🫒"), scroll: emoSvg("📜"), laurel: emoSvg("🌿"), backpack: emoSvg("🎒"), sun: emoSvg("☀️"), calendar: emoSvg("📅"), book: emoSvg("📖")
+};
+const ROME_FACTS = [
+  { say: "Fun fact! The Colosseum could hold about fifty thousand people!", show: [["colosseum", 10, 6, 52], ["laurel", 66, 10, 12]] },
+  { say: "Fun fact! Roman aqueducts carried water for many kilometres, using only gravity to make it flow downhill!", show: [["aqueduct", 0, 6, 54], ["amphora", 64, 6, 14]] },
+  { say: "Fun fact! The Romans built more than eighty thousand kilometres of stone roads!", show: [["road", 0, 0, 10, true], ["temple", 14, 12, 34], ["shield", 58, 12, 14]] },
+  { say: "Fun fact! Many English words come from Latin, the language of the Romans!", show: [["scroll", 16, 8, 26], ["book", 48, 8, 18]] },
+  { say: "Fun fact! The volcano Vesuvius buried the town of Pompeii in ash, and kept it safe for us to explore today!", show: [["volcano", 14, 6, 38], ["temple", 54, 6, 22]] },
+  { say: "Fun fact! The Romans made concrete so strong that some of their buildings are still standing after two thousand years!", show: [["temple", 8, 6, 36], ["colosseum", 46, 6, 30]] },
+  { say: "Fun fact! The month of July is named after a famous Roman leader, Julius Caesar!", show: [["calendar", 18, 10, 22], ["laurel", 46, 14, 16]] },
+  { say: "Fun fact! Each Roman soldier carried a heavy pack with tools, food and a cooking pot!", show: [["shield", 12, 8, 22], ["backpack", 36, 8, 18], ["amphora", 58, 8, 14]] }
+];
+const ROME_TOUR = [
+  { say: "Hooray! The clock ticks again! Let's take one last look at Rome before we fly home.", show: [["sun", 70, 60, 12], ["laurel", 14, 10, 14], ["grapes", 56, 8, 14]] },
+  { say: "Here is the Colosseum, where huge crowds came to watch shows and games.", show: [["colosseum", 8, 6, 56]] },
+  { say: "Here is an aqueduct, carrying fresh water into the city.", show: [["aqueduct", 0, 6, 58]] },
+  { say: "And here is the Forum, where Romans met to shop, talk and make decisions.", show: [["temple", 8, 6, 34], ["temple", 44, 6, 26], ["amphora", 66, 6, 12]] },
+  { say: "Goodbye, Rome! Tick tock. Time to fly!", show: [["colosseum", 24, 6, 34]] }
+];
+
+// ---------- the story ----------
+window.Story = StoryGame({
+  title: "Dr. Somebody in Ancient Rome", sub: "A Grade 4 adventure", gradeLabel: "Grade 4 (ages 9-10)", hostName: "Dr. Somebody",
+  host: HOST, saveKey: "grade4Rome.v1", medal: "g4", need: 6, starsToWin: 5, celebrations: { art: ROME_ART, facts: ROME_FACTS, finale: ROME_TOUR }, sceneVoice: "../audio/g4/scene/", // a short scene with a fun fact after each place, and a tour at the end hints: true, lessons: true, lessonVoice: "../audio/g4/lesson/", lineVoice: "../audio/g4/l/", numberPieces: true, // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
+  voice: recorded("../audio/g4/", 5), // Dr. Somebody's own recorded voice for the story lines
+  scenery: `<div class="sun"></div><div class="cloud c2"></div>${AQUEDUCT}${TEMPLE}<div class="hill back"></div><div class="hill"></div>`,
+  games: GAMES, gameIds: ["numerals", "multiply", "divide", "fractions", "decimals", "shapes", "measure", "data", "problems", "market", "roots", "grammar", "scroll"],
+  stepNames: {
+    numerals: ["numerals 1 to 12", "numerals up to 39", "numerals up to 100 (L and C)", "pick the numeral for a number"],
+    multiply: ["harder tables, times 10 and 100", "two digits times one digit", "two digits times one digit, with carrying", "times 10, 100 and 1000, and three digits times one digit"],
+    divide: ["division facts", "two digits divided by one digit", "division with remainders", "word problems: what the remainder means"],
+    fractions: ["equal fractions", "which fraction is bigger", "tenths as fractions and decimals", "counting by halves, thirds, quarters and tenths"],
+    decimals: ["reading tenths", "which decimal is bigger", "adding and taking away decimals", "decimal word problems"],
+    shapes: ["acute, right and obtuse angles", "naming shapes", "lines of symmetry", "finding a missing side"],
+    measure: ["metres and centimetres", "kilometres, metres, centimetres, millimetres", "how long did it take", "kilograms and grams, litres and millilitres"],
+    data: ["reading a graph", "mode", "median", "mean"],
+    problems: ["one step, numbers to 10,000", "one step, multiplying or dividing", "two steps", "harder two-step problems"],
+    market: ["adding up prices", "buying and selling several", "change from a bill", "money words, ways to pay, and the better deal"],
+    roots: ["number word parts (tri, oct, cent)", "find the word with a Latin part", "what a Latin part means", "use the word in a sentence"],
+    grammar: ["nouns, verbs, adjectives and adverbs", "joining words (but, so, because)", "tricky verbs", "commas, apostrophes and speech marks"],
+    scroll: ["read aloud, 3 answers", "reads it alone, 3 answers", "reads it alone, 4 answers", "reads it alone, 4 answers"]
+  },
+  rewards: [["eagle", "🦅"], ["wolf", "🐺"], ["horse", "🐎"], ["dolphin", "🐬"], ["lion", "🦁"], ["bull", "🐂"], ["boar", "🐗"], ["peacock", "🦚"], ["elephant", "🐘"], ["dog", "🐕"], ["bee", "🐝"], ["dove", "🕊️"]],
+  progress: list => `<div class="balloon">${BALLOON}</div>` + slots(list, "XII"),
+  finaleTitle: "The clock ticks again!", stickersLabel: "Roman friends:",
+  finaleArt: list => `<div class="balloon">${BALLOON}</div>` + list.map(e => `<span class="pop">${e}</span>`).join(""),
+  lines: {
+    hello: name => `Hello${name ? ", " + name : ""}! Doctor Somebody here. I am almost sure of it. The clock balloon has landed in ancient Rome, about two thousand years ago! But the Roman numerals have fallen off my clock. We need six of them back. Tap a place to find one.`,
+    start: "We need six Roman numerals to fix the clock. Tap a place to find one.",
+    left: n => `We need ${NUM[n]} more Roman numeral${n === 1 ? "" : "s"}. Tap a place!`,
+    won: who => `You did it! The ${who} found one of my Roman numerals. Tap the ${who}!`,
+    boarded: who => `Thank you, ${who}! One more numeral for the clock!`,
+    finale: name => `Tick tock! The clock can tell the time again! Thank you${name ? ", " + name : ""}! Goodbye, Rome! Now, which century did I leave my lunch in?`,
+    again: "Oh dear. I sneezed, and the numerals fell off again! Let's find them.",
+    replay: "Great job! You did it again!",
+    test: name => `Hello${name ? ", " + name : ""}! I am Doctor Somebody, in ancient Rome. Tick tock!`
+  }
+});
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>

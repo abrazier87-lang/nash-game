@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pip's Eggs">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Pip's Lost Eggs</title>
+<style>
+  :root { --sky1:#9be3ff; --sky2:#e8fbff; --grass:#7ed67a; --grass2:#55b85c; --ink:#2b2d42; --card:#fffdf5; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; overflow:hidden; background:var(--sky1);
+    font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif; color:var(--ink);
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation; overscroll-behavior:none; }
+  #app { position:fixed; inset:0; background:linear-gradient(var(--sky1),var(--sky2) 60%); overflow:hidden; overflow:clip; }
+  .layer { position:absolute; inset:0; overflow:hidden; overflow:clip; pointer-events:none; }
+  #fx { z-index:8; }
+  /* scenery */
+  .hill { position:absolute; left:-10%; right:-10%; bottom:-22vmin; height:50vmin; background:var(--grass); border-radius:50% 50% 0 0; }
+  .hill.back { bottom:-12vmin; left:30%; right:-40%; height:56vmin; background:var(--grass2); }
+  .sun { position:absolute; top:4vmin; right:6vmin; width:16vmin; height:16vmin; border-radius:50%; background:#ffd84d; box-shadow:0 0 0 3vmin rgba(255,216,77,.3); }
+  .cloud { position:absolute; top:10vmin; left:-30vmin; width:26vmin; height:8vmin; background:#fff; border-radius:8vmin; opacity:.85; animation:drift 70s linear infinite; }
+  .cloud::before { content:""; position:absolute; left:5vmin; top:-4vmin; width:12vmin; height:10vmin; background:#fff; border-radius:50%; }
+  .cloud.c2 { top:24vmin; animation-duration:100s; animation-delay:-40s; transform:scale(.7); }
+  @keyframes drift { to { left:110vw; } }
+
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; padding:2vmin; }
+  .screen.on { display:flex; }
+  button { font:inherit; color:inherit; border:none; background:none; padding:0; margin:0; cursor:pointer; touch-action:manipulation; }
+  svg { display:block; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .m { fill:var(--m,#58b368); } .d { fill:var(--d,#2f7d44); } .b { fill:#fff3c9; } .e { fill:#fff; } .p { fill:#2b2d42; }
+  .shadow svg * { fill:#39405a !important; stroke:#39405a !important; }
+
+  h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shadow:0 .6vmin 0 #2f7d44, 0 1vmin 2vmin rgba(0,0,0,.25); letter-spacing:.2vmin; }
+  .sub { font-size:3.2vmin; margin:0 0 2vmin; text-align:center; }
+  .bigbtn { width:30vmin; height:30vmin; border-radius:50%; background:#ff8a3d; box-shadow:0 1.6vmin 0 #c85a12, 0 3vmin 4vmin rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center; animation:pulse 1.6s ease-in-out infinite; }
+  .bigbtn:active { transform:translateY(1vmin); box-shadow:0 .6vmin 0 #c85a12; }
+  .bigbtn .tri { width:0; height:0; border-left:12vmin solid #fff; border-top:8vmin solid transparent; border-bottom:8vmin solid transparent; margin-left:3vmin; }
+  @keyframes pulse { 50% { transform:scale(1.07); } }
+  @keyframes bounce { 0%,100% { transform:translateY(0); } 40% { transform:translateY(-5vmin) rotate(-4deg); } 70% { transform:translateY(0) rotate(3deg); } }
+  @keyframes wobble { 0%,100% { transform:rotate(0); } 25% { transform:rotate(-7deg); } 75% { transform:rotate(7deg); } }
+  @keyframes pop { 0% { transform:scale(.3); opacity:0; } 70% { transform:scale(1.15); opacity:1; } 100% { transform:scale(1); } }
+  .bounce { animation:bounce .7s ease; } .wobble { animation:wobble .35s ease 2; } .pop { animation:pop .5s ease both; }
+
+  .corner { position:absolute; top:2vmin; width:11vmin; height:11vmin; border-radius:50%; background:rgba(255,255,255,.75); font-size:6vmin; line-height:11vmin; text-align:center; z-index:5; }
+  .corner.left { left:2vmin; } .corner.right { right:2vmin; opacity:.55; font-size:5vmin; }
+  .corner.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
+
+  /* title */
+  #title .pip { width:34vmin; height:28vmin; }
+  /* map */
+  #map .places { display:flex; gap:3vmin; flex-wrap:wrap; justify-content:center; align-items:flex-end; }
+  .place { width:29vmin; height:34vmin; border-radius:5vmin; background:var(--card); box-shadow:0 1.2vmin 0 rgba(0,0,0,.18); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; border:1vmin solid #fff; }
+  .place:active { transform:translateY(.8vmin); }
+  .place .pic { width:20vmin; height:20vmin; }
+  .place .name { font-size:2.8vmin; font-weight:bold; margin-top:1vmin; }
+  .place .badge { position:absolute; top:-3vmin; right:-3vmin; width:11vmin; height:11vmin; }
+  .place.done { background:#eaffd9; border-color:#7ed67a; }
+  .nest { display:flex; gap:2vmin; align-items:flex-end; justify-content:center; margin-top:3vmin; background:#c48a4a; border-radius:3vmin 3vmin 12vmin 12vmin; padding:1.5vmin 5vmin 2.5vmin; box-shadow:inset 0 -2vmin 0 #9c6830; }
+  .nest .slot { width:11vmin; height:12vmin; }
+  .nest .slot.empty { border:.8vmin dashed rgba(255,255,255,.7); border-radius:50%; }
+  .nest .pipslot { width:15vmin; height:13vmin; }
+  .family { display:flex; gap:.5vmin; margin-top:1.5vmin; height:7vmin; align-items:flex-end; }
+  .family div { width:7vmin; height:6vmin; }
+
+  /* game */
+  #game { justify-content:space-between; padding-top:3vmin; padding-bottom:4vmin; }
+  .stars { display:flex; gap:1.5vmin; height:9vmin; align-items:center; }
+  .star { width:8vmin; height:8vmin; opacity:.3; filter:grayscale(1); transition:all .3s; font-size:7vmin; line-height:8vmin; text-align:center; }
+  .star.got { opacity:1; filter:none; transform:scale(1.15); }
+  .ask { display:flex; align-items:center; justify-content:center; gap:2vmin; }
+  .ask .pip { width:26vmin; height:22vmin; }
+  .bubble { min-width:26vmin; height:26vmin; border-radius:6vmin; background:#fff; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; gap:1vmin; padding:2vmin 3vmin; position:relative; font-weight:bold; }
+  .bubble::before { content:""; position:absolute; left:-3.5vmin; top:55%; border:2.2vmin solid transparent; border-right-color:#fff; border-left:none; }
+  .bubble .art { width:20vmin; height:20vmin; }
+  .bubble .art.small3 { width:19vmin; height:20vmin; margin:0 -3vmin; }
+  .choices { display:flex; gap:3vmin; justify-content:center; align-items:center; flex-wrap:wrap; width:100%; }
+  .choice { width:var(--cs,30vmin); height:var(--cs,30vmin); border-radius:5vmin; background:var(--card); border:1vmin solid #fff; box-shadow:0 1.4vmin 0 rgba(0,0,0,.18); display:flex; align-items:center; justify-content:center; font-size:14vmin; font-weight:bold; flex-direction:column; }
+  .choice:active { transform:translateY(.8vmin); }
+  .choice .art { width:78%; height:78%; }
+  .choice.right { background:#d6ffc4; border-color:#55b85c; }
+  .choice.dim { opacity:.35; }
+  .dots { display:flex; gap:1.2vmin; height:3vmin; }
+  .dots i { width:3vmin; height:3vmin; border-radius:50%; background:#ff8a3d; }
+
+  /* eight places in the valley: four across, two rows */
+  #map .places { display:grid; grid-template-columns:repeat(4, auto); gap:2.5vmin; }
+  .place { width:21vmin; height:24vmin; border-radius:4vmin; }
+  .place .pic { width:14vmin; height:13vmin; display:flex; align-items:center; justify-content:center; font-weight:bold; }
+  .place .name { font-size:2.3vmin; }
+  .place .badge { top:-2vmin; right:-2vmin; width:8vmin; height:8vmin; }
+  .nest { margin-top:2.5vmin; }
+  /* newer games */
+  .bubble .art.small5 { width:14vmin; height:15vmin; margin:0 -2.2vmin; }
+  .bubble .seq { width:10vmin; height:10vmin; }
+  .bubble .q { width:10vmin; height:10vmin; border:.8vmin dashed #ff8a3d; border-radius:2vmin; font-size:7vmin; line-height:8.4vmin; text-align:center; color:#ff8a3d; }
+  .emoji { font-size:calc(var(--cs, 30vmin) * .58); line-height:1.25; }
+  .bodypip { width:62vmin; height:52vmin; }
+  .bodypip svg, .bodypip svg * { pointer-events:auto; cursor:pointer; }
+  .bodypip .hit { fill:transparent; stroke:transparent; pointer-events:all; }
+  .bodypip .glow > :not(.hit) { stroke:#ffd23f; stroke-width:5; }
+  #grown select { font:inherit; padding:6px; margin-top:4px; max-width:300px; border-radius:8px; }
+  /* learning help: the hint (💡), the "watch me" lesson (📖), and the big ▶ to skip a lesson */
+  .corner.hint, .corner.lesson { left:auto; right:2vmin; opacity:1; font-size:6vmin; }
+  .corner.hint { background:#fff3b0; } .corner.hint.used { opacity:.3; filter:grayscale(1); }
+  .corner.lesson { top:15vmin; background:#d9ecff; }
+  #myTurn { position:absolute; right:3vmin; bottom:3vmin; width:19vmin; height:19vmin; z-index:6; }
+  @media (orientation:portrait) { #myTurn { right:auto; left:calc(50% - 9.5vmin); bottom:auto; top:61%; } } /* a phone held upright: in the empty space between Pip and the cards */
+  #myTurn .tri { border-left-width:7vmin; border-top-width:4.6vmin; border-bottom-width:4.6vmin; margin-left:1.6vmin; }
+  .glow { outline:1.2vmin solid #ffd23f; outline-offset:.5vmin; border-radius:3vmin; transform:scale(1.08); transition:transform .15s; }
+  .choice.struck { opacity:.15; }
+  #bubble .glow { outline:none; filter:drop-shadow(0 0 .8vmin #ffb300) drop-shadow(0 0 .8vmin #ffd23f); transform:scale(1.15); } /* pictures in Pip's bubble sit close together: a soft glow instead of a box */
+
+  /* hatch + finale */
+  #hatch .stage, #finale .stage { width:46vmin; height:46vmin; }
+  #hatch .go, #finale .go { margin-top:3vmin; width:20vmin; height:20vmin; visibility:hidden; }
+  #hatch .go.show, #finale .go.show { visibility:visible; }
+  .row { display:flex; gap:2vmin; align-items:flex-end; justify-content:center; }
+  #finale .row div { width:22vmin; height:19vmin; }
+  .confetti { position:absolute; top:-5vmin; width:2.4vmin; height:3.4vmin; border-radius:.5vmin; animation:fall linear forwards; pointer-events:none; z-index:8; }
+  @keyframes fall { to { transform:translateY(115vh) rotate(720deg); } }
+
+  /* grown-ups */
+  #grown { position:absolute; inset:0; background:rgba(43,45,66,.6); display:none; align-items:center; justify-content:center; z-index:20; }
+  #grown.on { display:flex; }
+  #grown .panel { background:#fff; border-radius:16px; padding:22px 26px; width:min(560px,92vw); max-height:92vh; overflow:auto; font-size:16px; }
+  #grown h2 { margin:0 0 6px; } #grown p { margin:6px 0; line-height:1.4; }
+  #grown .line { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-top:1px solid #eee; }
+  #grown .pm { display:flex; align-items:center; gap:8px; }
+  #grown button { background:#eef3ff; border-radius:10px; padding:10px 16px; font-weight:bold; min-width:44px; }
+  #grown button.warn { background:#ffe3e0; } #grown button.main { background:#58b368; color:#fff; }
+  #grown .soon { color:#888; }
+  #grown .foot { display:flex; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; }
+  /* celebration scenes: the clock balloon drifts across, dinosaur pictures pop up, and the fun fact shows as a caption */
+  #scene { justify-content:flex-start; padding:0; }
+  .scenestage { position:absolute; inset:0; overflow:hidden; }
+  .sballoon { position:absolute; top:6vh; left:-30vmin; width:24vmin; height:30vmin; animation:sdrift 9s linear forwards; }
+  @keyframes sdrift { 0% { left:-30vmin; transform:translateY(0); } 25% { transform:translateY(-2vmin); } 50% { transform:translateY(1.5vmin); } 75% { transform:translateY(-1vmin); } 100% { left:105vw; transform:translateY(0); } }
+  .sitem { position:absolute; display:flex; align-items:flex-end; justify-content:center; opacity:0; animation:spop .6s ease forwards; transform-origin:50% 100%; }
+  .sitem svg { width:100%; height:100%; overflow:visible; }
+  .sitem .emo { line-height:1; }
+  .sitem.gone { animation:sgone .5s ease forwards; }
+  @keyframes spop { 0% { opacity:0; transform:scale(.3) translateY(4vmin); } 70% { opacity:1; transform:scale(1.08); } 100% { opacity:1; transform:scale(1); } }
+  @keyframes sgone { to { opacity:0; transform:scale(.6); } }
+  .scenecap { position:absolute; left:50%; transform:translateX(-50%); top:40vh; width:min(86vw, 120vmin); background:rgba(255,255,255,.92); border-radius:3vmin; padding:2vmin 3vmin; font-size:4.2vmin; line-height:1.3; font-weight:bold; text-align:center; box-shadow:0 1vmin 0 rgba(0,0,0,.12); z-index:3; }
+  .bigbtn.sceneskip { position:absolute; right:3vmin; bottom:3vmin; width:15vmin; height:15vmin; z-index:4; }
+  .bigbtn.sceneskip .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="layer"><div class="sun"></div><div class="cloud"></div><div class="cloud c2"></div>
+  <div class="hill back"></div><div class="hill"></div></div>
+  <div class="layer" id="fx"></div>
+
+  <div class="screen on" id="title">
+    <h1>Pip's Lost Eggs</h1>
+    <p class="sub" id="titleSub">A dinosaur adventure</p>
+    <div class="pip" id="titlePip"></div>
+    <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button>
+  </div>
+
+  <div class="screen" id="map">
+    <div class="places" id="places"></div>
+    <div class="nest" id="nest"></div>
+    <div class="family" id="family"></div>
+  </div>
+
+  <div class="screen" id="game">
+    <div class="stars" id="stars"></div>
+    <div class="ask">
+      <button class="pip" id="gamePip" aria-label="Say it again"></button>
+      <div class="bubble" id="bubble"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="screen" id="hatch">
+    <button class="stage" id="hatchStage" aria-label="Tap the egg"></button>
+    <button class="bigbtn go" id="hatchGo" aria-label="Keep going"><span class="tri"></span></button>
+  </div>
+
+  <div class="screen" id="scene"><div class="scenestage" id="sceneStage"></div><div class="scenecap" id="sceneCap"></div><button class="bigbtn sceneskip" id="sceneGo" aria-label="Keep going"><span class="tri"></span></button></div>
+
+  <div class="screen" id="finale">
+    <h1>All the eggs are home!</h1>
+    <div class="row" id="finaleRow"></div>
+    <button class="bigbtn go" id="finaleGo" aria-label="Play again"><span class="tri"></span></button>
+  </div>
+
+  <button class="corner left" id="homeBtn" aria-label="Back to the valley" style="display:none">🏠</button>
+  <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
+  <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+  <button class="corner hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
+  <button class="corner lesson" id="lessonBtn" aria-label="Show me how" style="display:none">📖</button>
+  <button class="bigbtn" id="myTurn" aria-label="My turn" style="display:none"><span class="tri"></span></button>
+
+  <div id="grown"><div class="panel" id="grownPanel"></div></div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   PIP'S LOST EGGS  -  an original learning game for Nash
+   Everything (pictures, voice, sounds, saving) lives in this one file.
+   ===================================================================== */
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const rand = n => Math.floor(Math.random() * n);
+const pick = arr => arr[rand(arr.length)];
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ---------- saved progress (kept on this device) ----------
+// Who is playing? (picked on the book shelf page). The first child added keeps the original saved progress.
+let PLAYER = null;
+try { const cur = localStorage.getItem("storyShelf.current"); PLAYER = JSON.parse(localStorage.getItem("storyShelf.players") || "[]").find(p => p.id === cur) || null; } catch (e) {}
+const NAME = PLAYER ? PLAYER.name : "";
+const SAVE_KEY = "pipsLostEggs.v1" + (PLAYER && PLAYER.id !== "p1" ? "." + PLAYER.id : "");
+const fresh = () => ({ skill: { colors: 1, shapes: 1, count: 1, patterns: 1, shadows: 1, sizes: 1, body: 1, sounds: 1 }, found: {}, friends: [], clutches: 0, learned: {}, auto: true, voice: true, sound: true, voiceName: "" });
+let S = fresh();
+try {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (raw) { const old = JSON.parse(raw); S = Object.assign(fresh(), old); S.skill = Object.assign(fresh().skill, old.skill || {}); } // keeps old progress when new games are added
+} catch (e) {}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+if (S.clutches > 0) stamp("pre"); // children who finished Pip's adventure before medals existed still get theirs
+
+// ---------- voice (the device's built-in talking voice) ----------
+// The game looks through the voices this device has and picks the most natural-sounding female one.
+// Grown-ups can choose a different one in the grown-ups panel.
+let voice = null;
+function voiceScore(v) {
+  const n = v.name + " " + (v.voiceURI || "");
+  let s = 0;
+  if (/premium|enhanced|natural|neural/i.test(n)) s += 50;
+  if (/Ava|Zoe|Allison|Samantha|Susan|Joelle|Nicky|Noelle|Aria|Jenny|Michelle|Ana\b|Sonia|Libby|Karen|Serena|Moira|Tessa|Google US English|Zira|Female/i.test(n)) s += 20;
+  if (/^en.US/i.test(v.lang)) s += 5;
+  if (/David|Mark\b|Guy\b|Daniel|Alex\b|Aaron|Tom\b|Evan|Nathan|Arthur|Oliver|Ryan|Christopher|Eric\b|Roger|Steffan|Brian|Andrew|Gordon|Rishi|\bMale/i.test(n)) s -= 30;
+  if (/compact|eloquence|Eddy|Flo\b|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Albert|Bad News|Good News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Kathy|Ralph|Fred/i.test(n)) s -= 40;
+  return s;
+}
+function englishVoices() {
+  if (!("speechSynthesis" in window)) return [];
+  return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+}
+function chooseVoice() {
+  const vs = englishVoices();
+  const wanted = sharedSettings().voiceName || S.voiceName; // the voice picked on the book shelf, else Pip's own older choice
+  voice = vs.find(v => v.name === wanted) || vs[0] || null;
+}
+// Settings shared by every game on the shelf (the same place the other games keep them).
+function sharedSettings() { try { return JSON.parse(localStorage.getItem("storyShelf.settings") || "{}") || {}; } catch (e) { return {}; } }
+function shareVoice(name) { try { const s = sharedSettings(); s.voiceName = name; localStorage.setItem("storyShelf.settings", JSON.stringify(s)); } catch (e) {} }
+// A medal on the book shelf for finishing the story (kept separately for each child).
+function stamp(id) {
+  try { const k = "storyShelf.stamps" + (PLAYER ? "." + PLAYER.id : ""), list = JSON.parse(localStorage.getItem(k) || "[]");
+    if (!list.includes(id)) { list.push(id); localStorage.setItem(k, JSON.stringify(list)); } } catch (e) {}
+}
+// Notes each answered question for the grown-ups' progress report (the same record the other games keep, in shared/kit.js).
+function track(station, stationName, step, q, firstTry, hinted) { // hinted: a hint (or Pip's help) was used on this question
+  try {
+    const key = "storyShelf.progress" + (PLAYER ? "." + PLAYER.id : ""), plain = h => String(h || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    const P = JSON.parse(localStorage.getItem(key) || "null") || { v: 1, games: {}, days: {} };
+    const g = P.games.pre || (P.games.pre = { title: "Pip's Lost Eggs", stations: {} });
+    const s = g.stations[station] || (g.stations[station] = { name: stationName, asked: 0, firstTry: 0, recent: [], missed: {} });
+    s.asked++; if (firstTry) s.firstTry++; if (hinted) s.hints = (s.hints || 0) + 1;
+    s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift();
+    const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    s.last = day; P.days[day] = (P.days[day] || 0) + 1;
+    if (!firstTry) {
+      const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
+      const label = plain(q.say) + (answer ? " → " + answer : "") + (hinted ? " · used a hint" : "");
+      s.missed[label] = (s.missed[label] || 0) + 1;
+      const keys = Object.keys(s.missed); if (keys.length > 40) { keys.sort((a, b) => s.missed[a] - s.missed[b]); delete s.missed[keys[0]]; }
+    }
+    localStorage.setItem(key, JSON.stringify(P));
+  } catch (e) {}
+}
+if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
+// ---------- recorded lines (Pip's own voice, saved as sound files in audio/pip/) ----------
+// playClip plays one recorded line. If the file is missing or cannot play, "fallback" is said in the device voice instead,
+// so the game never goes silent. It hands back a promise that is true if the line played all the way to its end,
+// and false if something else started talking first. ("turn" goes up each time any line starts.)
+const clips = {}; let playing = null, turn = 0, talking = null;
+function loadClip(url) { // fetch a line ahead of time so it starts without a pause
+  if (!clips[url]) clips[url] = (async () => {
+    const ac = audio(), reply = await fetch(url);
+    if (!reply.ok) throw new Error("no recording at " + url);
+    const data = await reply.arrayBuffer();
+    return new Promise((ok, no) => { const p = ac.decodeAudioData(data, ok, no); if (p && p.catch) p.catch(() => {}); });
+  })().catch(e => { delete clips[url]; throw e; });
+  return clips[url];
+}
+function stopClip() { turn++; if (playing) { const src = playing; playing = null; try { src.onended = null; src.stop(); } catch (e) {} if (src.cutOff) src.cutOff(); } }
+const hush = () => { stopClip(); if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+function playClip(url, fallback) {
+  return new Promise(async resolve => {
+    if (!S.voice) { stopClip(); return resolve(false); }
+    hush(); const mine = turn;
+    try {
+      const ac = audio(), sound = await loadClip(url);
+      if (ac.state === "suspended") await ac.resume();
+      if (mine !== turn) return resolve(false);
+      if (ac.state !== "running") throw new Error("sound is blocked");
+      const src = ac.createBufferSource(); src.buffer = sound; src.connect(ac.destination);
+      src.onended = () => { if (playing === src) playing = null; resolve(true); };
+      src.cutOff = () => resolve(false); // another line interrupted this one
+      playing = src; src.start();
+    } catch (e) { if (mine === turn) say(fallback).then(resolve); else resolve(false); }
+  });
+}
+const speak = (name, words) => playClip("../audio/pip/" + name + ".mp3", words);
+// Every other line Pip says (questions, cheers, hints, lessons) is recorded in audio/pip/l/, under a name made from its words
+// (the same naming the other games use, in shared/kit.js). A line without a recording uses the device voice.
+function clipName(words) {
+  let h = 0x811c9dc5; for (const ch of String(words)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+  return String(words).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32).replace(/-$/, "") + "-" + h.toString(16).padStart(8, "0");
+}
+const lineUrl = words => "../audio/pip/l/" + clipName(words) + ".mp3";
+// Says one line, or several one after another ("red", "blue", "red", "blue", "What comes next?"). True if it all played to the end.
+async function talk(parts) {
+  parts = [].concat(parts); parts.forEach(w => loadClip(lineUrl(w)).catch(() => {})); // get them all ready, so there are no gaps
+  for (const w of parts) if (!(await playClip(lineUrl(w), w))) return false;
+  return true;
+}
+async function talkAndWait(parts, quietPause) { // says it and waits until it is over; with the voice off, a short pause
+  if (!S.voice) return wait(quietPause);
+  if (await talk(parts)) await wait(450);
+}
+
+let lastSaid = "";
+function say(text) {
+  lastSaid = text; stopClip(); const mine = turn; // a new line always cuts off a recorded line that is still playing
+  return new Promise(resolve => {
+    if (!S.voice || !("speechSynthesis" in window)) return resolve(false);
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) u.voice = voice;
+      u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05; // gentle and unhurried, close to the voice's natural sound
+      let finished = false;
+      const done = () => { if (!finished) { finished = true; resolve(mine === turn); } };
+      u.onend = done; u.onerror = done;
+      setTimeout(done, Math.max(8000, text.length * 260)); // safety net: some devices never report that they finished
+      talking = u; // keeps the browser from forgetting the line half way through
+      setTimeout(() => { if (mine === turn) speechSynthesis.speak(u); else done(); }, 60);
+    } catch (e) { resolve(false); }
+  });
+}
+// Says a line and waits until it is really over. Two safeguards, because some tablets report "finished" too early:
+// the voice must say it has finished, AND enough time must have passed for a line of that length.
+async function sayAndWait(text, quietPause) {
+  const longEnough = wait(700 + text.length * 75);
+  if (!(await say(text))) return wait(quietPause); // voice is off (or cut off): just the usual short pause
+  await longEnough; await wait(600);
+}
+
+// ---------- little sounds (made by the computer, no sound files) ----------
+let AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === "suspended") AC.resume(); return AC; }
+function tone(freq, start, len, type, vol) {
+  const ac = audio(); if (!ac || !S.sound) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || "sine"; o.frequency.value = freq;
+  const t = ac.currentTime + start;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + len + 0.05);
+}
+const sfx = {
+  tap:   () => tone(520, 0, .08, "triangle", .12),
+  yes:   () => { tone(523, 0, .15, "triangle"); tone(659, .12, .15, "triangle"); tone(784, .24, .25, "triangle"); },
+  oops:  () => { tone(300, 0, .18, "sine", .12); tone(250, .12, .22, "sine", .12); },
+  crack: () => { tone(900, 0, .05, "square", .08); tone(600, .05, .06, "square", .08); },
+  party: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .13, .22, "triangle")); }
+};
+
+// ---------- pictures (drawn with simple shapes, all original) ----------
+const COLORS = {
+  red:    ["#ff5a5f", "#c7383d"], blue:   ["#4d9de0", "#2f6fab"], yellow: ["#ffd23f", "#d9a400"],
+  green:  ["#58b368", "#2f7d44"], orange: ["#ff9f43", "#d6741a"], purple: ["#a06cd5", "#7445a8"],
+  pink:   ["#ff8fb1", "#d85f85"], teal:   ["#3fc1c9", "#22919a"]
+};
+const svg = (inner, c, vb) => `<svg viewBox="${vb || "0 0 200 160"}" style="--m:${c[0]};--d:${c[1]}">${inner}</svg>`;
+const ART = {
+  pip: c => svg(`<path class="d" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z"/><rect class="d" x="80" y="136" width="18" height="20" rx="8"/><rect class="d" x="108" y="136" width="18" height="20" rx="8"/>
+    <ellipse class="m" cx="100" cy="104" rx="38" ry="42"/><ellipse class="b" cx="109" cy="112" rx="22" ry="28"/><ellipse class="d" cx="136" cy="98" rx="12" ry="6"/>
+    <ellipse class="m" cx="118" cy="48" rx="36" ry="30"/><ellipse class="m" cx="146" cy="57" rx="20" ry="15"/>
+    <circle class="e" cx="128" cy="40" r="8"/><circle class="p" cx="130" cy="41" r="4"/><circle class="p" cx="158" cy="52" r="1.8"/>
+    <path d="M138 64 Q150 72 162 62" fill="none" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/>`, c),
+  longneck: c => svg(`<path class="d" d="M42 98 Q12 100 4 78 Q26 96 52 86 Z"/><rect class="d" x="55" y="114" width="17" height="38" rx="7"/><rect class="d" x="100" y="114" width="17" height="38" rx="7"/>
+    <ellipse class="m" cx="85" cy="100" rx="50" ry="30"/><path class="m" d="M112 88 Q134 60 139 24 L160 28 Q156 72 130 108 Z"/><ellipse class="m" cx="156" cy="24" rx="21" ry="14"/>
+    <circle class="e" cx="161" cy="20" r="5"/><circle class="p" cx="162" cy="20" r="2.5"/>`, c),
+  spiky: c => svg(`<polygon class="d" points="58,76 71,42 85,70"/><polygon class="d" points="84,68 100,30 116,68"/><polygon class="d" points="115,70 129,42 142,77"/>
+    <path class="m" d="M46 98 Q14 94 4 116 Q30 116 52 116 Z"/><rect class="d" x="64" y="118" width="17" height="32" rx="7"/><rect class="d" x="120" y="118" width="17" height="32" rx="7"/>
+    <ellipse class="m" cx="100" cy="100" rx="60" ry="32"/><ellipse class="m" cx="168" cy="112" rx="23" ry="14"/>
+    <circle class="e" cx="174" cy="107" r="5"/><circle class="p" cx="175" cy="107" r="2.5"/>`, c),
+  horned: c => svg(`<path class="m" d="M36 94 Q10 94 4 110 Q24 113 42 112 Z"/><rect class="d" x="52" y="118" width="17" height="32" rx="7"/><rect class="d" x="104" y="118" width="17" height="32" rx="7"/>
+    <ellipse class="m" cx="85" cy="100" rx="55" ry="32"/><circle class="d" cx="138" cy="78" r="31"/><ellipse class="m" cx="160" cy="96" rx="27" ry="19"/>
+    <polygon class="b" points="148,80 153,46 162,80"/><polygon class="b" points="168,82 177,52 180,86"/><polygon class="b" points="182,92 198,80 188,102"/>
+    <circle class="e" cx="162" cy="94" r="5"/><circle class="p" cx="163" cy="94" r="2.5"/>`, c),
+  egg: c => svg(`<ellipse class="b" cx="100" cy="84" rx="46" ry="60"/><circle class="m" cx="82" cy="60" r="9"/><circle class="m" cx="118" cy="92" r="12"/><circle class="m" cx="86" cy="112" r="7"/>`, c),
+  leaf: c => svg(`<path class="m" d="M100 14 Q170 64 100 146 Q30 64 100 14 Z"/><path d="M100 30 L100 156" stroke="${c[1]}" stroke-width="6" stroke-linecap="round"/>`, c),
+  berry: c => svg(`<circle class="m" cx="100" cy="92" r="56"/><circle cx="80" cy="72" r="12" fill="#fff" opacity=".55"/><path d="M100 40 Q96 22 108 12" stroke="#6b4a2b" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="122" cy="30" rx="18" ry="9" fill="#58b368" transform="rotate(-20 122 30)"/>`, c),
+  bush: c => svg(`<circle fill="#55b85c" cx="60" cy="100" r="46"/><circle fill="#55b85c" cx="140" cy="100" r="46"/><circle fill="#7ed67a" cx="100" cy="76" r="54"/>
+    <circle fill="#ff5a5f" cx="70" cy="80" r="11"/><circle fill="#4d9de0" cx="112" cy="58" r="11"/><circle fill="#ffd23f" cx="132" cy="102" r="11"/><circle fill="#ff5a5f" cx="94" cy="114" r="11"/>`, c),
+  cave: c => svg(`<path fill="#9aa0b5" d="M10 152 Q10 30 100 22 Q190 30 190 152 Z"/><path fill="#39405a" d="M52 152 Q52 70 100 66 Q148 70 148 152 Z"/><circle fill="#fff" cx="88" cy="110" r="6"/><circle fill="#fff" cx="112" cy="110" r="6"/>`, c),
+  meadow: c => svg(`<g transform="translate(-6 10) scale(.72)">${ART.longneck(c).replace(/<\/?svg[^>]*>/g, "")}</g><g transform="translate(118 92) scale(.38)" style="--m:${COLORS.orange[0]};--d:${COLORS.orange[1]}">${ART.longneck(COLORS.orange).replace(/<\/?svg[^>]*>/g, "")}</g>`, c)
+};
+const DINOS = ["longneck", "spiky", "horned", "pip"];
+const DINO_NAMES = { longneck: "long neck dinosaur", spiky: "spiky dinosaur", horned: "horned dinosaur", pip: "little dinosaur", egg: "egg", leaf: "leaf" };
+const FRIEND_COLORS = ["blue", "orange", "purple", "pink", "teal", "yellow", "red"];
+const PIP = () => ART.pip(COLORS.green);
+
+// ---------- screens ----------
+let current = "title";
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  current = id;
+  $("homeBtn").style.display = (id === "game") ? "" : "none";
+  $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+  $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+  $("hintBtn").style.display = $("lessonBtn").style.display = (id === "game") ? "" : "none";
+  $("myTurn").style.display = "none"; // shown only while a lesson is playing
+}
+function animate(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function confetti(n) {
+  const cols = Object.values(COLORS).map(c => c[0]);
+  for (let i = 0; i < (n || 40); i++) {
+    const c = document.createElement("div"); c.className = "confetti";
+    c.style.left = rand(100) + "vw"; c.style.background = pick(cols);
+    c.style.animationDuration = (1.6 + Math.random() * 1.8) + "s"; c.style.animationDelay = (Math.random() * .6) + "s";
+    $("fx").appendChild(c); setTimeout(() => c.remove(), 4500);
+  }
+}
+
+// ---------- extra pictures for the newer games ----------
+const SHAPE_NAMES = ["circle", "square", "triangle", "star", "heart", "rectangle", "oval", "diamond"];
+const STAR_POINTS = Array.from({ length: 10 }, (_, i) => { const r = i % 2 ? 19 : 46, a = Math.PI * i / 5 - Math.PI / 2; return (50 + r * Math.cos(a)).toFixed(1) + "," + (53 + r * Math.sin(a)).toFixed(1); }).join(" ");
+const SHAPE_DRAW = {
+  circle: `<circle cx="50" cy="50" r="42"/>`, square: `<rect x="10" y="10" width="80" height="80" rx="5"/>`,
+  triangle: `<polygon points="50,8 94,90 6,90"/>`, star: `<polygon points="${STAR_POINTS}"/>`,
+  heart: `<path d="M50 90 C8 58 4 30 24 18 C38 10 50 22 50 34 C50 22 62 10 76 18 C96 30 92 58 50 90 Z"/>`,
+  rectangle: `<rect x="4" y="27" width="92" height="46" rx="5"/>`, oval: `<ellipse cx="50" cy="50" rx="46" ry="28"/>`,
+  diamond: `<polygon points="50,4 88,50 50,96 12,50"/>`
+};
+const shapeArt = (name, c) => `<svg viewBox="0 0 100 100"><g fill="${c[0]}" stroke="${c[1]}" stroke-width="4" stroke-linejoin="round">${SHAPE_DRAW[name]}</g></svg>`;
+const ANIMALS = [
+  { name: "cow", pic: "🐮", sound: "moo" }, { name: "dog", pic: "🐶", sound: "woof woof" }, { name: "cat", pic: "🐱", sound: "meow" }, { name: "duck", pic: "🦆", sound: "quack quack" },
+  { name: "sheep", pic: "🐑", sound: "baa" }, { name: "pig", pic: "🐷", sound: "oink oink" },
+  { name: "frog", pic: "🐸", sound: "ribbit" }, { name: "lion", pic: "🦁", sound: "roar" }, { name: "horse", pic: "🐴", sound: "neigh" }, { name: "chicken", pic: "🐔", sound: "cluck cluck" }
+];
+// A big Pip whose body parts can each be tapped (the see-through "hit" shapes make small parts easier to tap).
+const bodyPip = c => svg(`
+  <g data-part="tail"><path class="d" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z"/><path class="hit" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z" stroke-width="14"/></g>
+  <g data-part="feet"><rect class="d" x="80" y="136" width="18" height="20" rx="8"/><rect class="d" x="108" y="136" width="18" height="20" rx="8"/><rect class="hit" x="74" y="140" width="58" height="20"/></g>
+  <g data-part="tummy"><ellipse class="m" cx="100" cy="104" rx="38" ry="42"/><ellipse class="b" cx="109" cy="112" rx="22" ry="28"/></g>
+  <g data-part="arm"><ellipse class="d" cx="136" cy="98" rx="12" ry="6"/><ellipse class="hit" cx="138" cy="98" rx="17" ry="11"/></g>
+  <g data-part="head"><ellipse class="m" cx="118" cy="48" rx="36" ry="30"/><ellipse class="m" cx="146" cy="57" rx="20" ry="15"/></g>
+  <g data-part="eye"><circle class="e" cx="128" cy="40" r="8"/><circle class="p" cx="130" cy="41" r="4"/><circle class="hit" cx="128" cy="40" r="13"/></g>
+  <g data-part="nose"><circle class="p" cx="158" cy="52" r="2.5"/><circle class="hit" cx="158" cy="49" r="8"/></g>
+  <g data-part="mouth"><path d="M138 64 Q150 72 162 62" fill="none" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/><path class="hit" d="M136 62 Q150 76 165 60 L165 72 Q150 84 136 72 Z"/></g>`, c, "6 6 166 154");
+
+// ---------- the mini-games ----------
+// Each game has 4 difficulty steps. makeQuestion(step) returns:
+//   { bubble: picture/words shown in Pip's speech bubble, say: what Pip says (sayParts: the same, said in pieces),
+//     choices: [{ html, ok, name }], yay: what Pip says when right, size: optional card size,
+//     hint(P): Pip's nudge (the 💡 button, and the "try together" questions after a lesson),
+//     explain(P): Pip shows the answer and why, after a second wrong try }
+// lesson(P): the "watch me" lesson on the first visit (and from the 📖 button): Pip does one herself, out loud.
+// P is the helper below (helper()): P.say, P.glow, P.right(), P.bubbleArt(), P.demo(...) and so on.
+const NUM_WORDS = ["", "One", "Two", "Three", "Four", "Five"];
+// What to look for in each shadow, and in each shape.
+const LOOKS = { longneck: "It has a long, long neck.", spiky: "It has spikes on its back.", horned: "It has horns on its head.", pip: "It's small, like me!", egg: "It's round and smooth.", leaf: "It's pointy at both ends." };
+const SHAPE_LOOKS = { circle: "round, with no corners", square: "four sides, all the same", triangle: "three sides and three points", star: "five points", heart: "the shape of a love heart",
+  rectangle: "four sides, two long and two short", oval: "round and long, like an egg", diamond: "four points, like a kite" };
+const WHERE = { head: "My head is at the top.", tummy: "My tummy is in the middle.", tail: "My tail is at the back.", feet: "My feet are at the bottom.", eye: "My eye is on my head.",
+  arm: "My arm is on my side.", nose: "My nose is at the end of my face.", mouth: "My mouth is under my nose." };
+// Runs a little show: each step changes the picture, then Pip says the words. Stops if the child moves on.
+async function steps(P, list) { for (const [change, words] of list) { if (change) change(); if (!(await P.say(words))) return false; } return true; }
+const berryCard = c => `<div class="art">${ART.berry(COLORS[c])}</div>`;
+
+const GAMES = {
+  colors: {
+    name: "Berry Bush", icon: "bush", intro: "Pip is hungry! Find the berry Pip wants.",
+    lesson: P => { const c = P.demo(berryCard("red"), [berryCard("blue"), berryCard("red")]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! I want a red berry, like this one."],
+        [() => P.glow(c[0], true), "Is this berry red? No. It's blue."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "This berry is red, the same as mine. Yum!"]]); },
+    makeQuestion(step) {
+      const pool = step === 1 ? ["red", "blue", "yellow"] : step === 2 ? ["red", "blue", "yellow", "green"] : ["red", "blue", "yellow", "green", "orange", "purple"];
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const names = shuffle(pool).slice(0, count), target = names[0];
+      return {
+        bubble: `<div class="art">${ART.berry(COLORS[target])}</div>`,
+        say: `Pip wants the ${target} berry!`, yay: `Yum! ${cap(target)}!`,
+        choices: shuffle(names).map(n => ({ html: berryCard(n), ok: n === target, name: n, wrong: `That one is ${n}.` })),
+        hint: P => { P.glow(P.bubbleArt(), true); return P.say(`Look at my berry. It's ${target}. Find one the same colour!`); },
+        explain: P => { P.glow(P.bubbleArt(), true); P.glow(P.right(), true); return P.say(`This berry is ${target}, just like mine!`); }
+      };
+    }
+  },
+  shadows: {
+    name: "Shadow Cave", icon: "cave", intro: "Who is hiding in the cave? Match the shadow!",
+    lesson: P => { const c = P.demo(`<div class="art shadow">${ART.spiky(COLORS.green)}</div>`, [`<div class="art">${ART.egg(COLORS.teal)}</div>`, `<div class="art">${ART.spiky(COLORS.purple)}</div>`]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! This dark picture is a shadow. Look at its shape. It has spikes!"],
+        [() => P.glow(c[0], true), "The egg is round. It has no spikes."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "The spiky dinosaur has spikes, just like the shadow. It made the shadow!"]]); },
+    makeQuestion(step) {
+      let kinds;
+      if (step === 1) kinds = [pick(DINOS), pick(["egg", "leaf"])];
+      else if (step === 2) kinds = shuffle(DINOS).slice(0, 2).concat(pick(["egg", "leaf"]));
+      else kinds = shuffle(DINOS).slice(0, step === 3 ? 3 : 4);
+      const target = step === 1 ? kinds[rand(2)] : kinds[0];
+      const cols = shuffle(["blue", "orange", "purple", "red", "teal", "green"]);
+      return {
+        bubble: `<div class="art shadow">${ART[target](COLORS.green)}</div>`,
+        say: "Who made this shadow?", yay: `Yes! It's the ${DINO_NAMES[target]}!`,
+        choices: shuffle(kinds).map((k, i) => ({ html: `<div class="art">${ART[k](COLORS[cols[i]])}</div>`, ok: k === target, name: DINO_NAMES[k] })),
+        hint: P => { P.glow(P.bubbleArt(), true); return P.say(`Look at the shadow's shape. ${LOOKS[target]}`); },
+        explain: P => { P.glow(P.right(), true); return P.say(`It's the ${DINO_NAMES[target]}. ${LOOKS[target]}`); }
+      };
+    }
+  },
+  sizes: {
+    name: "Big and Small", icon: "meadow", intro: "Some dinosaurs are big. Some are small!",
+    lesson: P => { const card = pct => `<div class="art" style="width:${pct}%;height:${pct}%">${ART.longneck(COLORS.blue)}</div>`, c = P.demo(`<span style="font-size:9vmin">big</span>`, [card(40), card(95)]);
+      return steps(P, [[() => P.glow(c[1], true), "Watch me! This dinosaur is big. It fills up the whole card!"],
+        [() => { P.glow(c[1], false); P.glow(c[0], true); }, "This dinosaur is small. It's tiny!"], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "When I hear big, I tap the big one!"]]); },
+    makeQuestion(step) {
+      const kind = pick(["longneck", "spiky", "horned"]), col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
+      const card = pct => `<div class="art" style="width:${pct}%;height:${pct}%">${ART[kind](col)}</div>`;
+      if (step >= 3) { // three sizes, then four sizes
+        const big = rand(2) === 0, word = big ? "biggest" : "smallest";
+        const sizes = step === 3 ? [95, 62, 34] : [95, 74, 54, 34];
+        const target = big ? sizes[0] : sizes[sizes.length - 1], opposite = big ? sizes[sizes.length - 1] : sizes[0];
+        return {
+          bubble: `<span style="font-size:${big ? 7 : 4}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `That's the ${word} one!`,
+          choices: shuffle(sizes).map(s => ({ html: card(s), ok: s === target, size: s, wrong: s === opposite ? `That is the ${big ? "smallest" : "biggest"} one.` : "Not that one." })),
+          hint: P => P.say(big ? "The biggest one is bigger than all the others." : "The smallest one is smaller than all the others."),
+          explain: async P => { // line them up, from one end to the other
+            const order = P.cards().filter(c => !c.classList.contains("struck")).sort((a, b) => big ? a._ch.size - b._ch.size : b._ch.size - a._ch.size);
+            const words = big ? ["Small.", "Bigger.", "Even bigger.", "Biggest!"] : ["Big.", "Smaller.", "Even smaller.", "Smallest!"];
+            for (let i = 0; i < order.length; i++) { order.forEach(c => P.glow(c, false)); P.glow(order[i], true); if (!(await P.say(i === order.length - 1 ? words[3] : words[i]))) return false; }
+            return true;
+          }
+        };
+      }
+      const big = step === 1 ? true : rand(2) === 0, word = big ? "big" : "small";
+      return {
+        bubble: `<span style="font-size:${big ? 9 : 4.5}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `Yes! That one is ${word}!`,
+        choices: shuffle([[95, "big"], [40, "small"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" })),
+        hint: P => P.say(big ? "Big ones fill up the card!" : "Small ones are tiny!"),
+        explain: P => { P.glow(P.right(), true); return P.say(big ? "This one is big. It fills up the card!" : "This one is small. It's tiny!"); }
+      };
+    }
+  },
+
+  // ----- counting -----
+  count: {
+    name: "Egg Count", icon: () => `<span style="font-size:5.6vmin;color:#ff8a3d;white-space:nowrap">1 2 3</span>`, intro: "Let's count with Pip!",
+    lesson: P => { const egg = `<div class="art small3">${ART.egg(COLORS.blue)}</div>`, num = k => `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`;
+      const c = P.demo(egg.repeat(3), [num(2), num(3)]), eggs = P.bubbleItems();
+      return steps(P, [[null, "Watch me count the eggs. I touch each egg once."], [() => P.glow(eggs[0], true), "One."], [() => P.glow(eggs[1], true), "Two."], [() => P.glow(eggs[2], true), "Three."],
+        [() => { c[0].classList.add("dim"); P.glow(c[1], true); }, "The last number I say tells how many. Three eggs!"]]); },
+    makeQuestion(step) {
+      const max = step + 1; // step 1 counts to 2, step 4 counts to 5
+      const n = 1 + rand(max), words = NUM_WORDS;
+      const thing = pick([["egg", "eggs"], ["leaf", "leaves"], ["berry", "berries"]]);
+      const col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
+      let nums = [];
+      for (let k = 1; k <= max; k++) nums.push(k);
+      if (nums.length > 3) { nums = shuffle(nums.filter(k => k !== n)).slice(0, 2).concat(n).sort((a, b) => a - b); }
+      return {
+        bubble: Array(n).fill(`<div class="art ${n >= 4 ? "small5" : "small3"}">${ART[thing[0]](col)}</div>`).join(""),
+        say: `How many ${thing[1]}?`, yay: `${words[n]}! ${words.slice(1, n + 1).join(", ")}.`, pause: 1900 + n * 550,
+        choices: nums.map(k => ({ html: `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`, ok: k === n, wrong: `That is ${words[k].toLowerCase()}.` })),
+        hint: async P => { P.glow(P.bubbleItems()[0], true); return (await P.say("Touch each one as you count. I'll start!")) && P.say("One..."); },
+        explain: async P => { const items = P.bubbleItems();
+          for (let i = 0; i < items.length; i++) { P.glow(items[i], true); if (!(await P.say(words[i + 1] + "."))) return false; }
+          P.glow(P.right(), true); return P.say(`The last number tells how many. ${words[n]}!`); }
+      };
+    }
+  },
+
+  // ----- shapes -----
+  shapes: {
+    name: "Shape Rocks", icon: () => `<svg viewBox="0 0 200 160"><circle cx="50" cy="55" r="38" fill="#ff5a5f"/><rect x="105" y="20" width="72" height="72" rx="6" fill="#4d9de0"/><polygon points="100,80 150,152 50,152" fill="#ffd23f"/></svg>`,
+    intro: "Let's find shapes!",
+    lesson: P => { const c = P.demo(`<div class="art">${shapeArt("triangle", ["#aab0c6", "#8d93ab"])}</div>`, [`<div class="art">${shapeArt("circle", COLORS.red)}</div>`, `<div class="art">${shapeArt("triangle", COLORS.yellow)}</div>`]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me find the triangle!"], [() => P.glow(c[0], true), "This is a circle. It's round, with no corners."],
+        [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "This one has three sides and three points. It's a triangle!"]]); },
+    makeQuestion(step) {
+      const pool = step === 1 ? ["circle", "square", "triangle"] : step === 2 ? ["circle", "square", "triangle", "star", "heart"] : SHAPE_NAMES;
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const names = shuffle(pool).slice(0, count), target = names[0];
+      const cols = shuffle(["red", "blue", "yellow", "green", "orange", "purple"]);
+      const an = /^[aeiou]/.test(target) ? "An" : "A";
+      return {
+        // step 4 shows only the word, so he has to know the shape by its name
+        bubble: step === 4 ? `<span style="font-size:6vmin">${target}</span>` : `<div class="art">${shapeArt(target, ["#aab0c6", "#8d93ab"])}</div>`,
+        say: `Find the ${target}!`, yay: `Yes! ${an} ${target}!`,
+        choices: shuffle(names).map((n, i) => ({ html: `<div class="art">${shapeArt(n, COLORS[cols[i]])}</div>`, ok: n === target, name: n })),
+        hint: P => { P.glow(P.bubbleArt(), true); return P.say(`${an} ${target} has ${SHAPE_LOOKS[target]}.`.replace("has round", "is round").replace("has the shape", "is the shape")); },
+        explain: P => { P.glow(P.right(), true); return P.say(`This is the ${target}. It has ${SHAPE_LOOKS[target]}.`.replace("has round", "is round").replace("has the shape", "is the shape")); }
+      };
+    }
+  },
+
+  // ----- patterns -----
+  patterns: {
+    name: "Pattern Path", icon: () => `<svg viewBox="0 0 200 160"><circle cx="28" cy="80" r="21" fill="#ff5a5f"/><circle cx="76" cy="80" r="21" fill="#4d9de0"/><circle cx="124" cy="80" r="21" fill="#ff5a5f"/><circle cx="172" cy="80" r="21" fill="none" stroke="#ff8a3d" stroke-width="5" stroke-dasharray="9 7"/></svg>`,
+    intro: "Look at the pattern!",
+    lesson: P => { const seq = ["red", "blue", "red", "blue"], c = P.demo(seq.map(n => `<div class="seq">${ART.berry(COLORS[n])}</div>`).join("") + `<div class="q">?</div>`, [berryCard("blue"), berryCard("red")]), items = P.bubbleItems();
+      return steps(P, [[null, "Watch me! A pattern goes again and again. Let's say it."]].concat(seq.map((n, i) => [() => { items.forEach(x => P.glow(x, false)); P.glow(items[i], true); }, cap(n) + "."])
+        .concat([[() => { items.forEach(x => P.glow(x, false)); P.glow(items[4], true); }, "Red, blue, red, blue. What comes next? Red again!"], [() => { c[0].classList.add("dim"); P.glow(c[1], true); }, "So the red berry comes next!"]]))); },
+    makeQuestion(step) {
+      let things;
+      if (step === 2) { // different things instead of colors
+        things = shuffle([
+          { name: "egg", art: ART.egg(COLORS.teal), wrong: "That is the egg." }, { name: "leaf", art: ART.leaf(COLORS.green), wrong: "That is the leaf." },
+          { name: "dinosaur", art: ART.spiky(COLORS.purple), wrong: "That is the dinosaur." }, { name: "berry", art: ART.berry(COLORS.red), wrong: "That is the berry." }]);
+      } else {
+        things = shuffle(["red", "blue", "yellow", "green", "orange", "purple"]).map(c => ({ name: c, art: ART.berry(COLORS[c]), wrong: `That one is ${c}.` }));
+      }
+      const [A, B, C] = things;
+      const seq = step === 4 ? [A, A, B, A, A] : [A, B, A, B]; // step 4: two-then-one pattern
+      const answer = step === 4 ? B : A;
+      const options = step <= 2 ? [A, B] : [A, B, C];
+      const chant = async P => { const items = P.bubbleItems(); // say the pattern, lighting up each one
+        for (let i = 0; i < seq.length; i++) { items.forEach(x => P.glow(x, false)); P.glow(items[i], true); if (!(await P.say(cap(seq[i].name) + "."))) return false; }
+        items.forEach(x => P.glow(x, false)); P.glow(items[seq.length], true); return true; };
+      return {
+        bubble: seq.map(t => `<div class="seq">${t.art}</div>`).join("") + `<div class="q">?</div>`,
+        say: `${seq.map(t => t.name).join(", ")}. What comes next?`, sayParts: seq.map(t => cap(t.name) + ".").concat("What comes next?"), yay: `Yes! ${cap(answer.name)} comes next!`, pause: 2600,
+        choices: shuffle(options).map(t => ({ html: `<div class="art">${t.art}</div>`, ok: t === answer, wrong: t.wrong })),
+        hint: async P => (await P.say("Let's say the pattern together.")) && (await chant(P)) && P.say("What comes next?"),
+        explain: async P => (await chant(P)) && (P.glow(P.right(), true), P.say(`${cap(answer.name)} comes next!`))
+      };
+    }
+  },
+
+  // ----- body parts (tap the right part of a big Pip) -----
+  body: {
+    name: "Pip's Body", icon: () => PIP(), intro: "Let's find Pip's body parts!",
+    lesson: P => { P.demoBody();
+      return steps(P, [[() => P.glow(P.part("head"), true), "Watch me! This is my head, at the top."], [() => { P.glow(P.part("head"), false); P.glow(P.part("tummy"), true); }, "This is my tummy, in the middle."],
+        [() => { P.glow(P.part("tummy"), false); P.glow(P.part("tail"), true); }, "And this is my tail, at the back. Wag, wag!"]]); },
+    makeQuestion(step) {
+      const pool = ["head", "tummy", "tail"].concat(step >= 2 ? ["feet", "eye"] : [], step >= 3 ? ["arm", "nose"] : [], step >= 4 ? ["mouth"] : []);
+      const part = pick(pool);
+      return {
+        bubble: `<span style="font-size:7vmin">${part}</span>`,
+        say: part === "feet" ? "Where are Pip's feet?" : `Where is Pip's ${part}?`,
+        yay: part === "tail" ? "That's Pip's tail! Wag, wag, wag!" : part === "feet" ? "Those are Pip's feet! Where are your feet?" : `That's Pip's ${part}! Where is your ${part}?`,
+        pause: 3800, after: 1500, part,
+        hint: P => P.say(WHERE[part]),
+        explain: P => { P.glow(P.part(part), true); return P.say(part === "feet" ? "Here are my feet!" : `Here is my ${part}!`); },
+        render(box) {
+          box.innerHTML = `<div class="bodypip pop">${bodyPip(COLORS.green)}</div>`;
+          box.firstChild.addEventListener("click", e => {
+            const g = e.target.closest("[data-part]"); if (!g) return;
+            const p = g.dataset.part;
+            choose(g, { ok: p === part, wrong: p === "feet" ? "Those are Pip's feet." : `That is Pip's ${p}.` }, true);
+          });
+        }
+      };
+    }
+  },
+
+  // ----- animal sounds -----
+  sounds: {
+    name: "Animal Sounds", icon: () => `<span style="font-size:10vmin;line-height:1.2">🐮</span>`, intro: "Pip's animal friends are here! Listen!",
+    lesson: P => { const c = P.demo(`<span style="font-size:5vmin">🔊 Moo!</span>`, [`<span class="emoji">🐮</span>`, `<span class="emoji">🦆</span>`]);
+      return steps(P, [[() => P.glow(c[0], true), "Watch me! The cow says moo."], [() => { P.glow(c[0], false); P.glow(c[1], true); }, "The duck says quack quack."],
+        [() => { P.glow(c[1], false); P.glow(P.bubbleArt(), true); }, "Moo! Who says moo?"], [() => { c[1].classList.add("dim"); P.glow(c[0], true); }, "The cow says moo!"]]); },
+    makeQuestion(step) {
+      const pool = ANIMALS.slice(0, step === 1 ? 4 : step === 2 ? 6 : ANIMALS.length);
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const picks = shuffle(pool).slice(0, count), t = picks[0];
+      const Sound = cap(t.sound);
+      return {
+        bubble: `<span style="font-size:5vmin">🔊 ${Sound}!</span>`,
+        say: `${Sound}! ${Sound}! Who says ${t.sound}?`, yay: `Yes! The ${t.name} says ${t.sound}!`, pause: 2900,
+        choices: shuffle(picks).map(a => ({ html: `<span class="emoji">${a.pic}</span>`, ok: a === t, wrong: `That is the ${a.name}. The ${a.name} says ${a.sound}.`, animal: a })),
+        hint: async P => { // say what each animal still in play says
+          for (const c of P.cards().filter(c => !c.classList.contains("dim"))) { P.glow(c, true); const ok = await P.say(`The ${c._ch.animal.name} says ${c._ch.animal.sound}.`); P.glow(c, false); if (!ok) return false; }
+          return P.say(`Who says ${t.sound}?`); },
+        explain: P => { P.glow(P.right(), true); return P.say(`The ${t.name} says ${t.sound}!`); }
+      };
+    }
+  }
+};
+const GAME_IDS = ["colors", "shapes", "count", "patterns", "shadows", "sizes", "body", "sounds"]; // the order of places in the valley
+const NEST_SIZE = 3; // eggs needed to finish one adventure
+const STARS_TO_WIN = 4;
+const foundList = () => Object.values(S.found);
+
+// ---------- playing one place: Learn, then Try together, then Play ----------
+// The first visit to a place starts with a short "watch me" lesson (the big ▶ skips it, 📖 shows it again).
+// The next two questions come with Pip's help already showing. One 💡 hint per round. After a second wrong try,
+// Pip shows the answer and why. A question that needed help comes back a little later, to practise it again.
+let G = null; // the game being played right now
+const REVIEW = {}; // questions to bring back, while the game is open: { place: [{ q, due }] }
+function startGame(id) {
+  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "", hints: 1, count: 0, guided: 0 };
+  $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
+  $("gamePip").innerHTML = PIP();
+  $("hintBtn").classList.remove("used");
+  show("game");
+  if (GAMES[id].lesson && !(S.learned || {})[id]) runLesson(true);
+  else nextQuestion(id);
+}
+// The tools Pip uses to show things during a lesson, a hint or her help. "alive" turns false once the child moves on.
+function helper(alive) {
+  const cards = () => [...$("choices").querySelectorAll(".choice")].filter(b => b._ch);
+  return {
+    alive,
+    say: async words => { // with the voice off, a pause long enough to look at the picture instead
+      if (!alive()) return false;
+      if (!S.voice) { await wait(1100 + String(words).length * 35); return alive(); }
+      return (await talk(words)) && alive();
+    },
+    glow: (el, on) => el && el.classList.toggle("glow", !!on),
+    cards, right: () => cards().find(b => b._ch.ok),
+    bubbleArt: () => $("bubble").firstElementChild, bubbleItems: () => [...$("bubble").children],
+    part: name => $("choices").querySelector(`[data-part="${name}"]`),
+    wait: ms => wait(ms),
+    // a pretend question for a lesson: what is in Pip's bubble, and the cards (they cannot be tapped)
+    demo(bubbleHtml, list) {
+      $("bubble").innerHTML = bubbleHtml; animate($("bubble"), "pop");
+      const box = $("choices"); box.innerHTML = ""; box.style.setProperty("--cs", list.length >= 3 ? "27vmin" : "32vmin");
+      return list.map(h => { const b = document.createElement("div"); b.className = "choice pop"; b.innerHTML = h; box.appendChild(b); return b; });
+    },
+    demoBody() { $("bubble").innerHTML = `<span style="font-size:9vmin">👀</span>`; $("choices").innerHTML = `<div class="bodypip pop">${bodyPip(COLORS.green)}</div>`; }
+  };
+}
+async function runLesson(first) { // "Learn": Pip does one herself, out loud
+  const g = G; if (!g) return;
+  hush(); g.lesson = true; g.busy = true; g.q = null;
+  $("bubble").innerHTML = ""; $("choices").innerHTML = ""; $("myTurn").style.display = "";
+  const P = helper(() => G === g && !!g.lesson);
+  let ok = true;
+  if (first) ok = (S.voice ? await speak("intro-" + g.id, GAMES[g.id].intro) : (await wait(1500), true)) && P.alive();
+  if (ok) { await GAMES[g.id].lesson(P); ok = P.alive(); }
+  if (ok && await P.say("Now you try!")) endLesson(g);
+}
+function endLesson(g) {
+  if (G !== g || !g.lesson) return;
+  hush(); g.lesson = false; g.busy = false; $("myTurn").style.display = "none";
+  (S.learned || (S.learned = {}))[g.id] = true; save();
+  g.guided = 2; // "Try together": the next two questions come with Pip's help already showing
+  nextQuestion();
+}
+function nextQuestion(intro) { // "intro" is the place's id, only for the very first question: Pip says her welcome first, then asks
+  let q, tries = 0, lead = null;
+  const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
+  if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = "Let's try this one again!"; } // bring it back
+  else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 6 && q.say + q.bubble === G.lastSay);
+  G.lastSay = q.say + q.bubble;
+  G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
+  $("bubble").innerHTML = q.bubble; animate($("bubble"), "pop");
+  const box = $("choices"); box.innerHTML = "";
+  if (q.render) q.render(box); // a game can draw its own picture to tap (the body parts game does)
+  else {
+    box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
+    q.choices.forEach(ch => {
+      const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b._ch = ch; // (hints need to know which card is which)
+      b.addEventListener("click", () => choose(b, ch));
+      box.appendChild(b);
+    });
+  }
+  loadClip(lineUrl(q.yay)).catch(() => {}); // get the cheer ready too
+  const guide = G.guided > 0 && q.hint; // "Try together"
+  if (guide) { G.guided--; G.hinted = true; }
+  const g = G, parts = (lead ? [lead] : []).concat(q.sayParts || q.say);
+  const asked = intro ? speak("intro-" + intro, GAMES[intro].intro).then(finished => finished && G === g && g.q === q ? talk(parts) : false) // asks only if the welcome played to its end
+    : talk(parts);
+  if (guide) asked.then(done => { if (G === g && g.q === q && !g.busy && (done || !S.voice)) q.hint(helper(() => G === g && g.q === q && !g.busy)); });
+}
+// el = what was tapped. "part" is true when it is a part of a bigger picture rather than a card.
+async function choose(el, ch, part) {
+  if (!G || G.busy || el.classList.contains("dim")) return;
+  const q = G.q, box = $("choices");
+  if (ch.ok) {
+    G.busy = true; sfx.yes();
+    animate($("gamePip"), "bounce");
+    if (part) { el.classList.add("glow"); animate(box.firstChild, "bounce"); }
+    else { el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); }
+    G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
+    if ((!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: try it again a little later
+    const spoken = talkAndWait(q.yay, q.pause || 2100); // waits for Pip to finish; with the voice off, a short pause
+    track(G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
+    adjust(G.first && !G.hinted);
+    await spoken;
+    if (q.after) await wait(q.after); // extra time when Pip asks the child to do something ("Where is your tummy?")
+    if (!G || G.q !== q) return;
+    if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
+  } else {
+    sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
+    if (part) animate(box.firstChild, "wobble"); else { animate(el, "wobble"); el.classList.add("dim"); }
+    if (G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
+    const wrong = ch.wrong || `That is the ${ch.name}.`, g = G;
+    if (G.wrongs >= 2 && q.explain && !q.explained) { // a second wrong try: Pip shows how
+      q.explained = true;
+      talk(wrong).then(done => { if (G === g && g.q === q && !g.busy && (done || !S.voice)) q.explain(helper(() => G === g && g.q === q && !g.busy)); });
+    } else talk([wrong].concat(q.sayParts || q.say));
+  }
+}
+// Quietly make the game harder after 3 right in a row, easier after 2 hard questions in a row.
+function adjust(firstTry) {
+  if (!S.auto) return;
+  if (firstTry) { G.streak++; G.rough = 0; if (G.streak >= 3 && S.skill[G.id] < 4) { S.skill[G.id]++; G.streak = 0; } }
+  else { G.rough++; G.streak = 0; if (G.rough >= 2 && S.skill[G.id] > 1) { S.skill[G.id]--; G.rough = 0; } }
+  save();
+}
+function finishGame() {
+  const id = G.id; G = null;
+  if (S.found[id]) { // already rescued this egg: just celebrate
+    sfx.party(); confetti(30);
+    Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the valley once Pip has finished
+  } else { // a short celebration scene first: a dinosaur fun fact (a different one each time). The very first time, Dr. Somebody drops by too.
+    const k = (S.factAt || 0) % PIP_FACTS.length, stops = (S.metDoc ? [] : [DOC_HELLO]).concat(PIP_FACTS[k]);
+    S.factAt = k + 1; S.metDoc = true; save();
+    playScene(stops, () => startHatch(id));
+  }
+}
+
+// ---------- celebration scenes ----------
+// Dr. Somebody's clock balloon (a time machine, from the older grades' games) drifts across, dinosaur pictures pop up,
+// and Pip says a fun fact. The big ▶ skips ahead. Pip's lines are recorded in audio/pip/l/; Dr. Somebody's in audio/pip/doc/.
+const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
+  <path d="M80 6 C58 20 50 60 56 96 C60 118 72 134 80 140 C88 134 100 118 104 96 C110 60 102 20 80 6 Z" fill="#ffd23f"/>
+  <circle cx="80" cy="70" r="34" fill="#fff" stroke="#39405a" stroke-width="5"/>
+  <g stroke="#39405a" stroke-width="4" stroke-linecap="round"><line x1="80" y1="42" x2="80" y2="48"/><line x1="80" y1="92" x2="80" y2="98"/><line x1="52" y1="70" x2="58" y2="70"/><line x1="102" y1="70" x2="108" y2="70"/></g>
+  <line x1="80" y1="70" x2="80" y2="50" stroke="#39405a" stroke-width="5" stroke-linecap="round"/><line x1="80" y1="70" x2="97" y2="79" stroke="#ff5a5f" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#39405a"/>
+  <line x1="56" y1="130" x2="62" y2="162" stroke="#c9a37a" stroke-width="3"/><line x1="104" y1="130" x2="98" y2="162" stroke="#c9a37a" stroke-width="3"/>
+  <circle cx="80" cy="154" r="13" fill="#9c6b3f"/><circle cx="75" cy="152" r="5" fill="#fff"/><circle cx="85" cy="152" r="5" fill="#fff"/><circle cx="75" cy="152" r="2" fill="#2b2d42"/><circle cx="85" cy="152" r="2" fill="#2b2d42"/>
+  <rect x="56" y="160" width="48" height="32" rx="7" fill="#c48a4a"/><rect x="56" y="160" width="48" height="7" rx="3" fill="#9c6830"/></svg>`;
+const sceneEmo = e => `<span class="emo">${e}</span>`;
+const SCENE_ART = { pip: PIP(), egg: ART.egg(COLORS.teal), egg2: ART.egg(COLORS.pink), longneck: ART.longneck(COLORS.blue), spiky: ART.spiky(COLORS.purple), horned: ART.horned(COLORS.orange),
+  leaf: ART.leaf(COLORS.green), fern: sceneEmo("🌿"), volcano: sceneEmo("🌋"), bird: sceneEmo("🐦"), feather: sceneEmo("🪶"), house: sceneEmo("🏠"), nest: sceneEmo("🪺") };
+// [what is said, what pops up: [picture, left %, bottom %, size in vmin]]
+const DOC_HELLO = { doc: true, say: "Doctor Somebody here! Oh dear. My clock balloon has landed in dinosaur times again! Hello, Pip!", show: [["pip", 20, 8, 30], ["fern", 56, 8, 16]] };
+const PIP_FACTS = [
+  { say: "Fun fact! Baby dinosaurs hatched from eggs, just like baby birds!", show: [["egg", 14, 8, 18], ["egg2", 30, 8, 16], ["nest", 46, 8, 18], ["pip", 60, 8, 18]] },
+  { say: "Fun fact! Some dinosaurs were taller than a house!", show: [["longneck", 8, 6, 46], ["house", 58, 8, 14]] },
+  { say: "Fun fact! Birds are a kind of dinosaur!", show: [["bird", 18, 30, 16], ["pip", 40, 8, 26], ["feather", 66, 30, 10]] },
+  { say: "Fun fact! Some dinosaurs had feathers!", show: [["feather", 16, 26, 16], ["pip", 34, 8, 26], ["feather", 62, 34, 12]] },
+  { say: "Fun fact! Lots of dinosaurs ate only plants, like leaves and ferns!", show: [["longneck", 6, 6, 36], ["fern", 48, 8, 16], ["leaf", 62, 8, 14]] },
+  { say: "Fun fact! Some dinosaurs had big spikes on their backs!", show: [["spiky", 10, 6, 40], ["volcano", 58, 8, 18]] }
+];
+let SC = null;
+async function playScene(stops, then) {
+  const me = SC = { then, done: false }, alive = () => SC === me && !me.done;
+  show("scene"); const stage = $("sceneStage"); stage.innerHTML = `<div class="sballoon">${BALLOON}</div>`; sfx.party(); confetti(25);
+  for (const stop of stops) {
+    if (!alive()) return;
+    stage.querySelectorAll(".sitem").forEach(e => e.classList.add("gone"));
+    stop.show.forEach(([name, x, y, size], i) => { const d = document.createElement("div"); d.className = "sitem"; d.style.cssText = `left:${x}%;bottom:${y}%;width:${size}vmin;height:${size}vmin;font-size:${(size * .85).toFixed(1)}vmin;animation-delay:${(i * .35).toFixed(2)}s`; d.innerHTML = SCENE_ART[name]; stage.appendChild(d); });
+    $("sceneCap").textContent = stop.say;
+    const said = S.voice ? await (stop.doc ? playClip("../audio/pip/doc/" + clipName(stop.say) + ".mp3", stop.say) : talk(stop.say)) : (await wait(1500 + stop.say.length * 45), true);
+    if (!said || !alive()) return;
+    await wait(700);
+  }
+  if (alive()) { await wait(600); endScene(me); }
+}
+function endScene(me) { if (!me || me.done || SC !== me) return; me.done = true; SC = null; hush(); me.then(); }
+$("sceneGo").addEventListener("click", () => { sfx.tap(); endScene(SC); });
+
+// ---------- hatching an egg ----------
+let H = null;
+function startHatch(id) {
+  const colorName = FRIEND_COLORS[S.friends.length % FRIEND_COLORS.length];
+  const kind = pick(["longneck", "spiky", "horned", "pip"]);
+  H = { id, colorName, kind, taps: 0, done: false };
+  $("hatchStage").innerHTML = ART.egg(COLORS[colorName]);
+  $("hatchGo").classList.remove("show");
+  show("hatch"); sfx.party(); confetti(25); animate($("hatchStage"), "pop");
+  speak("found", "You found an egg! Tap the egg!");
+  loadClip(`../audio/pip/hatch-${colorName}-${kind}.mp3`).catch(() => {}); // get the hatching line ready so it starts without a pause
+}
+$("hatchStage").addEventListener("click", () => {
+  if (!H || H.done) return;
+  H.taps++; sfx.crack(); animate($("hatchStage"), "wobble");
+  if (H.taps >= 3) {
+    H.done = true;
+    S.found[H.id] = { color: H.colorName, kind: H.kind };
+    S.friends.push({ color: H.colorName, kind: H.kind }); save();
+    $("hatchStage").innerHTML = ART[H.kind](COLORS[H.colorName]); animate($("hatchStage"), "pop");
+    sfx.party(); confetti(50);
+    speak(`hatch-${H.colorName}-${H.kind}`, `Hello, baby dinosaur! ${/^[aeiou]/.test(H.colorName) ? "An" : "A"} ${H.colorName} ${DINO_NAMES[H.kind]}!`);
+    setTimeout(() => $("hatchGo").classList.add("show"), 1200);
+  }
+});
+$("hatchGo").addEventListener("click", () => {
+  sfx.tap(); H = null;
+  if (foundList().length >= NEST_SIZE) showFinale(); else showMap();
+});
+
+// ---------- the big finish (when the nest is full) ----------
+function showFinale() {
+  $("finaleRow").innerHTML = `<div>${PIP()}</div>` + foundList().slice(0, NEST_SIZE).map(f => `<div class="pop">${ART[f.kind](COLORS[f.color])}</div>`).join("");
+  $("finaleGo").classList.remove("show");
+  show("finale"); sfx.party(); confetti(80);
+  speak("finale", "Hooray! All the eggs are home! Pip is so happy. Thank you!");
+  setTimeout(() => $("finaleGo").classList.add("show"), 2500);
+}
+$("finaleGo").addEventListener("click", () => {
+  sfx.tap(); S.found = {}; S.clutches++; save(); stamp("pre");
+  showMap("again");
+});
+
+// ---------- the valley (map) ----------
+function showMap(line) {
+  const home = foundList();
+  if (home.length >= NEST_SIZE) { showFinale(); return; } // nest is full: go to the celebration
+  $("places").innerHTML = "";
+  GAME_IDS.forEach(id => {
+    const g = GAMES[id], b = document.createElement("button");
+    b.className = "place" + (S.found[id] ? " done" : "");
+    b.innerHTML = `<div class="pic">${typeof g.icon === "function" ? g.icon() : ART[g.icon](COLORS.blue)}</div><div class="name">${g.name}</div>` +
+      (S.found[id] ? `<div class="badge">${ART[S.found[id].kind](COLORS[S.found[id].color])}</div>` : `<div class="badge">${ART.egg(COLORS.teal)}</div>`);
+    b.addEventListener("click", () => { sfx.tap(); startGame(id); });
+    $("places").appendChild(b);
+  });
+  $("nest").innerHTML = `<div class="pipslot">${PIP()}</div>` + Array.from({ length: NEST_SIZE }, (_, i) =>
+    home[i] ? `<div class="slot">${ART[home[i].kind](COLORS[home[i].color])}</div>` : `<div class="slot empty"></div>`).join("");
+  const earlier = S.friends.slice(0, Math.max(0, S.friends.length - home.length)).slice(-12);
+  $("family").innerHTML = earlier.map(f => `<div>${ART[f.kind](COLORS[f.color])}</div>`).join("");
+  show("map");
+  const left = NEST_SIZE - home.length;
+  if (line === "again") speak("again", "Oh no! More eggs rolled away! Let's find them!");
+  else if (left === 3) speak("start", "Pip's eggs rolled away! Tap a place to find an egg.");
+  else if (left === 1) speak("left1", "One more egg to find! Tap a place.");
+  else speak("left2", "Two more eggs to find! Tap a place.");
+}
+
+// ---------- buttons ----------
+$("titlePip").innerHTML = PIP();
+if (NAME) $("titleSub").textContent = "A dinosaur adventure for " + NAME;
+$("shelfBtn").addEventListener("click", () => { hush(); location.href = "index.html"; });
+$("playBtn").addEventListener("click", () => {
+  audio(); sfx.tap();
+  // get the most-used recorded lines ready, so they start without a pause (a missing file is simply skipped)
+  ["start", "left1", "left2", "again", "replay", "found", "finale"].concat(GAME_IDS.map(id => "intro-" + id)).forEach(n => loadClip("../audio/pip/" + n + ".mp3").catch(() => {}));
+  showMap();
+});
+$("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); talk(G.q.sayParts || G.q.say); } });
+$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; hush(); showMap(); });
+// The hint: one per round. It takes away one wrong card (only when 3 or more are left), then Pip shows how to think about it.
+$("hintBtn").addEventListener("click", async () => {
+  if (!G || G.busy || !G.q || G.hints <= 0) return;
+  const q = G.q, g = G; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); hush();
+  const left = [...$("choices").querySelectorAll(".choice")].filter(b => b._ch && !b.classList.contains("dim"));
+  if (left.length >= 3) pick(left.filter(b => !b._ch.ok)).classList.add("dim", "struck");
+  const P = helper(() => G === g && g.q === q && !g.busy);
+  if (q.hint) await q.hint(P); else await P.say(q.sayParts || q.say);
+});
+// 📖: watch Pip's lesson again. ▶: skip the lesson and start playing.
+$("lessonBtn").addEventListener("click", () => { if (!G || G.lesson || !GAMES[G.id].lesson || (G.busy && G.q)) return; sfx.tap(); runLesson(false); });
+$("myTurn").addEventListener("click", () => { if (G && G.lesson) { sfx.tap(); endLesson(G); } });
+
+// ---------- grown-ups corner (press and hold the gear for 2 seconds) ----------
+let holdTimer = null;
+const gb = $("grownBtn");
+const startHold = e => { e.preventDefault(); gb.classList.add("holding"); holdTimer = setTimeout(openGrown, 1500); };
+const endHold = () => { gb.classList.remove("holding"); clearTimeout(holdTimer); };
+gb.addEventListener("pointerdown", startHold); gb.addEventListener("pointerup", endHold); gb.addEventListener("pointerleave", endHold); gb.addEventListener("pointercancel", endHold);
+gb.addEventListener("contextmenu", e => e.preventDefault());
+// with a keyboard: hold Enter or the space bar on the gear
+gb.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && !e.repeat) startHold(e); });
+gb.addEventListener("keyup", e => { if (e.key === "Enter" || e.key === " ") endHold(); });
+gb.addEventListener("blur", endHold);
+function openGrown() {
+  endHold(); hush();
+  const stepNames = {
+    colors: ["2 colors", "3 colors", "3 of 6 colors", "4 colors"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"],
+    sizes: ["find big", "big or small", "biggest / smallest of 3", "biggest / smallest of 4"], count: ["count to 2", "count to 3", "count to 4", "count to 5"],
+    shapes: ["circle, square, triangle", "adds star and heart", "8 shapes", "8 shapes, by name only"], patterns: ["2 colors taking turns", "2 things taking turns", "3 choices", "two-then-one pattern"],
+    body: ["head, tummy, tail", "adds feet and eye", "adds arm and nose", "adds mouth"], sounds: ["4 animals, 2 choices", "6 animals, 3 choices", "10 animals, 3 choices", "10 animals, 4 choices"]
+  };
+  const voices = englishVoices();
+  $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
+    <p><b>Preschool (ages 2-4).</b> ${NAME ? "Playing as <b>" + NAME.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
+    <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
+    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(v => `<option value="${v.name.replace(/"/g, "&quot;")}"${voice && v.name === voice.name ? " selected" : ""}>${v.name}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+    <p>Eggs hatched so far: <b>${S.friends.length}</b> &nbsp;|&nbsp; Full adventures finished: <b>${S.clutches}</b></p>
+    ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${stepNames[id][S.skill[id] - 1]}</small></div>
+      <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
+    <div class="line"><div>Adjust difficulty automatically</div><button data-act="auto">${S.auto ? "On" : "Off"}</button></div>
+    <div class="line"><div>Pip's talking voice</div><button data-act="voice">${S.voice ? "On" : "Off"}</button></div>
+    <div class="line"><div>Sound effects</div><button data-act="sound">${S.sound ? "On" : "Off"}</button></div>
+    <div class="foot"><button class="warn" data-act="reset">Start over (erase progress)</button><button class="main" data-act="close">Done</button></div>`;
+  $("grown").classList.add("on");
+}
+$("grownPanel").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  if (act === "test") { const was = S.voice; S.voice = true; say(`Hi${NAME ? " " + NAME : ""}! I'm Pip. Let's find the eggs!`); S.voice = was; return; }
+  if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
+  if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
+  if (act === "auto") S.auto = !S.auto;
+  if (act === "voice") S.voice = !S.voice;
+  if (act === "sound") S.sound = !S.sound;
+  if (act === "reset") { if (!confirm("Erase this game's progress and start over?")) return; S = fresh(); }
+  save();
+  if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }
+  if (act === "reset") { $("grown").classList.remove("on"); show("title"); return; }
+  openGrown();
+});
+
+$("grownPanel").addEventListener("change", e => {
+  if (e.target.id === "voicePick") { S.voiceName = e.target.value; shareVoice(e.target.value); chooseVoice(); save(); } // one choice for every game
+});
+
+// Stop pinch-zoom and double-tap zoom so little fingers can't shrink the game.
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("dblclick", e => e.preventDefault());
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>

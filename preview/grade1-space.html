@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Dr. Somebody's Space Balloon</title>
+<link rel="stylesheet" href="shared/kit.css?v=25">
+<style>
+  /* Space look: dark sky, stars, standing on a moon. */
+  :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
+  .sub { color:#fff; }
+  h1 { font-size:7.4vmin; padding:0 14vmin; }
+  .spacedust { position:absolute; inset:0; opacity:.75; background-image:radial-gradient(#fff 1px, transparent 1.6px), radial-gradient(#fff 1.4px, transparent 2px), radial-gradient(#ffe9a8 1px, transparent 1.6px);
+    background-size:90px 90px, 170px 170px, 130px 130px; background-position:0 0, 40px 70px, 90px 20px; }
+  .ringed { position:absolute; top:5vmin; right:7vmin; width:15vmin; height:15vmin; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffd9a0, #ff9f43); }
+  .ringed::after { content:""; position:absolute; left:-5vmin; right:-5vmin; top:5.6vmin; height:3.4vmin; border:.9vmin solid rgba(255,233,168,.85); border-radius:50%; transform:rotate(-18deg); }
+  .stickers { color:#fff; }
+  /* tens and ones blocks */
+  .blocks { display:flex; gap:2.5vmin; align-items:flex-end; }
+  .rods { display:flex; gap:.7vmin; }
+  .rod { display:block; width:1.9vmin; height:19vmin; border-radius:.4vmin; background:repeating-linear-gradient(#4d9de0 0 1.7vmin, #2f6fab 1.7vmin 1.9vmin); }
+  .cubes { display:grid; grid-template-columns:repeat(2, 1.9vmin); gap:.5vmin; align-content:end; }
+  .cube { display:block; width:1.9vmin; height:1.9vmin; border-radius:.4vmin; background:#ff9f43; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=25"></script>
+<script src="shared/story.js?v=25"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY'S SPACE BALLOON  -  the Grade 1 game
+   Story: Dr. Somebody is an owl inventor who is so forgetful that nobody
+   (not even the doctor) remembers their real name. Their time machine is
+   a hot-air balloon with a giant clock on it. On its first trip it
+   floated all the way up to space! It needs 4 star crystals to fly home.
+   Every planet has a crystal, guarded by a friendly space friend.
+   The engine that runs the game is in shared/story.js.
+   ===================================================================== */
+
+// ---------- pictures ----------
+const blocks = n => `<div class="blocks"><div class="rods">${`<i class="rod"></i>`.repeat(Math.floor(n / 10))}</div><div class="cubes">${`<i class="cube"></i>`.repeat(n % 10)}</div></div>`;
+
+// ---------- words ----------
+const W1 = [["cat", "🐱"], ["dog", "🐶"], ["pig", "🐷"], ["sun", "☀️"], ["hat", "🎩"], ["bus", "🚌"], ["bed", "🛏️"], ["fox", "🦊"], ["bug", "🐛"], ["hen", "🐔"], ["pen", "🖊️"], ["map", "🗺️"], ["box", "📦"], ["bat", "🦇"], ["ant", "🐜"], ["egg", "🥚"]];
+const W2 = [["frog", "🐸"], ["fish", "🐟"], ["duck", "🦆"], ["star", "⭐"], ["ship", "🚢"], ["moon", "🌙"], ["tree", "🌳"], ["cake", "🎂"], ["bell", "🔔"], ["drum", "🥁"], ["sock", "🧦"], ["ring", "💍"], ["milk", "🥛"], ["book", "📖"],
+  ["boat", "⛵"], ["bear", "🐻"], ["leaf", "🍃"], ["hand", "✋"], ["shoe", "👟"], ["rain", "🌧️"], ["snow", "❄️"], ["corn", "🌽"]];
+const W3 = [["rocket", "🚀"], ["planet", "🪐"], ["robot", "🤖"], ["tiger", "🐯"], ["apple", "🍎"], ["pizza", "🍕"], ["rabbit", "🐰"], ["spider", "🕷️"], ["flower", "🌼"], ["turtle", "🐢"], ["monkey", "🐵"], ["banana", "🍌"],
+  ["carrot", "🥕"], ["pencil", "✏️"], ["dragon", "🐉"], ["castle", "🏰"], ["guitar", "🎸"], ["cookie", "🍪"], ["candle", "🕯️"]];
+const VOWELS = "aeiou", CONS = "bcdfghlmnprst";
+const SOUND_ALIKE = { sun: "o", pen: "i", c: "k", k: "c" }; // wrong letters that would sound right, so they are never offered
+const SENTENCES = [
+  ["I can ___ a ball.", "kick", ["blue", "cat", "under"]], ["The sun is ___.", "hot", ["run", "desk", "eat"]], ["A fish can ___.", "swim", ["read", "hat", "soft"]],
+  ["I ___ my mom.", "love", ["green", "chair", "seven"]], ["The dog can ___ fast.", "run", ["red", "book", "happy"]], ["We read a ___.", "book", ["jump", "tall", "sing"]],
+  ["The cat sat on the ___.", "mat", ["ran", "big", "sing"]], ["Birds can ___ in the sky.", "fly", ["eat", "bed", "cold"]], ["I drink ___.", "milk", ["shoes", "jump", "tall"]],
+  ["The moon comes out at ___.", "night", ["lunch", "green", "hop"]], ["A frog can ___.", "hop", ["read", "pink", "door"]], ["I put on my ___.", "shoes", ["swim", "loud", "fast"]],
+  ["The rocket goes ___.", "up", ["cat", "eat", "sad"]], ["My hat is ___.", "red", ["run", "jump", "sing"]], ["I see a ___ in the sky.", "star", ["fork", "sock", "desk"]],
+  ["We ___ at the park.", "play", ["blue", "chair", "moon"]], ["The baby is ___.", "small", ["swim", "fork", "jump"]], ["I eat an ___.", "apple", ["under", "happy", "run"]]
+];
+const wordCard = (w, color) => `<span class="word${w.length > 4 ? " long" : ""}"${color ? ` style="color:${color}"` : ""}>${w}</span>`;
+
+// ---------- the calendar (Ontario Grade 1 learns days, months and seasons; reading clocks comes in Grade 3) ----------
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+// [season, picture, what it is like, months that clearly belong to it (March, June, September and December sit between two seasons)]
+const SEASONS = [["winter", "❄️", "Winter is cold, and it often snows.", ["January", "February"]], ["spring", "🌷", "In spring, flowers start to grow.", ["April", "May"]],
+  ["summer", "☀️", "Summer is hot and sunny.", ["July", "August"]], ["fall", "🍂", "In fall, the leaves change colour and fall down.", ["October", "November"]]];
+const dayCard = (w, color) => `<span class="word long" style="font-size:${w.length > 7 ? 4.6 : 5.6}vmin${color ? ";color:" + color : ""}">${w}</span>`;
+
+// ---------- teaching helpers: lessons ("watch me do one") and step-by-step explanations ----------
+const art = html => `<div class="lessonart">${html}</div>`;
+async function frames(L, list) { for (const [html, words] of list) { L.frame(art(html)); if (!(await L.say(words))) return false; } return true; }
+async function talkThrough(H, list) { for (const [html, words] of list) { H.show(art(html)); if (!(await H.say(words))) return false; } return true; }
+function pointTo(H, words) { const c = H.cards().find(c => c.ch.ok); if (c) H.glow(c.el, true); return H.say(words); }
+const spelled = w => w.toUpperCase().split("").join(", ");
+const range = (a, b) => { const out = []; for (let k = a; a <= b ? k <= b : k >= b; k += a <= b ? 1 : -1) out.push(k); return out; };
+
+// ---------- the planets (mini-games) ----------
+// Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again,
+//   hint(H): a nudge on how to think about it,  explain(H): the worked answer, after a second wrong try }.
+// lesson(L, step): the "watch me do one" lesson on the first visit (and from the 📖 button).
+const GAMES = {
+  read: {
+    name: "Word World", icon: "📖", intro: "Let's read!",
+    lesson: L => frames(L, [
+      [`<span class="big">c a t</span>`, "Watch me read a word. I look at each letter, and say its sound."],
+      [`<span class="big"><b>c</b> a t</span>`, "The first letter is C."], [`<span class="big">c <b>a</b> t</span>`, "Then A."], [`<span class="big">c a <b>t</b></span>`, "Then T."],
+      [`<span class="big">cat</span> 🐱`, "Now I blend the sounds together, fast. Cat! The word is cat."]]),
+    makeQuestion(step) {
+      const pool = step === 1 ? W1 : step === 2 ? W1.concat(W2) : W2.concat(W3);
+      const count = step === 1 ? 2 : step === 4 ? 4 : 3;
+      const t = pick(pool);
+      if (step === 4) { // see the picture, find its word among words that start the same way
+        const alike = shuffle(pool.filter(w => w !== t && w[0][0] === t[0][0])), rest = shuffle(pool.filter(w => w !== t && w[0][0] !== t[0][0]));
+        const others = alike.concat(rest).slice(0, count - 1), cols = shuffle(INK);
+        return { bubble: emo(t[1]), key: t[0], say: "Which word matches the picture?", yay: `Yes! That word is, ${t[0]}!`,
+          hint: H => { const w = t[0], A = w[0], Z = w[w.length - 1]; H.show(`<b>${A}</b> ${"_ ".repeat(w.length - 2)}<b>${Z}</b>`); return H.say(`Say the picture's name slowly. It starts with ${A.toUpperCase()} and ends with ${Z.toUpperCase()}. Check the start and the end of each word.`); },
+          explain: H => pointTo(H, `This word is, ${t[0]}. ${spelled(t[0])}.`),
+          choices: shuffle(others.concat([t])).map((w, i) => ({ html: wordCard(w[0], cols[i]), ok: w === t, wrong: `That word is, ${w[0]}.` })) };
+      }
+      const others = shuffle(pool.filter(w => w !== t)).slice(0, count - 1);
+      return { bubble: big(t[0], t[0].length > 4 ? 9 : 12), key: t[0], say: "Read the word. Which picture matches?", yay: `Yes! The word is, ${t[0]}!`,
+        hint: H => { const w = t[0], A = w[0].toUpperCase(); H.show(`<b>${w[0]}</b>${w.slice(1)}`); return H.say(`Look at the first letter, ${A}. Say each picture's name. Which one starts with ${A}? Then check the rest of the word.`); },
+        explain: H => pointTo(H, `${spelled(t[0])}. The word is, ${t[0]}.`),
+        choices: shuffle(others.concat([t])).map(w => ({ html: emo(w[1]), ok: w === t, wrong: `That picture is, ${w[0]}.` })) };
+    }
+  },
+  spell: {
+    name: "Spelling Star", icon: "✏️", intro: "Let's spell!",
+    lesson: L => frames(L, [
+      [`🐶 ${tiles(["d", "o", "?"])}`, "Watch me! Dog. One letter is missing, at the end."],
+      [`🐶 ${tiles(["d", "o", "?"])}`, "I say the word slowly, and listen to the very end. Dog."],
+      [`🐶 ${tiles(["d", "o", "g"])}`, "Dog ends with G. D, O, G. That spells dog!"]]),
+    makeQuestion(step) {
+      const t = pick(step === 4 ? W2 : W1), w = t[0], isV = c => VOWELS.includes(c);
+      let at;
+      if (step === 1) at = 0; else if (step === 2) at = w.length - 1;
+      else if (step === 3) { const cvc = W1.filter(x => isV(x[0][1]) && !isV(x[0][0]) && !isV(x[0][2])); return this.build(pick(cvc), 1, 3); }
+      else at = pick([...w].map((c, i) => isV(c) ? -1 : i).filter(i => i >= 0)); // step 4: a missing consonant in a longer word
+      return this.build(t, at, step === 4 ? 4 : 3);
+    },
+    build(t, at, count) {
+      const w = t[0], L = w[at], banned = (SOUND_ALIKE[w] || "") + (SOUND_ALIKE[L] || "") + L;
+      const others = shuffle([...(VOWELS.includes(L) ? VOWELS : CONS)].filter(c => !banned.includes(c))).slice(0, count - 1), cols = shuffle(INK);
+      return { bubble: emo(t[1], "mid") + tiles([...w].map((c, i) => i === at ? "?" : c)), key: w + at,
+        say: `${cap(w)}. Which letter is missing?`, yay: `Yes! ${spelled(w)}. That spells, ${w}!`, pause: 3600,
+        hint: H => { // where the missing sound is, without saying it
+          const where = at === 0 ? "at the start" : at === w.length - 1 ? "at the end" : "in the middle", when = at === 0 ? "first" : at === w.length - 1 ? "last" : "in the middle";
+          H.glow(H.bubble.querySelector(".q"), true);
+          return H.say(`The missing letter is ${where}. Say ${w} slowly. What sound do you hear ${when}?`);
+        },
+        explain: H => pointTo(H, `${cap(w)}. ${spelled(w)}. The missing letter is ${L.toUpperCase()}.`),
+        choices: shuffle(others.concat(L)).map((c, i) => ({ html: `<span style="color:${cols[i]}">${c}</span>`, ok: c === L, wrong: `Not the letter ${c.toUpperCase()}.` })) };
+    }
+  },
+  sentence: {
+    name: "Sentence Station", icon: "💬", intro: "Let's finish the sentence!",
+    lesson: L => frames(L, [
+      [`<div class="sentence">The sun is <u>&nbsp;</u>.</div>`, "Watch me! A word is missing. I try each word in the sentence, and listen."],
+      [`<div class="sentence">The sun is <b>desk</b>.</div>`, "The sun is desk. Hmm, that does not make sense."],
+      [`<div class="sentence">The sun is <b>hot</b>.</div>`, "The sun is hot. Yes! That makes sense. Hot is the word that fits."]]),
+    makeQuestion(step) {
+      const [s, a, wrongs] = pick(SENTENCES), count = step === 1 ? 2 : step === 4 ? 4 : 3, cols = shuffle(INK);
+      const full = w => s.replace("___", w), aloud = step <= 2; // steps 1 and 2 read the sentence out loud; after that they read it themselves
+      return { bubble: `<div class="sentence">${s.replace("___", "<u>&nbsp;</u>")}</div>`, key: s,
+        say: aloud ? `${s.replace("___", "blank")} Which word fits?` : "Read the sentence. Which word fits?", again: "Try another word.", yay: `Yes! ${full(a)}`, pause: 3200,
+        hint: async H => { // read the sentence with each word in the gap, so the child hears which one makes sense
+          if (!(await H.say("Try each word in the sentence. Which one sounds right?"))) return;
+          for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(full(c.ch.word)); H.glow(c.el, false); if (!ok) return; }
+          return H.say("Which one made sense?");
+        },
+        explain: H => pointTo(H, `${full(a)} That makes sense!`),
+        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === a, word: w, wrong: `${full(w)} That does not sound right.` })) };
+    }
+  },
+  plus: {
+    name: "Plus Planet", icon: "➕", intro: "Let's add!",
+    lesson: (L, step) => step === 3 ? frames(L, [
+        [`<span class="big">4 + <b>?</b> = 7</span>`, "Watch me! 4 plus what makes 7? I count up from 4 to 7."],
+        [`<span class="big">4 → 5, 6, 7</span>`, "5, 6, 7. I counted 3 numbers."], [`<span class="big">4 + <b>3</b> = 7</span>`, "So 4 plus 3 makes 7!"]])
+      : frames(L, [
+        [`<span class="big">5 + 3</span>`, "Watch me add 5 and 3. I start at the bigger number, 5."],
+        [`<span class="big">5 → 6</span>`, "Then I count on 3 more. 6,"], [`<span class="big">5 → 6, 7</span>`, "7,"], [`<span class="big">5 → 6, 7, 8</span>`, "8. So 5 plus 3 is 8!"]]),
+    makeQuestion(step) {
+      if (step === 4) { // three numbers
+        let a, b, c; do { a = 1 + rand(9); b = 1 + rand(9); c = 1 + rand(9); } while (a + b + c > 20);
+        return { bubble: `<span class="sum long">${a} + ${b} + ${c} = <b>?</b></span>`, say: `What is ${a}, plus ${b}, plus ${c}?`, yay: `Yes! It's ${a + b + c}!`, pause: 3200, choices: numCards(a + b + c, 0, 20, 4),
+          hint: H => { H.show(`(${a} + ${b}) + ${c}`); return H.say(`Add the first two numbers, ${a} plus ${b}. Then add ${c} more.`); },
+          explain: async H => (await talkThrough(H, [[`${a} + ${b} = <b>${a + b}</b>`, `First, ${a} plus ${b}, makes ${a + b}.`], [`${a + b} + ${c} = <b>${a + b + c}</b>`, `Then add ${c}, and that makes ${a + b + c}.`]])) && pointTo(H, `So the answer is ${a + b + c}.`) };
+      }
+      if (step === 3) { // the missing number
+        const total = 6 + rand(15), a = Math.max(1, total - 10) + rand(Math.min(10, total - 1) - Math.max(1, total - 10) + 1), b = total - a;
+        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what, makes ${total}?`, yay: `Yes! It's ${b}!`, pause: 3000, choices: numCards(b, 0, 20, 4),
+          hint: H => { H.show(`${a} → ${total}`); return H.say(`Start at ${a}, and count up to ${total}. How many numbers did you count?`); },
+          explain: async H => (await talkThrough(H, [[`${a} → ${range(a + 1, total).join(", ")}`, `Count up from ${a}. ${range(a + 1, total).join(", ")}.`]])) && pointTo(H, `That's ${b} numbers. So the answer is ${b}.`) };
+      }
+      let a, b;
+      if (step === 1) { const sum = 2 + rand(9); a = 1 + rand(sum - 1); b = sum - a; }
+      else { a = 2 + rand(9); const lo = Math.max(2, 11 - a); b = lo + rand(10 - lo + 1); }
+      const hi = Math.max(a, b), lo = Math.min(a, b);
+      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a}, plus ${b}?`, yay: `Yes! It's ${a + b}!`, pause: 2800, choices: numCards(a + b, 0, 20),
+        hint: H => { H.show(`${hi} + <span class="dots">${"●".repeat(lo)}</span>`); return H.say(`Start at the bigger number, ${hi}. Then count on ${lo} more. Use your fingers!`); },
+        explain: async H => (await talkThrough(H, [[`${hi} → ${range(hi + 1, a + b).join(", ")}`, `Start at ${hi}. Count on ${lo}. ${range(hi + 1, a + b).join(", ")}.`]])) && pointTo(H, `So the answer is ${a + b}.`) };
+    }
+  },
+  minus: {
+    name: "Minus Moon", icon: "➖", intro: "Let's take away!",
+    lesson: L => frames(L, [
+      [`<span class="big">8 − 3</span>`, "Watch me take 3 away from 8. I start at 8, and count back 3."],
+      [`<span class="big">8 → 7</span>`, "7,"], [`<span class="big">8 → 7, 6</span>`, "6,"], [`<span class="big">8 → 7, 6, 5</span>`, "5. So 8 take away 3 is 5!"]]),
+    makeQuestion(step) {
+      if (step === 4) { // taking away tens (Grade 1 works with numbers up to 50)
+        const b = 10 * (1 + rand(3)), a = b + 1 + rand(50 - b), ans = a - b, at = Math.floor(a / 10), bt = b / 10, o = a % 10;
+        return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a}, minus ${b}?`, yay: `Yes! It's ${ans}!`, pause: 3000, choices: numCards(ans, 0, 50, 4, [ans + 10, ans - 10, ans + 1]),
+          hint: H => { H.show(`${at} tens − ${bt} ten${bt === 1 ? "" : "s"}`); return H.say(`Take away the tens: ${at} tens take away ${bt}. The ones stay the same.`); },
+          explain: async H => (await talkThrough(H, [[`${at} tens − ${bt} = <b>${at - bt} tens</b>`, `${at} tens take away ${bt} tens leaves ${at - bt} tens. That's ${(at - bt) * 10}.`], [`${(at - bt) * 10} + ${o} = <b>${ans}</b>`, `The ${o} ones stay the same. ${(at - bt) * 10} and ${o} make ${ans}.`]])) && pointTo(H, `So the answer is ${ans}.`) };
+      }
+      if (step === 3) { // the missing number
+        const a = 6 + rand(15), b = 1 + rand(Math.min(10, a - 1)), c = a - b;
+        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what, leaves ${c}?`, yay: `Yes! It's ${b}!`, pause: 3000, choices: numCards(b, 0, 20, 4),
+          hint: H => { H.show(`${c} → ${a}`); return H.say(`Count up from ${c}, to ${a}. How many numbers did you count?`); },
+          explain: async H => (await talkThrough(H, [[`${c} → ${range(c + 1, a).join(", ")}`, `Count up from ${c}. ${range(c + 1, a).join(", ")}.`]])) && pointTo(H, `That's ${b} numbers. So the answer is ${b}.`) };
+      }
+      const a = step === 1 ? 2 + rand(9) : 11 + rand(10), b = 1 + rand(step === 1 ? a : 10);
+      return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a}, minus ${b}?`, yay: `Yes! It's ${a - b}!`, pause: 2800, choices: numCards(a - b, 0, 20),
+        hint: H => { H.show(`${a} − <span class="dots">${"●".repeat(b)}</span>`); return H.say(`Start at ${a}, and count back ${b}. Use your fingers!`); },
+        explain: async H => (await talkThrough(H, [[`${a} → ${range(a - 1, a - b).join(", ")}`, `Start at ${a}. Count back ${b}. ${range(a - 1, a - b).join(", ")}.`]])) && pointTo(H, `So the answer is ${a - b}.`) };
+    }
+  },
+  tens: {
+    name: "Tens Tower", icon: "🧱", intro: "Let's count tens and ones! A long stick is ten. A little block is one.",
+    lesson: L => frames(L, [
+      [blocks(34), "Watch me count these blocks. Each long stick is ten. Each little block is one."],
+      [blocks(34), "I count the long sticks by tens. 10, 20, 30."], [blocks(34), "Then I count on the little ones. 31, 32, 33, 34."],
+      [`${blocks(34)}<b>34</b>`, "3 tens and 4 ones make 34!"]]),
+    makeQuestion(step) { // Grade 1 works with numbers up to 50
+      const n = step === 1 ? 11 + rand(9) : step === 2 ? 20 + rand(16) : 21 + rand(30), t = Math.floor(n / 10), o = n % 10;
+      const flip = o * 10 + t, near = (flip !== n && flip >= 10 && flip <= 50 ? [flip] : []).concat([n + 10, n - 10, n + 1, n - 1]);
+      const parts = `${t} ten${t === 1 ? "" : "s"} and ${o} one${o === 1 ? "" : "s"}`;
+      return { bubble: step === 4 ? `<div class="sentence">${parts}</div>` : blocks(n), key: n,
+        say: step === 4 ? `Which number has ${t} ten${t === 1 ? "" : "s"}, and ${o} one${o === 1 ? "" : "s"}?` : "How many blocks? Count the tens, then the ones.", yay: `Yes! That makes ${n}!`, pause: 3400,
+        hint: step === 4
+          ? H => { H.show(`${t} tens → <b>${t}</b>_`); return H.say(`The tens give the first number, ${t}. The ones give the last number.`); }
+          : async H => { // count the long sticks by tens with the child, then leave the little ones to them
+              const rods = [...H.bubble.querySelectorAll(".rod")];
+              if (!(await H.say("Count the long sticks by tens."))) return;
+              for (let i = 0; i < rods.length; i++) { H.glow(rods[i], true); if (!(await H.say(String((i + 1) * 10)))) return; }
+              return H.say(`That's ${t * 10}. Now keep counting on with the little ones.`);
+            },
+        explain: H => pointTo(H, o ? `${t} ten${t === 1 ? "" : "s"} make ${t * 10}. ${cap(NUM[o] || String(o))} more ones make ${n}.` : `${t} tens make ${n}.`),
+        choices: numCards(n, 10, 50, step === 1 ? 3 : 4, near) };
+    }
+  },
+  clock: { // Calendar Comet (it keeps its old short name, "clock", so saved progress still works)
+    name: "Calendar Comet", icon: "📅", intro: "Tick tock! I love time. Let's learn the days, the months and the seasons!",
+    lesson: (L, step) => frames(L, step <= 2 ? [
+        ["📅", "Watch me! There are seven days in a week. They always come in the same order."],
+        [DAYS.slice(0, 4).join(", "), "Sunday, Monday, Tuesday, Wednesday,"], [DAYS.slice(4).join(", "), "Thursday, Friday, Saturday. Then back to Sunday!"],
+        ["Monday → <b>Tuesday</b>", "So the day after Monday is Tuesday."]]
+      : step === 3 ? [
+        ["📅", "Watch me! There are twelve months in a year. They always come in the same order."],
+        [MONTHS.slice(0, 6).join(", "), "January, February, March, April, May, June,"], [MONTHS.slice(6).join(", "), "July, August, September, October, November, December."],
+        ["March → <b>April</b>", "So the month after March is April."]]
+      : SEASONS.map(([n, pic, like]) => [`${pic} <b>${n}</b>`, like]).concat([["❄️ 🌷 ☀️ 🍂", "Winter, spring, summer, fall. Four seasons, again and again!"]])),
+    makeQuestion(step) {
+      const cols = shuffle(INK);
+      const cards = (right, wrongs, msg) => shuffle(wrongs.concat(right)).map((x, i) => ({ html: dayCard(x, cols[i]), ok: x === right, wrong: msg(x), word: x }));
+      if (step <= 2) { // the days of the week
+        const i = rand(7), today = DAYS[i], after = step === 1 || rand(2) === 0, ans = DAYS[(i + (after ? 1 : 6)) % 7];
+        const others = shuffle(DAYS.filter(d => d !== ans && d !== today)).slice(0, 2);
+        const say = step === 1 ? `What day comes after ${today}?` : after ? `Today is ${today}. What day will tomorrow be?` : `Today is ${today}. What day was yesterday?`;
+        const chant = DAYS.concat(DAYS).slice(after ? i : (i + 6) % 7, (after ? i : (i + 6) % 7) + 2);
+        return { bubble: `<div class="sentence">${step === 1 ? `${today} → <u>&nbsp;</u>` : `today: <b>${today}</b><br>${after ? "tomorrow" : "yesterday"}: <u>&nbsp;</u>`}</div>`, key: say, say, yay: `Yes! ${ans}!`, pause: 2600,
+          hint: H => H.say(after ? `Say the days in order, starting with ${today}. Which day comes next?` : `Say the days in order. Which day comes just before ${today}?`),
+          explain: async H => (await H.say(`${chant.join(", ")}.`)) && pointTo(H, after ? `${ans} comes after ${today}.` : `${ans} comes just before ${today}.`),
+          choices: cards(ans, others, x => `Not ${x}.`) };
+      }
+      if (step === 3) { // the months of the year
+        const i = rand(12), m = MONTHS[i], ans = MONTHS[(i + 1) % 12], others = shuffle(MONTHS.filter(x => x !== ans && x !== m)).slice(0, 2);
+        return { bubble: `<div class="sentence">${m} → <u>&nbsp;</u></div>`, key: m, say: `What month comes after ${m}?`, yay: `Yes! ${ans} comes after ${m}!`, pause: 2600,
+          hint: H => H.say(`Say the months in order. What comes after ${m}?`),
+          explain: async H => (await H.say(`${m}, ${ans}.`)) && pointTo(H, `${ans} comes after ${m}.`),
+          choices: cards(ans, others, x => `Not ${x}.`) };
+      }
+      // step 4: the seasons
+      const [n, pic, like, months] = pick(SEASONS), byMonth = rand(2) === 0, month = pick(months);
+      return { bubble: byMonth ? big(month, 8) : big(pic, 12), key: byMonth ? month : n, pause: 2800,
+        say: byMonth ? `In Ontario, which season is ${month} in?` : "Which season is this?", yay: `Yes! ${byMonth ? `${month} is in ${n}.` : like}`,
+        hint: H => H.say(byMonth ? `Think about the weather in ${month}. Is it cold, warm, or in between?` : "Look at the picture. What is the weather like?"),
+        explain: H => pointTo(H, byMonth ? `${month} is in ${n}. ${like}` : `That's ${n}. ${like}`),
+        choices: SEASONS.map(([s, p]) => ({ html: `<div style="display:flex;flex-direction:column;align-items:center;gap:.6vmin;line-height:1"><span style="font-size:7vmin">${p}</span><span style="font-size:3.6vmin">${s}</span></div>`, ok: s === n, wrong: `Not ${s}.` })) };
+    }
+  },
+  skip: {
+    name: "Skip-Count Rings", icon: "🪐", intro: "Let's skip count!",
+    lesson: L => frames(L, [
+      [tiles([5, 10, 15, "?"]), "Watch me skip count by fives. Each jump is five more."],
+      [tiles([5, 10, 15, "?"]), "5, 10, 15."], [tiles([5, 10, 15, 20]), "Five more than 15 is 20. So 20 comes next!"]]),
+    makeQuestion(step) { // Grade 1 counts up to 50
+      const back = step === 4, by = step === 1 ? 10 : step === 2 ? 5 : step === 3 ? 2 : pick([10, 5]), word = { 10: "tens", 5: "fives", 2: "twos" }[by];
+      const top = Math.floor(50 / by) - 3, start = back ? by * (4 + rand(top)) : by * (1 + rand(top)); // the answer stays at 50 or less
+      const d = back ? -by : by, seq = [start, start + d, start + 2 * d], ans = start + 3 * d;
+      return { bubble: tiles(seq.concat("?")), key: seq.join(), say: `Count ${back ? "backwards " : ""}by ${word}. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3400,
+        hint: H => { H.show(`${back ? "−" : "+"}${by} each time`); return H.say(back ? `Each number is ${by} less than the one before. Take away ${by} again.` : `Each number is ${by} more than the one before. Add ${by} again.`); },
+        explain: async H => (await H.say(`${seq.join(", ")}. Each jump is ${by} ${back ? "less" : "more"}.`)) && pointTo(H, `${by} ${back ? "less" : "more"} than ${seq[2]} is ${ans}.`),
+        choices: numCards(ans, 0, 50, 3, [ans + by, ans - by, ans + 1, ans - 1].filter(k => !seq.includes(k))) };
+    }
+  }
+};
+
+// ---------- celebration scenes: pictures of space, and fun facts (one after each planet won; a tour at the very end) ----------
+const emoSvg = e => `<span class="emo" style="font-size:inherit">${e}</span>`;
+const planetArt = (c1, c2, ring) => `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="40" fill="${c1}"/><path d="M24 50 Q60 40 96 50" stroke="${c2}" stroke-width="7" fill="none" opacity=".7"/><path d="M22 70 Q60 62 98 70" stroke="${c2}" stroke-width="5" fill="none" opacity=".6"/>${ring ? `<ellipse cx="60" cy="62" rx="58" ry="14" fill="none" stroke="#e9d8a6" stroke-width="6" transform="rotate(-12 60 62)"/>` : ""}</svg>`;
+const SPACE_ART = {
+  sun: `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#ffd23f"/><circle cx="60" cy="60" r="52" fill="none" stroke="#ffb703" stroke-width="6" stroke-dasharray="6 10"/></svg>`,
+  earth: `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="#3fa9e0"/><path d="M34 38 Q48 30 56 40 T60 62 Q48 70 38 60 Z" fill="#58b368"/><path d="M70 66 Q84 60 90 74 T76 96 Q66 86 70 66 Z" fill="#58b368"/><path d="M62 22 Q74 18 82 28" stroke="#fff" stroke-width="5" fill="none" opacity=".8"/></svg>`,
+  moon: `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="#d9dbe6"/><circle cx="44" cy="46" r="9" fill="#b9bed2"/><circle cx="74" cy="70" r="12" fill="#b9bed2"/><circle cx="72" cy="38" r="5" fill="#b9bed2"/><circle cx="44" cy="78" r="6" fill="#b9bed2"/></svg>`,
+  mars: planetArt("#e76f51", "#b5452c"), jupiter: planetArt("#e9b872", "#c47a3a"), saturn: planetArt("#f2d388", "#d4a84a", true), venus: planetArt("#f4c27a", "#e0a050"), neptune: planetArt("#4d7de0", "#2f55ab"),
+  rocket: emoSvg("🚀"), astronaut: emoSvg("🧑‍🚀"), satellite: emoSvg("🛰️"), comet: emoSvg("☄️"), stars: emoSvg("✨"), star: emoSvg("⭐"), footprint: emoSvg("👣"), clock: emoSvg("⏱️")
+};
+const SPACE_FACTS = [
+  { say: "Fun fact! The Sun is so big, about one million Earths could fit inside it!", show: [["sun", 8, 10, 40], ["earth", 56, 14, 10], ["stars", 64, 44, 12]] },
+  { say: "Fun fact! A day on Venus is longer than a whole year on Venus!", show: [["venus", 16, 10, 32], ["sun", 60, 30, 18]] },
+  { say: "Fun fact! Saturn's beautiful rings are made of ice and rock.", show: [["saturn", 14, 10, 40], ["stars", 64, 40, 12]] },
+  { say: "Fun fact! Jupiter is the biggest planet. All the other planets could fit inside it!", show: [["jupiter", 10, 8, 44], ["mars", 60, 20, 12], ["earth", 60, 6, 12]] },
+  { say: "Fun fact! Astronauts walked on the Moon. Their footprints are still there, because there is no wind!", show: [["moon", 10, 8, 40], ["astronaut", 54, 10, 18], ["footprint", 54, 36, 10]] },
+  { say: "Fun fact! Mars is called the red planet, because its dust is rusty red.", show: [["mars", 16, 10, 38], ["rocket", 62, 16, 16]] },
+  { say: "Fun fact! Sunlight takes about eight minutes to travel all the way to Earth.", show: [["sun", 6, 14, 30], ["earth", 58, 14, 16], ["clock", 40, 44, 10]] },
+  { say: "Fun fact! Scientists think there are more stars in space than grains of sand on all the beaches on Earth!", show: [["stars", 8, 14, 16], ["star", 30, 40, 10], ["stars", 50, 10, 14], ["star", 64, 34, 12]] }
+];
+const SPACE_TOUR = [
+  { say: "Hooray! We have all the star crystals! Let's look around space one last time before we fly home.", show: [["stars", 10, 30, 14], ["comet", 60, 40, 14], ["satellite", 40, 12, 14]] },
+  { say: "Here is the Moon. It travels around the Earth about once every month.", show: [["moon", 10, 10, 36], ["earth", 56, 16, 18]] },
+  { say: "Here are some of the planets. Eight planets travel around our Sun.", show: [["mars", 6, 14, 14], ["jupiter", 24, 8, 26], ["saturn", 50, 12, 24]] },
+  { say: "And here is the Earth, our home. From space it looks blue, because it's mostly covered in water!", show: [["earth", 18, 8, 40], ["satellite", 62, 30, 14]] },
+  { say: "Goodbye, space! Tick tock. Time to fly home!", show: [["rocket", 30, 12, 20], ["stars", 56, 30, 14]] }
+];
+
+// ---------- the story ----------
+window.Story = StoryGame({
+  title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
+  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5, celebrations: { art: SPACE_ART, facts: SPACE_FACTS, finale: SPACE_TOUR }, sceneVoice: "../audio/g1/scene/", // a short scene with a fun fact after each planet, and a tour at the end hints: true, lessons: true, // one hint per round; a short lesson on the first visit to each planet
+  lineVoice: "../audio/g1/l/", lessonVoice: "../audio/g1/lesson/", // Dr. Somebody's recorded voice for every question (in pieces) and every lesson line
+  voice: recorded("../audio/g1/", 3), // Dr. Somebody's own recorded voice for the story lines
+  scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,
+  games: GAMES, gameIds: ["read", "spell", "sentence", "plus", "minus", "tens", "clock", "skip"],
+  stepNames: {
+    read: ["read short words, 2 pictures", "read short words, 3 pictures", "read longer words", "pick the word for a picture"],
+    spell: ["missing first letter", "missing last letter", "missing middle vowel", "missing letter in a 4-letter word"],
+    sentence: ["read aloud, 2 words", "read aloud, 3 words", "reads it alone, 3 words", "reads it alone, 4 words"],
+    plus: ["adding to 10", "adding to 20", "find the missing number", "adding three numbers"],
+    minus: ["taking away within 10", "taking away within 20", "find the missing number", "taking away tens (to 50)"],
+    tens: ["teen numbers with blocks", "blocks up to 35", "blocks up to 50", "tens and ones in words"],
+    clock: ["days of the week", "yesterday and tomorrow", "months of the year", "the seasons"],
+    skip: ["count by tens, to 50", "count by fives, to 50", "count by twos, to 50", "count backwards by tens and fives"]
+  },
+  rewards: [["robot", "🤖"], ["alien", "👽"], ["rocket", "🚀"], ["satellite", "🛰️"], ["comet", "☄️"], ["flying saucer", "🛸"], ["shooting star", "🌠"], ["moon", "🌙"], ["telescope", "🔭"], ["little star", "🌟"]],
+  progress: list => `<div class="balloon">${BALLOON}</div>` + slots(list, "💎"),
+  finaleTitle: "Ready to fly!", stickersLabel: "Space friends:",
+  finaleArt: list => `<div class="balloon">${BALLOON}</div>` + list.map(e => `<span class="pop">${e}</span>`).join(""),
+  lines: {
+    hello: name => `Hello${name ? ", " + name : ""}! I am Doctor... um... Doctor Somebody! I forgot my name again. My clock balloon floated all the way up to space! I need four star crystals to fly home. Tap a planet to find one.`,
+    start: "We need four star crystals to fly home. Tap a planet to find one.",
+    left: n => `We need ${NUM[n]} more star crystal${n === 1 ? "" : "s"}. Tap a planet!`,
+    won: who => `You did it! The ${who} has a star crystal for us. Tap the ${who}!`,
+    boarded: who => `Thank you, ${who}! One more star crystal for the clock balloon!`,
+    finale: name => `Tick tock! The clock balloon is full of star power! Thank you${name ? ", " + name : ""}! Now, where was I going? I forget!`,
+    again: "Oh dear. I floated back up to space! Let's find more star crystals.",
+    replay: "Great job! You did it again!",
+    test: name => `Hello${name ? ", " + name : ""}! I am Doctor Somebody. Tick tock!`
+  }
+});
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>
