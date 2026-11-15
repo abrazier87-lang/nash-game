@@ -77,7 +77,24 @@ function fitText(card) {
 }
 
 function StoryGame(C) {
-  const { say, sfx, animate, confetti } = Kit;
+  const { sfx, animate, confetti } = Kit;
+  // The host's own recorded voice for every line (C.lineVoice is the folder). Lines mix things that change (numbers, words),
+  // so they are recorded in pieces: each sentence, split again at its commas, and each piece is shared by many lines.
+  // A piece with no recording is said by the device voice. Without C.lineVoice, the device voice says everything.
+  const lineUrl = w => C.lineVoice + Kit.clipName(w) + ".mp3";
+  const pieces = w => (String(w).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(w)]).map(s => s.trim()).flatMap(s => s.split(/(?<=,)\s+/)).filter(Boolean);
+  async function talk(words) {
+    const parts = pieces(words); parts.forEach(p => Kit.loadClip(lineUrl(p)).catch(() => {}));
+    for (const p of parts) if (!(await Kit.playClip(lineUrl(p), p))) return false;
+    return true;
+  }
+  const say = (words, force) => C.lineVoice ? talk(words) : Kit.say(words, force);
+  const sayAndWait = async (words, quietPause) => { if (!C.lineVoice) return Kit.sayAndWait(words, quietPause); if (!Kit.settings.voice) return wait(quietPause); if (await talk(words)) await wait(450); };
+  const helperFor = (q, alive) => { // the hint tools (shared/kit.js), speaking in the host's recorded voice
+    const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive });
+    if (C.lineVoice) { const plain = H.say; H.say = (words, clip) => plain(words, clip || (() => talk(words))); }
+    return H;
+  };
   const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
   const GAMES = C.games, GAME_IDS = C.gameIds, NEED = C.need || 4, STARS = C.starsToWin || 5;
 
@@ -87,7 +104,7 @@ function StoryGame(C) {
   const save = () => Kit.save(C.saveKey, S);
   const got = () => GAME_IDS.filter(id => S.aboard[id]).map(id => S.aboard[id]);
   // The host's story lines. If the grade has a recording for a line (C.voice), play it; if not, the device voice says the words.
-  const speak = (key, words) => C.voice && C.voice[key] ? Kit.playClip(C.voice[key], words) : say(words);
+  const speak = (key, words) => C.voice && C.voice[key] ? Kit.playClip(C.voice[key], words) : Kit.say(words);
 
   // ---------- the page ----------
   const play = label => `<button class="bigbtn go" id="${label}" aria-label="Keep going"><span class="tri"></span></button>`;
@@ -177,7 +194,7 @@ function StoryGame(C) {
     const guide = C.lessons && G.guided > 0 && q.hint; // "Try together": show the help straight after asking
     if (guide) { G.guided--; G.hinted = true; }
     const asked = say((lead || "") + q.say), g = G;
-    if (guide) asked.then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.hint(Kit.hintHelper({ bubble: $("bubble"), box, q, alive: () => G === g && g.q === q && !g.busy })); });
+    if (guide) asked.then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.hint(helperFor(q, () => G === g && g.q === q && !g.busy)); });
   }
   async function choose(el, ch) {
     if (!G || G.busy || el.classList.contains("dim")) return;
@@ -188,7 +205,7 @@ function StoryGame(C) {
       el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
       G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
       if (C.lessons && (!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: ask it again a little later
-      const spoken = Kit.sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
+      const spoken = sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
       Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
       adjust(G.first && !G.hinted); // an answer found with a hint does not make the place harder
       await spoken;
@@ -200,7 +217,7 @@ function StoryGame(C) {
       if (C.hints && G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
       if (C.lessons && G.wrongs >= 2 && q.explain && !q.explained) { // a second wrong try: show how to work it out, step by step
         q.explained = true; const g = G;
-        say(ch.wrong).then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.explain(Kit.hintHelper({ bubble: $("bubble"), box, q, alive: () => G === g && g.q === q && !g.busy })); });
+        say(ch.wrong).then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.explain(helperFor(q, () => G === g && g.q === q && !g.busy)); });
       } else say(`${ch.wrong} ${q.again || q.say}`);
     }
   }
@@ -283,7 +300,7 @@ function StoryGame(C) {
     if (!C.hints || !G || G.busy || !G.q || G.hints <= 0) return;
     const q = G.q; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
     Kit.dropOneWrong($("choices"));
-    const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive: () => G && G.q === q && !G.busy });
+    const H = helperFor(q, () => G && G.q === q && !G.busy);
     if (q.hint) await q.hint(H); else await H.say(q.help || q.say);
   });
   // The lesson button (📖): watch the "how to" lesson again, any time. Afterwards the questions start fresh.
@@ -315,7 +332,7 @@ function StoryGame(C) {
   $("grownPanel").addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
     const act = t.dataset.act, id = t.dataset.id;
-    if (act === "test") { say(C.lines.test(NAME), true); return; }
+    if (act === "test") { Kit.say(C.lines.test(NAME), true); return; } // tests the device voice picked above
     if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
     if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
     if (act === "auto") S.auto = !S.auto;
