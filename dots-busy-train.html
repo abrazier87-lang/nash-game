@@ -47,6 +47,18 @@
   .souvenirs button.dim { opacity:.35; }
   .souvenirs .pickline { flex-basis:100%; margin:0; text-align:center; font-size:3.4vmin; font-weight:bold; }
   #fair h1 { margin:0; }
+  /* lessons: the big ▶ skips Dot's "watch me" (on a phone held upright it sits between Dot and the cards) */
+  #myTurn { position:absolute; right:3vmin; bottom:3vmin; width:19vmin; height:19vmin; z-index:6; }
+  #myTurn .tri { border-left-width:7vmin; border-top-width:4.6vmin; border-bottom-width:4.6vmin; margin-left:1.6vmin; }
+  @media (orientation:portrait) { #myTurn { right:auto; left:calc(50% - 9.5vmin); bottom:auto; top:61%; } }
+  #bubble .glow { outline:none; filter:drop-shadow(0 0 .8vmin #ffb300) drop-shadow(0 0 .8vmin #ffd23f); transform:scale(1.15); }
+  /* dice dots (see how many at a glance) and the ten-frame (how many more make ten?) */
+  .dice { display:grid; grid-template-columns:repeat(3, 5vmin); grid-template-rows:repeat(3, 5vmin); gap:1vmin; padding:1.6vmin; border:.7vmin solid #39405a; border-radius:3vmin; background:#fff; }
+  .dice i { border-radius:50%; } .dice i.on { background:#39405a; }
+  .tenframe { display:grid; grid-template-columns:repeat(5, 7.5vmin); gap:.8vmin; }
+  .tenframe i { height:7.5vmin; border:.5vmin solid #8d93ab; border-radius:1.4vmin; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:5vmin; line-height:1; background:#fff; }
+  .tenframe i.counted::after { content:attr(data-n); font-size:4vmin; font-weight:bold; color:#ff8a3d; }
+  .pattern { display:flex; gap:1vmin; align-items:center; font-size:7vmin; }
 </style>
 </head>
 <body class="game">
@@ -100,6 +112,8 @@
   <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
   <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
   <button class="corner right hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
+  <button class="corner right lesson" id="lessonBtn" aria-label="Show me how" style="display:none">📖</button>
+  <button class="bigbtn" id="myTurn" aria-label="My turn" style="display:none"><span class="tri"></span></button>
 
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
@@ -122,7 +136,7 @@ const NAME = PLAYER ? PLAYER.name : "";
 
 // ---------- saved progress (kept on this device, one copy per child) ----------
 const SAVE = "dotsBusyTrain.v1";
-const fresh = () => ({ skill: { letters: 1, sounds: 1, rhymes: 1, words: 1, count: 1, moreless: 1, order: 1, adding: 1 }, aboard: {}, stickers: [], trips: 0, auto: true, waiting: null, souvenirs: [] });
+const fresh = () => ({ skill: { letters: 1, sounds: 1, rhymes: 1, words: 1, count: 1, moreless: 1, order: 1, adding: 1 }, aboard: {}, stickers: [], trips: 0, auto: true, waiting: null, souvenirs: [], learned: {} });
 let S = Kit.load(SAVE, fresh);
 if (S.trips > 0) Kit.stamp("k"); // children who filled the train before medals existed still get theirs
 const save = () => Kit.save(SAVE, S);
@@ -227,26 +241,48 @@ async function countTiles(H, last) {
 
 // ---------- the stations (mini-games) ----------
 // Each station has 4 difficulty steps. makeQuestion(step) returns:
-//   { bubble: what shows in Dot's speech bubble, say: what Dot says, yay: what Dot says when right,
-//     choices: [{ html, ok, wrong: what Dot says if this wrong card is tapped }], pause: optional wait in ms }
+//   { bubble: what shows in Dot's speech bubble, say: what Dot says (sayParts: the same, said in pieces), yay: what Dot says when right,
+//     choices: [{ html, ok, wrong: what Dot says if this wrong card is tapped }], pause: optional wait in ms,
+//     hint(P): Dot's nudge (the 💡, and the "try together" questions after a lesson),
+//     explain(P): Dot shows the answer and why, after a second wrong try,
+//     teach: counting questions, where Dot counts along after every wrong try instead }
+// lesson(P, step): the "watch me" lesson on the first visit (and from the 📖 button).
+// Runs a little show: each step changes the picture, then Dot says the words (or plays a recorded number).
+async function steps(P, list) { for (const [change, words, clip] of list) { if (change) change(); if (!(await P.say(words, clip))) return false; } return true; }
+const numClip = n => () => speak("num-" + n, cap(NUM[n])); // Dot's recorded numbers, one to twenty
+const numTiles = arr => arr.map(x => x === "?" ? `<div class="q">?</div>` : `<div class="tile">${x}</div>`).join("");
+const spelled = w => w.toUpperCase().split("").join(", ");
+const addPics = (th, a, b, size, sum) => `<div class="col"><div class="rowx">${group(th[2], a, size)}${big("+", 6, "#ff8a3d")}${group(th[2], b, size)}</div>${sum ? `<div class="cap">${a} + ${b}</div>` : ""}</div>`;
+const DICE = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const dice = n => `<div class="dice">${Array.from({ length: 9 }, (_, i) => `<i${DICE[n].includes(i) ? ' class="on"' : ""}></i>`).join("")}</div>`;
+// Light up a row of things one by one, saying the count for each (Dot's recorded numbers).
+async function countThese(P, els) { for (let i = 0; i < els.length; i++) { els.forEach(e => P.glow(e, false)); P.glow(els[i], true); if (!(await P.say(String(i + 1), numClip(i + 1)))) return false; } return true; }
+
 const GAMES = {
   letters: {
     name: "Letter Station", icon: `<span style="color:#ff5a5f">A</span><span style="color:#4d9de0">b</span><span style="color:#58b368">C</span>`, intro: "Let's find letters!",
+    lesson: P => { const c = P.demo(big("B", 16), [`<span style="color:#ff5a5f">D</span>`, `<span style="color:#4d9de0">B</span>`]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me find the letter B. B has a straight line and two bumps."],
+        [() => P.glow(c[0], true), "This letter has only one bump. It's D."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "This one has a straight line and two bumps. It's B!"]]); },
     makeQuestion(step) {
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
       let ls = shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")).slice(0, count);
       if (step === 4 && rand(2) === 0) ls = shuffle(["B", "D", "P", "Q"]); // the little letters that look alike
-      const t = ls[0], lower = step >= 3, show = l => lower ? l.toLowerCase() : l, cols = shuffle(INK);
+      const t = ls[0], lower = step >= 3, show = l => lower ? l.toLowerCase() : l, cols = shuffle(INK), [w] = LETTER_WORDS[t];
       return {
         bubble: step === 1 ? big(t, 16) : step === 4 ? big(t, 16) : big("👂", 12),
         say: step === 4 ? `This is the big letter ${t}. Find the little letter ${t}.` : `Find the letter ${t}.`,
         yay: `Yes! The letter ${t}!`, hint: H => letterHint(H, t, lower),
+        explain: P => { P.glow(P.right().el, true); return P.say(step === 4 ? `Big ${t} and little ${t} are the same letter. Here is little ${t}.` : t === "X" ? "This is the letter X. Fox ends with X." : `This is the letter ${t}. ${cap(w)} starts with ${t}.`); },
         choices: shuffle(ls).map((l, i) => ({ html: `<span style="color:${cols[i]}">${show(l)}</span>`, ok: l === t, wrong: `That is the letter ${l}.` }))
       };
     }
   },
   sounds: {
     name: "Sound Station", icon: "👂", intro: "Listen to how the words start!",
+    lesson: P => { const c = P.demo(emo("🐶"), [emo("🐱"), emo("🦆")]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Dog. Listen to how it starts: duh, duh, dog."],
+        [() => P.glow(c[0], true), "Cat. Cat starts with a different sound."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "Duck! Duh, duh, duck. Dog and duck start the same way!"]]); },
     makeQuestion(step) {
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
       const ls = shuffle(Object.keys(STARTS)).slice(0, count), L = ls[0];
@@ -258,12 +294,16 @@ const GAMES = {
         say: byLetter ? `Which one starts with the letter ${L}?` : `${cap(model[0])}. Which one starts like ${model[0]}?`,
         yay: byLetter ? `Yes! ${cap(answer[0])} starts with ${L}!` : `Yes! ${cap(model[0])} and ${answer[0]} both start with ${L}!`, pause: 3000,
         hint: H => soundHint(H, L, byLetter, model, answer),
+        explain: P => { P.glow(P.right().el, true); return P.say(byLetter ? `${cap(answer[0])}. ${cap(answer[0])} starts with ${L}.` : `${cap(model[0])}, ${answer[0]}. They both start with ${L}.`); },
         choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])} starts with ${c.L}.` }))
       };
     }
   },
   rhymes: {
     name: "Rhyme Station", icon: "🐱🎩", intro: "Rhyming words sound the same at the end!",
+    lesson: P => { const c = P.demo(emo("🐱"), [emo("🐶"), emo("🎩")]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Rhyming words sound the same at the end. Cat."],
+        [() => P.glow(c[0], true), "Cat, dog. They sound different at the end. No rhyme."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "Cat, hat! They sound the same at the end. Cat and hat rhyme!"]]); },
     makeQuestion(step) {
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
       const pairs = shuffle(step === 1 ? RHYMES.slice(0, 6) : RHYMES).slice(0, count);
@@ -276,12 +316,16 @@ const GAMES = {
           for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(`${a[0]}, ${c.ch.word}.`); H.glow(c.el, false); if (!ok) return; }
           return H.say(H.q.say);
         },
+        explain: P => { P.glow(P.right().el, true); return P.say(`${cap(a[0])}, ${b[0]}. They sound the same at the end. They rhyme!`); },
         choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, word: c.w[0], wrong: `${cap(c.w[0])} does not rhyme with ${a[0]}.` }))
       };
     }
   },
   words: {
     name: "Word Station", icon: `<span style="font-size:6vmin;color:#a06cd5">the</span>`, intro: "Let's read some words!",
+    lesson: P => { const card = (w, c) => `<span class="word" style="color:${c}">${w}</span>`, c = P.demo(big("the", 11), [card("see", INK[1]), card("the", INK[0])]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Some words we learn by looking at them. This word is: the. T, H, E."],
+        [() => P.glow(c[0], true), "This word is see. S, E, E. It looks different."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "T, H, E. The! It looks just the same!"]]); },
     makeQuestion(step) {
       const pool = step <= 2 ? WORDS[0] : step === 3 ? WORDS[0].concat(WORDS[1]) : WORDS[0].concat(WORDS[1], WORDS[2]);
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
@@ -293,13 +337,23 @@ const GAMES = {
           if (t.length > 1) H.show(`<b>${t[0]}</b> ${"_ ".repeat(t.length - 1).trim()}`);
           return H.say(t.length === 1 ? "This word is just one letter." : `It starts with the letter ${t[0].toUpperCase()}, and it has ${NUM[t.length]} letters.`);
         },
+        explain: P => { P.glow(P.right().el, true); return P.say(t.length === 1 ? `This word is, ${t}. Just one letter.` : `This word is, ${t}. ${spelled(t)}.`); },
         choices: shuffle(ws).map((w, i) => ({ html: `<span class="word${w.length > 3 ? " long" : ""}" style="color:${cols[i]}">${w}</span>`, ok: w === t, wrong: `That word is, ${w}.` }))
       };
     }
   },
   count: {
     name: "Counting Station", icon: `<span style="color:#ff8a3d">1 2 3</span>`, intro: "Let's count!",
+    lesson: P => { const th = snack(), c = P.demo(group(th[2], 4, 7), ["3", "4"]), items = P.items(".grid5 span");
+      return steps(P, [[null, "Watch me count! I touch each one, and say one number for each."]].concat(items.map((el, i) => [() => { items.forEach(x => P.glow(x, false)); P.glow(el, true); }, String(i + 1), numClip(i + 1)]))
+        .concat([[() => { items.forEach(x => P.glow(x, false)); c[0].classList.add("dim"); P.glow(c[1], true); }, "The last number I say tells how many. Four!"]])); },
     makeQuestion(step) {
+      if (step <= 2 && rand(3) === 0) { // dice dots: see how many at a glance
+        const n = 1 + rand(step === 1 ? 5 : 6);
+        return { bubble: dice(n), key: "dice" + n, say: "Dice dots! How many dots do you see?", yay: `Yes! ${cap(NUM[n])} dots!`, pause: 2400, choices: numberCards(n, 1, 6),
+          hint: H => H.say("Look at the shape the dots make. You might know it without counting!"),
+          explain: async P => (await countThese(P, P.items(".dice i.on"))) && (P.glow(P.right().el, true), P.say(`${cap(NUM[n])} dots. Next time, you might know it at a glance!`)) };
+      }
       const max = [5, 10, 15, 20][step - 1], min = [1, 3, 8, 11][step - 1];
       const n = min + rand(max - min + 1), th = snack();
       return {
@@ -311,46 +365,78 @@ const GAMES = {
   },
   moreless: {
     name: "More or Less", icon: "⚖️", intro: "Which has more? Which has fewer?",
+    lesson: P => { const th = snack(), c = P.demo(big("more", 7), [group(th[2], 2, 3.8), group(th[2], 5, 3.8)]);
+      return steps(P, [[null, "Watch me! Which group has more? I count each group."], [() => { P.glow(c[0], true); P.label(c[0], 2); }, "This group has two."],
+        [() => { P.glow(c[0], false); P.glow(c[1], true); P.label(c[1], 5); }, "This group has five."], [() => c[0].classList.add("dim"), "Five is more than two. This group has more!"]]); },
     makeQuestion(step) {
       const more = step === 1 ? true : rand(2) === 0;
       if (step === 4) { // numbers only, up to 20
         const a = 1 + rand(20); let b; do { b = 1 + rand(20); } while (b === a);
-        const t = more ? Math.max(a, b) : Math.min(a, b), o = a + b - t, word = more ? "bigger" : "smaller";
+        const t = more ? Math.max(a, b) : Math.min(a, b), o = a + b - t, word = more ? "bigger" : "smaller", lo = Math.min(a, b), hi = Math.max(a, b);
         return { bubble: big(word, 6), key: a + "," + b, say: `Which number is ${word}?`, yay: `Yes! ${t} is ${word} than ${o}.`, pause: 2800,
-          hint: H => { const lo = Math.min(a, b), hi = Math.max(a, b); H.show(`<span class="big">${lo} … ${hi}</span>`); return H.say(`When we count up, ${lo} comes before ${hi}. Numbers get bigger as we count.`); },
+          hint: H => { H.show(`<span class="big">${lo} … ${hi}</span>`); return H.say(`When we count up, ${lo} comes before ${hi}. Numbers get bigger as we count.`); },
+          explain: P => { P.glow(P.right().el, true); return P.say(`When we count, ${lo} comes before ${hi}. So ${t} is ${word}.`); },
           choices: shuffle([a, b]).map(k => ({ html: String(k), ok: k === t, wrong: `${k} is ${more ? "smaller" : "bigger"} than ${a + b - k}.` })) };
       }
       const top = step === 1 ? 5 : 10, gap = step === 3 ? 1 : 2 + rand(2);
       const small = 1 + rand(top - gap), large = small + gap, th = snack();
       const t = more ? large : small, o = more ? small : large, word = more ? "more" : "fewer";
+      const countGroups = async H => { for (const c of H.cards()) { H.glow(c.el, true); H.label(c.el, c.ch.n); const ok = await H.say(`This group has ${NUM[c.ch.n]}.`, () => speak("num-" + c.ch.n, cap(NUM[c.ch.n]))); H.glow(c.el, false); if (!ok) return false; } return true; };
       return { bubble: big(word, 7), key: small + "," + large + th[0], say: `Which group has ${word}?`, yay: `Yes! ${cap(NUM[t])} is ${word} than ${NUM[o]}.`, pause: 2800,
-        hint: async H => { // count each group, and leave its number on the card
-          for (const c of H.cards()) { H.glow(c.el, true); H.label(c.el, c.ch.n); const ok = await H.say(`This group has ${NUM[c.ch.n]}.`, () => speak("num-" + c.ch.n, cap(NUM[c.ch.n]))); H.glow(c.el, false); if (!ok) return; }
-          return H.say(H.q.say);
-        },
+        hint: async H => (await countGroups(H)) && H.say(H.q.say), // count each group, and leave its number on the card
+        explain: async P => (await countGroups(P)) && (P.glow(P.right().el, true), P.say(`${cap(NUM[t])} is ${word} than ${NUM[o]}. This group has ${word}.`)),
         choices: shuffle([small, large]).map(k => ({ html: group(th[2], k, 3.8), ok: k === t, n: k, wrong: `That group has ${more ? "fewer" : "more"}.` })) };
     }
   },
   order: {
     name: "What's Next?", icon: `<span style="color:#3fc1c9">3 4 ?</span>`, intro: "Let's put numbers in order!",
+    lesson: P => { const c = P.demo(numTiles([3, 4, 5, "?"]), ["7", "6"]), tl = P.items(".tile");
+      return steps(P, [[null, "Watch me! When we count, numbers always go in the same order."]].concat(tl.map((el, i) => [() => { tl.forEach(x => P.glow(x, false)); P.glow(el, true); }, String(3 + i), numClip(3 + i)]))
+        .concat([[() => { tl.forEach(x => P.glow(x, false)); P.glow(P.items(".q")[0], true); }, "What comes after five? Six!"], [() => { c[0].classList.add("dim"); P.glow(c[1], true); }, "Three, four, five, six. Six comes next!"]])); },
     makeQuestion(step) {
-      const tiles = (arr) => arr.map(x => x === "?" ? `<div class="q">?</div>` : `<div class="tile">${x}</div>`).join("");
+      if (step <= 2 ? rand(3) === 0 : rand(5) === 0) { // a picture pattern: what comes next?
+        const [A, B, C] = shuffle(THINGS), kind = step === 1 ? "AB" : step === 2 ? pick(["AB", "ABB"]) : pick(["ABB", "ABC"]);
+        const unit = kind === "AB" ? [A, B] : kind === "ABB" ? [A, B, B] : [A, B, C], seq = unit.concat(unit).slice(0, kind === "AB" ? 4 : 5), ans = unit[seq.length % unit.length];
+        const opts = shuffle(kind === "ABC" ? [A, B, C] : step === 1 ? [A, B] : [A, B, pick(THINGS.filter(x => !unit.includes(x)))]);
+        const chant = async P => { const its = P.items(".pattern span"); for (let i = 0; i < seq.length; i++) { its.forEach(x => P.glow(x, false)); P.glow(its[i], true); if (!(await P.say(cap(seq[i][0]) + "."))) return false; } its.forEach(x => P.glow(x, false)); P.glow(P.items(".pattern .q")[0], true); return true; };
+        return { bubble: `<div class="pattern">${seq.map(t => `<span>${t[2]}</span>`).join("")}<div class="q">?</div></div>`, key: "pat" + seq.map(t => t[0]).join(),
+          say: `${seq.map(t => t[0]).join(", ")}. What comes next?`, sayParts: seq.map(t => cap(t[0]) + ".").concat("What comes next?"), yay: `Yes! ${cap(ans[0])} comes next!`, pause: 2600,
+          hint: async P => (await P.say("Say the pattern with me.")) && (await chant(P)) && P.say("What comes next?"),
+          explain: async P => (await chant(P)) && (P.glow(P.right().el, true), P.say(`The pattern goes round again. ${cap(ans[0])} comes next!`)),
+          choices: opts.map(t => ({ html: emo(t[2]), ok: t === ans, wrong: `That is the ${t[0]}.` })) };
+      }
       if (step === 4 && rand(2) === 0) { // counting backwards
         const a = 4 + rand(7), seq = [a, a - 1, a - 2], ans = a - 3;
-        return { bubble: tiles(seq.concat("?")), hint: H => countTiles(H, "Keep counting down. What comes next?"), say: `Counting backwards. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3200, choices: numberCards(ans, 0, 20) };
+        return { bubble: numTiles(seq.concat("?")), hint: H => countTiles(H, "Keep counting down. What comes next?"), say: `Counting backwards. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3200, choices: numberCards(ans, 0, 20),
+          explain: async P => (await countTiles(P, `${cap(NUM[ans])} comes next when we count down.`)) && (P.glow(P.right().el, true), true) };
       }
       if (step === 4) { // the missing number is in the middle
         const a = 1 + rand(17), ans = a + 1;
-        return { bubble: tiles([a, "?", a + 2]), hint: H => countTiles(H, `What number comes between ${a} and ${a + 2}?`), say: `${a}, something, ${a + 2}. Which number is missing?`, yay: `Yes! ${a}, ${ans}, ${a + 2}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
+        return { bubble: numTiles([a, "?", a + 2]), hint: H => countTiles(H, `What number comes between ${a} and ${a + 2}?`), say: `${a}, something, ${a + 2}. Which number is missing?`, yay: `Yes! ${a}, ${ans}, ${a + 2}!`, pause: 3000, choices: numberCards(ans, 0, 20),
+          explain: async P => { P.glow(P.right().el, true); return P.say(`${a}, ${ans}, ${a + 2}. ${cap(NUM[ans])} goes in the middle.`); } };
       }
       const top = [6, 10, 20][step - 1], a = (step === 3 ? 8 : 1) + rand(top - 3 - (step === 3 ? 7 : 0)), seq = [a, a + 1, a + 2], ans = a + 3;
-      return { bubble: tiles(seq.concat("?")), hint: H => countTiles(H, "Keep counting. What comes next?"), say: `${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
+      return { bubble: numTiles(seq.concat("?")), hint: H => countTiles(H, "Keep counting. What comes next?"), say: `${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3000, choices: numberCards(ans, 0, 20),
+        explain: async P => (await countTiles(P, `${cap(NUM[ans])} comes next.`)) && (P.glow(P.right().el, true), true) };
     }
   },
   adding: {
     name: "Adding Station", icon: `<span style="color:#58b368">2+1</span>`, intro: "Let's put groups together!",
+    lesson: P => { const th = snack(), c = P.demo(addPics(th, 2, 1, 6), ["2", "3"]), items = P.items(".grid5 span");
+      return steps(P, [[null, "Watch me add. Two, and one more. I count them all together."]].concat(items.map((el, i) => [() => { items.forEach(x => P.glow(x, false)); P.glow(el, true); }, String(i + 1), numClip(i + 1)]))
+        .concat([[() => { items.forEach(x => P.glow(x, false)); c[0].classList.add("dim"); P.glow(c[1], true); }, "Two and one more make three!"]])); },
     makeQuestion(step) {
-      const th = snack(), away = step === 3 || (step === 4 && rand(2) === 0), top = step === 1 || step === 3 ? 5 : 10;
+      const th = snack();
+      if ((step === 2 || step === 4) && rand(3) === 0) { // the ten-frame: how many more make ten?
+        const n = (step === 2 ? 5 : 3) + rand(step === 2 ? 5 : 7), more = 10 - n;
+        return { bubble: `<div class="col"><div class="tenframe">${Array.from({ length: 10 }, (_, i) => `<i${i < n ? "" : ' class="empty"'}>${i < n ? th[2] : ""}</i>`).join("")}</div><div class="cap">${n} + ? = 10</div></div>`, key: "ten" + n,
+          say: `${cap(NUM[n])} ${th[1]} in the boxes. How many more make ten?`, again: "How many more make ten?", yay: `Yes! ${n} and ${more} make ten!`, pause: 3000, choices: numberCards(more, 1, 9),
+          hint: H => { H.glow(H.items(".tenframe i.empty")[0], true); return H.say("Ten boxes make ten. Count the empty boxes!"); },
+          explain: async P => { const empty = P.items(".tenframe i.empty");
+            for (let i = 0; i < empty.length; i++) { empty[i].dataset.n = i + 1; empty[i].classList.add("counted"); P.glow(empty[i], true); if (!(await P.say(String(i + 1), numClip(i + 1)))) return false; }
+            P.glow(P.right().el, true); return P.say(`${cap(NUM[more])} more make ten!`); } };
+      }
+      const away = step === 3 || (step === 4 && rand(2) === 0), top = step === 1 || step === 3 ? 5 : 10;
       const size = top === 5 ? 6 : 4.4;
       if (away) { // taking away: some of the pictures fade out
         const a = 2 + rand(top - 1), b = 1 + rand(a - 1), ans = a - b;
@@ -358,7 +444,7 @@ const GAMES = {
           say: `${cap(NUM[a])} ${th[1]}. Take away ${NUM[b]}. How many are left?`, yay: `Yes! ${a} take away ${b} is ${ans}!`, pause: 3200, choices: numberCards(ans, 0, 10), teach: true };
       }
       const sum = 2 + rand(top - 1), a = 1 + rand(sum - 1), b = sum - a;
-      return { bubble: `<div class="col"><div class="rowx">${group(th[2], a, size)}${big("+", 6, "#ff8a3d")}${group(th[2], b, size)}</div>${step > 1 ? `<div class="cap">${a} + ${b}</div>` : ""}</div>`,
+      return { bubble: addPics(th, a, b, size, step > 1),
         say: `${cap(NUM[a])} ${a === 1 ? th[0] : th[1]}, and ${NUM[b]} more. How many altogether?`, yay: `Yes! ${a} and ${b} make ${sum}!`, pause: 3200, choices: numberCards(sum, 0, 10), teach: true };
     }
   }
@@ -369,10 +455,10 @@ const STEP_NAMES = {
   sounds: ["starts like the picture, 2 choices", "starts like the picture, 3 choices", "starts with the letter, 3 choices", "starts with the letter, 4 choices"],
   rhymes: ["2 choices", "3 choices", "3 choices, more words", "4 choices"],
   words: ["match the word, 2 choices", "10 first words, by ear", "20 words, by ear", "30 words, 4 choices"],
-  count: ["count to 5", "count to 10", "count to 15", "count to 20"],
+  count: ["count to 5, and dice dots", "count to 10, and dice dots", "count to 15", "count to 20"],
   moreless: ["which has more, up to 5", "more or fewer, up to 10", "groups that are close", "bigger or smaller number, to 20"],
-  order: ["what comes next, to 6", "what comes next, to 10", "what comes next, to 20", "backwards and missing numbers"],
-  adding: ["adding to 5", "adding to 10", "taking away within 5", "adding and taking away within 10"]
+  order: ["what comes next to 6, and picture patterns", "what comes next to 10, and patterns", "what comes next to 20, and patterns", "backwards and missing numbers, and patterns"],
+  adding: ["adding to 5", "adding to 10, and making ten", "taking away within 5", "adding and taking away within 10, and making ten"]
 };
 const TRAIN_SIZE = 4;   // passengers on a full train
 const STARS_TO_WIN = 5; // right answers needed to win at a station
@@ -402,27 +488,79 @@ function show(id) {
   $("homeBtn").style.display = (id === "game") ? "" : "none";
   $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
   $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
-  $("hintBtn").style.display = (id === "game") ? "" : "none";
+  $("hintBtn").style.display = $("lessonBtn").style.display = (id === "game") ? "" : "none";
+  $("myTurn").style.display = "none"; // shown only while a lesson is playing
 }
 
-// ---------- playing a station ----------
+// ---------- Dot's recorded voice for every line ----------
+// Questions, cheers, hints and lessons are recorded in audio/dot/l/, under a name made from the words (Kit.clipName).
+// A line without a recording is said by the device voice instead.
+const lineUrl = w => "audio/dot/l/" + Kit.clipName(w) + ".mp3";
+async function talk(parts) { // one line, or several one after another; true if it all played to the end
+  parts = [].concat(parts); parts.forEach(w => Kit.loadClip(lineUrl(w)).catch(() => {}));
+  for (const w of parts) if (!(await Kit.playClip(lineUrl(w), w))) return false;
+  return true;
+}
+async function talkAndWait(parts, quietPause) { if (!Kit.settings.voice) return wait(quietPause); if (await talk(parts)) await wait(450); }
+// The tools Dot uses for hints, lessons and her help: the shared hint tools (shared/kit.js), speaking in Dot's voice.
+function helper(q, alive) {
+  const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive }), plain = H.say;
+  H.say = (words, clip) => plain(words, clip || (() => talk(words)));
+  H.right = () => H.cards().find(c => c.ch.ok) || { el: null };
+  H.items = sel => [...$("bubble").querySelectorAll(sel)];
+  H.bubbleArt = () => $("bubble").querySelector(".rowx > *") || $("bubble").firstElementChild;
+  H.demo = (bubbleHtml, list) => { // a pretend question for a lesson (the cards cannot be tapped)
+    const b = $("bubble"); b.className = "bubble"; b.innerHTML = bubbleHtml; animate(b, "pop");
+    const box = $("choices"); box.innerHTML = ""; box.style.setProperty("--cs", "26vmin"); // a little smaller than in play, to leave room for the ▶
+    return list.map(h => { const c = document.createElement("div"); c.className = "choice pop"; c.innerHTML = h; box.appendChild(c); return c; });
+  };
+  return H;
+}
+
+// ---------- playing a station: Learn, then Try together, then Play ----------
+// The first visit to a station starts with a short "watch me" lesson (the big ▶ skips it, 📖 shows it again).
+// The next two questions come with Dot's help already showing. One 💡 hint per round. After a second wrong try,
+// Dot shows the answer and why (counting questions: Dot counts along). A question that needed help comes back later.
 let G = null;
+const REVIEW = {}; // questions to bring back, while the game is open: { station: [{ q, due }] }
 function startGame(id) {
   const p = passengerAt(id); // the passenger the child is helping at this station
-  G = { id, p, need: starsNeeded(), stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1 }; // one hint per round
+  G = { id, p, need: starsNeeded(), stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0 }; // one hint per round
   $("hintBtn").classList.remove("used");
   $("stars").innerHTML = Array(G.need).fill(`<div class="star">${p.snack[2]}</div>`).join(""); // each right answer packs one of their snacks
   $("gameDot").innerHTML = DOT;
   show("game");
-  nextQuestion(id);
+  if (GAMES[id].lesson && !(S.learned || {})[id]) runLesson(true);
+  else nextQuestion(id);
+}
+async function runLesson(first) { // "Learn": Dot does one herself, out loud
+  const g = G; if (!g) return;
+  Kit.hush(); g.lesson = true; g.busy = true; g.q = null;
+  $("bubble").className = "bubble"; $("bubble").innerHTML = `<div class="lessonart"><span class="big">${GAMES[g.id].icon}</span></div>`;
+  $("choices").innerHTML = ""; $("myTurn").style.display = "";
+  const P = helper(null, () => G === g && !!g.lesson);
+  const line = async (name, words) => Kit.settings.voice ? speak(name, words) : (await wait(1200), true);
+  let ok = true;
+  if (first) ok = (S.aboard[g.id] || await line("wish-" + g.p.name, g.p.wish)) && P.alive() && await line("intro-" + g.id, GAMES[g.id].intro) && P.alive();
+  if (ok) { await GAMES[g.id].lesson(P, S.skill[g.id]); ok = P.alive(); }
+  if (ok && await P.say("Now you try!")) endLesson(g);
+}
+function endLesson(g) {
+  if (G !== g || !g.lesson) return;
+  Kit.hush(); g.lesson = false; g.busy = false; $("myTurn").style.display = "none";
+  (S.learned || (S.learned = {}))[g.id] = true; save();
+  g.guided = 2; // "Try together": the next two questions come with Dot's help already showing
+  nextQuestion();
 }
 function nextQuestion(intro) { // "intro" is the station's id, only for the very first question: Dot says her welcome first, then asks
-  let q, tries = 0;
-  do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last);
+  let q, tries = 0, lead = null;
+  const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
+  if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = "Let's try this one again!"; } // bring it back
+  else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last);
   G.last = String(q.key !== undefined ? q.key : q.say + q.bubble); G.hinted = false;
-  G.q = q; G.first = true; G.busy = false;
+  G.q = q; G.first = true; G.busy = false; G.wrongs = 0;
   const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
-  $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
+  $("bubble").className = "bubble"; $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
   const box = $("choices"); box.innerHTML = "";
   box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
   q.choices.forEach(ch => {
@@ -430,11 +568,15 @@ function nextQuestion(intro) { // "intro" is the station's id, only for the very
     b.addEventListener("click", () => choose(b, ch));
     box.appendChild(b);
   });
-  if (intro) (async () => { // the passenger's wish (unless they are already on the train), then Dot's welcome, then the question - each only if the one before played to its end
-    if (!S.aboard[intro] && !(await speak("wish-" + G.p.name, G.p.wish))) return;
-    if (await speak("intro-" + intro, GAMES[intro].intro) && G && G.q === q) say(q.say);
-  })();
-  else say(q.say);
+  Kit.loadClip(lineUrl(q.yay)).catch(() => {}); // get the cheer ready too
+  const guide = G.guided > 0 && (q.hint || q.teach); // "Try together"
+  if (guide) { G.guided--; G.hinted = true; }
+  const g = G, parts = (lead ? [lead] : []).concat(q.sayParts || q.say), still = () => G === g && g.q === q && !g.busy;
+  const asked = intro ? (async () => { // the passenger's wish (unless they are already on the train), then Dot's welcome, then the question - each only if the one before played to its end
+    if (!S.aboard[intro] && !(await speak("wish-" + G.p.name, G.p.wish))) return false;
+    return await speak("intro-" + intro, GAMES[intro].intro) && still() ? talk(parts) : false;
+  })() : talk(parts);
+  if (guide) asked.then(done => { if (still() && (done || !Kit.settings.voice)) { if (q.hint) q.hint(helper(q, still)); else countAlong(q); } });
 }
 async function choose(el, ch) {
   if (!G || G.busy || el.classList.contains("dim")) return;
@@ -443,41 +585,46 @@ async function choose(el, ch) {
     G.busy = true; sfx.yes();
     animate($("gameDot"), "bounce");
     el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
-    G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-    const spoken = Kit.sayAndWait(q.yay, q.pause || 2300); // waits for the voice to finish; with the voice off, a short pause
+    G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
+    if ((!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: try it again a little later
+    const spoken = talkAndWait(q.yay, q.pause || 2300); // waits for Dot to finish; with the voice off, a short pause
     Kit.track("k", "Dot's Busy Train", G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
-    adjust(G.first && !G.hinted); // an answer found with a hint does not make the station harder
+    adjust(G.first && !G.hinted); // an answer found with help does not make the station harder
     await spoken;
     if (!G || G.q !== q) return;
     if (G.stars >= G.need) finishGame(); else nextQuestion();
   } else {
-    sfx.oops(); G.first = false;
+    sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
     animate(el, "wobble"); el.classList.add("dim");
     if (G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
+    const g = G, still = () => G === g && g.q === q && !g.busy;
     if (q.teach) { // counting questions: Dot counts along with the child, then asks again
-      const told = Kit.settings.voice ? await say(ch.wrong) : true;
-      if (told && G && G.q === q && !G.busy) countAlong(q);
-    } else say(`${ch.wrong} ${q.say}`);
+      const told = Kit.settings.voice ? await talk(ch.wrong) : true;
+      if (told && still()) countAlong(q);
+    } else if (G.wrongs >= 2 && q.explain && !q.explained) { // a second wrong try: Dot shows how
+      q.explained = true;
+      talk(ch.wrong).then(done => { if (still() && (done || !Kit.settings.voice)) q.explain(helper(q, still)); });
+    } else talk([ch.wrong].concat(q.again || q.sayParts || q.say));
   }
 }
 // Counting along: Dot points at each picture in turn and says its number, then asks the question again.
 // With talking off, the numbers simply appear one by one. Any tap on an answer stops it straight away.
 async function countAlong(q) {
-  const me = (G.counting = (G.counting || 0) + 1), talk = Kit.settings.voice;
+  const me = (G.counting = (G.counting || 0) + 1), voiced = Kit.settings.voice;
   const still = () => G && G.q === q && !G.busy && G.counting === me;
   const items = [...$("bubble").querySelectorAll(".grid5 span")].filter(s => !s.classList.contains("gone"));
   items.forEach(s => s.classList.remove("lit", "counted"));
-  if (talk && !(await speak("count-along", "Let's count them together."))) return;
+  if (voiced && !(await speak("count-along", "Let's count them together."))) return;
   let finished = true;
   for (let i = 0; i < items.length; i++) {
     if (!still()) { finished = false; break; }
     items.forEach(s => s.classList.remove("lit"));
     items[i].dataset.n = i + 1; items[i].classList.add("lit", "counted");
-    const ok = talk ? await speak("num-" + (i + 1), cap(NUM[i + 1])) : (await wait(700), true);
+    const ok = voiced ? await speak("num-" + (i + 1), cap(NUM[i + 1])) : (await wait(700), true);
     if (!ok) { finished = false; break; }
   }
   items.forEach(s => s.classList.remove("lit"));
-  if (finished && still() && talk) say(q.say);
+  if (finished && still() && voiced) talk(q.again || q.say);
 }
 // Quietly make a station harder after 3 right in a row, easier after 2 hard questions in a row.
 function adjust(firstTry) {
@@ -618,16 +765,19 @@ $("playBtn").addEventListener("click", () => {
     .forEach(n => Kit.loadClip("audio/dot/" + n + ".mp3").catch(() => {}));
   showMap(riders().length ? undefined : "hello");
 });
-$("gameDot").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameDot"), "wobble"); say(G.q.say); } });
-$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+$("gameDot").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameDot"), "wobble"); talk(G.q.sayParts || G.q.say); } });
+$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; Kit.hush(); showMap(); });
 // The hint button: one per round. It takes away one wrong answer, then shows how to think about the question.
 $("hintBtn").addEventListener("click", async () => {
   if (!G || G.busy || !G.q || G.hints <= 0) return;
   const q = G.q; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
   Kit.dropOneWrong($("choices"));
-  const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive: () => G && G.q === q && !G.busy });
+  const g = G, H = helper(q, () => G === g && g.q === q && !g.busy);
   if (q.hint) await q.hint(H); else if (q.teach) await countAlong(q); else await H.say(q.say);
 });
+// 📖: watch Dot's lesson again. ▶: skip the lesson and start playing.
+$("lessonBtn").addEventListener("click", () => { if (!G || G.lesson || !GAMES[G.id].lesson || (G.busy && G.q)) return; sfx.tap(); runLesson(false); });
+$("myTurn").addEventListener("click", () => { if (G && G.lesson) { sfx.tap(); endLesson(G); } });
 $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });
 
 // ---------- grown-ups corner (press and hold the gear) ----------
