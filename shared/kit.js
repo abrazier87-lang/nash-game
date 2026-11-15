@@ -50,6 +50,32 @@ const Kit = (() => {
   const stamps = () => get(stampKey(), []);
   function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); } }
 
+  // ---------- progress, for the grown-ups' progress report (progress.html) ----------
+  // Every answered question is noted for the child who is playing: the game, the station, the difficulty step,
+  // and whether it was right first time. Questions that needed another try are kept as "tricky ones".
+  // It all stays on this device.
+  const progressKey = () => { const p = currentPlayer(); return "storyShelf.progress" + (p ? "." + p.id : ""); };
+  const plain = html => String(html || "").replace(/<\/b>\s*<i>/g, "/").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  function track(game, title, station, stationName, step, q, firstTry) {
+    try {
+      const P = get(progressKey(), null) || { v: 1, games: {}, days: {} };
+      const g = P.games[game] || (P.games[game] = { title, stations: {} });
+      const s = g.stations[station] || (g.stations[station] = { name: stationName, asked: 0, firstTry: 0, recent: [], missed: {} });
+      g.title = title; s.name = stationName; s.asked++; if (firstTry) s.firstTry++;
+      s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift(); // the last 20 answers
+      const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      s.last = day; P.days[day] = (P.days[day] || 0) + 1;
+      if (!firstTry) {
+        const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
+        const full = plain(q.help || (q.read !== undefined && q.read ? q.read : q.say)), asked = full.length > 110 ? full.slice(0, 107).replace(/\s+\S*$/, "") + "…" : full;
+        const label = asked + (answer ? " → " + answer : "");
+        s.missed[label] = (s.missed[label] || 0) + 1;
+        const keys = Object.keys(s.missed); if (keys.length > 40) { keys.sort((a, b) => s.missed[a] - s.missed[b]); delete s.missed[keys[0]]; }
+      }
+      put(progressKey(), P);
+    } catch (e) {}
+  }
+
   // ---------- settings shared by the newer games ----------
   const settings = Object.assign({ voice: true, sound: true, voiceName: "" }, get("storyShelf.settings", {}));
   const saveSettings = () => put("storyShelf.settings", settings);
@@ -191,7 +217,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "15"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "16"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, track, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

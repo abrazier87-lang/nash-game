@@ -231,6 +231,26 @@ function stamp(id) {
   try { const k = "storyShelf.stamps" + (PLAYER ? "." + PLAYER.id : ""), list = JSON.parse(localStorage.getItem(k) || "[]");
     if (!list.includes(id)) { list.push(id); localStorage.setItem(k, JSON.stringify(list)); } } catch (e) {}
 }
+// Notes each answered question for the grown-ups' progress report (the same record the other games keep, in shared/kit.js).
+function track(station, stationName, step, q, firstTry) {
+  try {
+    const key = "storyShelf.progress" + (PLAYER ? "." + PLAYER.id : ""), plain = h => String(h || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    const P = JSON.parse(localStorage.getItem(key) || "null") || { v: 1, games: {}, days: {} };
+    const g = P.games.pre || (P.games.pre = { title: "Pip's Lost Eggs", stations: {} });
+    const s = g.stations[station] || (g.stations[station] = { name: stationName, asked: 0, firstTry: 0, recent: [], missed: {} });
+    s.asked++; if (firstTry) s.firstTry++;
+    s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift();
+    const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    s.last = day; P.days[day] = (P.days[day] || 0) + 1;
+    if (!firstTry) {
+      const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
+      const label = plain(q.say) + (answer ? " → " + answer : "");
+      s.missed[label] = (s.missed[label] || 0) + 1;
+      const keys = Object.keys(s.missed); if (keys.length > 40) { keys.sort((a, b) => s.missed[a] - s.missed[b]); delete s.missed[keys[0]]; }
+    }
+    localStorage.setItem(key, JSON.stringify(P));
+  } catch (e) {}
+}
 if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
 // ---------- recorded lines (Pip's own voice, saved as sound files in audio/pip/) ----------
 // playClip plays one recorded line. If the file is missing or cannot play, "fallback" is said in the device voice instead,
@@ -597,6 +617,7 @@ async function choose(el, ch, part) {
     else { el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); }
     G.stars++; $("stars").children[G.stars - 1].classList.add("got");
     const spoken = sayAndWait(q.yay, q.pause || 2100); // waits for the voice to finish; with the voice off, a short pause
+    track(G.id, GAMES[G.id].name, S.skill[G.id], q, G.first); // for the progress report
     adjust(G.first);
     await spoken;
     if (q.after) await wait(q.after); // extra time when Pip asks the child to do something ("Where is your tummy?")
@@ -726,6 +747,7 @@ function openGrown() {
   const voices = englishVoices();
   $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
     <p><b>Preschool (ages 2-4).</b> ${NAME ? "Playing as <b>" + NAME.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
+    <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
     <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(v => `<option value="${v.name.replace(/"/g, "&quot;")}"${voice && v.name === voice.name ? " selected" : ""}>${v.name}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <p>Eggs hatched so far: <b>${S.friends.length}</b> &nbsp;|&nbsp; Full adventures finished: <b>${S.clutches}</b></p>
     ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${stepNames[id][S.skill[id] - 1]}</small></div>
