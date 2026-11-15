@@ -144,7 +144,7 @@ function addSteps(a, b) {
     [`<span class="big">${a} + ${b}</span>`, `Let's add ${a} and ${b}. Split the numbers into tens and ones.`],
     [tens, bt ? `Add the tens. ${at} plus ${bt} is ${t}.` : `${b} has no tens, so the tens stay ${at}.`],
     [`${tens}<br>${ones}`, `Add the ones. ${ao} plus ${bo} is ${o}.${o >= 10 ? " That's more than 10, so it makes one more ten." : ""}`],
-    [`${T(t)} + ${O(o)} = <b>${a + b}</b>`, `${t} and ${o} make ${a + b}!`]];
+    [`${T(t)} + ${O(o)} = <b>${a + b}</b>`, `${t} and ${o}, make ${a + b}!`]];
 }
 // Taking away by splitting into tens and ones (when no borrowing is needed): 47 − 25 is 40 − 20, then 7 − 5.
 function subSteps(a, b) {
@@ -154,13 +154,13 @@ function subSteps(a, b) {
     [`<span class="big">${a} − ${b}</span>`, `Let's take ${b} away from ${a}. Split the numbers into tens and ones.`],
     [tens, bt ? `Take away the tens. ${at} take away ${bt} is ${t}.` : `${b} has no tens, so the tens stay ${at}.`],
     [`${tens}<br>${ones}`, `Take away the ones. ${ao} take away ${bo} is ${o}.`],
-    [`${T(t)} + ${O(o)} = <b>${a - b}</b>`, `${t} and ${o} make ${a - b}!`]];
+    [`${T(t)} + ${O(o)} = <b>${a - b}</b>`, `${t} and ${o}, make ${a - b}!`]];
 }
 // Counting up from a smaller number to a bigger one: jump to the next ten, then jump the rest. The jumps add up to the answer.
 function jumpSteps(lo, hi, show = String, said = String) {
   const ten = Math.ceil(lo / 10) * 10, js = ten === lo || ten >= hi ? [[lo, hi]] : [[lo, ten], [ten, hi]], lines = [], out = [];
-  js.forEach(([a, b]) => { lines.push(`${show(a)} → ${show(b)}: <b>${show(b - a)}</b>`); out.push([lines.join("<br>"), `From ${said(a)} to ${said(b)} is ${said(b - a)}.`]); });
-  if (js.length > 1) out.push([`${js.map(([a, b]) => show(b - a)).join(" + ")} = <b>${show(hi - lo)}</b>`, `${js.map(([a, b]) => said(b - a)).join(" and ")} make ${said(hi - lo)}.`]);
+  js.forEach(([a, b]) => { lines.push(`${show(a)} → ${show(b)}: <b>${show(b - a)}</b>`); out.push([lines.join("<br>"), `From ${said(a)}, up to ${said(b)}, is ${said(b - a)}.`]); });
+  if (js.length > 1) out.push([`${js.map(([a, b]) => show(b - a)).join(" + ")} = <b>${show(hi - lo)}</b>`, `Add up the jumps, and that makes ${said(hi - lo)}.`]);
   return out;
 }
 const countUpLesson = (lo, hi, ask, start) => [[`<span class="big">${ask}</span>`, start]].concat(jumpSteps(lo, hi));
@@ -217,17 +217,17 @@ const GAMES = {
       let a, b;
       if (step === 4) { // the missing number
         b = 5 + rand(36); a = 10 + rand(91 - b); const total = a + b;
-        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, choices: sumCards(b),
-          hint: H => { H.show(`${a} → ${total}`); return H.say(`Count up from ${a} to ${total}. Jump to the next ten first, then add up your jumps.`); },
-          explain: async H => (await talkThrough(H, jumpSteps(a, total))) && pointTo(H, `So the missing number is ${b}. ${a} plus ${b} is ${total}.`) };
+        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what, makes ${total}?`, yay: `Yes! It's ${b}!`, choices: sumCards(b),
+          hint: H => { H.show(`${a} → ${total}`); return H.say(`Count up from ${a}, to ${total}. Jump to the next ten first, then add up your jumps.`); },
+          explain: async H => (await talkThrough(H, jumpSteps(a, total))) && pointTo(H, `So the missing number is ${b}.`) };
       }
       if (step === 1) { const o = rand(9); a = (1 + rand(8)) * 10 + o; b = 1 + rand(9 - o); }               // 34 + 5
       else if (step === 2) { const at = 1 + rand(7), ao = rand(9); a = at * 10 + ao; b = (1 + rand(8 - at)) * 10 + rand(10 - ao); } // 34 + 25
       else { const ao = 2 + rand(8), at = 1 + rand(6); a = at * 10 + ao; b = rand(8 - at) * 10 + (10 - ao) + rand(ao); }             // 37 + 28 (carrying)
       const bt = b - b % 10;
-      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, choices: sumCards(a + b),
+      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a}, plus ${b}?`, yay: `Yes! It's ${a + b}!`, choices: sumCards(a + b),
         hint: H => { H.show(bt ? `${T(a - a % 10)} + ${T(bt)} &nbsp; ${O(a % 10)} + ${O(b % 10)}` : `${T(a - a % 10)} &nbsp; ${O(a % 10)} + ${O(b)}`);
-          return H.say(bt ? "Split the numbers into tens and ones. Add the tens. Then add the ones. Then put them together." : `The tens stay the same. Just add the ones: ${a % 10} plus ${b}.`); },
+          return H.say(bt ? "Split the numbers into tens and ones. Add the tens. Then add the ones. Then put them together." : `The tens stay the same. Just add the ones, ${a % 10}, plus ${b}.`); },
         explain: async H => (await talkThrough(H, addSteps(a, b).slice(1))) && pointTo(H, `So the answer is ${a + b}.`) };
     }
   },
@@ -240,21 +240,21 @@ const GAMES = {
       let a, b;
       if (step === 4) { // the missing number
         a = 20 + rand(80); b = 5 + rand(Math.min(36, a - 5)); const c = a - b;
-        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, choices: sumCards(b),
-          hint: H => { H.show(`${c} → ${a}`); return H.say(`Count up from ${c} to ${a}. The jumps tell you the missing number.`); },
-          explain: async H => (await talkThrough(H, jumpSteps(c, a))) && pointTo(H, `So the missing number is ${b}. ${a} take away ${b} leaves ${c}.`) };
+        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what, leaves ${c}?`, yay: `Yes! It's ${b}!`, choices: sumCards(b),
+          hint: H => { H.show(`${c} → ${a}`); return H.say(`Count up from ${c}, to ${a}. The jumps tell you the missing number.`); },
+          explain: async H => (await talkThrough(H, jumpSteps(c, a))) && pointTo(H, `So the missing number is ${b}.`) };
       }
       if (step === 1) { const o = 1 + rand(9); a = (1 + rand(9)) * 10 + o; b = 1 + rand(o); }                 // 47 - 5
       else if (step === 2) { const at = 2 + rand(8), ao = 1 + rand(9); a = at * 10 + ao; b = (1 + rand(at - 1)) * 10 + rand(ao + 1); } // 47 - 25
       else { const ao = rand(9), at = 2 + rand(8); a = at * 10 + ao; b = rand(at) * 10 + ao + 1 + rand(9 - ao); }                       // 42 - 17 (borrowing)
-      const q = { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, choices: sumCards(a - b) };
+      const q = { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a}, minus ${b}?`, yay: `Yes! It's ${a - b}!`, choices: sumCards(a - b) };
       if (step === 3) { // borrowing: count up from the smaller number
-        q.hint = H => { H.show(`${b} → ${a}`); return H.say(`Count up from ${b} to ${a}. Jump to the next ten first, then add up your jumps.`); };
-        q.explain = async H => (await talkThrough(H, jumpSteps(b, a))) && pointTo(H, `So ${a} take away ${b} is ${a - b}.`);
+        q.hint = H => { H.show(`${b} → ${a}`); return H.say(`Count up from ${b}, to ${a}. Jump to the next ten first, then add up your jumps.`); };
+        q.explain = async H => (await talkThrough(H, jumpSteps(b, a))) && pointTo(H, `So the answer is ${a - b}.`);
       } else {
         const bt = b - b % 10;
         q.hint = H => { H.show(bt ? `${T(a - a % 10)} − ${T(bt)} &nbsp; ${O(a % 10)} − ${O(b % 10)}` : `${T(a - a % 10)} &nbsp; ${O(a % 10)} − ${O(b)}`);
-          return H.say(bt ? "Split the numbers into tens and ones. Take away the tens. Then take away the ones." : `The tens stay the same. Just take away the ones: ${a % 10} take away ${b}.`); };
+          return H.say(bt ? "Split the numbers into tens and ones. Take away the tens. Then take away the ones." : `The tens stay the same. Just take away the ones, ${a % 10}, take away ${b}.`); };
         q.explain = async H => (await talkThrough(H, subSteps(a, b).slice(1))) && pointTo(H, `So the answer is ${a - b}.`);
       }
       return q;
@@ -271,7 +271,7 @@ const GAMES = {
         const text = `A ${thing} costs ${fmt(cost)}. You pay with a loonie, which is $1. How much change do you get?`;
         return { bubble: `<div class="passage">${text}</div>`, tall: true, key: "change" + cost, say: `A ${thing} costs ${moneySaid(cost)}. You pay with a loonie, which is 1 dollar. How much change do you get?`, yay: `Yes! ${cap(moneySaid(change))} change.`,
           choices: moneyCards(change, [change + 10, change - 10, change + 5, change - 5, cost]),
-          hint: H => { H.show(`${fmt(cost)} → $1`); return H.say(`Count up from ${moneySaid(cost)} to 1 dollar. Jump to the next ten first.`); },
+          hint: H => { H.show(`${fmt(cost)} → $1`); return H.say(`Count up from ${moneySaid(cost)}, to 1 dollar. Jump to the next ten first.`); },
           explain: async H => (await talkThrough(H, jumpSteps(cost, 100, fmt, moneySaid))) && pointTo(H, `So your change is ${moneySaid(change)}.`) };
       }
       let t = 0, l = 0, q = 0, d, n, c, count;
@@ -326,16 +326,16 @@ const GAMES = {
       if (step === 3) { // how many hours did it take?
         const trip = pick(TRIPS);
         return { bubble: `<div class="rowx">${mini(h, 0)}<span style="font-size:6vmin">→</span>${mini(h2, 0)}</div>`, tall: true, key: [h, n].join(),
-          say: `${trip} started at ${h} o'clock and finished at ${h2} o'clock. How many hours did it take?`, again: "How many hours did it take?", read: `${trip} started at ${h}:00 and finished at ${h2}:00. How many hours did it take?`,
-          yay: `Yes! From ${h} o'clock to ${h2} o'clock is ${n} hour${n > 1 ? "s" : ""}.`, choices: numCards(n, 1, 12, 4, [n + 1, n - 1, n + 2]),
-          hint: H => { H.show(`${h}:00 → ${h2}:00`); return H.say(`Start at ${h} o'clock. Count each hour until you get to ${h2} o'clock. Use your fingers!`); },
+          say: `${trip} started at ${h} o'clock, and finished at ${h2} o'clock. How many hours did it take?`, again: "How many hours did it take?", read: `${trip} started at ${h}:00 and finished at ${h2}:00. How many hours did it take?`,
+          yay: `Yes! It took ${n} hour${n > 1 ? "s" : ""}.`, choices: numCards(n, 1, 12, 4, [n + 1, n - 1, n + 2]),
+          hint: H => { H.show(`${h}:00 → ${h2}:00`); return H.say(`Start at ${h} o'clock. Count each hour, until you get to ${h2} o'clock. Use your fingers!`); },
           explain: async H => (await talkThrough(H, countSteps)) && pointTo(H, `So it took ${n} hour${n > 1 ? "s" : ""}.`) };
       }
       // step 4: what time will it end?
       const m = pick([0, 30]), trip = pick(TRIPS), back = (h2 + 10) % 12 + 1, hrs = `${n} hour${n > 1 ? "s" : ""}`;
       return { bubble: `<div class="col"><div class="clockbox small">${clock(h, m)}</div><div class="cap">+ ${hrs}</div></div>`, tall: true, key: [h, m, n].join(),
         say: `${trip} starts at ${timeSaid(h, m)}. It lasts ${hrs}. What time does it end?`, again: "What time does it end?", read: `${trip} starts at ${timeText(h, m)}. It lasts ${hrs}. What time does it end?`,
-        yay: `Yes! ${hrs} after ${timeSaid(h, m)} is ${timeSaid(h2, m)}!`,
+        yay: `Yes! It ends at ${timeSaid(h2, m)}!`,
         choices: shuffle(shuffle(uniqTimes([[h, m], [h2 % 12 + 1, m], [back, m], [h2, (m + 30) % 60]]).filter(o => !(o[0] === h2 && o[1] === m))).slice(0, 3).concat([[h2, m]]))
           .map(o => ({ html: `<span style="font-size:7vmin">${timeText(o[0], o[1])}</span>`, ok: o[0] === h2 && o[1] === m, wrong: `That says ${timeSaid(o[0], o[1])}.` })),
         hint: H => H.say(`Start at ${timeSaid(h, m)}. Count on ${hrs}. The minutes stay the same.`),
@@ -369,7 +369,7 @@ const GAMES = {
       const wrongs = shuffle([...new Set(all.flat())].filter(x => !linked.has(x))).slice(0, count - 1);
       return { bubble: `<div class="col">${big(w, 8)}<div class="cap">${opp ? "opposite" : "means the same"}</div></div>`, key: w + opp,
         say: opp ? `Which word is the opposite of ${w}?` : `Which word means the same as ${w}?`, yay: opp ? `Yes! ${cap(a)} is the opposite of ${w}!` : `Yes! ${cap(a)} means the same as ${w}!`,
-        choices: shuffle(wrongs.concat(a)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === a, wrong: opp ? `${cap(x)} is not the opposite of ${w}.` : `${cap(x)} does not mean the same as ${w}.` })),
+        choices: shuffle(wrongs.concat(a)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === a, wrong: opp ? `${cap(x)}. That is not the opposite.` : `${cap(x)}. That does not mean the same.` })),
         hint: H => H.say(opp ? `Opposites are as different as can be, like up and down. Which word is the most different from ${w}?` : `Words that mean the same can swap places in a sentence. Which word could take the place of ${w}?`),
         explain: H => pointTo(H, opp ? `${cap(w)} and ${a} are opposites. They are as different as can be.` : `You can say ${a} instead of ${w}, and it means the same thing.`) };
     }
@@ -460,7 +460,7 @@ const GAMES = {
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody in Ancient Egypt", sub: "A Grade 2 adventure", gradeLabel: "Grade 2 (ages 7-8)", hostName: "Dr. Somebody",
-  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g2/lesson/", // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
+  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g2/lesson/", lineVoice: "audio/g2/l/", // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g2/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud c2"></div><div class="pyr"></div><div class="pyr p2"></div><div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["add", "sub", "tokens", "time", "words", "scribe", "scroll", "rows"],
