@@ -274,7 +274,7 @@ function StoryGame(C) {
   function showMap(line) {
     const on = got();
     if (on.length >= NEED) { showFinale(); return; }
-    $("places").innerHTML = ""; $("places").classList.toggle("many", GAME_IDS.length > 8); $("progress").classList.toggle("many", NEED > 4); // smaller cards when a grade has lots of places
+    $("places").innerHTML = ""; $("places").classList.toggle("many", GAME_IDS.length > 8); $("places").classList.toggle("lots", GAME_IDS.length > 12); $("progress").classList.toggle("many", NEED > 4); // smaller cards when a grade has lots of places
     GAME_IDS.forEach(id => {
       const g = GAMES[id], b = document.createElement("button");
       b.className = "place" + (S.aboard[id] ? " done" : "");

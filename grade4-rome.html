@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Rome</title>
-<link rel="stylesheet" href="shared/kit.css?v=22">
+<link rel="stylesheet" href="shared/kit.css?v=23">
 <style>
   /* Blue sky, olive hills, a temple and an aqueduct. */
   :root { --sky1:#8fd3f4; --sky2:#fdebd0; --grass:#a9b665; --grass2:#7d9a4b; --title-shadow:#8e2f25; --strip:rgba(255,255,255,.45); --strip-line:rgba(90,100,40,.6); }
@@ -30,8 +30,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=22"></script>
-<script src="shared/story.js?v=22"></script>
+<script src="shared/kit.js?v=23"></script>
+<script src="shared/story.js?v=23"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -152,6 +152,20 @@ const SCROLLS = [
   ["Mount Vesuvius is a volcano in Italy. In the year 79, it erupted and buried the town of Pompeii in ash. The ash kept buildings and objects safe for centuries. Today visitors can walk through the ancient streets.", "What buried the town of Pompeii?", "ash from a volcano", ["a great flood", "a sandstorm", "deep snow"]],
   ["Romans ate their main meal in the late afternoon. Poor families ate bread, beans and porridge. Rich families held feasts with many courses. They often ate lying on couches around a low table.", "How did rich Romans often eat their feasts?", "lying on couches", ["standing in the street", "sitting on the floor", "riding in chariots"]]
 ];
+
+// the Roman market: [one of it, lowest price, highest price, more than one]. Prices are in whole dollars (Ontario Grade 4 money).
+const MARKET = [["a loaf of bread", 2, 6, "loaves of bread"], ["a jar of olives", 3, 9, "jars of olives"], ["a bunch of grapes", 2, 7, "bunches of grapes"], ["a clay lamp", 5, 15, "clay lamps"],
+  ["a pair of sandals", 8, 20, "pairs of sandals"], ["a wool cloak", 15, 30, "wool cloaks"], ["a bag of figs", 2, 8, "bags of figs"], ["a jug of olive oil", 4, 12, "jugs of olive oil"],
+  ["a honey cake", 1, 5, "honey cakes"], ["a toy chariot", 6, 18, "toy chariots"]];
+// [money word, a story, why]
+const MONEY_WORDS = [["spending", "Marcus uses $12 to buy a toy chariot.", "Marcus uses his money to buy something."],
+  ["saving", "Livia puts $5 in her money box every week. She wants to buy a new cloak next month.", "Livia keeps her money for later."],
+  ["earning", "Julia sells bread at the market, and gets $20 for her work.", "Julia gets paid for her work."],
+  ["donating", "Felix gives $10 to help families who need food.", "Felix gives his money to help others."],
+  ["investing", "Aurelia uses her money to buy a second bread oven, so her bakery can sell more bread later.", "Aurelia uses money now, so she can make more money later."]];
+// ways to pay (in Canada today)
+const PAYING = [["cash", "You hand the seller coins and paper bills."], ["a debit card", "In Canada today, you tap a card, and the money comes straight out of your bank account."],
+  ["a credit card", "In Canada today, you tap a card, and the bank pays the store now. Later, you pay the bank back."]];
 
 // ---------- teaching helpers: lessons ("watch me do one"), hints and step-by-step explanations ----------
 const art = html => `<div class="lessonart">${html}</div>`;
@@ -467,6 +481,58 @@ const GAMES = {
         explain: async H => (await talkThrough(H, work)) && pointTo(H, `So the answer is ${comma(ans)}.`) };
     }
   },
+  market: { // Ontario Grade 4 money: costs and change in whole dollars, ways to pay, spending and saving, and spotting a good deal
+    name: "Roman Market", icon: "💰", intro: "Welcome to the Roman market! I'll pay with the Canadian dollars I brought from home. Let's buy and sell!",
+    lesson: L => frames(L, [
+      [`🍞 $4 &nbsp; 🧀 $9`, "Watch me shop. Bread costs 4 dollars, and cheese costs 9 dollars. I add them. 4 plus 9 is 13 dollars."],
+      [`$13 → $20`, "I pay with a 20 dollar bill. To find my change, I count up from 13 to 20."],
+      [`$13 → $14, $15 … $20 = <b>$7</b>`, "14, 15, 16, 17, 18, 19, 20. That's 7 dollars. My change is 7 dollars!"]]),
+    makeQuestion(step) {
+      const cash = (ans, list) => numCards(ans, 1, 1000, 4, list.filter(x => x > 0 && x !== ans)).map(c => ({ ...c, html: `<span style="font-size:6.4vmin">$${c.html}</span>`, wrong: `That is ${c.html} dollars.` }));
+      const dollars = n => `${n} dollar${n === 1 ? "" : "s"}`;
+      const shop = shuffle(MARKET), [A, B, C] = shop, price = it => it[1] + rand(it[2] - it[1] + 1);
+      const ask = (text, said, ans, list, hint, work, yay) => ({ bubble: passage(text), tall: true, key: text, say: (said || text).replace(/(\d+) dollars bill/g, "$1 dollar bill"), help: text, again: "Read the problem again.", yay: yay || `Yes! ${cap(dollars(ans))}.`,
+        choices: cash(ans, list), hint: H => H.say(hint), explain: async H => (await talkThrough(H, work)) && pointTo(H, `So the answer is ${dollars(ans)}.`) });
+      if (step === 1) { // the cost of two or three things
+        const items = [A, B].concat(rand(2) ? [C] : []), ps = items.map(price), total = ps.reduce((a, b) => a + b, 0);
+        const list = items.map((it, i) => `${it[0]} for $${ps[i]}`), text = `You buy ${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}. How much do you spend altogether?`;
+        return ask(text, text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), total, [total + 1, total - 1, total + 10, total - 10, Math.max(...ps)], "Add up the prices of everything you buy.",
+          [[ps.map(p => `$${p}`).join(" + ") + ` = <b>$${total}</b>`, `${ps.join(" plus ")} is ${total}.`]]);
+      }
+      if (step === 2) { // buying or selling several of the same thing
+        const n = 2 + rand(5), p = price(A), sell = rand(2) === 0, total = n * p;
+        const text = sell ? `A merchant sells ${n} ${A[3]} for $${p} each. How much money does the merchant earn?` : `You buy ${n} ${A[3]}. Each one costs $${p}. How much do you spend?`;
+        return ask(text, text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), total, [n + p, total + p, total - p, total + 10], `${n} of them at ${dollars(p)} each. That's ${n} groups of ${p}. Multiply.`,
+          [[`${n} × $${p} = <b>$${total}</b>`, `${n} times ${p} is ${total}.`]], sell ? `Yes! The merchant earns ${dollars(total)}.` : undefined);
+      }
+      if (step === 3) { // change from cash
+        const ps = [price(A), price(B)], cost = ps[0] + ps[1], pay = cost < 20 ? 20 : cost < 50 ? 50 : 100, change = pay - cost, ten = Math.ceil(cost / 10) * 10;
+        const text = `You buy ${A[0]} for $${ps[0]} and ${B[0]} for $${ps[1]}. You pay with a $${pay} bill. How much change do you get?`;
+        return ask(text, text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), change, [cost, change + 1, change - 1, change + 10, pay - ps[0]], "First add the two prices. Then count up from that total to the bill you paid with.",
+          [[`$${ps[0]} + $${ps[1]} = $${cost}`, `Step one. ${ps[0]} plus ${ps[1]} is ${cost}.`]].concat(ten > cost && ten < pay ? [[`$${cost} → $${ten} → $${pay}`, `Step two. Count up from ${cost} to ${ten}, that's ${ten - cost}. Then ${ten} to ${pay}, that's ${pay - ten}.`]] : [[`$${cost} → $${pay}`, `Step two. Count up from ${cost} to ${pay}.`]]),
+          `Yes! Your change is ${dollars(change)}.`);
+      }
+      // step 4: money words, ways to pay, or which is the better deal
+      const kind = rand(3), cols = shuffle(INK);
+      if (kind === 0) { const [word, text, why] = pick(MONEY_WORDS), others = shuffle(MONEY_WORDS.filter(m => m[0] !== word).map(m => m[0])).slice(0, 3);
+        return { bubble: passage(text), tall: true, key: text, say: `${text} Is that spending, saving, earning, donating, or investing?`, again: "Which money word fits?", yay: `Yes! That's ${word}.`,
+          hint: H => H.say("Spending is buying. Saving is keeping money for later. Earning is getting paid. Donating is giving to help. Investing is using money to make more money later."),
+          explain: H => pointTo(H, `${why} So that's ${word}.`),
+          choices: shuffle(others.concat(word)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === word, wrong: `Not ${w}.` })) }; }
+      if (kind === 1) { const [way, text] = pick(PAYING), others = PAYING.filter(p => p[0] !== way).map(p => p[0]);
+        return { bubble: passage(text), tall: true, key: text, say: `${text} What is this way of paying called?`, again: "What is this way of paying called?", yay: `Yes! That's paying with ${way}.`,
+          hint: H => H.say("Cash is coins and bills. A debit card takes money straight from your bank account. With a credit card, the bank pays now, and you pay the bank back later."),
+          explain: H => pointTo(H, `${text} That's ${way}.`),
+          choices: shuffle(others.concat(way)).map(w => ({ html: ansCard(w), ok: w === way, wrong: `Not ${w}.` })) }; }
+      const each = [2 + rand(4), 0]; each[1] = each[0] + 1 + rand(3); const [cheap, dear] = shuffle([0, 1]).map(i => each[i]); // which pack costs less for each one?
+      const nA = 2 + rand(4), nB = 2 + rand(4), packA = { n: nA, cost: nA * cheap }, packB = { n: nB, cost: nB * dear }, best = cheap < dear ? "A" : "B", item = A[3];
+      const text = `Pack A has ${packA.n} ${item} for $${packA.cost}. Pack B has ${packB.n} ${item} for $${packB.cost}. Which pack costs less for each one?`;
+      return { bubble: passage(text), tall: true, key: text, say: text.replace(/\$(\d+)/g, (_, n) => dollars(+n)), again: "Which pack costs less for each one?", yay: `Yes! Pack ${best} is the better deal.`,
+        hint: H => H.say("Work out the price of one, for each pack. Divide the cost by how many are in the pack."),
+        explain: async H => (await talkThrough(H, [[`A: $${packA.cost} ÷ ${packA.n} = $${cheap}`, `Pack A. ${packA.cost} divided by ${packA.n} is ${dollars(cheap)} each.`], [`B: $${packB.cost} ÷ ${packB.n} = $${dear}`, `Pack B. ${packB.cost} divided by ${packB.n} is ${dollars(dear)} each.`]])) && pointTo(H, `${cap(dollars(Math.min(cheap, dear)))} each is less. So pack ${best} is the better deal.`),
+        choices: ["A", "B"].map((p, i) => ({ html: wordCard("Pack " + p, cols[i]), ok: p === best, wrong: `Pack ${p} costs more for each one.` })) };
+    }
+  },
   roots: {
     name: "Latin Words", icon: "🔤", intro: "The Romans spoke Latin. Lots of English words have little pieces of Latin inside them!",
     lesson: L => frames(L, [
@@ -542,7 +608,7 @@ window.Story = StoryGame({
   host: HOST, saveKey: "grade4Rome.v1", medal: "g4", need: 6, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g4/lesson/", // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g4/", 5), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud c2"></div>${AQUEDUCT}${TEMPLE}<div class="hill back"></div><div class="hill"></div>`,
-  games: GAMES, gameIds: ["numerals", "multiply", "divide", "fractions", "decimals", "shapes", "measure", "data", "problems", "roots", "grammar", "scroll"],
+  games: GAMES, gameIds: ["numerals", "multiply", "divide", "fractions", "decimals", "shapes", "measure", "data", "problems", "market", "roots", "grammar", "scroll"],
   stepNames: {
     numerals: ["numerals 1 to 12", "numerals up to 39", "numerals up to 100 (L and C)", "pick the numeral for a number"],
     multiply: ["harder tables, times 10 and 100", "two digits times one digit", "two digits times one digit, with carrying", "times 10, 100 and 1000, and three digits times one digit"],
@@ -553,6 +619,7 @@ window.Story = StoryGame({
     measure: ["metres and centimetres", "kilometres, metres, centimetres, millimetres", "how long did it take", "kilograms and grams, litres and millilitres"],
     data: ["reading a graph", "mode", "median", "mean"],
     problems: ["one step, numbers to 10,000", "one step, multiplying or dividing", "two steps", "harder two-step problems"],
+    market: ["adding up prices", "buying and selling several", "change from a bill", "money words, ways to pay, and the better deal"],
     roots: ["number word parts (tri, oct, cent)", "find the word with a Latin part", "what a Latin part means", "use the word in a sentence"],
     grammar: ["nouns, verbs, adjectives and adverbs", "joining words (but, so, because)", "tricky verbs", "commas, apostrophes and speech marks"],
     scroll: ["read aloud, 3 answers", "reads it alone, 3 answers", "reads it alone, 4 answers", "reads it alone, 4 answers"]

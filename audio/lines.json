@@ -8790,6 +8790,11 @@
     "audio/g2/l/so-your-change-is-40-cents-4b242039.mp3": ["dr-somebody", "So your change is 40 cents."],
     "audio/g2/l/2-o-clock-is-5-hours-49002a4f.mp3": ["dr-somebody", "2 o'clock is 5 hours."],
     "audio/g2/l/half-past-2-is-4-hours-later-48fe1027.mp3": ["dr-somebody", "half past 2 is 4 hours later."],
-    "audio/g2/l/11-o-clock-is-4-hours-later-f8340e02.mp3": ["dr-somebody", "11 o'clock is 4 hours later."]
+    "audio/g2/l/11-o-clock-is-4-hours-later-f8340e02.mp3": ["dr-somebody", "11 o'clock is 4 hours later."],
+
+    "audio/g4/lesson/welcome-to-the-roman-market-i-ll-e9f2126e.mp3": ["dr-somebody", "Welcome to the Roman market! I'll pay with the Canadian dollars I brought from home. Let's buy and sell!"],
+    "audio/g4/lesson/watch-me-shop-bread-costs-4-doll-2b3849ad.mp3": ["dr-somebody", "Watch me shop. Bread costs 4 dollars, and cheese costs 9 dollars. I add them. 4 plus 9 is 13 dollars."],
+    "audio/g4/lesson/i-pay-with-a-20-dollar-bill-to-f-db9f1404.mp3": ["dr-somebody", "I pay with a 20 dollar bill. To find my change, I count up from 13 to 20."],
+    "audio/g4/lesson/14-15-16-17-18-19-20-that-s-7-do-d6f4f1fc.mp3": ["dr-somebody", "14, 15, 16, 17, 18, 19, 20. That's 7 dollars. My change is 7 dollars!"]
   }
 }

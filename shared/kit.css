@@ -106,6 +106,12 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .places.many .place .pic { width:15vmin; height:11vmin; font-size:6vmin; }
 .places.many .place .name { font-size:2.1vmin; }
 @media (max-aspect-ratio: 13/10) { .places.many { grid-template-columns:repeat(4, auto); } }
+/* more than 12 places: smaller still, 7 across on a wide screen or 5 across on a squarer one */
+.places.many.lots { grid-template-columns:repeat(7, auto); gap:1.6vmin; }
+.places.many.lots .place { width:16.5vmin; height:17vmin; border-radius:3vmin; }
+.places.many.lots .place .pic { width:13vmin; height:9vmin; font-size:5vmin; }
+.places.many.lots .place .name { font-size:1.9vmin; }
+@media (max-aspect-ratio: 13/10) { .places.many.lots { grid-template-columns:repeat(5, auto); margin-top:9vmin; } .places.many.lots .place { width:15vmin; } } /* three rows: leave room for the corner buttons */
 .progress.many { gap:1.6vmin; }
 .progress.many .balloon { width:12vmin; height:15vmin; }
 .progress.many .slot { width:8.6vmin; height:8.6vmin; font-size:5.4vmin; line-height:8.6vmin; }
