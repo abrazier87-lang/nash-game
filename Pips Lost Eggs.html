@@ -102,6 +102,16 @@
   .bodypip .hit { fill:transparent; stroke:transparent; pointer-events:all; }
   .bodypip .glow > :not(.hit) { stroke:#ffd23f; stroke-width:5; }
   #grown select { font:inherit; padding:6px; margin-top:4px; max-width:300px; border-radius:8px; }
+  /* learning help: the hint (💡), the "watch me" lesson (📖), and the big ▶ to skip a lesson */
+  .corner.hint, .corner.lesson { left:auto; right:2vmin; opacity:1; font-size:6vmin; }
+  .corner.hint { background:#fff3b0; } .corner.hint.used { opacity:.3; filter:grayscale(1); }
+  .corner.lesson { top:15vmin; background:#d9ecff; }
+  #myTurn { position:absolute; right:3vmin; bottom:3vmin; width:19vmin; height:19vmin; z-index:6; }
+  @media (orientation:portrait) { #myTurn { right:auto; left:calc(50% - 9.5vmin); bottom:auto; top:61%; } } /* a phone held upright: in the empty space between Pip and the cards */
+  #myTurn .tri { border-left-width:7vmin; border-top-width:4.6vmin; border-bottom-width:4.6vmin; margin-left:1.6vmin; }
+  .glow { outline:1.2vmin solid #ffd23f; outline-offset:.5vmin; border-radius:3vmin; transform:scale(1.08); transition:transform .15s; }
+  .choice.struck { opacity:.15; }
+  #bubble .glow { outline:none; filter:drop-shadow(0 0 .8vmin #ffb300) drop-shadow(0 0 .8vmin #ffd23f); transform:scale(1.15); } /* pictures in Pip's bubble sit close together: a soft glow instead of a box */
 
   /* hatch + finale */
   #hatch .stage, #finale .stage { width:46vmin; height:46vmin; }
@@ -167,6 +177,9 @@
   <button class="corner left" id="homeBtn" aria-label="Back to the valley" style="display:none">🏠</button>
   <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
   <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+  <button class="corner hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
+  <button class="corner lesson" id="lessonBtn" aria-label="Show me how" style="display:none">📖</button>
+  <button class="bigbtn" id="myTurn" aria-label="My turn" style="display:none"><span class="tri"></span></button>
 
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
@@ -184,6 +197,7 @@ const rand = n => Math.floor(Math.random() * n);
 const pick = arr => arr[rand(arr.length)];
 const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const wait = ms => new Promise(r => setTimeout(r, ms));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 // ---------- saved progress (kept on this device) ----------
 // Who is playing? (picked on the book shelf page). The first child added keeps the original saved progress.
@@ -191,7 +205,7 @@ let PLAYER = null;
 try { const cur = localStorage.getItem("storyShelf.current"); PLAYER = JSON.parse(localStorage.getItem("storyShelf.players") || "[]").find(p => p.id === cur) || null; } catch (e) {}
 const NAME = PLAYER ? PLAYER.name : "";
 const SAVE_KEY = "pipsLostEggs.v1" + (PLAYER && PLAYER.id !== "p1" ? "." + PLAYER.id : "");
-const fresh = () => ({ skill: { colors: 1, shapes: 1, count: 1, patterns: 1, shadows: 1, sizes: 1, body: 1, sounds: 1 }, found: {}, friends: [], clutches: 0, auto: true, voice: true, sound: true, voiceName: "" });
+const fresh = () => ({ skill: { colors: 1, shapes: 1, count: 1, patterns: 1, shadows: 1, sizes: 1, body: 1, sounds: 1 }, found: {}, friends: [], clutches: 0, learned: {}, auto: true, voice: true, sound: true, voiceName: "" });
 let S = fresh();
 try {
   const raw = localStorage.getItem(SAVE_KEY);
@@ -232,19 +246,19 @@ function stamp(id) {
     if (!list.includes(id)) { list.push(id); localStorage.setItem(k, JSON.stringify(list)); } } catch (e) {}
 }
 // Notes each answered question for the grown-ups' progress report (the same record the other games keep, in shared/kit.js).
-function track(station, stationName, step, q, firstTry) {
+function track(station, stationName, step, q, firstTry, hinted) { // hinted: a hint (or Pip's help) was used on this question
   try {
     const key = "storyShelf.progress" + (PLAYER ? "." + PLAYER.id : ""), plain = h => String(h || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     const P = JSON.parse(localStorage.getItem(key) || "null") || { v: 1, games: {}, days: {} };
     const g = P.games.pre || (P.games.pre = { title: "Pip's Lost Eggs", stations: {} });
     const s = g.stations[station] || (g.stations[station] = { name: stationName, asked: 0, firstTry: 0, recent: [], missed: {} });
-    s.asked++; if (firstTry) s.firstTry++;
+    s.asked++; if (firstTry) s.firstTry++; if (hinted) s.hints = (s.hints || 0) + 1;
     s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift();
     const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     s.last = day; P.days[day] = (P.days[day] || 0) + 1;
     if (!firstTry) {
       const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
-      const label = plain(q.say) + (answer ? " → " + answer : "");
+      const label = plain(q.say) + (answer ? " → " + answer : "") + (hinted ? " · used a hint" : "");
       s.missed[label] = (s.missed[label] || 0) + 1;
       const keys = Object.keys(s.missed); if (keys.length > 40) { keys.sort((a, b) => s.missed[a] - s.missed[b]); delete s.missed[keys[0]]; }
     }
@@ -285,6 +299,23 @@ function playClip(url, fallback) {
   });
 }
 const speak = (name, words) => playClip("audio/pip/" + name + ".mp3", words);
+// Every other line Pip says (questions, cheers, hints, lessons) is recorded in audio/pip/l/, under a name made from its words
+// (the same naming the other games use, in shared/kit.js). A line without a recording uses the device voice.
+function clipName(words) {
+  let h = 0x811c9dc5; for (const ch of String(words)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+  return String(words).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32).replace(/-$/, "") + "-" + h.toString(16).padStart(8, "0");
+}
+const lineUrl = words => "audio/pip/l/" + clipName(words) + ".mp3";
+// Says one line, or several one after another ("red", "blue", "red", "blue", "What comes next?"). True if it all played to the end.
+async function talk(parts) {
+  parts = [].concat(parts); parts.forEach(w => loadClip(lineUrl(w)).catch(() => {})); // get them all ready, so there are no gaps
+  for (const w of parts) if (!(await playClip(lineUrl(w), w))) return false;
+  return true;
+}
+async function talkAndWait(parts, quietPause) { // says it and waits until it is over; with the voice off, a short pause
+  if (!S.voice) return wait(quietPause);
+  if (await talk(parts)) await wait(450);
+}
 
 let lastSaid = "";
 function say(text) {
@@ -377,6 +408,8 @@ function show(id) {
   $("homeBtn").style.display = (id === "game") ? "" : "none";
   $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
   $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+  $("hintBtn").style.display = $("lessonBtn").style.display = (id === "game") ? "" : "none";
+  $("myTurn").style.display = "none"; // shown only while a lesson is playing
 }
 function animate(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 function confetti(n) {
@@ -418,24 +451,47 @@ const bodyPip = c => svg(`
 
 // ---------- the mini-games ----------
 // Each game has 4 difficulty steps. makeQuestion(step) returns:
-//   { bubble: picture/words shown in Pip's speech bubble, say: what Pip says,
-//     choices: [{ html, ok, name }], yay: what Pip says when right, size: optional card size }
+//   { bubble: picture/words shown in Pip's speech bubble, say: what Pip says (sayParts: the same, said in pieces),
+//     choices: [{ html, ok, name }], yay: what Pip says when right, size: optional card size,
+//     hint(P): Pip's nudge (the 💡 button, and the "try together" questions after a lesson),
+//     explain(P): Pip shows the answer and why, after a second wrong try }
+// lesson(P): the "watch me" lesson on the first visit (and from the 📖 button): Pip does one herself, out loud.
+// P is the helper below (helper()): P.say, P.glow, P.right(), P.bubbleArt(), P.demo(...) and so on.
+const NUM_WORDS = ["", "One", "Two", "Three", "Four", "Five"];
+// What to look for in each shadow, and in each shape.
+const LOOKS = { longneck: "It has a long, long neck.", spiky: "It has spikes on its back.", horned: "It has horns on its head.", pip: "It's small, like me!", egg: "It's round and smooth.", leaf: "It's pointy at both ends." };
+const SHAPE_LOOKS = { circle: "round, with no corners", square: "four sides, all the same", triangle: "three sides and three points", star: "five points", heart: "the shape of a love heart",
+  rectangle: "four sides, two long and two short", oval: "round and long, like an egg", diamond: "four points, like a kite" };
+const WHERE = { head: "My head is at the top.", tummy: "My tummy is in the middle.", tail: "My tail is at the back.", feet: "My feet are at the bottom.", eye: "My eye is on my head.",
+  arm: "My arm is on my side.", nose: "My nose is at the end of my face.", mouth: "My mouth is under my nose." };
+// Runs a little show: each step changes the picture, then Pip says the words. Stops if the child moves on.
+async function steps(P, list) { for (const [change, words] of list) { if (change) change(); if (!(await P.say(words))) return false; } return true; }
+const berryCard = c => `<div class="art">${ART.berry(COLORS[c])}</div>`;
+
 const GAMES = {
   colors: {
     name: "Berry Bush", icon: "bush", intro: "Pip is hungry! Find the berry Pip wants.",
+    lesson: P => { const c = P.demo(berryCard("red"), [berryCard("blue"), berryCard("red")]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! I want a red berry, like this one."],
+        [() => P.glow(c[0], true), "Is this berry red? No. It's blue."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "This berry is red, the same as mine. Yum!"]]); },
     makeQuestion(step) {
       const pool = step === 1 ? ["red", "blue", "yellow"] : step === 2 ? ["red", "blue", "yellow", "green"] : ["red", "blue", "yellow", "green", "orange", "purple"];
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
       const names = shuffle(pool).slice(0, count), target = names[0];
       return {
         bubble: `<div class="art">${ART.berry(COLORS[target])}</div>`,
-        say: `Pip wants the ${target} berry!`, yay: `Yum! ${target}!`,
-        choices: shuffle(names).map(n => ({ html: `<div class="art">${ART.berry(COLORS[n])}</div>`, ok: n === target, name: n }))
+        say: `Pip wants the ${target} berry!`, yay: `Yum! ${cap(target)}!`,
+        choices: shuffle(names).map(n => ({ html: berryCard(n), ok: n === target, name: n, wrong: `That one is ${n}.` })),
+        hint: P => { P.glow(P.bubbleArt(), true); return P.say(`Look at my berry. It's ${target}. Find one the same colour!`); },
+        explain: P => { P.glow(P.bubbleArt(), true); P.glow(P.right(), true); return P.say(`This berry is ${target}, just like mine!`); }
       };
     }
   },
   shadows: {
     name: "Shadow Cave", icon: "cave", intro: "Who is hiding in the cave? Match the shadow!",
+    lesson: P => { const c = P.demo(`<div class="art shadow">${ART.spiky(COLORS.green)}</div>`, [`<div class="art">${ART.egg(COLORS.teal)}</div>`, `<div class="art">${ART.spiky(COLORS.purple)}</div>`]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! This dark picture is a shadow. Look at its shape. It has spikes!"],
+        [() => P.glow(c[0], true), "The egg is round. It has no spikes."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "The spiky dinosaur has spikes, just like the shadow. It made the shadow!"]]); },
     makeQuestion(step) {
       let kinds;
       if (step === 1) kinds = [pick(DINOS), pick(["egg", "leaf"])];
@@ -446,12 +502,17 @@ const GAMES = {
       return {
         bubble: `<div class="art shadow">${ART[target](COLORS.green)}</div>`,
         say: "Who made this shadow?", yay: `Yes! It's the ${DINO_NAMES[target]}!`,
-        choices: shuffle(kinds).map((k, i) => ({ html: `<div class="art">${ART[k](COLORS[cols[i]])}</div>`, ok: k === target, name: DINO_NAMES[k] }))
+        choices: shuffle(kinds).map((k, i) => ({ html: `<div class="art">${ART[k](COLORS[cols[i]])}</div>`, ok: k === target, name: DINO_NAMES[k] })),
+        hint: P => { P.glow(P.bubbleArt(), true); return P.say(`Look at the shadow's shape. ${LOOKS[target]}`); },
+        explain: P => { P.glow(P.right(), true); return P.say(`It's the ${DINO_NAMES[target]}. ${LOOKS[target]}`); }
       };
     }
   },
   sizes: {
     name: "Big and Small", icon: "meadow", intro: "Some dinosaurs are big. Some are small!",
+    lesson: P => { const card = pct => `<div class="art" style="width:${pct}%;height:${pct}%">${ART.longneck(COLORS.blue)}</div>`, c = P.demo(`<span style="font-size:9vmin">big</span>`, [card(40), card(95)]);
+      return steps(P, [[() => P.glow(c[1], true), "Watch me! This dinosaur is big. It fills up the whole card!"],
+        [() => { P.glow(c[1], false); P.glow(c[0], true); }, "This dinosaur is small. It's tiny!"], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "When I hear big, I tap the big one!"]]); },
     makeQuestion(step) {
       const kind = pick(["longneck", "spiky", "horned"]), col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
       const card = pct => `<div class="art" style="width:${pct}%;height:${pct}%">${ART[kind](col)}</div>`;
@@ -461,13 +522,22 @@ const GAMES = {
         const target = big ? sizes[0] : sizes[sizes.length - 1], opposite = big ? sizes[sizes.length - 1] : sizes[0];
         return {
           bubble: `<span style="font-size:${big ? 7 : 4}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `That's the ${word} one!`,
-          choices: shuffle(sizes).map(s => ({ html: card(s), ok: s === target, wrong: s === opposite ? `That is the ${big ? "smallest" : "biggest"} one.` : "Not that one." }))
+          choices: shuffle(sizes).map(s => ({ html: card(s), ok: s === target, size: s, wrong: s === opposite ? `That is the ${big ? "smallest" : "biggest"} one.` : "Not that one." })),
+          hint: P => P.say(big ? "The biggest one is bigger than all the others." : "The smallest one is smaller than all the others."),
+          explain: async P => { // line them up, from one end to the other
+            const order = P.cards().filter(c => !c.classList.contains("struck")).sort((a, b) => big ? a._ch.size - b._ch.size : b._ch.size - a._ch.size);
+            const words = big ? ["Small.", "Bigger.", "Even bigger.", "Biggest!"] : ["Big.", "Smaller.", "Even smaller.", "Smallest!"];
+            for (let i = 0; i < order.length; i++) { order.forEach(c => P.glow(c, false)); P.glow(order[i], true); if (!(await P.say(i === order.length - 1 ? words[3] : words[i]))) return false; }
+            return true;
+          }
         };
       }
       const big = step === 1 ? true : rand(2) === 0, word = big ? "big" : "small";
       return {
         bubble: `<span style="font-size:${big ? 9 : 4.5}vmin">${word}</span>`, say: `Tap the ${word} dinosaur!`, yay: `Yes! That one is ${word}!`,
-        choices: shuffle([[95, "big"], [40, "small"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" }))
+        choices: shuffle([[95, "big"], [40, "small"]]).map(s => ({ html: card(s[0]), ok: s[1] === word, name: s[1] + " one" })),
+        hint: P => P.say(big ? "Big ones fill up the card!" : "Small ones are tiny!"),
+        explain: P => { P.glow(P.right(), true); return P.say(big ? "This one is big. It fills up the card!" : "This one is small. It's tiny!"); }
       };
     }
   },
@@ -475,9 +545,13 @@ const GAMES = {
   // ----- counting -----
   count: {
     name: "Egg Count", icon: () => `<span style="font-size:5.6vmin;color:#ff8a3d;white-space:nowrap">1 2 3</span>`, intro: "Let's count with Pip!",
+    lesson: P => { const egg = `<div class="art small3">${ART.egg(COLORS.blue)}</div>`, num = k => `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`;
+      const c = P.demo(egg.repeat(3), [num(2), num(3)]), eggs = P.bubbleItems();
+      return steps(P, [[null, "Watch me count the eggs. I touch each egg once."], [() => P.glow(eggs[0], true), "One."], [() => P.glow(eggs[1], true), "Two."], [() => P.glow(eggs[2], true), "Three."],
+        [() => { c[0].classList.add("dim"); P.glow(c[1], true); }, "The last number I say tells how many. Three eggs!"]]); },
     makeQuestion(step) {
       const max = step + 1; // step 1 counts to 2, step 4 counts to 5
-      const n = 1 + rand(max), words = ["", "One", "Two", "Three", "Four", "Five"];
+      const n = 1 + rand(max), words = NUM_WORDS;
       const thing = pick([["egg", "eggs"], ["leaf", "leaves"], ["berry", "berries"]]);
       const col = COLORS[pick(["blue", "orange", "purple", "red", "teal"])];
       let nums = [];
@@ -486,7 +560,11 @@ const GAMES = {
       return {
         bubble: Array(n).fill(`<div class="art ${n >= 4 ? "small5" : "small3"}">${ART[thing[0]](col)}</div>`).join(""),
         say: `How many ${thing[1]}?`, yay: `${words[n]}! ${words.slice(1, n + 1).join(", ")}.`, pause: 1900 + n * 550,
-        choices: nums.map(k => ({ html: `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`, ok: k === n, wrong: `That is ${words[k].toLowerCase()}.` }))
+        choices: nums.map(k => ({ html: `${k}<div class="dots">${"<i></i>".repeat(k)}</div>`, ok: k === n, wrong: `That is ${words[k].toLowerCase()}.` })),
+        hint: async P => { P.glow(P.bubbleItems()[0], true); return (await P.say("Touch each one as you count. I'll start!")) && P.say("One..."); },
+        explain: async P => { const items = P.bubbleItems();
+          for (let i = 0; i < items.length; i++) { P.glow(items[i], true); if (!(await P.say(words[i + 1] + "."))) return false; }
+          P.glow(P.right(), true); return P.say(`The last number tells how many. ${words[n]}!`); }
       };
     }
   },
@@ -495,6 +573,9 @@ const GAMES = {
   shapes: {
     name: "Shape Rocks", icon: () => `<svg viewBox="0 0 200 160"><circle cx="50" cy="55" r="38" fill="#ff5a5f"/><rect x="105" y="20" width="72" height="72" rx="6" fill="#4d9de0"/><polygon points="100,80 150,152 50,152" fill="#ffd23f"/></svg>`,
     intro: "Let's find shapes!",
+    lesson: P => { const c = P.demo(`<div class="art">${shapeArt("triangle", ["#aab0c6", "#8d93ab"])}</div>`, [`<div class="art">${shapeArt("circle", COLORS.red)}</div>`, `<div class="art">${shapeArt("triangle", COLORS.yellow)}</div>`]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me find the triangle!"], [() => P.glow(c[0], true), "This is a circle. It's round, with no corners."],
+        [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "This one has three sides and three points. It's a triangle!"]]); },
     makeQuestion(step) {
       const pool = step === 1 ? ["circle", "square", "triangle"] : step === 2 ? ["circle", "square", "triangle", "star", "heart"] : SHAPE_NAMES;
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
@@ -505,7 +586,9 @@ const GAMES = {
         // step 4 shows only the word, so he has to know the shape by its name
         bubble: step === 4 ? `<span style="font-size:6vmin">${target}</span>` : `<div class="art">${shapeArt(target, ["#aab0c6", "#8d93ab"])}</div>`,
         say: `Find the ${target}!`, yay: `Yes! ${an} ${target}!`,
-        choices: shuffle(names).map((n, i) => ({ html: `<div class="art">${shapeArt(n, COLORS[cols[i]])}</div>`, ok: n === target, name: n }))
+        choices: shuffle(names).map((n, i) => ({ html: `<div class="art">${shapeArt(n, COLORS[cols[i]])}</div>`, ok: n === target, name: n })),
+        hint: P => { P.glow(P.bubbleArt(), true); return P.say(`${an} ${target} has ${SHAPE_LOOKS[target]}.`.replace("has round", "is round").replace("has the shape", "is the shape")); },
+        explain: P => { P.glow(P.right(), true); return P.say(`This is the ${target}. It has ${SHAPE_LOOKS[target]}.`.replace("has round", "is round").replace("has the shape", "is the shape")); }
       };
     }
   },
@@ -514,6 +597,9 @@ const GAMES = {
   patterns: {
     name: "Pattern Path", icon: () => `<svg viewBox="0 0 200 160"><circle cx="28" cy="80" r="21" fill="#ff5a5f"/><circle cx="76" cy="80" r="21" fill="#4d9de0"/><circle cx="124" cy="80" r="21" fill="#ff5a5f"/><circle cx="172" cy="80" r="21" fill="none" stroke="#ff8a3d" stroke-width="5" stroke-dasharray="9 7"/></svg>`,
     intro: "Look at the pattern!",
+    lesson: P => { const seq = ["red", "blue", "red", "blue"], c = P.demo(seq.map(n => `<div class="seq">${ART.berry(COLORS[n])}</div>`).join("") + `<div class="q">?</div>`, [berryCard("blue"), berryCard("red")]), items = P.bubbleItems();
+      return steps(P, [[null, "Watch me! A pattern goes again and again. Let's say it."]].concat(seq.map((n, i) => [() => { items.forEach(x => P.glow(x, false)); P.glow(items[i], true); }, cap(n) + "."])
+        .concat([[() => { items.forEach(x => P.glow(x, false)); P.glow(items[4], true); }, "Red, blue, red, blue. What comes next? Red again!"], [() => { c[0].classList.add("dim"); P.glow(c[1], true); }, "So the red berry comes next!"]]))); },
     makeQuestion(step) {
       let things;
       if (step === 2) { // different things instead of colors
@@ -521,16 +607,21 @@ const GAMES = {
           { name: "egg", art: ART.egg(COLORS.teal), wrong: "That is the egg." }, { name: "leaf", art: ART.leaf(COLORS.green), wrong: "That is the leaf." },
           { name: "dinosaur", art: ART.spiky(COLORS.purple), wrong: "That is the dinosaur." }, { name: "berry", art: ART.berry(COLORS.red), wrong: "That is the berry." }]);
       } else {
-        things = shuffle(["red", "blue", "yellow", "green", "orange", "purple"]).map(c => ({ name: c, art: ART.berry(COLORS[c]), wrong: `That is ${c}.` }));
+        things = shuffle(["red", "blue", "yellow", "green", "orange", "purple"]).map(c => ({ name: c, art: ART.berry(COLORS[c]), wrong: `That one is ${c}.` }));
       }
       const [A, B, C] = things;
       const seq = step === 4 ? [A, A, B, A, A] : [A, B, A, B]; // step 4: two-then-one pattern
       const answer = step === 4 ? B : A;
       const options = step <= 2 ? [A, B] : [A, B, C];
+      const chant = async P => { const items = P.bubbleItems(); // say the pattern, lighting up each one
+        for (let i = 0; i < seq.length; i++) { items.forEach(x => P.glow(x, false)); P.glow(items[i], true); if (!(await P.say(cap(seq[i].name) + "."))) return false; }
+        items.forEach(x => P.glow(x, false)); P.glow(items[seq.length], true); return true; };
       return {
         bubble: seq.map(t => `<div class="seq">${t.art}</div>`).join("") + `<div class="q">?</div>`,
-        say: `${seq.map(t => t.name).join(", ")}. What comes next?`, yay: `Yes! ${answer.name} comes next!`, pause: 2600,
-        choices: shuffle(options).map(t => ({ html: `<div class="art">${t.art}</div>`, ok: t === answer, wrong: t.wrong }))
+        say: `${seq.map(t => t.name).join(", ")}. What comes next?`, sayParts: seq.map(t => cap(t.name) + ".").concat("What comes next?"), yay: `Yes! ${cap(answer.name)} comes next!`, pause: 2600,
+        choices: shuffle(options).map(t => ({ html: `<div class="art">${t.art}</div>`, ok: t === answer, wrong: t.wrong })),
+        hint: async P => (await P.say("Let's say the pattern together.")) && (await chant(P)) && P.say("What comes next?"),
+        explain: async P => (await chant(P)) && (P.glow(P.right(), true), P.say(`${cap(answer.name)} comes next!`))
       };
     }
   },
@@ -538,6 +629,9 @@ const GAMES = {
   // ----- body parts (tap the right part of a big Pip) -----
   body: {
     name: "Pip's Body", icon: () => PIP(), intro: "Let's find Pip's body parts!",
+    lesson: P => { P.demoBody();
+      return steps(P, [[() => P.glow(P.part("head"), true), "Watch me! This is my head, at the top."], [() => { P.glow(P.part("head"), false); P.glow(P.part("tummy"), true); }, "This is my tummy, in the middle."],
+        [() => { P.glow(P.part("tummy"), false); P.glow(P.part("tail"), true); }, "And this is my tail, at the back. Wag, wag!"]]); },
     makeQuestion(step) {
       const pool = ["head", "tummy", "tail"].concat(step >= 2 ? ["feet", "eye"] : [], step >= 3 ? ["arm", "nose"] : [], step >= 4 ? ["mouth"] : []);
       const part = pick(pool);
@@ -545,7 +639,9 @@ const GAMES = {
         bubble: `<span style="font-size:7vmin">${part}</span>`,
         say: part === "feet" ? "Where are Pip's feet?" : `Where is Pip's ${part}?`,
         yay: part === "tail" ? "That's Pip's tail! Wag, wag, wag!" : part === "feet" ? "Those are Pip's feet! Where are your feet?" : `That's Pip's ${part}! Where is your ${part}?`,
-        pause: 3800, after: 1500,
+        pause: 3800, after: 1500, part,
+        hint: P => P.say(WHERE[part]),
+        explain: P => { P.glow(P.part(part), true); return P.say(part === "feet" ? "Here are my feet!" : `Here is my ${part}!`); },
         render(box) {
           box.innerHTML = `<div class="bodypip pop">${bodyPip(COLORS.green)}</div>`;
           box.firstChild.addEventListener("click", e => {
@@ -561,15 +657,22 @@ const GAMES = {
   // ----- animal sounds -----
   sounds: {
     name: "Animal Sounds", icon: () => `<span style="font-size:10vmin;line-height:1.2">🐮</span>`, intro: "Pip's animal friends are here! Listen!",
+    lesson: P => { const c = P.demo(`<span style="font-size:5vmin">🔊 Moo!</span>`, [`<span class="emoji">🐮</span>`, `<span class="emoji">🦆</span>`]);
+      return steps(P, [[() => P.glow(c[0], true), "Watch me! The cow says moo."], [() => { P.glow(c[0], false); P.glow(c[1], true); }, "The duck says quack quack."],
+        [() => { P.glow(c[1], false); P.glow(P.bubbleArt(), true); }, "Moo! Who says moo?"], [() => { c[1].classList.add("dim"); P.glow(c[0], true); }, "The cow says moo!"]]); },
     makeQuestion(step) {
       const pool = ANIMALS.slice(0, step === 1 ? 4 : step === 2 ? 6 : ANIMALS.length);
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
       const picks = shuffle(pool).slice(0, count), t = picks[0];
-      const Sound = t.sound.charAt(0).toUpperCase() + t.sound.slice(1);
+      const Sound = cap(t.sound);
       return {
         bubble: `<span style="font-size:5vmin">🔊 ${Sound}!</span>`,
         say: `${Sound}! ${Sound}! Who says ${t.sound}?`, yay: `Yes! The ${t.name} says ${t.sound}!`, pause: 2900,
-        choices: shuffle(picks).map(a => ({ html: `<span class="emoji">${a.pic}</span>`, ok: a === t, wrong: `That is the ${a.name}. The ${a.name} says ${a.sound}.` }))
+        choices: shuffle(picks).map(a => ({ html: `<span class="emoji">${a.pic}</span>`, ok: a === t, wrong: `That is the ${a.name}. The ${a.name} says ${a.sound}.`, animal: a })),
+        hint: async P => { // say what each animal still in play says
+          for (const c of P.cards().filter(c => !c.classList.contains("dim"))) { P.glow(c, true); const ok = await P.say(`The ${c._ch.animal.name} says ${c._ch.animal.sound}.`); P.glow(c, false); if (!ok) return false; }
+          return P.say(`Who says ${t.sound}?`); },
+        explain: P => { P.glow(P.right(), true); return P.say(`The ${t.name} says ${t.sound}!`); }
       };
     }
   }
@@ -579,32 +682,87 @@ const NEST_SIZE = 3; // eggs needed to finish one adventure
 const STARS_TO_WIN = 4;
 const foundList = () => Object.values(S.found);
 
+// ---------- playing one place: Learn, then Try together, then Play ----------
+// The first visit to a place starts with a short "watch me" lesson (the big ▶ skips it, 📖 shows it again).
+// The next two questions come with Pip's help already showing. One 💡 hint per round. After a second wrong try,
+// Pip shows the answer and why. A question that needed help comes back a little later, to practise it again.
 let G = null; // the game being played right now
+const REVIEW = {}; // questions to bring back, while the game is open: { place: [{ q, due }] }
 function startGame(id) {
-  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "" };
+  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "", hints: 1, count: 0, guided: 0 };
   $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
   $("gamePip").innerHTML = PIP();
+  $("hintBtn").classList.remove("used");
   show("game");
-  nextQuestion(id);
+  if (GAMES[id].lesson && !(S.learned || {})[id]) runLesson(true);
+  else nextQuestion(id);
+}
+// The tools Pip uses to show things during a lesson, a hint or her help. "alive" turns false once the child moves on.
+function helper(alive) {
+  const cards = () => [...$("choices").querySelectorAll(".choice")].filter(b => b._ch);
+  return {
+    alive,
+    say: async words => { // with the voice off, a pause long enough to look at the picture instead
+      if (!alive()) return false;
+      if (!S.voice) { await wait(1100 + String(words).length * 35); return alive(); }
+      return (await talk(words)) && alive();
+    },
+    glow: (el, on) => el && el.classList.toggle("glow", !!on),
+    cards, right: () => cards().find(b => b._ch.ok),
+    bubbleArt: () => $("bubble").firstElementChild, bubbleItems: () => [...$("bubble").children],
+    part: name => $("choices").querySelector(`[data-part="${name}"]`),
+    wait: ms => wait(ms),
+    // a pretend question for a lesson: what is in Pip's bubble, and the cards (they cannot be tapped)
+    demo(bubbleHtml, list) {
+      $("bubble").innerHTML = bubbleHtml; animate($("bubble"), "pop");
+      const box = $("choices"); box.innerHTML = ""; box.style.setProperty("--cs", list.length >= 3 ? "27vmin" : "32vmin");
+      return list.map(h => { const b = document.createElement("div"); b.className = "choice pop"; b.innerHTML = h; box.appendChild(b); return b; });
+    },
+    demoBody() { $("bubble").innerHTML = `<span style="font-size:9vmin">👀</span>`; $("choices").innerHTML = `<div class="bodypip pop">${bodyPip(COLORS.green)}</div>`; }
+  };
+}
+async function runLesson(first) { // "Learn": Pip does one herself, out loud
+  const g = G; if (!g) return;
+  hush(); g.lesson = true; g.busy = true; g.q = null;
+  $("bubble").innerHTML = ""; $("choices").innerHTML = ""; $("myTurn").style.display = "";
+  const P = helper(() => G === g && !!g.lesson);
+  let ok = true;
+  if (first) ok = (S.voice ? await speak("intro-" + g.id, GAMES[g.id].intro) : (await wait(1500), true)) && P.alive();
+  if (ok) { await GAMES[g.id].lesson(P); ok = P.alive(); }
+  if (ok && await P.say("Now you try!")) endLesson(g);
+}
+function endLesson(g) {
+  if (G !== g || !g.lesson) return;
+  hush(); g.lesson = false; g.busy = false; $("myTurn").style.display = "none";
+  (S.learned || (S.learned = {}))[g.id] = true; save();
+  g.guided = 2; // "Try together": the next two questions come with Pip's help already showing
+  nextQuestion();
 }
 function nextQuestion(intro) { // "intro" is the place's id, only for the very first question: Pip says her welcome first, then asks
-  let q, tries = 0;
-  do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 6 && q.say + q.bubble === G.lastSay);
+  let q, tries = 0, lead = null;
+  const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
+  if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = "Let's try this one again!"; } // bring it back
+  else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 6 && q.say + q.bubble === G.lastSay);
   G.lastSay = q.say + q.bubble;
-  G.q = q; G.first = true; G.busy = false;
+  G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
   $("bubble").innerHTML = q.bubble; animate($("bubble"), "pop");
   const box = $("choices"); box.innerHTML = "";
   if (q.render) q.render(box); // a game can draw its own picture to tap (the body parts game does)
   else {
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
     q.choices.forEach(ch => {
-      const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
+      const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b._ch = ch; // (hints need to know which card is which)
       b.addEventListener("click", () => choose(b, ch));
       box.appendChild(b);
     });
   }
-  if (intro) speak("intro-" + intro, GAMES[intro].intro).then(finished => { if (finished && G && G.q === q) say(q.say); }); // asks only if the welcome played to its end
-  else say(q.say);
+  loadClip(lineUrl(q.yay)).catch(() => {}); // get the cheer ready too
+  const guide = G.guided > 0 && q.hint; // "Try together"
+  if (guide) { G.guided--; G.hinted = true; }
+  const g = G, parts = (lead ? [lead] : []).concat(q.sayParts || q.say);
+  const asked = intro ? speak("intro-" + intro, GAMES[intro].intro).then(finished => finished && G === g && g.q === q ? talk(parts) : false) // asks only if the welcome played to its end
+    : talk(parts);
+  if (guide) asked.then(done => { if (G === g && g.q === q && !g.busy && (done || !S.voice)) q.hint(helper(() => G === g && g.q === q && !g.busy)); });
 }
 // el = what was tapped. "part" is true when it is a part of a bigger picture rather than a card.
 async function choose(el, ch, part) {
@@ -615,18 +773,24 @@ async function choose(el, ch, part) {
     animate($("gamePip"), "bounce");
     if (part) { el.classList.add("glow"); animate(box.firstChild, "bounce"); }
     else { el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); }
-    G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-    const spoken = sayAndWait(q.yay, q.pause || 2100); // waits for the voice to finish; with the voice off, a short pause
-    track(G.id, GAMES[G.id].name, S.skill[G.id], q, G.first); // for the progress report
-    adjust(G.first);
+    G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
+    if ((!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: try it again a little later
+    const spoken = talkAndWait(q.yay, q.pause || 2100); // waits for Pip to finish; with the voice off, a short pause
+    track(G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
+    adjust(G.first && !G.hinted);
     await spoken;
     if (q.after) await wait(q.after); // extra time when Pip asks the child to do something ("Where is your tummy?")
     if (!G || G.q !== q) return;
     if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
   } else {
-    sfx.oops(); G.first = false;
+    sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
     if (part) animate(box.firstChild, "wobble"); else { animate(el, "wobble"); el.classList.add("dim"); }
-    say(`${ch.wrong || `That is the ${ch.name}.`} ${q.say}`);
+    if (G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
+    const wrong = ch.wrong || `That is the ${ch.name}.`, g = G;
+    if (G.wrongs >= 2 && q.explain && !q.explained) { // a second wrong try: Pip shows how
+      q.explained = true;
+      talk(wrong).then(done => { if (G === g && g.q === q && !g.busy && (done || !S.voice)) q.explain(helper(() => G === g && g.q === q && !g.busy)); });
+    } else talk([wrong].concat(q.sayParts || q.say));
   }
 }
 // Quietly make the game harder after 3 right in a row, easier after 2 hard questions in a row.
@@ -722,8 +886,20 @@ $("playBtn").addEventListener("click", () => {
   ["start", "left1", "left2", "again", "replay", "found", "finale"].concat(GAME_IDS.map(id => "intro-" + id)).forEach(n => loadClip("audio/pip/" + n + ".mp3").catch(() => {}));
   showMap();
 });
-$("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); say(G.q.say); } });
-$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+$("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); talk(G.q.sayParts || G.q.say); } });
+$("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; hush(); showMap(); });
+// The hint: one per round. It takes away one wrong card (only when 3 or more are left), then Pip shows how to think about it.
+$("hintBtn").addEventListener("click", async () => {
+  if (!G || G.busy || !G.q || G.hints <= 0) return;
+  const q = G.q, g = G; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); hush();
+  const left = [...$("choices").querySelectorAll(".choice")].filter(b => b._ch && !b.classList.contains("dim"));
+  if (left.length >= 3) pick(left.filter(b => !b._ch.ok)).classList.add("dim", "struck");
+  const P = helper(() => G === g && g.q === q && !g.busy);
+  if (q.hint) await q.hint(P); else await P.say(q.sayParts || q.say);
+});
+// 📖: watch Pip's lesson again. ▶: skip the lesson and start playing.
+$("lessonBtn").addEventListener("click", () => { if (!G || G.lesson || !GAMES[G.id].lesson || (G.busy && G.q)) return; sfx.tap(); runLesson(false); });
+$("myTurn").addEventListener("click", () => { if (G && G.lesson) { sfx.tap(); endLesson(G); } });
 
 // ---------- grown-ups corner (press and hold the gear for 2 seconds) ----------
 let holdTimer = null;
