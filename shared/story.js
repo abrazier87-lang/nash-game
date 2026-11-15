@@ -143,6 +143,9 @@ function StoryGame(C) {
     go.addEventListener("click", () => { sfx.tap(); endLesson(g); }); // children can skip ahead whenever they like
     box.appendChild(go);
     const L = Kit.lessonHelper({ bubble: $("bubble"), alive: () => G === g && !!g.lesson });
+    if (C.lessonVoice) { // the host's own recorded voice for lesson lines (C.lessonVoice is the folder); a line with no recording uses the device voice
+      const plain = L.say; L.say = words => plain(words, () => Kit.playClip(C.lessonVoice + Kit.clipName(words) + ".mp3", words));
+    }
     L.frame(`<div class="lessonart"><span class="big">${GAMES[g.id].icon}</span><br><b>${GAMES[g.id].name}</b></div>`); // clear the last question away straight away
     let ok = !first || await L.say(GAMES[g.id].intro);
     if (ok) { await GAMES[g.id].lesson(L, S.skill[g.id]); ok = L.alive(); }

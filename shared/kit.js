@@ -217,6 +217,12 @@ const Kit = (() => {
   // playClip plays one recorded line. If the file is missing or cannot play, it says "fallback" in the device voice instead,
   // so a game never goes silent. Like say(), it hands back a promise that finishes when the line is over.
   const clips = {}; let playing = null, turn = 0;
+  // The file name for a recorded line, made from its words: the same words always give the same name
+  // (tools/make-voice.py records the files listed in audio/lines.json under these names).
+  function clipName(words) {
+    let h = 0x811c9dc5; for (const ch of String(words)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+    return String(words).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32).replace(/-$/, "") + "-" + h.toString(16).padStart(8, "0");
+  }
   function loadClip(url) { // fetch a line ahead of time so it starts without a pause
     if (!clips[url]) clips[url] = (async () => {
       const ac = audio(), reply = await fetch(url);
@@ -302,7 +308,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "20"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "21"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();
