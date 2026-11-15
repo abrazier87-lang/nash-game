@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=16">
+<link rel="stylesheet" href="shared/kit.css?v=17">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -99,11 +99,12 @@
   <button class="corner left" id="homeBtn" aria-label="Back to the stations" style="display:none">🏠</button>
   <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
   <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+  <button class="corner right hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
 
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=16"></script>
+<script src="shared/kit.js?v=17"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -198,6 +199,32 @@ const RHYMES = [[["cat", "🐱"], ["hat", "🎩"]], [["dog", "🐶"], ["frog", "
   [["cake", "🎂"], ["snake", "🐍"]], [["mouse", "🐭"], ["house", "🏠"]], [["bear", "🐻"], ["chair", "🪑"]], [["sock", "🧦"], ["clock", "⏰"]], [["goat", "🐐"], ["boat", "⛵"]], [["whale", "🐳"], ["snail", "🐌"]], [["king", "🤴"], ["ring", "💍"]]];
 const WORDS = [["I", "a", "the", "see", "go", "to", "me", "my", "we", "up"], ["and", "is", "it", "in", "can", "you", "like", "look", "big", "no"], ["he", "she", "was", "for", "are", "have", "said", "play", "come", "here"]];
 
+// ---------- hints ----------
+// A word for every letter, used by the letter hints ("Tiger starts with T").
+const LETTER_WORDS = { A: ["apple", "🍎"], B: ["bear", "🐻"], C: ["cat", "🐱"], D: ["dog", "🐶"], E: ["egg", "🥚"], F: ["fish", "🐟"], G: ["goat", "🐐"], H: ["hat", "🎩"],
+  I: ["insect", "🐞"], J: ["juice", "🧃"], K: ["kite", "🪁"], L: ["lion", "🦁"], M: ["moon", "🌙"], N: ["nose", "👃"], O: ["octopus", "🐙"], P: ["pig", "🐷"], Q: ["queen", "👸"],
+  R: ["rabbit", "🐰"], S: ["sun", "☀️"], T: ["tiger", "🐯"], U: ["umbrella", "☂️"], V: ["van", "🚐"], W: ["whale", "🐳"], X: ["fox", "🦊"], Y: ["yo-yo", "🪀"], Z: ["zebra", "🦓"] };
+function letterHint(H, L, lower) {
+  const [w, e] = LETTER_WORDS[L], shown = lower ? L.toLowerCase() : L;
+  if (L === "X") { H.show(`${e} fo<b>${shown}</b>`); return H.say("Fox ends with X. Look at the last letter of fox."); }
+  H.show(`${e} <b>${shown}</b>${w.slice(1)}`);
+  return H.say(`${cap(w)} starts with ${L}. Look at the first letter of ${w}.`);
+}
+function soundHint(H, L, byLetter, model, answer) {
+  if (byLetter) { const ex = pick(STARTS[L].filter(w => w[0] !== answer[0])); H.show(`${ex[1]} <b>${L}</b>${ex[0].slice(1)}`); return H.say(`${L}, like ${ex[0]}. Say each picture's name. Which one starts like ${ex[0]}?`); }
+  H.show(`<b>${L}</b>${model[0].slice(1)}`);
+  return H.say(`${cap(model[0])} starts with ${L}. Say each picture's name. Which one starts with ${L} too?`);
+}
+// Counts the number tiles with the child (in Dot's own voice), then asks the last part.
+async function countTiles(H, last) {
+  for (const t of H.bubble.querySelectorAll(".tile")) {
+    const n = +t.textContent; H.glow(t, true);
+    const ok = await H.say(String(n), n >= 1 && n <= 20 ? () => speak("num-" + n, cap(NUM[n])) : null);
+    H.glow(t, false); if (!ok) return false;
+  }
+  return H.say(last);
+}
+
 // ---------- the stations (mini-games) ----------
 // Each station has 4 difficulty steps. makeQuestion(step) returns:
 //   { bubble: what shows in Dot's speech bubble, say: what Dot says, yay: what Dot says when right,
@@ -213,7 +240,7 @@ const GAMES = {
       return {
         bubble: step === 1 ? big(t, 16) : step === 4 ? big(t, 16) : big("👂", 12),
         say: step === 4 ? `This is the big letter ${t}. Find the little letter ${t}.` : `Find the letter ${t}.`,
-        yay: `Yes! The letter ${t}!`,
+        yay: `Yes! The letter ${t}!`, hint: H => letterHint(H, t, lower),
         choices: shuffle(ls).map((l, i) => ({ html: `<span style="color:${cols[i]}">${show(l)}</span>`, ok: l === t, wrong: `That is the letter ${l}.` }))
       };
     }
@@ -230,6 +257,7 @@ const GAMES = {
         bubble: byLetter ? big(`${L} ${L.toLowerCase()}`, 13) : emo(model[1]),
         say: byLetter ? `Which one starts with the letter ${L}?` : `${cap(model[0])}. Which one starts like ${model[0]}?`,
         yay: byLetter ? `Yes! ${cap(answer[0])} starts with ${L}!` : `Yes! ${cap(model[0])} and ${answer[0]} both start with ${L}!`, pause: 3000,
+        hint: H => soundHint(H, L, byLetter, model, answer),
         choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])} starts with ${c.L}.` }))
       };
     }
@@ -243,7 +271,12 @@ const GAMES = {
       const cards = [{ w: b, ok: true }].concat(pairs.slice(1).map(p => ({ w: pick(p), ok: false })));
       return {
         bubble: emo(a[1]), say: `${cap(a[0])}. Which one rhymes with ${a[0]}?`, yay: `Yes! ${cap(a[0])}, ${b[0]}. They rhyme!`, pause: 2800,
-        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])} does not rhyme with ${a[0]}.` }))
+        hint: async H => { // say each picture together with the word, so the child hears which ending matches
+          if (!(await H.say(`Say each one with ${a[0]}. Listen to the ends.`))) return;
+          for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(`${a[0]}, ${c.ch.word}.`); H.glow(c.el, false); if (!ok) return; }
+          return H.say(H.q.say);
+        },
+        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, word: c.w[0], wrong: `${cap(c.w[0])} does not rhyme with ${a[0]}.` }))
       };
     }
   },
@@ -256,6 +289,10 @@ const GAMES = {
       return {
         bubble: step === 1 ? big(t, 11) : big("👂", 12), // step 1 shows the word to match; after that it is by ear
         say: `Find the word, ${t}.`, read: `Find the word "${t}".`, yay: `Yes! That word is, ${t}!`,
+        hint: H => { // the first letter and how many letters, without saying the word
+          if (t.length > 1) H.show(`<b>${t[0]}</b> ${"_ ".repeat(t.length - 1).trim()}`);
+          return H.say(t.length === 1 ? "This word is just one letter." : `It starts with the letter ${t[0].toUpperCase()}, and it has ${NUM[t.length]} letters.`);
+        },
         choices: shuffle(ws).map((w, i) => ({ html: `<span class="word${w.length > 3 ? " long" : ""}" style="color:${cols[i]}">${w}</span>`, ok: w === t, wrong: `That word is, ${w}.` }))
       };
     }
@@ -280,13 +317,18 @@ const GAMES = {
         const a = 1 + rand(20); let b; do { b = 1 + rand(20); } while (b === a);
         const t = more ? Math.max(a, b) : Math.min(a, b), o = a + b - t, word = more ? "bigger" : "smaller";
         return { bubble: big(word, 6), key: a + "," + b, say: `Which number is ${word}?`, yay: `Yes! ${t} is ${word} than ${o}.`, pause: 2800,
+          hint: H => { const lo = Math.min(a, b), hi = Math.max(a, b); H.show(`<span class="big">${lo} … ${hi}</span>`); return H.say(`When we count up, ${lo} comes before ${hi}. Numbers get bigger as we count.`); },
           choices: shuffle([a, b]).map(k => ({ html: String(k), ok: k === t, wrong: `${k} is ${more ? "smaller" : "bigger"} than ${a + b - k}.` })) };
       }
       const top = step === 1 ? 5 : 10, gap = step === 3 ? 1 : 2 + rand(2);
       const small = 1 + rand(top - gap), large = small + gap, th = snack();
       const t = more ? large : small, o = more ? small : large, word = more ? "more" : "fewer";
       return { bubble: big(word, 7), key: small + "," + large + th[0], say: `Which group has ${word}?`, yay: `Yes! ${cap(NUM[t])} is ${word} than ${NUM[o]}.`, pause: 2800,
-        choices: shuffle([small, large]).map(k => ({ html: group(th[2], k, 3.8), ok: k === t, wrong: `That group has ${more ? "fewer" : "more"}.` })) };
+        hint: async H => { // count each group, and leave its number on the card
+          for (const c of H.cards()) { H.glow(c.el, true); H.label(c.el, c.ch.n); const ok = await H.say(`This group has ${NUM[c.ch.n]}.`, () => speak("num-" + c.ch.n, cap(NUM[c.ch.n]))); H.glow(c.el, false); if (!ok) return; }
+          return H.say(H.q.say);
+        },
+        choices: shuffle([small, large]).map(k => ({ html: group(th[2], k, 3.8), ok: k === t, n: k, wrong: `That group has ${more ? "fewer" : "more"}.` })) };
     }
   },
   order: {
@@ -295,14 +337,14 @@ const GAMES = {
       const tiles = (arr) => arr.map(x => x === "?" ? `<div class="q">?</div>` : `<div class="tile">${x}</div>`).join("");
       if (step === 4 && rand(2) === 0) { // counting backwards
         const a = 4 + rand(7), seq = [a, a - 1, a - 2], ans = a - 3;
-        return { bubble: tiles(seq.concat("?")), say: `Counting backwards. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3200, choices: numberCards(ans, 0, 20) };
+        return { bubble: tiles(seq.concat("?")), hint: H => countTiles(H, "Keep counting down. What comes next?"), say: `Counting backwards. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3200, choices: numberCards(ans, 0, 20) };
       }
       if (step === 4) { // the missing number is in the middle
         const a = 1 + rand(17), ans = a + 1;
-        return { bubble: tiles([a, "?", a + 2]), say: `${a}, something, ${a + 2}. Which number is missing?`, yay: `Yes! ${a}, ${ans}, ${a + 2}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
+        return { bubble: tiles([a, "?", a + 2]), hint: H => countTiles(H, `What number comes between ${a} and ${a + 2}?`), say: `${a}, something, ${a + 2}. Which number is missing?`, yay: `Yes! ${a}, ${ans}, ${a + 2}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
       }
       const top = [6, 10, 20][step - 1], a = (step === 3 ? 8 : 1) + rand(top - 3 - (step === 3 ? 7 : 0)), seq = [a, a + 1, a + 2], ans = a + 3;
-      return { bubble: tiles(seq.concat("?")), say: `${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
+      return { bubble: tiles(seq.concat("?")), hint: H => countTiles(H, "Keep counting. What comes next?"), say: `${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3000, choices: numberCards(ans, 0, 20) };
     }
   },
   adding: {
@@ -360,13 +402,15 @@ function show(id) {
   $("homeBtn").style.display = (id === "game") ? "" : "none";
   $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
   $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+  $("hintBtn").style.display = (id === "game") ? "" : "none";
 }
 
 // ---------- playing a station ----------
 let G = null;
 function startGame(id) {
   const p = passengerAt(id); // the passenger the child is helping at this station
-  G = { id, p, need: starsNeeded(), stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "" };
+  G = { id, p, need: starsNeeded(), stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1 }; // one hint per round
+  $("hintBtn").classList.remove("used");
   $("stars").innerHTML = Array(G.need).fill(`<div class="star">${p.snack[2]}</div>`).join(""); // each right answer packs one of their snacks
   $("gameDot").innerHTML = DOT;
   show("game");
@@ -375,14 +419,14 @@ function startGame(id) {
 function nextQuestion(intro) { // "intro" is the station's id, only for the very first question: Dot says her welcome first, then asks
   let q, tries = 0;
   do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last);
-  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble);
+  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble); G.hinted = false;
   G.q = q; G.first = true; G.busy = false;
   const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
   $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
   const box = $("choices"); box.innerHTML = "";
   box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
   q.choices.forEach(ch => {
-    const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
+    const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b._ch = ch; // (the hint needs to know which card is which)
     b.addEventListener("click", () => choose(b, ch));
     box.appendChild(b);
   });
@@ -401,14 +445,15 @@ async function choose(el, ch) {
     el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
     G.stars++; $("stars").children[G.stars - 1].classList.add("got");
     const spoken = Kit.sayAndWait(q.yay, q.pause || 2300); // waits for the voice to finish; with the voice off, a short pause
-    Kit.track("k", "Dot's Busy Train", G.id, GAMES[G.id].name, S.skill[G.id], q, G.first); // for the progress report
-    adjust(G.first);
+    Kit.track("k", "Dot's Busy Train", G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
+    adjust(G.first && !G.hinted); // an answer found with a hint does not make the station harder
     await spoken;
     if (!G || G.q !== q) return;
     if (G.stars >= G.need) finishGame(); else nextQuestion();
   } else {
     sfx.oops(); G.first = false;
     animate(el, "wobble"); el.classList.add("dim");
+    if (G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
     if (q.teach) { // counting questions: Dot counts along with the child, then asks again
       const told = Kit.settings.voice ? await say(ch.wrong) : true;
       if (told && G && G.q === q && !G.busy) countAlong(q);
@@ -575,6 +620,14 @@ $("playBtn").addEventListener("click", () => {
 });
 $("gameDot").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameDot"), "wobble"); say(G.q.say); } });
 $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+// The hint button: one per round. It takes away one wrong answer, then shows how to think about the question.
+$("hintBtn").addEventListener("click", async () => {
+  if (!G || G.busy || !G.q || G.hints <= 0) return;
+  const q = G.q; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
+  Kit.dropOneWrong($("choices"));
+  const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive: () => G && G.q === q && !G.busy });
+  if (q.hint) await q.hint(H); else if (q.teach) await countAlong(q); else await H.say(q.say);
+});
 $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });
 
 // ---------- grown-ups corner (press and hold the gear) ----------

@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody's Space Balloon</title>
-<link rel="stylesheet" href="shared/kit.css?v=16">
+<link rel="stylesheet" href="shared/kit.css?v=17">
 <style>
   /* Space look: dark sky, stars, standing on a moon. */
   :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=16"></script>
-<script src="shared/story.js?v=16"></script>
+<script src="shared/kit.js?v=17"></script>
+<script src="shared/story.js?v=17"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -66,6 +66,10 @@ const wordCard = (w, color) => `<span class="word${w.length > 4 ? " long" : ""}"
 
 // ---------- the planets (mini-games) ----------
 // Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again }.
+// Clock hints light up the short (hour) hand in orange.
+const HOUR_HAND = 'svg line[stroke-width="5"]';
+const paintHand = l => { l.setAttribute("stroke", "#ff8a3d"); l.setAttribute("stroke-width", "7"); };
+
 const GAMES = {
   read: {
     name: "Word World", icon: "📖", intro: "Let's read!",
@@ -77,10 +81,12 @@ const GAMES = {
         const alike = shuffle(pool.filter(w => w !== t && w[0][0] === t[0][0])), rest = shuffle(pool.filter(w => w !== t && w[0][0] !== t[0][0]));
         const others = alike.concat(rest).slice(0, count - 1), cols = shuffle(INK);
         return { bubble: emo(t[1]), key: t[0], say: "Which word matches the picture?", yay: `Yes! That word is, ${t[0]}!`,
+          hint: H => { const w = t[0], A = w[0], Z = w[w.length - 1]; H.show(`<b>${A}</b> ${"_ ".repeat(w.length - 2)}<b>${Z}</b>`); return H.say(`Say the picture's name slowly. It starts with ${A.toUpperCase()} and ends with ${Z.toUpperCase()}. Check the start and the end of each word.`); },
           choices: shuffle(others.concat([t])).map((w, i) => ({ html: wordCard(w[0], cols[i]), ok: w === t, wrong: `That word is, ${w[0]}.` })) };
       }
       const others = shuffle(pool.filter(w => w !== t)).slice(0, count - 1);
       return { bubble: big(t[0], t[0].length > 4 ? 9 : 12), key: t[0], say: "Read the word. Which picture matches?", yay: `Yes! The word is, ${t[0]}!`,
+        hint: H => { const w = t[0], A = w[0].toUpperCase(); H.show(`<b>${w[0]}</b>${w.slice(1)}`); return H.say(`Look at the first letter, ${A}. Say each picture's name. Which one starts with ${A}? Then check the rest of the word.`); },
         choices: shuffle(others.concat([t])).map(w => ({ html: emo(w[1]), ok: w === t, wrong: `That picture is, ${w[0]}.` })) };
     }
   },
@@ -99,6 +105,11 @@ const GAMES = {
       const others = shuffle([...(VOWELS.includes(L) ? VOWELS : CONS)].filter(c => !banned.includes(c))).slice(0, count - 1), cols = shuffle(INK);
       return { bubble: emo(t[1], "mid") + tiles([...w].map((c, i) => i === at ? "?" : c)), key: w + at,
         say: `${cap(w)}. Which letter is missing?`, yay: `Yes! ${w.toUpperCase().split("").join(", ")}. That spells, ${w}!`, pause: 3600,
+        hint: H => { // where the missing sound is, without saying it
+          const where = at === 0 ? "at the start" : at === w.length - 1 ? "at the end" : "in the middle", when = at === 0 ? "first" : at === w.length - 1 ? "last" : "in the middle";
+          H.glow(H.bubble.querySelector(".q"), true);
+          return H.say(`The missing letter is ${where}. Say ${w} slowly. What sound do you hear ${when}?`);
+        },
         choices: shuffle(others.concat(L)).map((c, i) => ({ html: `<span style="color:${cols[i]}">${c}</span>`, ok: c === L, wrong: `Not the letter ${c.toUpperCase()}.` })) };
     }
   },
@@ -109,7 +120,12 @@ const GAMES = {
       const full = w => s.replace("___", w), aloud = step <= 2; // steps 1 and 2 read the sentence out loud; after that they read it themselves
       return { bubble: `<div class="sentence">${s.replace("___", "<u>&nbsp;</u>")}</div>`, key: s,
         say: aloud ? `${s.replace("___", "blank")} Which word fits?` : "Read the sentence. Which word fits?", again: "Try another word.", yay: `Yes! ${full(a)}`, pause: 3200,
-        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === a, wrong: `${full(w)} That does not sound right.` })) };
+        hint: async H => { // read the sentence with each word in the gap, so the child hears which one makes sense
+          if (!(await H.say("Try each word in the sentence. Which one sounds right?"))) return;
+          for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(full(c.ch.word)); H.glow(c.el, false); if (!ok) return; }
+          return H.say("Which one made sense?");
+        },
+        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === a, word: w, wrong: `${full(w)} That does not sound right.` })) };
     }
   },
   plus: {
@@ -117,16 +133,19 @@ const GAMES = {
     makeQuestion(step) {
       if (step === 4) { // three numbers
         let a, b, c; do { a = 1 + rand(9); b = 1 + rand(9); c = 1 + rand(9); } while (a + b + c > 20);
-        return { bubble: `<span class="sum long">${a} + ${b} + ${c} = <b>?</b></span>`, say: `What is ${a} plus ${b} plus ${c}?`, yay: `Yes! ${a} plus ${b} plus ${c} is ${a + b + c}!`, pause: 3200, choices: numCards(a + b + c, 0, 20, 4) };
+        return { bubble: `<span class="sum long">${a} + ${b} + ${c} = <b>?</b></span>`, say: `What is ${a} plus ${b} plus ${c}?`, yay: `Yes! ${a} plus ${b} plus ${c} is ${a + b + c}!`, pause: 3200, choices: numCards(a + b + c, 0, 20, 4),
+          hint: H => { H.show(`(${a} + ${b}) + ${c}`); return H.say(`Add the first two numbers, ${a} plus ${b}. Then add ${c} more.`); } };
       }
       if (step === 3) { // the missing number
         const total = 6 + rand(15), a = Math.max(1, total - 10) + rand(Math.min(10, total - 1) - Math.max(1, total - 10) + 1), b = total - a;
-        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, pause: 3000, choices: numCards(b, 0, 20, 4) };
+        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, pause: 3000, choices: numCards(b, 0, 20, 4),
+          hint: H => { H.show(`${a} → ${total}`); return H.say(`Start at ${a} and count up to ${total}. How many numbers did you count?`); } };
       }
       let a, b;
       if (step === 1) { const sum = 2 + rand(9); a = 1 + rand(sum - 1); b = sum - a; }
       else { a = 2 + rand(9); const lo = Math.max(2, 11 - a); b = lo + rand(10 - lo + 1); }
-      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, pause: 2800, choices: numCards(a + b, 0, 20) };
+      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, pause: 2800, choices: numCards(a + b, 0, 20),
+        hint: H => { const hi = Math.max(a, b), lo = Math.min(a, b); H.show(`${hi} + <span class="dots">${"●".repeat(lo)}</span>`); return H.say(`Start at the bigger number, ${hi}. Then count on ${lo} more. Use your fingers!`); } };
     }
   },
   minus: {
@@ -134,14 +153,17 @@ const GAMES = {
     makeQuestion(step) {
       if (step === 4) { // taking away tens from a bigger number
         const b = 10 * (1 + rand(3)), a = b + 1 + rand(99 - b), ans = a - b;
-        return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${ans}!`, pause: 3000, choices: numCards(ans, 0, 99, 4, [ans + 10, ans - 10, ans + 1]) };
+        return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${ans}!`, pause: 3000, choices: numCards(ans, 0, 99, 4, [ans + 10, ans - 10, ans + 1]),
+          hint: H => { const at = Math.floor(a / 10), bt = b / 10; H.show(`${at} tens − ${bt} ten${bt === 1 ? "" : "s"}`); return H.say(`Take away the tens: ${at} tens take away ${bt}. The ones stay the same.`); } };
       }
       if (step === 3) { // the missing number
         const a = 6 + rand(15), b = 1 + rand(Math.min(10, a - 1)), c = a - b;
-        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, pause: 3000, choices: numCards(b, 0, 20, 4) };
+        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, pause: 3000, choices: numCards(b, 0, 20, 4),
+          hint: H => { H.show(`${c} → ${a}`); return H.say(`Count up from ${c} to ${a}. How many numbers did you count?`); } };
       }
       const a = step === 1 ? 2 + rand(9) : 11 + rand(10), b = 1 + rand(step === 1 ? a : 10);
-      return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, pause: 2800, choices: numCards(a - b, 0, 20) };
+      return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, pause: 2800, choices: numCards(a - b, 0, 20),
+        hint: H => { H.show(`${a} − <span class="dots">${"●".repeat(b)}</span>`); return H.say(`Start at ${a} and count back ${b}. Use your fingers!`); } };
     }
   },
   tens: {
@@ -152,6 +174,14 @@ const GAMES = {
       const parts = `${t} ten${t === 1 ? "" : "s"} and ${o} one${o === 1 ? "" : "s"}`;
       return { bubble: step === 4 ? `<div class="sentence">${parts}</div>` : blocks(n), key: n,
         say: step === 4 ? `Which number has ${parts}?` : "How many blocks? Count the tens, then the ones.", yay: `Yes! ${parts} make ${n}!`, pause: 3400,
+        hint: step === 4
+          ? H => { H.show(`${t} tens → <b>${t}</b>_`); return H.say(`The tens give the first number, ${t}. The ones give the last number.`); }
+          : async H => { // count the long sticks by tens with the child, then leave the little ones to them
+              const rods = [...H.bubble.querySelectorAll(".rod")];
+              if (!(await H.say("Count the long sticks by tens."))) return;
+              for (let i = 0; i < rods.length; i++) { H.glow(rods[i], true); if (!(await H.say(String((i + 1) * 10)))) return; }
+              return H.say(`That's ${t * 10}. Now keep counting on with the little ones.`);
+            },
         choices: numCards(n, 10, 99, step === 1 ? 3 : 4, near) };
     }
   },
@@ -162,10 +192,12 @@ const GAMES = {
       if (step === 4) { // read the time, find the clock
         const opts = [[h, m], [h, 30 - m], [next, m]];
         return { bubble: big(timeText(h, m), 11), key: h + ":" + m, say: `Which clock shows ${timeSaid(h, m)}?`, yay: `Yes! That clock shows ${timeSaid(h, m)}!`, pause: 3000,
+          hint: H => { H.cards().forEach(c => c.el.querySelectorAll(HOUR_HAND).forEach(paintHand)); return H.say(m ? `For half past ${h}, the long hand points down to 6, and the orange short hand is just past ${h}.` : `For ${h} o'clock, the long hand points up to 12, and the orange short hand points to ${h}.`); },
           choices: shuffle(opts).map(o => ({ html: `<div class="art">${clock(o[0], o[1])}</div>`, ok: o[0] === h && o[1] === m, wrong: `That clock shows ${timeSaid(o[0], o[1])}.` })) };
       }
       const opts = step === 1 ? [[h, 0], [next, 0], [before, 0]] : step === 2 ? [[h, 30], [next, 30], [h, 0]] : [[h, m], [h, 30 - m], [next, m], [before, m]];
       return { bubble: `<div class="clockbox">${clock(h, m)}</div>`, key: h + ":" + m, say: "What time does the clock show?", yay: `Yes! It is ${timeSaid(h, m)}!`, pause: 3000,
+        hint: H => { H.bubble.querySelectorAll(HOUR_HAND).forEach(paintHand); return H.say(m ? "The long hand points down to 6, so it is half past. Look at the orange short hand: which number has it just gone past?" : "The long hand points straight up to 12, so it is something o'clock. Now look where the orange short hand points."); },
         choices: shuffle(opts).map(o => ({ html: `<span style="font-size:${opts.length === 4 ? 7 : 9}vmin">${timeText(o[0], o[1])}</span>`, ok: o[0] === h && o[1] === m, wrong: `That says ${timeSaid(o[0], o[1])}.` })) };
     }
   },
@@ -176,6 +208,7 @@ const GAMES = {
       const start = back ? by * (4 + rand(by === 10 ? 7 : 9)) : by * (1 + rand(by === 10 ? 6 : by === 5 ? 15 : 20));
       const d = back ? -by : by, seq = [start, start + d, start + 2 * d], ans = start + 3 * d;
       return { bubble: tiles(seq.concat("?")), key: seq.join(), say: `Count ${back ? "backwards " : ""}by ${word}. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3400,
+        hint: H => { H.show(`${back ? "−" : "+"}${by} each time`); return H.say(back ? `Each number is ${by} less than the one before. Take away ${by} again.` : `Each number is ${by} more than the one before. Add ${by} again.`); },
         choices: numCards(ans, 0, 120, 3, [ans + by, ans - by, ans + 1, ans - 1].filter(k => !seq.includes(k))) };
     }
   }
@@ -184,7 +217,7 @@ const GAMES = {
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
-  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5,
+  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5, hints: true, // one hint per round
   voice: recorded("audio/g1/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["read", "spell", "sentence", "plus", "minus", "tens", "clock", "skip"],

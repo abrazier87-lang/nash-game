@@ -104,6 +104,7 @@ function StoryGame(C) {
     <button class="corner left" id="homeBtn" aria-label="Back to the map" style="display:none">🏠</button>
     <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
     <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
+    <button class="corner right hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
     <div id="grown"><div class="panel" id="grownPanel"></div></div>`;
   $("titleSub").textContent = C.sub + (NAME ? " for " + NAME : "");
 
@@ -114,12 +115,14 @@ function StoryGame(C) {
     $("homeBtn").style.display = (id === "game") ? "" : "none";
     $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
     $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
+    $("hintBtn").style.display = (id === "game" && C.hints) ? "" : "none"; // only in grades that have hints
   }
 
   // ---------- playing one place ----------
   let G = null;
   function startGame(id) {
-    G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "" };
+    G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1 }; // one hint per round
+    $("hintBtn").classList.remove("used");
     $("stars").innerHTML = Array(STARS).fill('<div class="star">⭐</div>').join("");
     show("game");
     nextQuestion(GAMES[id].intro + " ");
@@ -128,13 +131,13 @@ function StoryGame(C) {
     const keyOf = q => String(q.key !== undefined ? q.key : q.say + q.bubble);
     let q, tries = 0;
     do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
-    G.last = keyOf(q); G.q = q; G.first = true; G.busy = false;
+    G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false;
     const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
     $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
     const box = $("choices"); box.innerHTML = "";
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
     q.choices.forEach(ch => {
-      const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html;
+      const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b._ch = ch; // (the hint needs to know which card is which)
       b.addEventListener("click", () => choose(b, ch));
       box.appendChild(b); fitText(b);
     });
@@ -149,14 +152,15 @@ function StoryGame(C) {
       el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
       G.stars++; $("stars").children[G.stars - 1].classList.add("got");
       const spoken = Kit.sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
-      Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, G.first); // for the progress report
-      adjust(G.first);
+      Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
+      adjust(G.first && !G.hinted); // an answer found with a hint does not make the place harder
       await spoken;
       if (!G || G.q !== q) return;
       if (G.stars >= STARS) finishGame(); else nextQuestion();
     } else {
       sfx.oops(); G.first = false;
       animate(el, "wobble"); el.classList.add("dim");
+      if (C.hints && G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
       say(`${ch.wrong} ${q.again || q.say}`);
     }
   }
@@ -233,6 +237,15 @@ function StoryGame(C) {
   $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); Object.values(C.voice || {}).forEach(url => Kit.loadClip(url).catch(() => {})); showMap(got().length || S.trips ? undefined : "hello"); });
   $("gameHost").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameHost"), "wobble"); say(G.q.help || G.q.say); } }); // tap the host to hear it again ("help" is a fuller version, if the question has one)
   $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+  // The hint button: one per round. It takes away one wrong answer, then shows how to think about the question
+  // (each question's own "hint"; a question without one just hears the question again).
+  $("hintBtn").addEventListener("click", async () => {
+    if (!C.hints || !G || G.busy || !G.q || G.hints <= 0) return;
+    const q = G.q; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
+    Kit.dropOneWrong($("choices"));
+    const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive: () => G && G.q === q && !G.busy });
+    if (q.hint) await q.hint(H); else await H.say(q.help || q.say);
+  });
   $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });
 
   // ---------- grown-ups corner (press and hold the gear) ----------

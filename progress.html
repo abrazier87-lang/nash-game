@@ -53,7 +53,7 @@
   <p class="foot" id="foot"></p>
 </div>
 
-<script src="shared/kit.js?v=16"></script>
+<script src="shared/kit.js?v=17"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -126,7 +126,7 @@ function render() {
     Object.values(game.stations).forEach(s => {
       const j = judge(s), tricky = Object.entries(s.missed || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
       html += `<div class="row">
-          <div><div class="name">${esc(s.name)}</div><small>Step ${j.step} of 4${j.trend} · ${s.asked} answered · last played ${s.last ? dayName(s.last) : "–"}</small></div>
+          <div><div class="name">${esc(s.name)}</div><small>Step ${j.step} of 4${j.trend} · ${s.asked} answered${s.hints ? ` · 💡 ${s.hints} hint${s.hints === 1 ? "" : "s"} used` : ""} · last played ${s.last ? dayName(s.last) : "–"}</small></div>
           <div><div class="bar"><i style="width:${pct(j.rate)};background:${j.color}"></i></div><small>${pct(j.rate)} right first time</small></div>
           <div><span class="tag" style="background:${j.color}">${j.tag}</span><small>${j.advice}</small></div>
           ${tricky.length ? `<details><summary>Tricky ones (${tricky.length})</summary><ul>${tricky.map(([t, n]) => `<li>${esc(t)} <small>needed another try ${n === 1 ? "once" : n + " times"}</small></li>`).join("")}</ul></details>` : ""}

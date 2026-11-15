@@ -56,24 +56,61 @@ const Kit = (() => {
   // It all stays on this device.
   const progressKey = () => { const p = currentPlayer(); return "storyShelf.progress" + (p ? "." + p.id : ""); };
   const plain = html => String(html || "").replace(/<\/b>\s*<i>/g, "/").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
-  function track(game, title, station, stationName, step, q, firstTry) {
+  function track(game, title, station, stationName, step, q, firstTry, hinted) { // hinted: a hint was used on this question
     try {
       const P = get(progressKey(), null) || { v: 1, games: {}, days: {} };
       const g = P.games[game] || (P.games[game] = { title, stations: {} });
       const s = g.stations[station] || (g.stations[station] = { name: stationName, asked: 0, firstTry: 0, recent: [], missed: {} });
-      g.title = title; s.name = stationName; s.asked++; if (firstTry) s.firstTry++;
+      g.title = title; s.name = stationName; s.asked++; if (firstTry) s.firstTry++; if (hinted) s.hints = (s.hints || 0) + 1;
       s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift(); // the last 20 answers
       const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
       s.last = day; P.days[day] = (P.days[day] || 0) + 1;
       if (!firstTry) {
         const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
         const full = plain(q.help || (q.read !== undefined && q.read ? q.read : q.say)), asked = full.length > 110 ? full.slice(0, 107).replace(/\s+\S*$/, "") + "…" : full;
-        const label = asked + (answer ? " → " + answer : "");
+        const label = asked + (answer ? " → " + answer : "") + (hinted ? " · used a hint" : "");
         s.missed[label] = (s.missed[label] || 0) + 1;
         const keys = Object.keys(s.missed); if (keys.length > 40) { keys.sort((a, b) => s.missed[a] - s.missed[b]); delete s.missed[keys[0]]; }
       }
       put(progressKey(), P);
     } catch (e) {}
+  }
+
+  // ---------- hints (one per round) ----------
+  // A hint first takes away one wrong answer (only when 3 or more are left, so it never gives the answer away),
+  // then runs the question's own "how to think about it" moment. hintHelper gives that moment simple tools:
+  //   H.say(words, clip)  says the words (or plays a recorded clip); with talking off, writes them in the bubble
+  //   H.show(html)        adds a picture or a few words under the question in the bubble
+  //   H.cards()           the answer cards still in play, as [{ el, ch }]
+  //   H.glow(el, on)      lights up a card, tile or picture;  H.label(el, text) puts a small number on a card
+  //   H.q                 the question itself;  H.alive() is false once the child has moved on
+  function dropOneWrong(box) {
+    const left = [...box.children].filter(b => b._ch && !b.classList.contains("dim"));
+    if (left.length < 3) return null;
+    const x = pick(left.filter(b => !b._ch.ok)); x.classList.add("dim", "struck"); return x;
+  }
+  function hintHelper({ bubble, box, q, alive }) {
+    const pace = () => (Kit.testPace || 1); // tests can speed this up
+    const roomy = () => { // makes room under the question; moves the bubble's pictures rather than redrawing them, so lit-up ones stay lit
+      if (bubble.classList.contains("quiet")) return;
+      const row = document.createElement("div"); row.className = "rowx";
+      while (bubble.firstChild) row.appendChild(bubble.firstChild);
+      bubble.appendChild(row); bubble.classList.add("quiet");
+    };
+    const part = cls => { roomy(); let el = bubble.querySelector("." + cls); if (!el) { el = document.createElement("div"); el.className = cls; bubble.appendChild(el); } return el; };
+    return {
+      q, bubble, alive,
+      show: html => { part("hintbox").innerHTML = html; },
+      say: async (words, clip) => {
+        if (!alive()) return false;
+        if (settings.voice) return (clip ? await clip() : await say(words)) && alive();
+        part("hintsaid").textContent = words; await wait(Math.max(1400, words.length * 55) * pace()); return alive();
+      },
+      cards: () => [...box.children].filter(b => b._ch && !b.classList.contains("dim")).map(el => ({ el, ch: el._ch })),
+      glow: (el, on) => el && el.classList.toggle("glow", !!on),
+      label: (el, text) => { let t = el.querySelector(".hintbadge"); if (!t) { t = document.createElement("span"); t.className = "hintbadge"; el.appendChild(t); } t.textContent = text; },
+      wait: ms => wait(ms * pace())
+    };
   }
 
   // ---------- settings shared by the newer games ----------
@@ -217,7 +254,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "16"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, track, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "17"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, track, dropOneWrong, hintHelper, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();
