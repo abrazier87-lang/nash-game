@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=17">
+<link rel="stylesheet" href="shared/kit.css?v=18">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -40,12 +40,13 @@
   <h1 class="shelfTitle">Story Shelf</h1>
   <div class="who" id="who"></div>
   <div class="shelf" id="shelf"></div>
-  <p id="version" style="text-align:center;margin:44px 0 0;font-size:13px;color:#a08a6c"></p>
+  <p id="backupNudge" style="text-align:center;margin:36px 0 0;font-size:15px;color:#7a5520"></p>
+  <p id="version" style="text-align:center;margin:12px 0 0;font-size:13px;color:#a08a6c"></p>
 </div>
 <button class="gear" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 
-<script src="shared/kit.js?v=17"></script>
+<script src="shared/kit.js?v=18"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -94,12 +95,23 @@ function openGrown() {
   Kit.hush();
   const voices = Kit.englishVoices(), v = Kit.currentVoice(), list = Kit.players();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
-    <p>Each child gets their own saved progress on this device. Progress does not move between devices.</p>
+    <p>Each child gets their own saved progress. It is kept only on this device, so make a backup now and then (below).</p>
     ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
     <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
+    <h3 style="margin:16px 0 2px">💾 Back up progress</h3>
+    <p class="soon">A backup holds every child's progress, medals and report. Keep it in Files, Notes or an email to yourself.
+      If the game is ever removed, or you move to another device, restore it here. Last backup: <b>${Kit.lastBackup() ? Kit.niceDate(Kit.lastBackup()) : "never"}</b></p>
+    <div class="line"><div>Save a backup file</div><button class="main" data-act="backup">Save</button></div>
+    <div class="line"><div>Copy the backup as text (to paste into Notes or an email)</div><button data-act="copy">Copy</button></div>
+    <div class="line"><div>Restore from a backup file</div><button data-act="restore-file">Choose file</button></div>
+    <div class="line"><div>Restore from pasted text</div><button data-act="restore-paste">Paste</button></div>
+    <div id="pasteBox" hidden><textarea id="pasteCode" rows="4" style="width:100%;font:inherit;font-size:13px" placeholder="Paste the backup here"></textarea>
+      <div class="line"><div class="soon">Restoring replaces all progress on this device.</div><button class="warn" data-act="restore-code">Restore</button></div></div>
+    <p id="backupMsg" style="font-weight:bold"></p>
+    <input type="file" id="backupFile" accept=".txt,.json,text/plain" hidden>
     <div class="foot"><span></span><button class="main" data-act="close">Done</button></div>`;
   $("grown").classList.add("on");
 }
@@ -108,6 +120,7 @@ $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act;
   if (act === "test") { Kit.say("Hello! Pick a book to play.", true); return; }
+  if (act && (act === "backup" || act === "copy" || act.startsWith("restore"))) { backupAction(act); return; }
   if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
   if (act === "sound") Kit.settings.sound = !Kit.settings.sound;
@@ -117,9 +130,57 @@ $("grownPanel").addEventListener("click", e => {
 });
 $("grownPanel").addEventListener("change", e => {
   if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
+  if (e.target.id === "backupFile" && e.target.files[0]) { // a backup file was picked: read it, then restore
+    const reader = new FileReader();
+    reader.onload = () => restoreFrom(reader.result);
+    reader.onerror = () => backupMsg("That file could not be read.");
+    reader.readAsText(e.target.files[0]); e.target.value = "";
+  }
 });
+
+// ---------- backup and restore ----------
+const backupMsg = text => { $("backupMsg").textContent = text; };
+function backupAction(act) {
+  if (act === "backup") { // on an iPad this opens the Share sheet (Save to Files, Notes, Mail...); elsewhere it downloads a small text file
+    const b = Kit.makeBackup(), name = `story-shelf-backup-${b.made.toISOString().slice(0, 10)}.txt`;
+    const file = new File([b.text], name, { type: "text/plain" });
+    const saved = how => { Kit.markBackedUp(); backupMsg(`Backup ${how}. Keep it somewhere safe.`); };
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: "Story Shelf backup" }).then(() => saved("saved"),
+        e => backupMsg(e && e.name === "AbortError" ? "No backup was saved." : "Sharing did not work. Try 'Copy' instead."));
+    } else {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      saved("downloaded (look in your Downloads)");
+    }
+  }
+  if (act === "copy") {
+    const b = Kit.makeBackup(), showIt = () => { $("pasteBox").hidden = false; $("pasteCode").value = b.text; $("pasteCode").select(); backupMsg("Select everything in the box above and copy it, then paste it into Notes or an email."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(b.text).then(() => { Kit.markBackedUp(); backupMsg("Backup copied. Paste it into Notes or an email to yourself."); }, showIt);
+    else showIt();
+  }
+  if (act === "restore-file") $("backupFile").click();
+  if (act === "restore-paste") { $("pasteBox").hidden = false; $("pasteCode").value = ""; $("pasteCode").focus(); backupMsg(""); }
+  if (act === "restore-code") restoreFrom($("pasteCode").value);
+}
+function restoreFrom(text) {
+  let b;
+  try { b = Kit.readBackup(text); } catch (e) { backupMsg("That doesn't look like a Story Shelf backup. Nothing was changed."); return; }
+  const who = b.names && b.names.length ? ` (${b.names.join(", ")})` : "";
+  if (!confirm(`Restore the backup made ${Kit.niceDate(b.made)}${who}?\n\nThis replaces all progress on this device with the backup.`)) { backupMsg("Nothing was changed."); return; }
+  try { Kit.restoreBackup(b); } catch (e) { backupMsg("Restoring did not work, so nothing was changed."); return; }
+  location.reload(); // start fresh with the restored progress
+}
 drawWho();
 $("version").textContent = "Version " + Kit.VERSION;
+// A gentle reminder for grown-ups when there is progress that has not been backed up for two weeks.
+(() => {
+  let any = false; try { any = Object.keys(localStorage).some(k => /^storyShelf\.progress/.test(k)); } catch (e) {}
+  const last = Kit.lastBackup(), old = !last || Date.now() - new Date(last).getTime() > 14 * 864e5;
+  if (any && old) $("backupNudge").textContent = last
+    ? "💾 Grown-ups: the last backup was over two weeks ago. Press and hold the gear to make a new one."
+    : "💾 Grown-ups: progress has not been backed up yet. Press and hold the gear to make a backup.";
+})();
 </script>
 </body>
 </html>

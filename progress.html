@@ -53,7 +53,7 @@
   <p class="foot" id="foot"></p>
 </div>
 
-<script src="shared/kit.js?v=17"></script>
+<script src="shared/kit.js?v=18"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -136,7 +136,8 @@ function render() {
   });
   $("report").innerHTML = html;
   const first = Object.keys(days).sort()[0];
-  $("foot").textContent = `Recording started ${first ? dayName(first) : "today"}. Everything in this report stays on this device.`;
+  const lb = Kit.lastBackup();
+  $("foot").textContent = `Recording started ${first ? dayName(first) : "today"}. Everything in this report stays on this device. Last backup: ${lb ? Kit.niceDate(lb) : "never"} (back up from the grown-ups panel on the book shelf).`;
 }
 $("who").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; chosen = b.dataset.id || null; render(); });
 render();

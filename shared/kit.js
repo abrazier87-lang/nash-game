@@ -76,6 +76,46 @@ const Kit = (() => {
     } catch (e) {}
   }
 
+  // ---------- backup: everything the Story Shelf keeps on this device, as one code ----------
+  // Progress lives only on the device (and an iPad keeps a separate store for each home-screen icon), so a grown-up can
+  // save a backup and restore it later, or move it to another device. The code is "SSB1." followed by the data in letters
+  // and numbers only, so it survives being pasted into Notes or an email, even with line breaks added.
+  const BACKUP_KEYS = /^(storyShelf|pipsLostEggs|dotsBusyTrain|grade\d+[A-Za-z]*)\./; // the names every game saves under
+  const toB64 = s => { const bytes = new TextEncoder().encode(s); let bin = ""; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); };
+  const fromB64 = s => new TextDecoder().decode(Uint8Array.from(atob(s), c => c.charCodeAt(0)));
+  const shelfKeys = () => { const out = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (BACKUP_KEYS.test(k)) out.push(k); } return out; };
+  const niceDate = d => new Date(d).toLocaleString("en-CA", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+  function makeBackup() {
+    const data = {};
+    shelfKeys().forEach(k => { if (k !== "storyShelf.lastBackup") data[k] = localStorage.getItem(k); });
+    const names = players().map(p => p.name), made = new Date();
+    const code = "SSB1." + toB64(JSON.stringify({ app: "story-shelf", v: 1, made: made.toISOString(), names, data }));
+    const text = `Story Shelf backup\nMade: ${niceDate(made)}\nChildren: ${names.join(", ") || "(no names added)"}\n\n` +
+      `To restore it: open the Story Shelf, press and hold the gear, and choose "Restore from a backup".\n\n${code}\n`;
+    return { code, text, names, made };
+  }
+  function readBackup(text) { // finds the backup in a file or pasted text; throws if there is none
+    const m = String(text || "").match(/SSB1\.([A-Za-z0-9+/=\s]+)/);
+    if (!m) throw new Error("not a backup");
+    const b = JSON.parse(fromB64(m[1].replace(/\s+/g, "")));
+    if (!b || b.app !== "story-shelf" || !b.data) throw new Error("not a backup");
+    return b;
+  }
+  function restoreBackup(b) { // replaces this device's Story Shelf data with the backup's; if anything goes wrong, puts the old data back
+    const before = {}; shelfKeys().forEach(k => { before[k] = localStorage.getItem(k); });
+    try {
+      Object.keys(before).forEach(k => localStorage.removeItem(k));
+      Object.entries(b.data).forEach(([k, v]) => { if (BACKUP_KEYS.test(k)) localStorage.setItem(k, v); });
+      localStorage.setItem("storyShelf.lastBackup", JSON.stringify(b.made));
+    } catch (e) {
+      shelfKeys().forEach(k => localStorage.removeItem(k));
+      Object.entries(before).forEach(([k, v]) => localStorage.setItem(k, v));
+      throw e;
+    }
+  }
+  const markBackedUp = () => put("storyShelf.lastBackup", new Date().toISOString());
+  const lastBackup = () => get("storyShelf.lastBackup", null);
+
   // ---------- hints (one per round) ----------
   // A hint first takes away one wrong answer (only when 3 or more are left, so it never gives the answer away),
   // then runs the question's own "how to think about it" moment. hintHelper gives that moment simple tools:
@@ -254,7 +294,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "17"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, track, dropOneWrong, hintHelper, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "18"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();
