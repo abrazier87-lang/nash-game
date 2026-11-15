@@ -602,10 +602,38 @@ const GAMES = {
   }
 };
 
+// ---------- celebration scenes: pictures of Rome, and fun facts (one after each place won; a tour at the very end) ----------
+const emoSvg = e => `<span class="emo" style="font-size:inherit">${e}</span>`;
+const ROME_ART = {
+  colosseum: `<svg viewBox="0 0 220 120"><path d="M10 118 V40 Q110 6 210 40 V118 Z" fill="#e3c9a0"/><path d="M10 40 Q110 6 210 40 V52 Q110 18 10 52 Z" fill="#cfae7c"/>
+    <g fill="#8a6a44">${[0, 1, 2].map(r => Array.from({ length: 9 }, (_, i) => `<path d="M${22 + i * 21} ${110 - r * 24} v-14 a7 7 0 0 1 14 0 v14 z"/>`).join("")).join("")}</g><path d="M150 118 V58 L210 40 V118 Z" fill="#d1b386" opacity=".6"/></svg>`,
+  aqueduct: `<svg viewBox="0 0 240 110"><rect x="0" y="10" width="240" height="14" fill="#cfae7c"/><g fill="#e3c9a0">${Array.from({ length: 6 }, (_, i) => `<path d="M${i * 40} 24 h40 v86 h-8 v-50 a12 12 0 0 0 -24 0 v50 h-8 z"/>`).join("")}</g><rect x="0" y="6" width="240" height="6" fill="#3fa9e0"/></svg>`,
+  temple: `<svg viewBox="0 0 160 120"><polygon points="80,8 154,40 6,40" fill="#efe6d4" stroke="#cbb994" stroke-width="2"/><rect x="10" y="40" width="140" height="8" fill="#e0d4bb"/><g fill="#f6efe1">${Array.from({ length: 6 }, (_, i) => `<rect x="${18 + i * 24}" y="48" width="12" height="58"/>`).join("")}</g><rect x="6" y="106" width="148" height="12" fill="#e0d4bb"/></svg>`,
+  road: `<svg viewBox="0 0 400 40" preserveAspectRatio="none"><rect width="400" height="40" fill="#a0a4b8"/><g fill="#8d93ab">${Array.from({ length: 30 }, (_, i) => `<rect x="${(i % 15) * 27 + (i > 14 ? 13 : 0)}" y="${i > 14 ? 21 : 2}" width="24" height="17" rx="3"/>`).join("")}</g></svg>`,
+  volcano: emoSvg("🌋"), shield: emoSvg("🛡️"), amphora: emoSvg("🏺"), grapes: emoSvg("🍇"), olive: emoSvg("🫒"), scroll: emoSvg("📜"), laurel: emoSvg("🌿"), backpack: emoSvg("🎒"), sun: emoSvg("☀️"), calendar: emoSvg("📅"), book: emoSvg("📖")
+};
+const ROME_FACTS = [
+  { say: "Fun fact! The Colosseum could hold about fifty thousand people!", show: [["colosseum", 10, 6, 52], ["laurel", 66, 10, 12]] },
+  { say: "Fun fact! Roman aqueducts carried water for many kilometres, using only gravity to make it flow downhill!", show: [["aqueduct", 0, 6, 54], ["amphora", 64, 6, 14]] },
+  { say: "Fun fact! The Romans built more than eighty thousand kilometres of stone roads!", show: [["road", 0, 0, 10, true], ["temple", 14, 12, 34], ["shield", 58, 12, 14]] },
+  { say: "Fun fact! Many English words come from Latin, the language of the Romans!", show: [["scroll", 16, 8, 26], ["book", 48, 8, 18]] },
+  { say: "Fun fact! The volcano Vesuvius buried the town of Pompeii in ash, and kept it safe for us to explore today!", show: [["volcano", 14, 6, 38], ["temple", 54, 6, 22]] },
+  { say: "Fun fact! The Romans made concrete so strong that some of their buildings are still standing after two thousand years!", show: [["temple", 8, 6, 36], ["colosseum", 46, 6, 30]] },
+  { say: "Fun fact! The month of July is named after a famous Roman leader, Julius Caesar!", show: [["calendar", 18, 10, 22], ["laurel", 46, 14, 16]] },
+  { say: "Fun fact! Each Roman soldier carried a heavy pack with tools, food and a cooking pot!", show: [["shield", 12, 8, 22], ["backpack", 36, 8, 18], ["amphora", 58, 8, 14]] }
+];
+const ROME_TOUR = [
+  { say: "Hooray! The clock ticks again! Let's take one last look at Rome before we fly home.", show: [["sun", 70, 60, 12], ["laurel", 14, 10, 14], ["grapes", 56, 8, 14]] },
+  { say: "Here is the Colosseum, where huge crowds came to watch shows and games.", show: [["colosseum", 8, 6, 56]] },
+  { say: "Here is an aqueduct, carrying fresh water into the city.", show: [["aqueduct", 0, 6, 58]] },
+  { say: "And here is the Forum, where Romans met to shop, talk and make decisions.", show: [["temple", 8, 6, 34], ["temple", 44, 6, 26], ["amphora", 66, 6, 12]] },
+  { say: "Goodbye, Rome! Tick tock. Time to fly!", show: [["colosseum", 24, 6, 34]] }
+];
+
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody in Ancient Rome", sub: "A Grade 4 adventure", gradeLabel: "Grade 4 (ages 9-10)", hostName: "Dr. Somebody",
-  host: HOST, saveKey: "grade4Rome.v1", medal: "g4", need: 6, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g4/lesson/", lineVoice: "audio/g4/l/", numberPieces: true, // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
+  host: HOST, saveKey: "grade4Rome.v1", medal: "g4", need: 6, starsToWin: 5, celebrations: { art: ROME_ART, facts: ROME_FACTS, finale: ROME_TOUR }, sceneVoice: "audio/g4/scene/", // a short scene with a fun fact after each place, and a tour at the end hints: true, lessons: true, lessonVoice: "audio/g4/lesson/", lineVoice: "audio/g4/l/", numberPieces: true, // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g4/", 5), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud c2"></div>${AQUEDUCT}${TEMPLE}<div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["numerals", "multiply", "divide", "fractions", "decimals", "shapes", "measure", "data", "problems", "market", "roots", "grammar", "scroll"],

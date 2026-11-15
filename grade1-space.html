@@ -293,10 +293,38 @@ const GAMES = {
   }
 };
 
+// ---------- celebration scenes: pictures of space, and fun facts (one after each planet won; a tour at the very end) ----------
+const emoSvg = e => `<span class="emo" style="font-size:inherit">${e}</span>`;
+const planetArt = (c1, c2, ring) => `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="40" fill="${c1}"/><path d="M24 50 Q60 40 96 50" stroke="${c2}" stroke-width="7" fill="none" opacity=".7"/><path d="M22 70 Q60 62 98 70" stroke="${c2}" stroke-width="5" fill="none" opacity=".6"/>${ring ? `<ellipse cx="60" cy="62" rx="58" ry="14" fill="none" stroke="#e9d8a6" stroke-width="6" transform="rotate(-12 60 62)"/>` : ""}</svg>`;
+const SPACE_ART = {
+  sun: `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="#ffd23f"/><circle cx="60" cy="60" r="52" fill="none" stroke="#ffb703" stroke-width="6" stroke-dasharray="6 10"/></svg>`,
+  earth: `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="#3fa9e0"/><path d="M34 38 Q48 30 56 40 T60 62 Q48 70 38 60 Z" fill="#58b368"/><path d="M70 66 Q84 60 90 74 T76 96 Q66 86 70 66 Z" fill="#58b368"/><path d="M62 22 Q74 18 82 28" stroke="#fff" stroke-width="5" fill="none" opacity=".8"/></svg>`,
+  moon: `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="#d9dbe6"/><circle cx="44" cy="46" r="9" fill="#b9bed2"/><circle cx="74" cy="70" r="12" fill="#b9bed2"/><circle cx="72" cy="38" r="5" fill="#b9bed2"/><circle cx="44" cy="78" r="6" fill="#b9bed2"/></svg>`,
+  mars: planetArt("#e76f51", "#b5452c"), jupiter: planetArt("#e9b872", "#c47a3a"), saturn: planetArt("#f2d388", "#d4a84a", true), venus: planetArt("#f4c27a", "#e0a050"), neptune: planetArt("#4d7de0", "#2f55ab"),
+  rocket: emoSvg("🚀"), astronaut: emoSvg("🧑‍🚀"), satellite: emoSvg("🛰️"), comet: emoSvg("☄️"), stars: emoSvg("✨"), star: emoSvg("⭐"), footprint: emoSvg("👣"), clock: emoSvg("⏱️")
+};
+const SPACE_FACTS = [
+  { say: "Fun fact! The Sun is so big, about one million Earths could fit inside it!", show: [["sun", 8, 10, 40], ["earth", 56, 14, 10], ["stars", 64, 44, 12]] },
+  { say: "Fun fact! A day on Venus is longer than a whole year on Venus!", show: [["venus", 16, 10, 32], ["sun", 60, 30, 18]] },
+  { say: "Fun fact! Saturn's beautiful rings are made of ice and rock.", show: [["saturn", 14, 10, 40], ["stars", 64, 40, 12]] },
+  { say: "Fun fact! Jupiter is the biggest planet. All the other planets could fit inside it!", show: [["jupiter", 10, 8, 44], ["mars", 60, 20, 12], ["earth", 60, 6, 12]] },
+  { say: "Fun fact! Astronauts walked on the Moon. Their footprints are still there, because there is no wind!", show: [["moon", 10, 8, 40], ["astronaut", 54, 10, 18], ["footprint", 54, 36, 10]] },
+  { say: "Fun fact! Mars is called the red planet, because its dust is rusty red.", show: [["mars", 16, 10, 38], ["rocket", 62, 16, 16]] },
+  { say: "Fun fact! Sunlight takes about eight minutes to travel all the way to Earth.", show: [["sun", 6, 14, 30], ["earth", 58, 14, 16], ["clock", 40, 44, 10]] },
+  { say: "Fun fact! Scientists think there are more stars in space than grains of sand on all the beaches on Earth!", show: [["stars", 8, 14, 16], ["star", 30, 40, 10], ["stars", 50, 10, 14], ["star", 64, 34, 12]] }
+];
+const SPACE_TOUR = [
+  { say: "Hooray! We have all the star crystals! Let's look around space one last time before we fly home.", show: [["stars", 10, 30, 14], ["comet", 60, 40, 14], ["satellite", 40, 12, 14]] },
+  { say: "Here is the Moon. It travels around the Earth about once every month.", show: [["moon", 10, 10, 36], ["earth", 56, 16, 18]] },
+  { say: "Here are some of the planets. Eight planets travel around our Sun.", show: [["mars", 6, 14, 14], ["jupiter", 24, 8, 26], ["saturn", 50, 12, 24]] },
+  { say: "And here is the Earth, our home. From space it looks blue, because it's mostly covered in water!", show: [["earth", 18, 8, 40], ["satellite", 62, 30, 14]] },
+  { say: "Goodbye, space! Tick tock. Time to fly home!", show: [["rocket", 30, 12, 20], ["stars", 56, 30, 14]] }
+];
+
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
-  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5, hints: true, lessons: true, // one hint per round; a short lesson on the first visit to each planet
+  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5, celebrations: { art: SPACE_ART, facts: SPACE_FACTS, finale: SPACE_TOUR }, sceneVoice: "audio/g1/scene/", // a short scene with a fun fact after each planet, and a tour at the end hints: true, lessons: true, // one hint per round; a short lesson on the first visit to each planet
   lineVoice: "audio/g1/l/", lessonVoice: "audio/g1/lesson/", // Dr. Somebody's recorded voice for every question (in pieces) and every lesson line
   voice: recorded("audio/g1/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,

@@ -94,6 +94,7 @@
     <button class="bigbtn go" id="boardGo" aria-label="Keep going"><span class="tri"></span></button>
   </div>
 
+  <div class="screen" id="scene"><div class="scenestage" id="sceneStage"></div><div class="scenecap" id="sceneCap"></div><button class="bigbtn sceneskip" id="sceneGo" aria-label="Keep going"><span class="tri"></span></button></div>
   <div class="screen" id="finale">
     <h1>Off to the fair!</h1>
     <div class="train" id="finaleTrain"></div>
@@ -643,8 +644,51 @@ function finishGame() {
   if (S.aboard[id]) { // this station's passenger is already on the train: just celebrate
     sfx.party(); confetti(30);
     Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the stations once Dot has finished
-  } else startBoard(id);
+  } else { // a short celebration scene first, starring the passenger, with a fun fact about that animal. The very first time, Dr. Somebody floats by too.
+    const p = passengerAt(id), stops = (S.metDoc ? [] : [DOC_HELLO]).concat({ say: ANIMAL_FACTS[p.name], show: [[p.pic, 4, 8, 30], ["engine", 34, 6, 26], [p.snack[2], 60, 28, 12], [p.snack[2], 66, 12, 10]] });
+    S.metDoc = true; save();
+    playScene(stops, () => startBoard(id));
+  }
 }
+
+// ---------- celebration scenes ----------
+// Dr. Somebody's clock balloon (a time machine, from the older grades' games) drifts across, the passenger pops up with their
+// snacks and Dot's train, and Dot says a fun fact about that animal. The ▶ skips ahead.
+// Dot's lines are recorded in pieces in audio/dot/l/; Dr. Somebody's line is in audio/dot/doc/.
+const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
+  <path d="M80 6 C58 20 50 60 56 96 C60 118 72 134 80 140 C88 134 100 118 104 96 C110 60 102 20 80 6 Z" fill="#ffd23f"/>
+  <circle cx="80" cy="70" r="34" fill="#fff" stroke="#39405a" stroke-width="5"/>
+  <g stroke="#39405a" stroke-width="4" stroke-linecap="round"><line x1="80" y1="42" x2="80" y2="48"/><line x1="80" y1="92" x2="80" y2="98"/><line x1="52" y1="70" x2="58" y2="70"/><line x1="102" y1="70" x2="108" y2="70"/></g>
+  <line x1="80" y1="70" x2="80" y2="50" stroke="#39405a" stroke-width="5" stroke-linecap="round"/><line x1="80" y1="70" x2="97" y2="79" stroke="#ff5a5f" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#39405a"/>
+  <line x1="56" y1="130" x2="62" y2="162" stroke="#c9a37a" stroke-width="3"/><line x1="104" y1="130" x2="98" y2="162" stroke="#c9a37a" stroke-width="3"/>
+  <circle cx="80" cy="154" r="13" fill="#9c6b3f"/><circle cx="75" cy="152" r="5" fill="#fff"/><circle cx="85" cy="152" r="5" fill="#fff"/><circle cx="75" cy="152" r="2" fill="#2b2d42"/><circle cx="85" cy="152" r="2" fill="#2b2d42"/>
+  <rect x="56" y="160" width="48" height="32" rx="7" fill="#c48a4a"/><rect x="56" y="160" width="48" height="7" rx="3" fill="#9c6830"/></svg>`;
+const DOC_HELLO = { doc: true, say: "Hello, Dot! Doctor Somebody here, floating by in my clock balloon. Have a wonderful time at the fair!", show: [["engine", 14, 6, 30], ["🎡", 52, 8, 22]] };
+const ANIMAL_FACTS = { lion: "Fun fact! A lion's roar can be heard from far, far away!", elephant: "Fun fact! Elephants use their trunks to drink, to smell, and to say hello!",
+  monkey: "Fun fact! Monkeys are great climbers, and some use their tails like an extra hand!", panda: "Fun fact! Pandas spend most of the day eating bamboo!",
+  penguin: "Fun fact! Penguins can't fly, but they are super swimmers!", giraffe: "Fun fact! Giraffes are the tallest animals in the whole world!",
+  koala: "Fun fact! Koalas sleep for most of the day and night!", tiger: "Fun fact! Every tiger has its very own pattern of stripes!",
+  zebra: "Fun fact! No two zebras have the same stripes!", rabbit: "Fun fact! Rabbits can hop very fast, and zig-zag to get away!",
+  fox: "Fun fact! Foxes curl their big, bushy tails around them to keep warm!", bear: "Fun fact! Many bears sleep through the winter in a cozy den!",
+  frog: "Fun fact! Frogs start life as tadpoles, swimming in the water!", pig: "Fun fact! Pigs roll in the mud to stay cool!" };
+let SC = null;
+async function playScene(stops, then) {
+  const me = SC = { then, done: false }, alive = () => SC === me && !me.done;
+  show("scene"); const stage = $("sceneStage"); stage.innerHTML = `<div class="sballoon">${BALLOON}</div>`; sfx.party(); confetti(25);
+  for (const stop of stops) {
+    if (!alive()) return;
+    stage.querySelectorAll(".sitem").forEach(e => e.classList.add("gone"));
+    stop.show.forEach(([pic, x, y, size], i) => { const d = document.createElement("div"); d.className = "sitem"; d.style.cssText = `left:${x}%;bottom:${y}%;width:${size}vmin;height:${size}vmin;font-size:${(size * .85).toFixed(1)}vmin;animation-delay:${(i * .35).toFixed(2)}s`;
+      d.innerHTML = pic === "engine" ? ENGINE : `<span class="emo">${pic}</span>`; stage.appendChild(d); });
+    $("sceneCap").textContent = stop.say;
+    const said = Kit.settings.voice ? await (stop.doc ? Kit.playClip("audio/dot/doc/" + Kit.clipName(stop.say) + ".mp3", stop.say) : talk(stop.say, true)) : (await wait(1500 + stop.say.length * 45), true); // fun facts are recorded whole
+    if (!said || !alive()) return;
+    await wait(700);
+  }
+  if (alive()) { await wait(600); endScene(me); }
+}
+function endScene(me) { if (!me || me.done || SC !== me) return; me.done = true; SC = null; Kit.hush(); me.then(); }
+$("sceneGo").addEventListener("click", () => { sfx.tap(); endScene(SC); });
 
 // ---------- a passenger gets on ----------
 let B = null;

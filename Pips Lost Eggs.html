@@ -133,6 +133,20 @@
   #grown button.warn { background:#ffe3e0; } #grown button.main { background:#58b368; color:#fff; }
   #grown .soon { color:#888; }
   #grown .foot { display:flex; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; }
+  /* celebration scenes: the clock balloon drifts across, dinosaur pictures pop up, and the fun fact shows as a caption */
+  #scene { justify-content:flex-start; padding:0; }
+  .scenestage { position:absolute; inset:0; overflow:hidden; }
+  .sballoon { position:absolute; top:6vh; left:-30vmin; width:24vmin; height:30vmin; animation:sdrift 9s linear forwards; }
+  @keyframes sdrift { 0% { left:-30vmin; transform:translateY(0); } 25% { transform:translateY(-2vmin); } 50% { transform:translateY(1.5vmin); } 75% { transform:translateY(-1vmin); } 100% { left:105vw; transform:translateY(0); } }
+  .sitem { position:absolute; display:flex; align-items:flex-end; justify-content:center; opacity:0; animation:spop .6s ease forwards; transform-origin:50% 100%; }
+  .sitem svg { width:100%; height:100%; overflow:visible; }
+  .sitem .emo { line-height:1; }
+  .sitem.gone { animation:sgone .5s ease forwards; }
+  @keyframes spop { 0% { opacity:0; transform:scale(.3) translateY(4vmin); } 70% { opacity:1; transform:scale(1.08); } 100% { opacity:1; transform:scale(1); } }
+  @keyframes sgone { to { opacity:0; transform:scale(.6); } }
+  .scenecap { position:absolute; left:50%; transform:translateX(-50%); top:40vh; width:min(86vw, 120vmin); background:rgba(255,255,255,.92); border-radius:3vmin; padding:2vmin 3vmin; font-size:4.2vmin; line-height:1.3; font-weight:bold; text-align:center; box-shadow:0 1vmin 0 rgba(0,0,0,.12); z-index:3; }
+  .bigbtn.sceneskip { position:absolute; right:3vmin; bottom:3vmin; width:15vmin; height:15vmin; z-index:4; }
+  .bigbtn.sceneskip .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
 </style>
 </head>
 <body>
@@ -167,6 +181,8 @@
     <button class="stage" id="hatchStage" aria-label="Tap the egg"></button>
     <button class="bigbtn go" id="hatchGo" aria-label="Keep going"><span class="tri"></span></button>
   </div>
+
+  <div class="screen" id="scene"><div class="scenestage" id="sceneStage"></div><div class="scenecap" id="sceneCap"></div><button class="bigbtn sceneskip" id="sceneGo" aria-label="Keep going"><span class="tri"></span></button></div>
 
   <div class="screen" id="finale">
     <h1>All the eggs are home!</h1>
@@ -805,8 +821,54 @@ function finishGame() {
   if (S.found[id]) { // already rescued this egg: just celebrate
     sfx.party(); confetti(30);
     Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the valley once Pip has finished
-  } else startHatch(id);
+  } else { // a short celebration scene first: a dinosaur fun fact (a different one each time). The very first time, Dr. Somebody drops by too.
+    const k = (S.factAt || 0) % PIP_FACTS.length, stops = (S.metDoc ? [] : [DOC_HELLO]).concat(PIP_FACTS[k]);
+    S.factAt = k + 1; S.metDoc = true; save();
+    playScene(stops, () => startHatch(id));
+  }
 }
+
+// ---------- celebration scenes ----------
+// Dr. Somebody's clock balloon (a time machine, from the older grades' games) drifts across, dinosaur pictures pop up,
+// and Pip says a fun fact. The big ▶ skips ahead. Pip's lines are recorded in audio/pip/l/; Dr. Somebody's in audio/pip/doc/.
+const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
+  <path d="M80 6 C58 20 50 60 56 96 C60 118 72 134 80 140 C88 134 100 118 104 96 C110 60 102 20 80 6 Z" fill="#ffd23f"/>
+  <circle cx="80" cy="70" r="34" fill="#fff" stroke="#39405a" stroke-width="5"/>
+  <g stroke="#39405a" stroke-width="4" stroke-linecap="round"><line x1="80" y1="42" x2="80" y2="48"/><line x1="80" y1="92" x2="80" y2="98"/><line x1="52" y1="70" x2="58" y2="70"/><line x1="102" y1="70" x2="108" y2="70"/></g>
+  <line x1="80" y1="70" x2="80" y2="50" stroke="#39405a" stroke-width="5" stroke-linecap="round"/><line x1="80" y1="70" x2="97" y2="79" stroke="#ff5a5f" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#39405a"/>
+  <line x1="56" y1="130" x2="62" y2="162" stroke="#c9a37a" stroke-width="3"/><line x1="104" y1="130" x2="98" y2="162" stroke="#c9a37a" stroke-width="3"/>
+  <circle cx="80" cy="154" r="13" fill="#9c6b3f"/><circle cx="75" cy="152" r="5" fill="#fff"/><circle cx="85" cy="152" r="5" fill="#fff"/><circle cx="75" cy="152" r="2" fill="#2b2d42"/><circle cx="85" cy="152" r="2" fill="#2b2d42"/>
+  <rect x="56" y="160" width="48" height="32" rx="7" fill="#c48a4a"/><rect x="56" y="160" width="48" height="7" rx="3" fill="#9c6830"/></svg>`;
+const sceneEmo = e => `<span class="emo">${e}</span>`;
+const SCENE_ART = { pip: PIP(), egg: ART.egg(COLORS.teal), egg2: ART.egg(COLORS.pink), longneck: ART.longneck(COLORS.blue), spiky: ART.spiky(COLORS.purple), horned: ART.horned(COLORS.orange),
+  leaf: ART.leaf(COLORS.green), fern: sceneEmo("🌿"), volcano: sceneEmo("🌋"), bird: sceneEmo("🐦"), feather: sceneEmo("🪶"), house: sceneEmo("🏠"), nest: sceneEmo("🪺") };
+// [what is said, what pops up: [picture, left %, bottom %, size in vmin]]
+const DOC_HELLO = { doc: true, say: "Doctor Somebody here! Oh dear. My clock balloon has landed in dinosaur times again! Hello, Pip!", show: [["pip", 20, 8, 30], ["fern", 56, 8, 16]] };
+const PIP_FACTS = [
+  { say: "Fun fact! Baby dinosaurs hatched from eggs, just like baby birds!", show: [["egg", 14, 8, 18], ["egg2", 30, 8, 16], ["nest", 46, 8, 18], ["pip", 60, 8, 18]] },
+  { say: "Fun fact! Some dinosaurs were taller than a house!", show: [["longneck", 8, 6, 46], ["house", 58, 8, 14]] },
+  { say: "Fun fact! Birds are a kind of dinosaur!", show: [["bird", 18, 30, 16], ["pip", 40, 8, 26], ["feather", 66, 30, 10]] },
+  { say: "Fun fact! Some dinosaurs had feathers!", show: [["feather", 16, 26, 16], ["pip", 34, 8, 26], ["feather", 62, 34, 12]] },
+  { say: "Fun fact! Lots of dinosaurs ate only plants, like leaves and ferns!", show: [["longneck", 6, 6, 36], ["fern", 48, 8, 16], ["leaf", 62, 8, 14]] },
+  { say: "Fun fact! Some dinosaurs had big spikes on their backs!", show: [["spiky", 10, 6, 40], ["volcano", 58, 8, 18]] }
+];
+let SC = null;
+async function playScene(stops, then) {
+  const me = SC = { then, done: false }, alive = () => SC === me && !me.done;
+  show("scene"); const stage = $("sceneStage"); stage.innerHTML = `<div class="sballoon">${BALLOON}</div>`; sfx.party(); confetti(25);
+  for (const stop of stops) {
+    if (!alive()) return;
+    stage.querySelectorAll(".sitem").forEach(e => e.classList.add("gone"));
+    stop.show.forEach(([name, x, y, size], i) => { const d = document.createElement("div"); d.className = "sitem"; d.style.cssText = `left:${x}%;bottom:${y}%;width:${size}vmin;height:${size}vmin;font-size:${(size * .85).toFixed(1)}vmin;animation-delay:${(i * .35).toFixed(2)}s`; d.innerHTML = SCENE_ART[name]; stage.appendChild(d); });
+    $("sceneCap").textContent = stop.say;
+    const said = S.voice ? await (stop.doc ? playClip("audio/pip/doc/" + clipName(stop.say) + ".mp3", stop.say) : talk(stop.say)) : (await wait(1500 + stop.say.length * 45), true);
+    if (!said || !alive()) return;
+    await wait(700);
+  }
+  if (alive()) { await wait(600); endScene(me); }
+}
+function endScene(me) { if (!me || me.done || SC !== me) return; me.done = true; SC = null; hush(); me.then(); }
+$("sceneGo").addEventListener("click", () => { sfx.tap(); endScene(SC); });
 
 // ---------- hatching an egg ----------
 let H = null;
