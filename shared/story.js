@@ -82,7 +82,12 @@ function StoryGame(C) {
   // so they are recorded in pieces: each sentence, split again at its commas, and each piece is shared by many lines.
   // A piece with no recording is said by the device voice. Without C.lineVoice, the device voice says everything.
   const lineUrl = w => C.lineVoice + Kit.clipName(w) + ".mp3";
-  const pieces = w => (String(w).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(w)]).map(s => s.trim()).flatMap(s => s.split(/(?<=,)\s+/)).filter(Boolean);
+  const sentencePieces = w => (String(w).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(w)]).map(s => s.trim()).flatMap(s => s.split(/(?<=,)\s+/)).filter(Boolean);
+  // C.numberPieces (grades with big numbers): numbers are recorded once each, 0 to 999, plus "thousand", and slotted into the
+  // words around them. "What is 526, minus 396?" plays "What is", "526", "minus", "396". 3,456 plays "3", "thousand", "456".
+  const numberWords = tok => { const n = parseInt(tok.replace(/,/g, ""), 10); return n >= 1000 && n < 1000000 ? [String(Math.floor(n / 1000)), "thousand"].concat(n % 1000 ? [String(n % 1000)] : []) : [String(n)]; };
+  const splitNumbers = p => p.split(/(\d[\d,]*\d|\d)/).flatMap((part, i) => { if (i % 2) return numberWords(part); const t = part.replace(/^[\s,.;:!?]+|[\s,;:]+$/g, "").trim(); return t && /[a-z]/i.test(t) ? [t] : []; });
+  const pieces = w => { const ps = sentencePieces(w); return C.numberPieces ? ps.flatMap(p => /\d/.test(p) ? splitNumbers(p) : [p]) : ps; };
   async function talk(words) {
     const parts = pieces(words); parts.forEach(p => Kit.loadClip(lineUrl(p)).catch(() => {}));
     for (const p of parts) if (!(await Kit.playClip(lineUrl(p), p))) return false;

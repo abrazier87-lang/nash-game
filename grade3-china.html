@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient China</title>
-<link rel="stylesheet" href="shared/kit.css?v=23">
+<link rel="stylesheet" href="shared/kit.css?v=24">
 <style>
   /* Misty mountains, green hills and a red pagoda. */
   :root { --sky1:#bfe6ef; --sky2:#fdf3dc; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#b03a2e; --strip:rgba(255,255,255,.45); --strip-line:rgba(60,110,70,.6); }
@@ -32,8 +32,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=23"></script>
-<script src="shared/story.js?v=23"></script>
+<script src="shared/kit.js?v=24"></script>
+<script src="shared/story.js?v=24"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -538,7 +538,7 @@ const GAMES = {
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody in Ancient China", sub: "A Grade 3 adventure", gradeLabel: "Grade 3 (ages 8-9)", hostName: "Dr. Somebody",
-  host: HOST, saveKey: "grade3China.v1", medal: "g3", need: 6, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g3/lesson/", // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
+  host: HOST, saveKey: "grade3China.v1", medal: "g3", need: 6, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g3/lesson/", lineVoice: "audio/g3/l/", numberPieces: true, // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g3/", 5), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud"></div><div class="peak"></div><div class="peak p2"></div>${PAGODA}<div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["times", "share", "fractions", "abacus", "money", "graphs", "patterns", "garden", "problems", "words", "grammar", "scroll"],
