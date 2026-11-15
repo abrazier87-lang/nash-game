@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Egypt</title>
-<link rel="stylesheet" href="shared/kit.css?v=18">
+<link rel="stylesheet" href="shared/kit.css?v=19">
 <style>
   /* Desert look: blue sky fading to sand, pyramids, dunes. */
   :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=18"></script>
-<script src="shared/story.js?v=18"></script>
+<script src="shared/kit.js?v=19"></script>
+<script src="shared/story.js?v=19"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -83,6 +83,8 @@ const PAST = [["run", "ran", "runned", "ranned"], ["jump", "jumped", "jumpt", "j
   ["swim", "swam", "swimmed", "swammed"], ["write", "wrote", "writed", "wroted"], ["carry", "carried", "carryed", "carred"], ["stop", "stopped", "stoped", "stopt"], ["build", "built", "builded", "builted"], ["find", "found", "finded", "fand"],
   ["give", "gave", "gived", "gaved"], ["sing", "sang", "singed", "sanged"]];
 // [what the scroll says, the question, the right answer, three wrong answers]
+// The first group is about ancient Egypt (history). The second group is about Egypt today and how people live
+// in a hot, dry place, compared with Ontario (Grade 2 social studies, "Global Communities").
 const SCROLLS = [
   ["The Nile is a very long river in Egypt. People grew their food next to it.", "Where did people grow food?", "next to the Nile", ["on the pyramids", "in the sea", "on the moon"]],
   ["The pyramids are huge buildings made of stone blocks. They were built for the kings of Egypt.", "Who were the pyramids built for?", "the kings", ["the cats", "the farmers", "the crocodiles"]],
@@ -93,52 +95,184 @@ const SCROLLS = [
   ["Egyptians wrote on paper made from a plant. The plant was called papyrus.", "What was the paper made from?", "a plant", ["a rock", "a fish", "sand"]],
   ["The Sphinx is a giant statue. It has the body of a lion and the head of a person.", "What kind of body does the Sphinx have?", "a lion's body", ["a bird's body", "a fish's body", "a snake's body"]],
   ["Every year the Nile flooded. The flood left rich, dark mud that was good for growing plants.", "What did the flood leave behind?", "rich mud", ["gold coins", "big stones", "snow"]],
-  ["Egypt is hot and dry. Most of the land is desert, covered in sand.", "What covers most of the land?", "sand", ["snow", "forest", "grass"]],
   ["Egyptians used boats to travel on the Nile. The boats had big sails to catch the wind.", "What helped the boats move?", "the wind", ["the sand", "an engine", "the moon"]],
   ["Workers moved the heavy pyramid stones on wooden sleds. Many people pulled each sled with ropes.", "What did workers use to move the stones?", "wooden sleds", ["trucks", "balloons", "wagons with engines"]],
   ["Egyptians told the time with the sun. A stick's shadow moved as the sun crossed the sky.", "What did they use to tell the time?", "a shadow from the sun", ["a wrist watch", "a phone", "a bell"]],
-  ["Farmers in Egypt grew wheat. They used the wheat to make bread.", "What was the wheat used for?", "making bread", ["building boats", "making paper", "feeding crocodiles"]]
+  ["Farmers in Egypt grew wheat. They used the wheat to make bread.", "What was the wheat used for?", "making bread", ["building boats", "making paper", "feeding crocodiles"]],
+  // Egypt today, and living in a hot, dry place
+  ["Egypt is hot and dry. Most of the land is desert, covered in sand.", "What covers most of the land?", "sand", ["snow", "forest", "grass"]],
+  ["Egypt is in the north of Africa. Africa is a continent, a very big piece of land. Canada is on a different continent, North America.", "Which continent is Egypt in?", "Africa", ["North America", "Europe", "Asia"]],
+  ["Egypt is closer to the equator than Ontario is. The sun shines strongly there, so it is warm all year.", "Why is Egypt warm all year?", "it is closer to the equator", ["it is near the North Pole", "it has lots of snow", "it has big forests"]],
+  ["Many homes in the desert have thick walls and small windows. They keep out the hot sun and keep the inside cool.", "Why do desert homes have thick walls?", "to keep the inside cool", ["to keep the snow out", "to look like pyramids", "to hold more windows"]],
+  ["People in hot places often wear loose, light-coloured clothes. Light colours help keep them cool in the sun.", "Which clothes keep you cool in the sun?", "loose, light-coloured clothes", ["thick winter coats", "dark wool sweaters", "snow pants"]],
+  ["More than 100 million people live in Egypt today. Most of them live near the Nile, where there is water.", "Where do most people in Egypt live today?", "near the Nile", ["in the middle of the desert", "inside the pyramids", "at the North Pole"]],
+  ["Cairo is the biggest city in Egypt today. It has tall buildings, busy roads and a subway.", "What is the biggest city in Egypt?", "Cairo", ["Toronto", "Ottawa", "Rome"]],
+  ["Egypt gets very little rain. Farmers use water from the Nile carefully, so there is enough for everyone.", "Why do farmers use water carefully?", "so there is enough for everyone", ["because it snows a lot", "so the boats can fly", "because water is pink"]],
+  ["All people need food, water and a home. People in Egypt and people in Ontario meet these needs in different ways.", "What do all people need?", "food, water and a home", ["toys and games", "a boat and a camel", "a pyramid"]],
+  ["In Ontario we have four seasons, with snow in winter. In most of Egypt, it almost never snows.", "Where does it snow in winter?", "in Ontario", ["in the Egyptian desert", "on the Nile", "in Cairo"]],
+  ["The Nile flows north into the Mediterranean Sea. It is one of the longest rivers in the world.", "Which way does the Nile flow?", "north", ["south", "east", "west"]],
+  ["Camels can walk a long way in the desert without drinking. Their wide feet help them walk on soft sand.", "What helps camels walk on sand?", "their wide feet", ["their long tails", "their small ears", "their humps"]],
+  ["Long ago, Egyptians wrote with hieroglyphs. Today, most people in Egypt speak and write Arabic.", "What language do most people in Egypt speak today?", "Arabic", ["hieroglyphs", "French", "Latin"]]
 ];
 
+// ---------- how long things take (Grade 2 measures time in seconds, minutes and hours) ----------
+const UNITS = ["seconds", "minutes", "hours"], unitWord = (u, n) => n === 1 ? UNITS[u].slice(0, -1) : UNITS[u];
+// [what it is, picture, about how long, unit: 0 seconds, 1 minutes, 2 hours]
+const EVENTS = [
+  ["blinking your eyes", "👁️", 1, 0], ["clapping your hands 5 times", "👏", 5, 0], ["sneezing", "🤧", 1, 0], ["writing your name", "✍️", 10, 0], ["drinking a glass of water", "🥛", 20, 0], ["jumping 10 times", "🦘", 10, 0],
+  ["brushing your teeth", "🪥", 2, 1], ["eating a snack", "🍎", 10, 1], ["building a sandcastle", "🏰", 30, 1], ["reading a short story", "📖", 10, 1], ["getting dressed", "👕", 5, 1], ["walking to the market", "🚶", 15, 1],
+  ["sleeping at night", "😴", 10, 2], ["a school day", "🏫", 6, 2], ["watching a movie", "🎬", 2, 2], ["sailing down the Nile to the next town", "⛵", 5, 2], ["baking bread in a clay oven", "🍞", 1, 2], ["driving from Toronto to Ottawa", "🚗", 5, 2]
+];
+const howLong = e => `${e[2]} ${unitWord(e[3], e[2])}`;
+const LESSON_COINS = { 1: [10, 10, 5, 5], 2: [25, 25, 10, 5], 3: [200, 100, 25, 10] }; // the coins Dr. Somebody counts in the lesson, for each step
+const TRIPS = ["A boat trip on the Nile", "A visit to the pyramids", "A trip to the market", "A camel ride"];
+const mini = (h, m) => `<span style="display:inline-block;width:15vmin;height:15vmin;vertical-align:middle">${clock(h, m)}</span>`;
+
+// ---------- teaching helpers: lessons ("watch me do one"), hints and step-by-step explanations ----------
+const T = n => `<span class="t">${n}</span>`, O = n => `<span class="o">${n}</span>`; // tens in blue, ones in green
+const art = html => `<div class="lessonart">${html}</div>`;
+// A lesson, or a worked explanation, is a list of [picture, words]: each picture shows while the host says the words.
+async function frames(L, list) { for (const [html, words] of list) { L.frame(art(html)); if (!(await L.say(words))) return false; } return true; }
+async function talkThrough(H, list) { for (const [html, words] of list) { H.show(art(html)); if (!(await H.say(words))) return false; } return true; }
+// Lights up the right answer card and says why.
+function pointTo(H, words) { const c = H.cards().find(c => c.ch.ok); if (c) H.glow(c.el, true); return H.say(words); }
+// Adding by splitting into tens and ones: 37 + 28 is 30 + 20, then 7 + 8, then put them together.
+function addSteps(a, b) {
+  const at = a - a % 10, bt = b - b % 10, ao = a % 10, bo = b % 10, t = at + bt, o = ao + bo;
+  const tens = bt ? `${T(at)} + ${T(bt)} = ${T(t)}` : `${T(at)}`, ones = `${O(ao)} + ${O(bo)} = ${O(o)}`;
+  return [
+    [`<span class="big">${a} + ${b}</span>`, `Let's add ${a} and ${b}. Split the numbers into tens and ones.`],
+    [tens, bt ? `Add the tens. ${at} plus ${bt} is ${t}.` : `${b} has no tens, so the tens stay ${at}.`],
+    [`${tens}<br>${ones}`, `Add the ones. ${ao} plus ${bo} is ${o}.${o >= 10 ? " That's more than 10, so it makes one more ten." : ""}`],
+    [`${T(t)} + ${O(o)} = <b>${a + b}</b>`, `${t} and ${o} make ${a + b}!`]];
+}
+// Taking away by splitting into tens and ones (when no borrowing is needed): 47 − 25 is 40 − 20, then 7 − 5.
+function subSteps(a, b) {
+  const at = a - a % 10, bt = b - b % 10, ao = a % 10, bo = b % 10, t = at - bt, o = ao - bo;
+  const tens = bt ? `${T(at)} − ${T(bt)} = ${T(t)}` : `${T(at)}`, ones = `${O(ao)} − ${O(bo)} = ${O(o)}`;
+  return [
+    [`<span class="big">${a} − ${b}</span>`, `Let's take ${b} away from ${a}. Split the numbers into tens and ones.`],
+    [tens, bt ? `Take away the tens. ${at} take away ${bt} is ${t}.` : `${b} has no tens, so the tens stay ${at}.`],
+    [`${tens}<br>${ones}`, `Take away the ones. ${ao} take away ${bo} is ${o}.`],
+    [`${T(t)} + ${O(o)} = <b>${a - b}</b>`, `${t} and ${o} make ${a - b}!`]];
+}
+// Counting up from a smaller number to a bigger one: jump to the next ten, then jump the rest. The jumps add up to the answer.
+function jumpSteps(lo, hi, show = String, said = String) {
+  const ten = Math.ceil(lo / 10) * 10, js = ten === lo || ten >= hi ? [[lo, hi]] : [[lo, ten], [ten, hi]], lines = [], out = [];
+  js.forEach(([a, b]) => { lines.push(`${show(a)} → ${show(b)}: <b>${show(b - a)}</b>`); out.push([lines.join("<br>"), `From ${said(a)} to ${said(b)} is ${said(b - a)}.`]); });
+  if (js.length > 1) out.push([`${js.map(([a, b]) => show(b - a)).join(" + ")} = <b>${show(hi - lo)}</b>`, `${js.map(([a, b]) => said(b - a)).join(" and ")} make ${said(hi - lo)}.`]);
+  return out;
+}
+const countUpLesson = (lo, hi, ask, start) => [[`<span class="big">${ask}</span>`, start]].concat(jumpSteps(lo, hi));
+// Coins: start with the biggest coin and count on. "values" are in cents, biggest first.
+const coinRow = (values, lit) => `<div class="toks" style="max-width:none">${values.map((c, i) => coin(c).replace('class="coin', `class="coin${i === lit ? " glow" : ""}`)).join("")}</div>`;
+function coinSteps(values) {
+  let total = 0;
+  return values.map((c, i) => { total += c; return [coinRow(values, i) + `<b>${fmt(total)}</b>`, i ? `${c < 100 ? "Count on " + c : "Count on " + moneySaid(c)}. That's ${moneySaid(total)}.` : `Start with the biggest coin. ${moneySaid(c)}.`]; });
+}
+// Spelling: letter teams that make one sound (rain, boat, night), and the tricky part of heart words.
+const TEAMS = [["igh", "long I"], ["ai", "long A"], ["ay", "long A"], ["oa", "long O"], ["ow", "long O"], ["ee", "long E"], ["ea", "long E"], ["oo", "oo"], ["ir", "ir"]];
+function team(w) { const t = TEAMS.find(([x]) => w.includes(x)); if (t) return { at: w.indexOf(t[0]), len: t[0].length, letters: t[0], sound: t[1] };
+  const i = w.search(/[aeiou][^aeiou]e$/); return i >= 0 ? { at: i, len: w.length - i, letters: w[i] + " and the e at the end", sound: "long " + w[i].toUpperCase(), magic: true } : null; }
+const HEART = { friend: [2, 2], because: [3, 2], people: [1, 2], said: [1, 2], school: [1, 2], again: [2, 2], little: [4, 2], water: [1, 1], would: [1, 3], they: [2, 2], were: [1, 3], once: [0, 1], every: [2, 1], laugh: [1, 4] };
+const marked = (w, at, len) => `${w.slice(0, at)}<b>${w.slice(at, at + len)}</b>${w.slice(at + len)}`;
+const spelled = w => w.toUpperCase().split("").join(", ");
+// The rule for making "more than one".
+function pluralRule(one, many) {
+  if (many !== one + "s" && many !== one + "es" && many !== one.slice(0, -1) + "ies" && many !== one.slice(0, -1) + "ves")
+    return { hint: `${cap(one)} is a special word. It changes when there is more than one, instead of adding s.`, why: `One ${one}, two ${many}. This one we learn by heart.` };
+  if (one.endsWith("f")) return { hint: `${cap(one)} ends in f. Some words that end in f change the f to v, then add e s.`, why: `Change the f to v and add e s. One ${one}, two ${many}.` };
+  if (/[^aeiou]y$/.test(one)) return { hint: `${cap(one)} ends in y. When a word ends in y after a consonant, change the y to i and add e s.`, why: `Change the y to i and add e s. One ${one}, two ${many}.` };
+  if (/(s|x|sh|ch)$/.test(one)) return { hint: `${cap(one)} ends in ${one.endsWith("sh") ? "s h" : one.slice(-1)}. Words that end in s, x, s h or c h add e s. You can hear the extra sound.`, why: `Add e s. One ${one}, two ${many}. Say it: ${many}.` };
+  return { hint: `Most words just add s to mean more than one.`, why: `Just add s. One ${one}, two ${many}.` };
+}
+// The rule for "yesterday" words.
+function pastRule(now, then) {
+  if (then === now + "ed") return { hint: `Most yesterday words add e d to the end.`, why: `Just add e d. Today I ${now}. Yesterday I ${then}.` };
+  if (then === now + now.slice(-1) + "ed") return { hint: `${cap(now)} is short and ends in one vowel and one consonant. Double the last letter, then add e d.`, why: `Double the ${now.slice(-1)}, then add e d. Yesterday I ${then}.` };
+  if (now.endsWith("y") && then === now.slice(0, -1) + "ied") return { hint: `${cap(now)} ends in y. Change the y to i, then add e d.`, why: `Change the y to i and add e d. Yesterday I ${then}.` };
+  return { hint: `${cap(now)} is a word that changes instead of adding e d. Say each one in the sentence and listen for the one that sounds right.`, why: `${cap(now)} changes to ${then}. Today I ${now}. Yesterday I ${then}.`, irregular: true };
+}
+// Reading: find the sentence in the scroll that holds the answer (the one sharing the most words with the answer and the question).
+const STOP = new Set("the a an and of to in on is was were it its they them their what who why where which how did do does for with from that this there be by at as are has have most most".split(" "));
+function answerSentence(text, ask, ans) {
+  const sents = text.match(/[^.!?]+[.!?]/g) || [text], words = s => s.toLowerCase().replace(/'s\b/g, "").match(/[a-z]+/g) || [];
+  const keys = [...words(ans).map(w => [w, 2]), ...words(ask).map(w => [w, 1])].filter(([w]) => w.length > 2 && !STOP.has(w));
+  const score = s => { const ws = words(s); return keys.reduce((n, [k, v]) => n + (ws.some(w => w === k || w.startsWith(k.slice(0, Math.max(4, k.length - 2)))) ? v : 0), 0); };
+  return sents.map(s => s.trim()).reduce((best, s) => score(s) > score(best) ? s : best, sents[0].trim());
+}
+const scrollHtml = (text, ask) => `<div class="passage">${(text.match(/[^.!?]+[.!?]/g) || [text]).map(s => `<span class="sent">${s.trim()}</span>`).join(" ")}<b>${ask}</b></div>`;
+const litSentence = (H, s) => { const el = [...H.bubble.querySelectorAll(".sent")].find(x => x.textContent === s); H.glow(el, true); return el; };
+
 // ---------- the places (mini-games) ----------
-// Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again, tall }.
+// Each has 4 difficulty steps. makeQuestion(step) returns { bubble, say, yay, choices: [{ html, ok, wrong }], pause, key, again, tall,
+//   hint(H): a nudge on how to think about it,  explain(H): the worked answer, after a second wrong try }.
+// lesson(L, step): the "watch me do one" lesson on the first visit (and from the 📖 button).
 const GAMES = {
   add: {
     name: "Pyramid Sums", icon: "🔺", intro: "Let's add big numbers!",
+    lesson: (L, step) => frames(L, step === 4 ? countUpLesson(26, 40, "26 + <b>?</b> = 40", "What do we add to 26 to make 40? Count up from 26, and add up the jumps.")
+      .concat([["26 + <b>14</b> = 40", "So 26 plus 14 is 40!"]]) : addSteps(...[[34, 5], [34, 25], [37, 28]][step - 1])),
     makeQuestion(step) {
       let a, b;
       if (step === 4) { // the missing number
         b = 5 + rand(36); a = 10 + rand(91 - b); const total = a + b;
-        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, choices: sumCards(b) };
+        return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what makes ${total}?`, yay: `Yes! ${a} plus ${b} is ${total}!`, choices: sumCards(b),
+          hint: H => { H.show(`${a} → ${total}`); return H.say(`Count up from ${a} to ${total}. Jump to the next ten first, then add up your jumps.`); },
+          explain: async H => (await talkThrough(H, jumpSteps(a, total))) && pointTo(H, `So the missing number is ${b}. ${a} plus ${b} is ${total}.`) };
       }
       if (step === 1) { const o = rand(9); a = (1 + rand(8)) * 10 + o; b = 1 + rand(9 - o); }               // 34 + 5
       else if (step === 2) { const at = 1 + rand(7), ao = rand(9); a = at * 10 + ao; b = (1 + rand(8 - at)) * 10 + rand(10 - ao); } // 34 + 25
       else { const ao = 2 + rand(8), at = 1 + rand(6); a = at * 10 + ao; b = rand(8 - at) * 10 + (10 - ao) + rand(ao); }             // 37 + 28 (carrying)
-      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, choices: sumCards(a + b) };
+      const bt = b - b % 10;
+      return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a} plus ${b}?`, yay: `Yes! ${a} plus ${b} is ${a + b}!`, choices: sumCards(a + b),
+        hint: H => { H.show(bt ? `${T(a - a % 10)} + ${T(bt)} &nbsp; ${O(a % 10)} + ${O(b % 10)}` : `${T(a - a % 10)} &nbsp; ${O(a % 10)} + ${O(b)}`);
+          return H.say(bt ? "Split the numbers into tens and ones. Add the tens. Then add the ones. Then put them together." : `The tens stay the same. Just add the ones: ${a % 10} plus ${b}.`); },
+        explain: async H => (await talkThrough(H, addSteps(a, b).slice(1))) && pointTo(H, `So the answer is ${a + b}.`) };
     }
   },
   sub: {
     name: "Nile Take-Away", icon: "🐊", intro: "Let's take away big numbers!",
+    lesson: (L, step) => frames(L, step === 4 ? countUpLesson(25, 42, "42 − <b>?</b> = 25", "42 take away what leaves 25? Count up from 25 to 42. The jumps tell us.").concat([["42 − <b>17</b> = 25", "So 42 take away 17 leaves 25!"]])
+      : step === 3 ? countUpLesson(17, 42, "42 − 17", "Here's a trick for taking away. To work out 42 take away 17, count up from 17 to 42.").concat([["42 − 17 = <b>25</b>", "So 42 take away 17 is 25!"]])
+      : subSteps(...(step === 1 ? [47, 5] : [47, 25]))),
     makeQuestion(step) {
       let a, b;
       if (step === 4) { // the missing number
         a = 20 + rand(80); b = 5 + rand(Math.min(36, a - 5)); const c = a - b;
-        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, choices: sumCards(b) };
+        return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what leaves ${c}?`, yay: `Yes! ${a} minus ${b} is ${c}!`, choices: sumCards(b),
+          hint: H => { H.show(`${c} → ${a}`); return H.say(`Count up from ${c} to ${a}. The jumps tell you the missing number.`); },
+          explain: async H => (await talkThrough(H, jumpSteps(c, a))) && pointTo(H, `So the missing number is ${b}. ${a} take away ${b} leaves ${c}.`) };
       }
       if (step === 1) { const o = 1 + rand(9); a = (1 + rand(9)) * 10 + o; b = 1 + rand(o); }                 // 47 - 5
       else if (step === 2) { const at = 2 + rand(8), ao = 1 + rand(9); a = at * 10 + ao; b = (1 + rand(at - 1)) * 10 + rand(ao + 1); } // 47 - 25
       else { const ao = rand(9), at = 2 + rand(8); a = at * 10 + ao; b = rand(at) * 10 + ao + 1 + rand(9 - ao); }                       // 42 - 17 (borrowing)
-      return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, choices: sumCards(a - b) };
+      const q = { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a} minus ${b}?`, yay: `Yes! ${a} minus ${b} is ${a - b}!`, choices: sumCards(a - b) };
+      if (step === 3) { // borrowing: count up from the smaller number
+        q.hint = H => { H.show(`${b} → ${a}`); return H.say(`Count up from ${b} to ${a}. Jump to the next ten first, then add up your jumps.`); };
+        q.explain = async H => (await talkThrough(H, jumpSteps(b, a))) && pointTo(H, `So ${a} take away ${b} is ${a - b}.`);
+      } else {
+        const bt = b - b % 10;
+        q.hint = H => { H.show(bt ? `${T(a - a % 10)} − ${T(bt)} &nbsp; ${O(a % 10)} − ${O(b % 10)}` : `${T(a - a % 10)} &nbsp; ${O(a % 10)} − ${O(b)}`);
+          return H.say(bt ? "Split the numbers into tens and ones. Take away the tens. Then take away the ones." : `The tens stay the same. Just take away the ones: ${a % 10} take away ${b}.`); };
+        q.explain = async H => (await talkThrough(H, subSteps(a, b).slice(1))) && pointTo(H, `So the answer is ${a - b}.`);
+      }
+      return q;
     }
   },
   tokens: { // the Canadian coins game (it keeps its old short name, "tokens", so saved progress still works)
     name: "Market Coins", icon: "🪙", intro: "I brought my coins from home in Canada! A nickel is 5 cents. A dime is 10 cents. A quarter is 25 cents.",
+    lesson: (L, step) => frames(L, step === 4 ? [[`<span class="big">65¢ → $1</span>`, "A fig costs 65 cents and you pay with a loonie, 1 dollar. To find your change, count up from 65 cents to 1 dollar."]].concat(jumpSteps(65, 100, fmt, moneySaid))
+        .concat([["change: <b>35¢</b>", "Your change is 35 cents!"]])
+      : coinSteps(LESSON_COINS[step]).concat([[coinRow(LESSON_COINS[step]) + `<b>${fmt(LESSON_COINS[step].reduce((a, b) => a + b))}</b>`, `Biggest coins first, then count on. That makes counting money easier!`]])),
     makeQuestion(step) {
       if (step === 4 && rand(2)) { // change from a loonie
         const cost = 5 * (4 + rand(15)), change = 100 - cost, thing = pick(["fig", "loaf of bread", "clay pot", "bunch of grapes"]);
         const text = `A ${thing} costs ${fmt(cost)}. You pay with a loonie, which is $1. How much change do you get?`;
         return { bubble: `<div class="passage">${text}</div>`, tall: true, key: "change" + cost, say: `A ${thing} costs ${moneySaid(cost)}. You pay with a loonie, which is 1 dollar. How much change do you get?`, yay: `Yes! ${cap(moneySaid(change))} change.`,
-          choices: moneyCards(change, [change + 10, change - 10, change + 5, change - 5, cost]) };
+          choices: moneyCards(change, [change + 10, change - 10, change + 5, change - 5, cost]),
+          hint: H => { H.show(`${fmt(cost)} → $1`); return H.say(`Count up from ${moneySaid(cost)} to 1 dollar. Jump to the next ten first.`); },
+          explain: async H => (await talkThrough(H, jumpSteps(cost, 100, fmt, moneySaid))) && pointTo(H, `So your change is ${moneySaid(change)}.`) };
       }
       let t = 0, l = 0, q = 0, d, n, c, count;
       do {
@@ -147,42 +281,85 @@ const GAMES = {
         else { t = rand(2); l = rand(3); q = rand(4); d = rand(3); n = rand(2); }      // adds loonies and toonies
         c = t * 200 + l * 100 + q * 25 + d * 10 + n * 5; count = t + l + q + d + n;
       } while (count < 2 || count > 9 || (step <= 2 ? c > 95 : c < 100 || c > 500) || (step === 2 && q === 0));
-      return { bubble: `<div class="toks">${coin(200).repeat(t)}${coin(100).repeat(l)}${coin(25).repeat(q)}${coin(10).repeat(d)}${coin(5).repeat(n)}</div>`, key: [t, l, q, d, n].join(),
+      const values = [].concat(Array(t).fill(200), Array(l).fill(100), Array(q).fill(25), Array(d).fill(10), Array(n).fill(5));
+      return { bubble: `<div class="toks">${values.map(coin).join("")}</div>`, key: [t, l, q, d, n].join(),
         say: (step >= 3 ? "A loonie is 1 dollar. A toonie is 2 dollars. " : "") + "How much money is this?", again: "How much money is this?", yay: `Yes! That is ${moneySaid(c)}.`,
-        choices: moneyCards(c, step <= 2 ? [c + 5, c - 5, c + 10, c - 10, c + 25] : [c + 25, c - 25, c + 100, c - 100, c + 10, c + 5]) };
+        choices: moneyCards(c, step <= 2 ? [c + 5, c - 5, c + 10, c - 10, c + 25] : [c + 25, c - 25, c + 100, c - 100, c + 10, c + 5]),
+        hint: H => { H.glow(H.bubble.querySelector(".coin"), true); return H.say(`Start with the biggest coin, ${moneySaid(values[0])}. Then count on with each smaller coin.`); },
+        explain: async H => { // light up each coin in turn and say the total so far
+          const els = [...H.bubble.querySelectorAll(".coin")]; let total = 0;
+          for (let i = 0; i < els.length; i++) { els.forEach(e => H.glow(e, false)); H.glow(els[i], true); total += values[i]; if (!(await H.say(moneySaid(total)))) return false; }
+          return pointTo(H, `That's ${moneySaid(c)}.`);
+        } };
     }
   },
-  time: {
-    name: "Sundial Time", icon: "🕰️", intro: "Long ago, people in Egypt told the time with the sun. We can use a clock!",
+  time: { // Grade 2 measures time: seconds, minutes and hours, and how long something takes
+    name: "Sundial Time", icon: "🕰️", intro: "Long ago, people in Egypt told the time with the sun. Let's think about how long things take!",
+    lesson: (L, step) => frames(L, step <= 2 ? [
+        ["⏱️", "We measure how long things take in seconds, minutes and hours."],
+        ["👏 &nbsp;1 second", "A second is very short. It's about as quick as one clap."],
+        ["🔢 &nbsp;1 minute = 60 seconds", "A minute is 60 seconds. That's about as long as counting slowly to 60."],
+        ["🍞 &nbsp;1 hour = 60 minutes", "An hour is 60 minutes. That's much longer. Baking a loaf of bread takes about an hour."]]
+      : [[`${mini(2, 0)} → ${mini(5, 0)}`, "A boat left at 2 o'clock and got to the next town at 5 o'clock. How long was the trip? Let's count the hours."],
+        [`${mini(3, 0)}<br><b>1</b>`, "3 o'clock is 1 hour."], [`${mini(4, 0)}<br><b>2</b>`, "4 o'clock is 2 hours."], [`${mini(5, 0)}<br><b>3</b>`, "5 o'clock is 3 hours. The trip took 3 hours!"]]),
     makeQuestion(step) {
-      const h = 1 + rand(12), next = h % 12 + 1;
-      const textCards = (opts, h0, m0) => shuffle(uniqTimes(opts)).map(o => ({ html: `<span style="font-size:7vmin">${timeText(o[0], o[1])}</span>`, ok: o[0] === h0 && o[1] === m0, wrong: `That says ${timeSaid(o[0], o[1])}.` }));
-      if (step === 4) { // what time will it be a little later?
-        const m = pick([0, 15, 30]), plus = pick([15, 30, 60]), total = m + plus, h2 = (h - 1 + Math.floor(total / 60)) % 12 + 1, m2 = total % 60, label = plus === 60 ? "1 hour" : plus + " minutes";
-        return { bubble: `<div class="col"><div class="clockbox small">${clock(h, m)}</div><div class="cap">+ ${label}</div></div>`, tall: true, key: [h, m, plus].join(),
-          say: `The clock shows ${timeSaid(h, m)}. What time will it be in ${label}?`, yay: `Yes! It will be ${timeSaid(h2, m2)}!`,
-          choices: textCards([[h2, m2], [h, m], [h2 % 12 + 1, m2], [h2, (m2 + 15) % 60]], h2, m2) };
+      if (step === 1) { // seconds, minutes or hours?
+        const e = pick(EVENTS), [what, pic, n, u] = e;
+        return { bubble: `<div class="col">${big(pic, 11)}<div class="sentence">${cap(what)} takes about ${n} <u>&nbsp;</u></div></div>`, tall: true, key: what,
+          say: `${cap(what)} takes about ${n}, what? Seconds, minutes, or hours?`, again: `${cap(what)} takes about ${n}, what?`, read: "Seconds, minutes, or hours?", yay: `Yes! ${cap(what)} takes about ${howLong(e)}.`,
+          choices: [0, 1, 2].map(k => ({ html: wordCard(unitWord(k, n), INK[k]), ok: k === u, wrong: k < u ? `${n} ${unitWord(k, n)} would be much too quick.` : `${n} ${unitWord(k, n)} would be much too long!` })),
+          hint: H => H.say("A second is as quick as a clap. A minute is about as long as counting slowly to 60. An hour is much longer, like baking a loaf of bread."),
+          explain: H => pointTo(H, `${cap(what)} takes about ${howLong(e)}.`) };
       }
-      if (step === 1) { // quarter past, half past, quarter to
-        const m = pick([15, 45, 15, 45, 30]);
-        return { bubble: `<div class="clockbox">${clock(h, m)}</div>`, key: h + ":" + m, say: "What time does the clock show?", yay: `Yes! It is ${timeSaid(h, m)}. We write it ${h} ${m}.`,
-          choices: textCards([[h, m], [h, (m + 30) % 60], [next, m]], h, m) };
+      if (step === 2) { // which takes the longest, or the least time?
+        const pickU = u => pick(EVENTS.filter(e => e[3] === u)), es = shuffle([pickU(0), pickU(1), pickU(2)]), longest = rand(2) === 0, right = longest ? 2 : 0;
+        return { bubble: `<div class="sentence">Which one takes ${longest ? "the longest" : "the least time"}?</div>`, key: es.map(e => e[0]).join(),
+          say: `Which one takes ${longest ? "the longest" : "the least time"}? ${es.map(e => e[0]).join(", or ")}?`, again: `Which one takes ${longest ? "the longest" : "the least time"}?`, read: "", yay: `Yes! ${cap(es.find(e => e[3] === right)[0])} takes about ${howLong(es.find(e => e[3] === right))}.`,
+          choices: es.map(e => ({ html: `<div style="display:flex;flex-direction:column;align-items:center;gap:.6vmin;padding:0 1.2vmin;line-height:1"><span style="font-size:8vmin">${e[1]}</span><span style="font-size:2.8vmin;line-height:1.15">${e[0]}</span></div>`, ok: e[3] === right, wrong: `${cap(e[0])} takes about ${howLong(e)}.`, e })),
+          hint: H => H.say("Think about each one. Does it take seconds, minutes, or hours?"),
+          explain: async H => { for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(`${cap(c.ch.e[0])}: about ${howLong(c.ch.e)}.`); H.glow(c.el, false); if (!ok) return false; }
+            return pointTo(H, longest ? "Hours are the longest." : "Seconds are the quickest."); } };
       }
-      const m = 5 * (1 + rand(11)), mixedUp = [m / 5, (h % 12) * 5]; // mixedUp: what you get if you swap the two hands
-      if (step === 2) return { bubble: `<div class="clockbox">${clock(h, m)}</div>`, key: h + ":" + m, say: "What time does the clock show?", yay: `Yes! It is ${timeSaid(h, m)}!`,
-        choices: textCards([[h, m], mixedUp, [h, (m + 5) % 60], [next, m]], h, m) };
-      return { bubble: big(timeText(h, m), 11), key: h + ":" + m, say: `Which clock shows ${timeSaid(h, m)}?`, yay: `Yes! That clock shows ${timeSaid(h, m)}!`, // step 3: pick the clock
-        choices: shuffle(uniqTimes([[h, m], mixedUp, [h, (m + 15) % 60]])).map(o => ({ html: `<div class="art">${clock(o[0], o[1])}</div>`, ok: o[0] === h && o[1] === m, wrong: `That clock shows ${timeSaid(o[0], o[1])}.` })) };
+      const h = 1 + rand(12), n = 1 + rand(step === 3 ? 5 : 4), h2 = (h - 1 + n) % 12 + 1;
+      const count = Array.from({ length: n }, (_, i) => (h + i) % 12 + 1); // the hours counted on: 3, 4, 5
+      const countSteps = count.map((x, i) => [`${count.slice(0, i + 1).map(y => `${y}:00`).join(" → ")}<br><b>${i + 1} hour${i ? "s" : ""}</b>`, `${x} o'clock is ${i + 1} hour${i ? "s" : ""}.`]);
+      if (step === 3) { // how many hours did it take?
+        const trip = pick(TRIPS);
+        return { bubble: `<div class="rowx">${mini(h, 0)}<span style="font-size:6vmin">→</span>${mini(h2, 0)}</div>`, tall: true, key: [h, n].join(),
+          say: `${trip} started at ${h} o'clock and finished at ${h2} o'clock. How many hours did it take?`, again: "How many hours did it take?", read: `${trip} started at ${h}:00 and finished at ${h2}:00. How many hours did it take?`,
+          yay: `Yes! From ${h} o'clock to ${h2} o'clock is ${n} hour${n > 1 ? "s" : ""}.`, choices: numCards(n, 1, 12, 4, [n + 1, n - 1, n + 2]),
+          hint: H => { H.show(`${h}:00 → ${h2}:00`); return H.say(`Start at ${h} o'clock. Count each hour until you get to ${h2} o'clock. Use your fingers!`); },
+          explain: async H => (await talkThrough(H, countSteps)) && pointTo(H, `So it took ${n} hour${n > 1 ? "s" : ""}.`) };
+      }
+      // step 4: what time will it end?
+      const m = pick([0, 30]), trip = pick(TRIPS), back = (h2 + 10) % 12 + 1, hrs = `${n} hour${n > 1 ? "s" : ""}`;
+      return { bubble: `<div class="col"><div class="clockbox small">${clock(h, m)}</div><div class="cap">+ ${hrs}</div></div>`, tall: true, key: [h, m, n].join(),
+        say: `${trip} starts at ${timeSaid(h, m)}. It lasts ${hrs}. What time does it end?`, again: "What time does it end?", read: `${trip} starts at ${timeText(h, m)}. It lasts ${hrs}. What time does it end?`,
+        yay: `Yes! ${hrs} after ${timeSaid(h, m)} is ${timeSaid(h2, m)}!`,
+        choices: shuffle(shuffle(uniqTimes([[h, m], [h2 % 12 + 1, m], [back, m], [h2, (m + 30) % 60]]).filter(o => !(o[0] === h2 && o[1] === m))).slice(0, 3).concat([[h2, m]]))
+          .map(o => ({ html: `<span style="font-size:7vmin">${timeText(o[0], o[1])}</span>`, ok: o[0] === h2 && o[1] === m, wrong: `That says ${timeSaid(o[0], o[1])}.` })),
+        hint: H => H.say(`Start at ${timeSaid(h, m)}. Count on ${hrs}. The minutes stay the same.`),
+        explain: async H => (await talkThrough(H, count.map((x, i) => [`${count.slice(0, i + 1).map(y => timeText(y, m)).join(" → ")}<br><b>${i + 1} hour${i ? "s" : ""}</b>`, `${timeSaid(x, m)} is ${i + 1} hour${i ? "s" : ""} later.`]))) && pointTo(H, `So it ends at ${timeSaid(h2, m)}.`) };
     }
   },
   words: {
     name: "Hieroglyph Words", icon: "📜", intro: "Let's learn about words!",
+    lesson: (L, step) => frames(L, step === 4 ? [
+        ["<b>noun</b>: pyramid", "A naming word, called a noun, names a person, a place or a thing. Here's a test: can you put 'the' in front of it? The pyramid. Yes! It's a noun."],
+        ["<b>verb</b>: dig", "An action word, called a verb, is something you do. Test it: can you say 'I can' in front of it? I can dig. Yes! It's a verb."],
+        ["<b>adjective</b>: golden", "A describing word, called an adjective, tells us what something is like. A golden crown. Golden tells us what the crown is like."]]
+      : [[`${big("hot", 8, "#ff5a5f")} &nbsp;↔&nbsp; ${big("cold", 8, "#4d9de0")}`, "Opposites are words that are as different as can be. Hot and cold are opposites."],
+        ["The sand is <b>hot</b>.<br>The snow is <b>cold</b>.", "Try them in sentences. The sand is hot. The snow is cold."],
+        [`${big("big", 8, "#58b368")} &nbsp;=&nbsp; ${big("large", 8, "#a06cd5")}`, "Some words mean the same thing. Big and large mean the same."],
+        ["a <b>big</b> pyramid<br>a <b>large</b> pyramid", "Swap one for the other in a sentence. A big pyramid. A large pyramid. It still means the same thing!"]]),
     makeQuestion(step) {
       const cols = shuffle(INK);
       if (step === 4) { // naming words, action words, describing words
         const kind = pick(Object.keys(KINDS)), cards = Object.keys(KINDS).map(k => ({ w: pick(KINDS[k].words), k }));
         return { bubble: `<div class="sentence">${KINDS[kind].ask}</div>`, key: kind + cards.map(c => c.w).join(), say: `Which one is ${KINDS[kind].ask}?`, yay: `Yes! ${KINDS[kind].why}`, pause: 3200,
-          choices: shuffle(cards).map((c, i) => ({ html: wordCard(c.w, cols[i]), ok: c.k === kind, wrong: `${cap(c.w)} is ${KINDS[c.k].ask}.` })) };
+          choices: shuffle(cards).map((c, i) => ({ html: wordCard(c.w, cols[i]), ok: c.k === kind, wrong: `${cap(c.w)} is ${KINDS[c.k].ask}.`, kind: c.k, word: c.w })),
+          hint: H => H.say(kind === "noun" ? "A naming word: can you put 'the' in front of it?" : kind === "verb" ? "An action word: can you say 'I can' in front of it?" : "A describing word tells what something is like. Can you put it in front of 'crown'?"),
+          explain: async H => { for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(`${cap(c.ch.word)} is ${KINDS[c.ch.kind].ask}.`); H.glow(c.el, false); if (!ok) return false; } return pointTo(H, KINDS[kind].why); } };
       }
       const opp = step === 1 ? true : step === 2 ? false : rand(2) === 0, list = opp ? OPPOSITES : SAME, count = step === 3 ? 4 : 3;
       const pair = shuffle(pick(list)), [w, a] = pair;
@@ -192,44 +369,90 @@ const GAMES = {
       const wrongs = shuffle([...new Set(all.flat())].filter(x => !linked.has(x))).slice(0, count - 1);
       return { bubble: `<div class="col">${big(w, 8)}<div class="cap">${opp ? "opposite" : "means the same"}</div></div>`, key: w + opp,
         say: opp ? `Which word is the opposite of ${w}?` : `Which word means the same as ${w}?`, yay: opp ? `Yes! ${cap(a)} is the opposite of ${w}!` : `Yes! ${cap(a)} means the same as ${w}!`,
-        choices: shuffle(wrongs.concat(a)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === a, wrong: opp ? `${cap(x)} is not the opposite of ${w}.` : `${cap(x)} does not mean the same as ${w}.` })) };
+        choices: shuffle(wrongs.concat(a)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === a, wrong: opp ? `${cap(x)} is not the opposite of ${w}.` : `${cap(x)} does not mean the same as ${w}.` })),
+        hint: H => H.say(opp ? `Opposites are as different as can be, like up and down. Which word is the most different from ${w}?` : `Words that mean the same can swap places in a sentence. Which word could take the place of ${w}?`),
+        explain: H => pointTo(H, opp ? `${cap(w)} and ${a} are opposites. They are as different as can be.` : `You can say ${a} instead of ${w}, and it means the same thing.`) };
     }
   },
   scribe: {
     name: "Scribe School", icon: "✍️", intro: "A scribe had to spell every word the right way. Let's try!",
+    lesson: (L, step) => frames(L, [
+      [[`r<b>ai</b>n &nbsp; b<b>oa</b>t &nbsp; n<b>igh</b>t`, "Some sounds are spelled with a team of letters. In rain, the A and the I work together to make the long A sound. In boat, O A makes the long O sound. In night, I G H makes the long I sound."],
+        [`c<b>a</b>k<b>e</b>`, "And in cake, the E at the end is silent. It makes the A say its name."]],
+      [[`s<b>ai</b>d &nbsp; fr<b>ie</b>nd`, "Some words have a tricky part that doesn't sound the way it looks. We call them heart words, because we learn the tricky part by heart."],
+        [`fr<b>ie</b>nd`, "In friend, the tricky part is I E. Look at it, say the letters, and remember it: F, R, I, E, N, D."]],
+      [["cat → cat<b>s</b>", "To mean more than one, most words just add S. One cat, two cats."], ["box → box<b>es</b>", "Words that end in S, X, S H or C H add E S. One box, two boxes."],
+        ["baby → bab<b>ies</b>", "If a word ends in a consonant and Y, change the Y to I and add E S. One baby, two babies."], ["mouse → <b>mice</b>", "And some words change completely. One mouse, two mice!"]],
+      [["jump → jump<b>ed</b>", "To talk about yesterday, most words add E D. Today I jump. Yesterday I jumped."], ["stop → sto<b>pped</b>", "Short words like stop double the last letter first. Stopped."],
+        ["go → <b>went</b>", "And some words change completely. Today I go. Yesterday I went. Say it in a sentence to hear which one sounds right."]]][step - 1]),
     makeQuestion(step) {
-      const cols = shuffle(INK), cards = (right, wrongs, msg) => shuffle(wrongs.concat(right)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === right, wrong: msg }));
-      if (step <= 2) { const [w, x, y] = pick(step === 1 ? SPELL_EASY : SPELL_TRICKY);
-        return { bubble: big("👂", 12), key: w, say: `Which one spells, ${w}, the right way?`, read: `Which one spells "${w}" the right way?`, yay: `Yes! ${w.toUpperCase().split("").join(", ")}. That spells, ${w}!`, choices: cards(w, [x, y], "That is not how we spell it.") }; }
-      if (step === 3) { const [one, many, x, y] = pick(PLURALS);
-        return { bubble: `<div class="sentence">one ${one}<br>two <u>&nbsp;</u></div>`, key: one, say: `One ${one}. Two what? Pick the right spelling.`, yay: `Yes! One ${one}, two ${many}.`, choices: cards(many, [x, y], "Not quite.") }; }
-      const [now, then, x, y] = pick(PAST);
-      return { bubble: `<div class="sentence">Today I ${now}.<br>Yesterday I <u>&nbsp;</u>.</div>`, key: now, say: `Today I ${now}. Yesterday I, blank. Pick the right word.`, yay: `Yes! Today I ${now}. Yesterday I ${then}.`, choices: cards(then, [x, y], "Not quite.") };
+      const cols = shuffle(INK), cards = (right, wrongs, msg) => shuffle(wrongs.concat(right)).map((x, i) => ({ html: wordCard(x, cols[i]), ok: x === right, wrong: msg, word: x }));
+      if (step <= 2) { const [w, x, y] = pick(step === 1 ? SPELL_EASY : SPELL_TRICKY), tm = team(w), heart = HEART[w];
+        const q = { bubble: big("👂", 12), key: w, say: `Which one spells, ${w}, the right way?`, read: `Which one spells "${w}" the right way?`, yay: `Yes! ${spelled(w)}. That spells, ${w}!`, choices: cards(w, [x, y], "That is not how we spell it.") };
+        if (step === 1 && tm) {
+          q.hint = H => H.say(tm.magic ? `Say ${w} slowly. Listen for the ${tm.sound} sound. A silent E at the end can make a vowel say its name.` : `Say ${w} slowly. Listen for the ${tm.sound} sound in the middle. In this word, it's spelled with the letters ${tm.letters.toUpperCase().split("").join(" ")}.`);
+          q.explain = H => { H.show(big(tm.magic ? marked(w.slice(0, -1), tm.at, 1) + "<b>e</b>" : marked(w, tm.at, tm.len), 9)); return pointTo(H, `${spelled(w)}. ${tm.magic ? `The E at the end makes the ${w[tm.at].toUpperCase()} say its name.` : `${tm.letters.toUpperCase().split("").join(" ")} makes the ${tm.sound} sound.`}`); };
+        }
+        if (step === 2 && heart) {
+          q.hint = H => { H.show(big(w.slice(0, heart[0]) + "<b>" + "_".repeat(heart[1]) + "</b>" + w.slice(heart[0] + heart[1]), 9)); return H.say(`${cap(w)} is a heart word. Part of it is tricky. Look closely at the part with the lines. Which word gets that part right?`); };
+          q.explain = H => { H.show(big(marked(w, heart[0], heart[1]), 9)); return pointTo(H, `${spelled(w)}. The tricky part is ${spelled(w.substr(heart[0], heart[1]))}. Learn that part by heart!`); };
+        }
+        return q; }
+      if (step === 3) { const [one, many, x, y] = pick(PLURALS), rule = pluralRule(one, many);
+        return { bubble: `<div class="sentence">one ${one}<br>two <u>&nbsp;</u></div>`, key: one, say: `One ${one}. Two what? Pick the right spelling.`, again: `One ${one}. Two what?`, yay: `Yes! One ${one}, two ${many}.`, choices: cards(many, [x, y], "Not quite."),
+          hint: H => H.say(rule.hint), explain: H => pointTo(H, rule.why) }; }
+      const [now, then, x, y] = pick(PAST), rule = pastRule(now, then);
+      return { bubble: `<div class="sentence">Today I ${now}.<br>Yesterday I <u>&nbsp;</u>.</div>`, key: now, say: `Today I ${now}. Yesterday I, blank. Pick the right word.`, again: `Today I ${now}. Yesterday I, blank.`, yay: `Yes! Today I ${now}. Yesterday I ${then}.`, choices: cards(then, [x, y], "Not quite."),
+        hint: async H => { if (!(await H.say(rule.hint))) return false;
+          if (rule.irregular) for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(`Yesterday I ${c.ch.word}.`); H.glow(c.el, false); if (!ok) return false; }
+          return true; },
+        explain: H => pointTo(H, rule.why) };
     }
   },
   scroll: {
-    name: "Explorer's Scroll", icon: "🏺", intro: "Let's read about ancient Egypt!",
+    name: "Explorer's Scroll", icon: "🏺", intro: "Let's read about Egypt, long ago and today!",
+    lesson: L => frames(L, [
+      [`<div class="passage" style="font-size:4vmin">Egyptians loved cats. Cats kept mice away from the food.<b>Why were cats helpful?</b></div>`, "Here's how good readers find answers. First, read the question. Why were cats helpful?"],
+      [`<div class="passage" style="font-size:4vmin">Egyptians loved cats. <span class="sent glow">Cats kept mice away from the food.</span><b>Why were cats helpful?</b></div>`, "Then look in the scroll for the sentence that answers it. Cats kept mice away from the food."],
+      [`<div class="passage" style="font-size:4vmin">Egyptians loved cats. <span class="sent glow">Cats kept <u>mice away</u> from the food.</span><b>Why were cats helpful?</b></div>`, "So cats were helpful because they kept mice away. The answer was right there in the scroll!"]]),
     makeQuestion(step) {
-      const [text, ask, a, wrongs] = pick(SCROLLS), count = step === 1 ? 2 : step === 4 ? 4 : 3, aloud = step <= 2; // steps 1 and 2 read the scroll out loud
-      return { bubble: `<div class="passage">${text}<b>${ask}</b></div>`, tall: true, key: ask,
+      const [text, ask, a, wrongs] = pick(SCROLLS), count = step === 1 ? 2 : step === 4 ? 4 : 3, aloud = step <= 2, s = answerSentence(text, ask, a); // steps 1 and 2 read the scroll out loud
+      return { bubble: scrollHtml(text, ask), tall: true, key: ask,
         say: aloud ? `${text} ${ask}` : `Read the scroll. ${ask}`, again: ask, yay: `Yes! ${cap(a)}.`,
-        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map(x => ({ html: ansCard(x), ok: x === a, wrong: "Not quite. Look at the scroll again." })) };
+        choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map(x => ({ html: ansCard(x), ok: x === a, wrong: "Not quite. Look at the scroll again." })),
+        hint: H => { litSentence(H, s); return H.say(`The answer is in the sentence that's lit up. ${s}`); },
+        explain: async H => { litSentence(H, s); return (await H.say(`Let's read this sentence again. ${s}`)) && pointTo(H, `So the answer is: ${a}.`); } };
     }
   },
   rows: {
     name: "Stone Rows", icon: "🧱", intro: "The pyramids were built from rows and rows of stones. Let's count them the quick way!",
+    lesson: L => { const grid = lit => `<div class="stones" style="grid-template-columns:repeat(4, auto);font-size:5vmin">${Array.from({ length: 12 }, (_, i) => `<span${Math.floor(i / 4) === lit ? ' class="glow"' : ""}>🧱</span>`).join("")}</div>`;
+      return frames(L, [[grid(-1), "Here are 3 rows of 4 stones. Counting them one at a time is slow. Let's count by fours instead!"],
+        [grid(0) + "<b>4</b>", "4"], [grid(1) + "<b>4, 8</b>", "8"], [grid(2) + "<b>4, 8, 12</b>", "12! 3 rows of 4 make 12."], ["4 + 4 + 4 = <b>12</b>", "That's the same as 4 plus 4 plus 4."]]); },
     makeQuestion(step) {
+      const skip = (k, times) => Array.from({ length: times }, (_, i) => (i + 1) * k);
+      const skipSteps = (k, times) => skip(k, times).map((x, i, all) => [`${all.slice(0, i + 1).join(", ")}`, String(x)]);
       if (step === 1) { // equal groups
         const g = 2 + rand(3), k = pick([2, 5]), n = g * k;
         return { bubble: `<div class="groups">${`<div style="${k === 5 ? "grid-template-columns:repeat(3,auto)" : ""}">${"<span>🧱</span>".repeat(k)}</div>`.repeat(g)}</div>`, key: g + "x" + k,
-          tall: true, say: `${g} groups of ${k}. How many stones altogether?`, yay: `Yes! ${g} groups of ${k} make ${n}!`, choices: numCards(n, 1, 100, 4, [n + k, n - k, g + k, n + 1]) };
+          tall: true, say: `${g} groups of ${k}. How many stones altogether?`, yay: `Yes! ${g} groups of ${k} make ${n}!`, choices: numCards(n, 1, 100, 4, [n + k, n - k, g + k, n + 1]),
+          hint: H => { H.glow(H.bubble.querySelector(".groups div"), true); return H.say(`Each group has ${k} stones. Count by ${k}s, one group at a time.`); },
+          explain: async H => { const gs = [...H.bubble.querySelectorAll(".groups > div")];
+            for (let i = 0; i < gs.length; i++) { gs.forEach(x => H.glow(x, false)); H.glow(gs[i], true); if (!(await H.say(String((i + 1) * k)))) return false; }
+            return pointTo(H, `${g} groups of ${k} make ${n}.`); } };
       }
       const r = 2 + rand(4), c = step === 2 ? 2 + rand(4) : pick([2, 3, 4, 5, 10]), n = r * c, near = [n + c, n - c, n + r, r + c, n + 1];
+      const tip = H => H.say(`Count by ${c}s. ${c}, ${2 * c}, and keep going, once for each ${step === 3 ? c + " you see" : "row"}.`);
+      const worked = async H => (await talkThrough(H, skipSteps(c, r))) && pointTo(H, `${r} ${step === 3 ? "lots" : "rows"} of ${c} make ${n}.`);
       if (step === 2) return { bubble: `<div class="stones" style="grid-template-columns:repeat(${c}, auto)">${"<span>🧱</span>".repeat(n)}</div>`, key: r + "x" + c,
-        say: `${r} rows of ${c}. How many stones altogether?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
+        say: `${r} rows of ${c}. How many stones altogether?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near),
+        hint: H => { [...H.bubble.querySelectorAll(".stones span")].slice(0, c).forEach(x => H.glow(x, true)); return tip(H); },
+        explain: async H => { const st = [...H.bubble.querySelectorAll(".stones span")];
+          for (let i = 0; i < r; i++) { st.forEach((x, j) => H.glow(x, Math.floor(j / c) === i)); if (!(await H.say(String((i + 1) * c)))) return false; }
+          return pointTo(H, `${r} rows of ${c} make ${n}.`); } };
       if (step === 3) return { bubble: `<span class="sum" style="font-size:${Math.min(10, 95 / (r * (String(c).length + 3) + 1)).toFixed(1)}vmin">${Array(r).fill(c).join(" + ")} = <b>?</b></span>`, key: r + "x" + c,
-        say: `What is ${Array(r).fill(c).join(" plus ")}?`, yay: `Yes! ${r} lots of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
-      return { bubble: `<div class="sentence">${r} rows of ${c} stones</div>`, key: r + "x" + c, say: `A wall has ${r} rows of ${c} stones. How many stones is that?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near) };
+        say: `What is ${Array(r).fill(c).join(" plus ")}?`, yay: `Yes! ${r} lots of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near), hint: tip, explain: worked };
+      return { bubble: `<div class="sentence">${r} rows of ${c} stones</div>`, key: r + "x" + c, say: `A wall has ${r} rows of ${c} stones. How many stones is that?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near), hint: tip, explain: worked };
     }
   }
 };
@@ -237,7 +460,7 @@ const GAMES = {
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody in Ancient Egypt", sub: "A Grade 2 adventure", gradeLabel: "Grade 2 (ages 7-8)", hostName: "Dr. Somebody",
-  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5,
+  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, // one hint per round; a short lesson on the first visit to each place
   voice: recorded("audio/g2/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud c2"></div><div class="pyr"></div><div class="pyr p2"></div><div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["add", "sub", "tokens", "time", "words", "scribe", "scroll", "rows"],
@@ -245,7 +468,7 @@ window.Story = StoryGame({
     add: ["two digits plus one digit", "two digits plus two digits", "adding with carrying", "find the missing number"],
     sub: ["two digits minus one digit", "two digits minus two digits", "taking away with borrowing", "find the missing number"],
     tokens: ["nickels and dimes", "adds quarters (under a dollar)", "adds loonies and toonies", "bigger amounts and change from a loonie"],
-    time: ["quarter past, half past, quarter to", "to the nearest 5 minutes", "pick the right clock", "what time will it be later"],
+    time: ["seconds, minutes or hours?", "which takes longest?", "how many hours did it take?", "what time will it end?"],
     words: ["opposites", "words that mean the same", "both kinds, 4 choices", "naming, action and describing words"],
     scribe: ["spelling common words", "spelling tricky words", "more than one (plurals)", "yesterday words (past tense)"],
     scroll: ["read aloud, 2 answers", "read aloud, 3 answers", "reads it alone, 3 answers", "reads it alone, 4 answers"],

@@ -120,6 +120,17 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 /* hints: the light-bulb button, and what a hint adds to the question */
 .corner.hint { background:#fff3b0; opacity:1; font-size:6vmin; }
 .corner.hint.used { opacity:.3; filter:grayscale(1); }
+/* lessons ("watch me do one"): the 📖 button sits under the 💡, and the lesson draws its own picture in the bubble */
+.corner.lesson { top:15vmin; background:#d9ecff; opacity:1; font-size:6vmin; }
+.bubble.lessonframe .rowx { flex-direction:column; gap:1.5vmin; }
+.bubble.lessonframe .hintbox { max-width:none; }
+.choice.myturn { width:auto; min-width:34vmin; padding:0 4vmin; font-size:6vmin; background:#c8f7c5; }
+.lessonart { font-size:5.5vmin; line-height:1.25; text-align:center; }
+.lessonart .big { font-size:8vmin; font-weight:bold; }
+.lessonart b { color:#ff8a3d; }
+.lessonart .t { color:#4d9de0; font-weight:bold; } /* tens */
+.lessonart .o { color:#2bb673; font-weight:bold; } /* ones */
+.lessonart .dim { opacity:.3; }
 .choice { position:relative; }
 .choice.struck { opacity:.2; }
 .glow { outline:1vmin solid #ffd23f; outline-offset:.4vmin; border-radius:2vmin; transform:scale(1.06); transition:transform .15s; }

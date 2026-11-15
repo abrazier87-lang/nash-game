@@ -153,6 +153,14 @@ const Kit = (() => {
     };
   }
 
+  // A lesson ("watch me do one") uses the same tools as a hint, plus L.frame(html), which swaps the bubble
+  // for the lesson's own picture. There are no answer cards during a lesson.
+  function lessonHelper({ bubble, alive }) {
+    const L = hintHelper({ bubble, box: document.createElement("div"), q: null, alive });
+    L.frame = html => { bubble.className = "bubble quiet lessonframe"; bubble.innerHTML = `<div class="rowx">${html}</div>`; };
+    return L;
+  }
+
   // ---------- settings shared by the newer games ----------
   const settings = Object.assign({ voice: true, sound: true, voiceName: "" }, get("storyShelf.settings", {}));
   const saveSettings = () => put("storyShelf.settings", settings);
@@ -294,7 +302,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "18"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "19"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

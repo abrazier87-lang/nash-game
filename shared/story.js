@@ -105,6 +105,7 @@ function StoryGame(C) {
     <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
     <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
     <button class="corner right hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
+    <button class="corner right lesson" id="lessonBtn" aria-label="Show me how" style="display:none">📖</button>
     <div id="grown"><div class="panel" id="grownPanel"></div></div>`;
   $("titleSub").textContent = C.sub + (NAME ? " for " + NAME : "");
 
@@ -116,24 +117,52 @@ function StoryGame(C) {
     $("shelfBtn").style.display = (id === "title" || id === "map") ? "" : "none";
     $("grownBtn").style.display = (id === "title" || id === "map") ? "" : "none";
     $("hintBtn").style.display = (id === "game" && C.hints) ? "" : "none"; // only in grades that have hints
+    $("lessonBtn").style.display = (id === "game" && C.lessons) ? "" : "none"; // only in grades that have lessons
   }
 
-  // ---------- playing one place ----------
+  // ---------- playing one place: Learn, then Try together, then Play ----------
+  // In grades with lessons (C.lessons), the first visit to a place starts with a short "watch me" lesson,
+  // the next two questions come with the help already showing, and the 📖 button replays the lesson any time.
+  // After a second wrong try the host explains the answer step by step, and a question that needed help
+  // comes back a little later ("bring it back"), because practising again after a short gap helps it stick.
   let G = null;
+  const REVIEW = {}; // questions to bring back, for as long as the game is open: { place: [{ q, due }] }
   function startGame(id) {
-    G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1 }; // one hint per round
+    G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0 }; // one hint per round
     $("hintBtn").classList.remove("used");
     $("stars").innerHTML = Array(STARS).fill('<div class="star">⭐</div>').join("");
     show("game");
-    nextQuestion(GAMES[id].intro + " ");
+    if (C.lessons && GAMES[id].lesson && !(S.learned || {})[id]) runLesson(true);
+    else nextQuestion(GAMES[id].intro + " ");
+  }
+  async function runLesson(first) { // "Learn": the host works through one example, step by step
+    const g = G; if (!g) return;
+    Kit.hush(); g.lesson = true; g.busy = true; g.q = null;
+    const box = $("choices"); box.innerHTML = ""; box.style.setProperty("--cs", "30vmin");
+    const go = document.createElement("button"); go.className = "choice pop myturn"; go.innerHTML = "<span>My turn ▶</span>";
+    go.addEventListener("click", () => { sfx.tap(); endLesson(g); }); // children can skip ahead whenever they like
+    box.appendChild(go);
+    const L = Kit.lessonHelper({ bubble: $("bubble"), alive: () => G === g && !!g.lesson });
+    let ok = !first || await L.say(GAMES[g.id].intro);
+    if (ok) { await GAMES[g.id].lesson(L, S.skill[g.id]); ok = L.alive(); }
+    if (ok && await L.say("Now it's your turn!")) endLesson(g);
+  }
+  function endLesson(g) {
+    if (G !== g || !g.lesson) return;
+    Kit.hush(); g.lesson = false; g.busy = false;
+    (S.learned || (S.learned = {}))[g.id] = true; save();
+    g.guided = 2; // "Try together": the next two questions come with the help already showing
+    nextQuestion();
   }
   function nextQuestion(lead) {
     const keyOf = q => String(q.key !== undefined ? q.key : q.say + q.bubble);
     let q, tries = 0;
-    do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
-    G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false;
+    const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
+    if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = (lead || "") + "Here's a tricky one again. "; } // bring it back
+    else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
+    G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
     const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
-    $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
+    $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); $("bubble").classList.remove("lessonframe"); animate($("bubble"), "pop");
     const box = $("choices"); box.innerHTML = "";
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
     q.choices.forEach(ch => {
@@ -141,7 +170,10 @@ function StoryGame(C) {
       b.addEventListener("click", () => choose(b, ch));
       box.appendChild(b); fitText(b);
     });
-    say((lead || "") + q.say);
+    const guide = C.lessons && G.guided > 0 && q.hint; // "Try together": show the help straight after asking
+    if (guide) { G.guided--; G.hinted = true; }
+    const asked = say((lead || "") + q.say), g = G;
+    if (guide) asked.then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.hint(Kit.hintHelper({ bubble: $("bubble"), box, q, alive: () => G === g && g.q === q && !g.busy })); });
   }
   async function choose(el, ch) {
     if (!G || G.busy || el.classList.contains("dim")) return;
@@ -150,7 +182,8 @@ function StoryGame(C) {
       G.busy = true; sfx.yes();
       animate($("gameHost"), "bounce");
       el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
-      G.stars++; $("stars").children[G.stars - 1].classList.add("got");
+      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
+      if (C.lessons && (!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: ask it again a little later
       const spoken = Kit.sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
       Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
       adjust(G.first && !G.hinted); // an answer found with a hint does not make the place harder
@@ -158,10 +191,13 @@ function StoryGame(C) {
       if (!G || G.q !== q) return;
       if (G.stars >= STARS) finishGame(); else nextQuestion();
     } else {
-      sfx.oops(); G.first = false;
+      sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
       animate(el, "wobble"); el.classList.add("dim");
       if (C.hints && G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
-      say(`${ch.wrong} ${q.again || q.say}`);
+      if (C.lessons && G.wrongs >= 2 && q.explain && !q.explained) { // a second wrong try: show how to work it out, step by step
+        q.explained = true; const g = G;
+        say(ch.wrong).then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.explain(Kit.hintHelper({ bubble: $("bubble"), box, q, alive: () => G === g && g.q === q && !g.busy })); });
+      } else say(`${ch.wrong} ${q.again || q.say}`);
     }
   }
   // Quietly make a place harder after 3 right in a row, easier after 2 hard questions in a row.
@@ -245,6 +281,12 @@ function StoryGame(C) {
     Kit.dropOneWrong($("choices"));
     const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive: () => G && G.q === q && !G.busy });
     if (q.hint) await q.hint(H); else await H.say(q.help || q.say);
+  });
+  // The lesson button (📖): watch the "how to" lesson again, any time. Afterwards the questions start fresh.
+  $("lessonBtn").addEventListener("click", () => {
+    if (!C.lessons || !G || G.lesson || !GAMES[G.id].lesson) return;
+    if (G.busy && G.q) return; // a right answer is being cheered: wait for the next question
+    sfx.tap(); runLesson(false);
   });
   $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });
 
