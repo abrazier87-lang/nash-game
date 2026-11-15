@@ -292,10 +292,10 @@ const GAMES = {
       return {
         bubble: byLetter ? big(`${L} ${L.toLowerCase()}`, 13) : emo(model[1]),
         say: byLetter ? `Which one starts with the letter ${L}?` : `${cap(model[0])}. Which one starts like ${model[0]}?`,
-        yay: byLetter ? `Yes! ${cap(answer[0])} starts with ${L}!` : `Yes! ${cap(model[0])} and ${answer[0]} both start with ${L}!`, pause: 3000,
+        yay: byLetter ? `Yes! ${cap(answer[0])}. It starts with ${L}!` : `Yes! ${cap(model[0])}, ${answer[0]}. Both start with ${L}!`, pause: 3000,
         hint: H => soundHint(H, L, byLetter, model, answer),
         explain: P => { P.glow(P.right().el, true); return P.say(byLetter ? `${cap(answer[0])}. ${cap(answer[0])} starts with ${L}.` : `${cap(model[0])}, ${answer[0]}. They both start with ${L}.`); },
-        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])} starts with ${c.L}.` }))
+        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, wrong: `${cap(c.w[0])}. That starts with ${c.L}.` }))
       };
     }
   },
@@ -317,7 +317,7 @@ const GAMES = {
           return H.say(H.q.say);
         },
         explain: P => { P.glow(P.right().el, true); return P.say(`${cap(a[0])}, ${b[0]}. They sound the same at the end. They rhyme!`); },
-        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, word: c.w[0], wrong: `${cap(c.w[0])} does not rhyme with ${a[0]}.` }))
+        choices: shuffle(cards).map(c => ({ html: emo(c.w[1]), ok: c.ok, word: c.w[0], wrong: `${cap(c.w[0])}. That does not rhyme.` }))
       };
     }
   },
@@ -373,10 +373,10 @@ const GAMES = {
       if (step === 4) { // numbers only, up to 20
         const a = 1 + rand(20); let b; do { b = 1 + rand(20); } while (b === a);
         const t = more ? Math.max(a, b) : Math.min(a, b), o = a + b - t, word = more ? "bigger" : "smaller", lo = Math.min(a, b), hi = Math.max(a, b);
-        return { bubble: big(word, 6), key: a + "," + b, say: `Which number is ${word}?`, yay: `Yes! ${t} is ${word} than ${o}.`, pause: 2800,
+        return { bubble: big(word, 6), key: a + "," + b, say: `Which number is ${word}?`, yay: `Yes! ${t} is ${word}!`, pause: 2800,
           hint: H => { H.show(`<span class="big">${lo} … ${hi}</span>`); return H.say(`When we count up, ${lo} comes before ${hi}. Numbers get bigger as we count.`); },
-          explain: P => { P.glow(P.right().el, true); return P.say(`When we count, ${lo} comes before ${hi}. So ${t} is ${word}.`); },
-          choices: shuffle([a, b]).map(k => ({ html: String(k), ok: k === t, wrong: `${k} is ${more ? "smaller" : "bigger"} than ${a + b - k}.` })) };
+          explain: P => { P.glow(P.right().el, true); return P.say(`When we count up, ${lo} comes before ${hi}. So ${t} is ${word}.`); },
+          choices: shuffle([a, b]).map(k => ({ html: String(k), ok: k === t, wrong: `${k} is ${more ? "smaller" : "bigger"}.` })) };
       }
       const top = step === 1 ? 5 : 10, gap = step === 3 ? 1 : 2 + rand(2);
       const small = 1 + rand(top - gap), large = small + gap, th = snack();
@@ -496,16 +496,21 @@ function show(id) {
 // Questions, cheers, hints and lessons are recorded in audio/dot/l/, under a name made from the words (Kit.clipName).
 // A line without a recording is said by the device voice instead.
 const lineUrl = w => "audio/dot/l/" + Kit.clipName(w) + ".mp3";
-async function talk(parts) { // one line, or several one after another; true if it all played to the end
-  parts = [].concat(parts); parts.forEach(w => Kit.loadClip(lineUrl(w)).catch(() => {}));
+// Most lines mix things that change (numbers, snacks, words), so they are recorded in pieces: each sentence,
+// split again at its commas. "Three peanuts, and two more. How many altogether?" is three recordings,
+// and each piece is shared by many lines. (Lessons are recorded whole: "whole" keeps a line in one piece.)
+const pieces = w => (String(w).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(w)]).map(s => s.trim()).flatMap(s => s.split(/(?<=,)\s+/)).filter(Boolean);
+async function talk(parts, whole) { // one line, or several one after another; true if it all played to the end
+  parts = [].concat(parts); if (!whole) parts = parts.flatMap(pieces);
+  parts.forEach(w => Kit.loadClip(lineUrl(w)).catch(() => {}));
   for (const w of parts) if (!(await Kit.playClip(lineUrl(w), w))) return false;
   return true;
 }
 async function talkAndWait(parts, quietPause) { if (!Kit.settings.voice) return wait(quietPause); if (await talk(parts)) await wait(450); }
 // The tools Dot uses for hints, lessons and her help: the shared hint tools (shared/kit.js), speaking in Dot's voice.
-function helper(q, alive) {
+function helper(q, alive, whole) {
   const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive }), plain = H.say;
-  H.say = (words, clip) => plain(words, clip || (() => talk(words)));
+  H.say = (words, clip) => plain(words, clip || (() => talk(words, whole)));
   H.right = () => H.cards().find(c => c.ch.ok) || { el: null };
   H.items = sel => [...$("bubble").querySelectorAll(sel)];
   H.bubbleArt = () => $("bubble").querySelector(".rowx > *") || $("bubble").firstElementChild;
@@ -538,7 +543,7 @@ async function runLesson(first) { // "Learn": Dot does one herself, out loud
   Kit.hush(); g.lesson = true; g.busy = true; g.q = null;
   $("bubble").className = "bubble"; $("bubble").innerHTML = `<div class="lessonart"><span class="big">${GAMES[g.id].icon}</span></div>`;
   $("choices").innerHTML = ""; $("myTurn").style.display = "";
-  const P = helper(null, () => G === g && !!g.lesson);
+  const P = helper(null, () => G === g && !!g.lesson, true); // lessons are recorded as whole lines
   const line = async (name, words) => Kit.settings.voice ? speak(name, words) : (await wait(1200), true);
   let ok = true;
   if (first) ok = (S.aboard[g.id] || await line("wish-" + g.p.name, g.p.wish)) && P.alive() && await line("intro-" + g.id, GAMES[g.id].intro) && P.alive();
@@ -568,7 +573,7 @@ function nextQuestion(intro) { // "intro" is the station's id, only for the very
     b.addEventListener("click", () => choose(b, ch));
     box.appendChild(b);
   });
-  Kit.loadClip(lineUrl(q.yay)).catch(() => {}); // get the cheer ready too
+  pieces(q.yay).forEach(p => Kit.loadClip(lineUrl(p)).catch(() => {})); // get the cheer ready too
   const guide = G.guided > 0 && (q.hint || q.teach); // "Try together"
   if (guide) { G.guided--; G.hinted = true; }
   const g = G, parts = (lead ? [lead] : []).concat(q.sayParts || q.say), still = () => G === g && g.q === q && !g.busy;
