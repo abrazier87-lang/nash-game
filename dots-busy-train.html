@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=12">
+<link rel="stylesheet" href="shared/kit.css?v=13">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -77,7 +77,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=12"></script>
+<script src="shared/kit.js?v=13"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -97,6 +97,7 @@ const NAME = PLAYER ? PLAYER.name : "";
 const SAVE = "dotsBusyTrain.v1";
 const fresh = () => ({ skill: { letters: 1, sounds: 1, rhymes: 1, words: 1, count: 1, moreless: 1, order: 1, adding: 1 }, aboard: {}, stickers: [], trips: 0, auto: true });
 let S = Kit.load(SAVE, fresh);
+if (S.trips > 0) Kit.stamp("k"); // children who filled the train before medals existed still get theirs
 const save = () => Kit.save(SAVE, S);
 
 // ---------- pictures ----------
@@ -354,8 +355,8 @@ function adjust(firstTry) {
 function finishGame() {
   const id = G.id; G = null;
   if (S.aboard[id]) { // this station's passenger is already on the train: just celebrate
-    sfx.party(); confetti(30); speak("replay", "Great job! You did it again!");
-    setTimeout(showMap, 2600);
+    sfx.party(); confetti(30);
+    Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the stations once Dot has finished
   } else startBoard(id);
 }
 
@@ -442,7 +443,7 @@ function openGrown() {
   const voices = Kit.englishVoices(), v = Kit.currentVoice();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p><b>Kindergarten (ages 5-6).</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
-    <div class="line"><div>Dot's voice<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <p>Passengers picked up so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Full trains sent to the fair: <b>${S.trips}</b></p>
     ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${STEP_NAMES[id][S.skill[id] - 1]}</small></div>
       <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}

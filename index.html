@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=12">
+<link rel="stylesheet" href="shared/kit.css?v=13">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -45,7 +45,7 @@
 <button class="gear" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 
-<script src="shared/kit.js?v=12"></script>
+<script src="shared/kit.js?v=13"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -53,7 +53,7 @@
    To add a new grade's game: fill in its "file" below.
    ===================================================================== */
 const BOOKS = [
-  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", color: "#58b368", file: "Pips%20Lost%20Eggs.html" },
+  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", color: "#58b368", file: "Pips%20Lost%20Eggs.html", medal: "pre" },
   { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", color: "#ff5a5f", file: "dots-busy-train.html", medal: "k" },
   { grade: "Grade 1",      ages: "Ages 6-7",   name: "Dr. Somebody's Space Balloon", pic: "🦉", color: "#4b3aa8", file: "grade1-space.html", medal: "g1" },
   { grade: "Grade 2",      ages: "Ages 7-8",   name: "Dr. Somebody in Ancient Egypt", pic: "🏺", color: "#c98a2b", file: "grade2-egypt.html", medal: "g2" },
@@ -96,7 +96,7 @@ function openGrown() {
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p>Each child gets their own saved progress on this device. Progress does not move between devices.</p>
     ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
-    <div class="line"><div>Talking voice (for the newer games)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
     <div class="foot"><span></span><button class="main" data-act="close">Done</button></div>`;

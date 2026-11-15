@@ -198,6 +198,7 @@ try {
   if (raw) { const old = JSON.parse(raw); S = Object.assign(fresh(), old); S.skill = Object.assign(fresh().skill, old.skill || {}); } // keeps old progress when new games are added
 } catch (e) {}
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+if (S.clutches > 0) stamp("pre"); // children who finished Pip's adventure before medals existed still get theirs
 
 // ---------- voice (the device's built-in talking voice) ----------
 // The game looks through the voices this device has and picks the most natural-sounding female one.
@@ -219,7 +220,16 @@ function englishVoices() {
 }
 function chooseVoice() {
   const vs = englishVoices();
-  voice = vs.find(v => v.name === S.voiceName) || vs[0] || null;
+  const wanted = sharedSettings().voiceName || S.voiceName; // the voice picked on the book shelf, else Pip's own older choice
+  voice = vs.find(v => v.name === wanted) || vs[0] || null;
+}
+// Settings shared by every game on the shelf (the same place the other games keep them).
+function sharedSettings() { try { return JSON.parse(localStorage.getItem("storyShelf.settings") || "{}") || {}; } catch (e) { return {}; } }
+function shareVoice(name) { try { const s = sharedSettings(); s.voiceName = name; localStorage.setItem("storyShelf.settings", JSON.stringify(s)); } catch (e) {} }
+// A medal on the book shelf for finishing the story (kept separately for each child).
+function stamp(id) {
+  try { const k = "storyShelf.stamps" + (PLAYER ? "." + PLAYER.id : ""), list = JSON.parse(localStorage.getItem(k) || "[]");
+    if (!list.includes(id)) { list.push(id); localStorage.setItem(k, JSON.stringify(list)); } } catch (e) {}
 }
 if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
 // ---------- recorded lines (Pip's own voice, saved as sound files in audio/pip/) ----------
@@ -274,6 +284,13 @@ function say(text) {
       setTimeout(() => { if (mine === turn) speechSynthesis.speak(u); else done(); }, 60);
     } catch (e) { resolve(false); }
   });
+}
+// Says a line and waits until it is really over. Two safeguards, because some tablets report "finished" too early:
+// the voice must say it has finished, AND enough time must have passed for a line of that length.
+async function sayAndWait(text, quietPause) {
+  const longEnough = wait(700 + text.length * 75);
+  if (!(await say(text))) return wait(quietPause); // voice is off (or cut off): just the usual short pause
+  await longEnough; await wait(600);
 }
 
 // ---------- little sounds (made by the computer, no sound files) ----------
@@ -508,7 +525,7 @@ const GAMES = {
         bubble: `<span style="font-size:7vmin">${part}</span>`,
         say: part === "feet" ? "Where are Pip's feet?" : `Where is Pip's ${part}?`,
         yay: part === "tail" ? "That's Pip's tail! Wag, wag, wag!" : part === "feet" ? "Those are Pip's feet! Where are your feet?" : `That's Pip's ${part}! Where is your ${part}?`,
-        pause: 3800,
+        pause: 3800, after: 1500,
         render(box) {
           box.innerHTML = `<div class="bodypip pop">${bodyPip(COLORS.green)}</div>`;
           box.firstChild.addEventListener("click", e => {
@@ -579,9 +596,10 @@ async function choose(el, ch, part) {
     if (part) { el.classList.add("glow"); animate(box.firstChild, "bounce"); }
     else { el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); }
     G.stars++; $("stars").children[G.stars - 1].classList.add("got");
-    say(q.yay);
+    const spoken = sayAndWait(q.yay, q.pause || 2100); // waits for the voice to finish; with the voice off, a short pause
     adjust(G.first);
-    await wait(q.pause || 2100);
+    await spoken;
+    if (q.after) await wait(q.after); // extra time when Pip asks the child to do something ("Where is your tummy?")
     if (!G || G.q !== q) return;
     if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
   } else {
@@ -600,8 +618,8 @@ function adjust(firstTry) {
 function finishGame() {
   const id = G.id; G = null;
   if (S.found[id]) { // already rescued this egg: just celebrate
-    sfx.party(); confetti(30); speak("replay", "Great job! You did it again!");
-    setTimeout(showMap, 2600);
+    sfx.party(); confetti(30);
+    Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the valley once Pip has finished
   } else startHatch(id);
 }
 
@@ -644,7 +662,7 @@ function showFinale() {
   setTimeout(() => $("finaleGo").classList.add("show"), 2500);
 }
 $("finaleGo").addEventListener("click", () => {
-  sfx.tap(); S.found = {}; S.clutches++; save();
+  sfx.tap(); S.found = {}; S.clutches++; save(); stamp("pre");
   showMap("again");
 });
 
@@ -703,8 +721,8 @@ function openGrown() {
   };
   const voices = englishVoices();
   $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
-    <p><b>Stage: Hatchling (ages 2-3).</b> <span class="soon">Explorer (4-5) and Ranger (6+) are not built yet.</span> <small class="soon">Version 2</small></p>
-    <div class="line"><div>Pip's voice<br><select id="voicePick">${voices.length ? voices.map(v => `<option value="${v.name.replace(/"/g, "&quot;")}"${voice && v.name === voice.name ? " selected" : ""}>${v.name}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+    <p><b>Preschool (ages 2-4).</b> ${NAME ? "Playing as <b>" + NAME.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
+    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(v => `<option value="${v.name.replace(/"/g, "&quot;")}"${voice && v.name === voice.name ? " selected" : ""}>${v.name}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <p>Eggs hatched so far: <b>${S.friends.length}</b> &nbsp;|&nbsp; Full adventures finished: <b>${S.clutches}</b></p>
     ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${stepNames[id][S.skill[id] - 1]}</small></div>
       <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
@@ -731,7 +749,7 @@ $("grownPanel").addEventListener("click", e => {
 });
 
 $("grownPanel").addEventListener("change", e => {
-  if (e.target.id === "voicePick") { S.voiceName = e.target.value; chooseVoice(); save(); }
+  if (e.target.id === "voicePick") { S.voiceName = e.target.value; shareVoice(e.target.value); chooseVoice(); save(); } // one choice for every game
 });
 
 // Stop pinch-zoom and double-tap zoom so little fingers can't shrink the game.

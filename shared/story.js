@@ -167,7 +167,7 @@ function StoryGame(C) {
   }
   function finishGame() {
     const id = G.id; G = null;
-    if (S.aboard[id]) { sfx.party(); confetti(30); speak("replay", C.lines.replay); setTimeout(showMap, 2600); } // already won here this trip
+    if (S.aboard[id]) { sfx.party(); confetti(30); Promise.all([speak("replay", C.lines.replay), wait(2600)]).then(() => { if (current === "game") showMap(); }); } // back to the map once the host has finished // already won here this trip
     else startBoard(id);
   }
 
@@ -239,7 +239,7 @@ function StoryGame(C) {
     const voices = Kit.englishVoices(), v = Kit.currentVoice();
     $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
       <p><b>${C.gradeLabel}.</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
-      <div class="line"><div>${C.hostName}'s voice<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
+      <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
       <p>Places won so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Times the story was finished: <b>${S.trips}</b></p>
       ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${C.stepNames[id][S.skill[id] - 1]}</small></div>
         <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
