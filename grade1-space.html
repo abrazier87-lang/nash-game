@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody's Space Balloon</title>
-<link rel="stylesheet" href="shared/kit.css?v=10">
+<link rel="stylesheet" href="shared/kit.css?v=11">
 <style>
   /* Space look: dark sky, stars, standing on a moon. */
   :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=10"></script>
-<script src="shared/story.js?v=10"></script>
+<script src="shared/kit.js?v=11"></script>
+<script src="shared/story.js?v=11"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -185,6 +185,7 @@ const GAMES = {
 window.Story = StoryGame({
   title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
   host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5,
+  voice: recorded("audio/g1/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["read", "spell", "sentence", "plus", "minus", "tens", "clock", "skip"],
   stepNames: {

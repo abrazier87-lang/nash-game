@@ -56,6 +56,11 @@ function clock(h, m) {
 const timeText = (h, m) => `${h}:${String(m).padStart(2, "0")}`; // how it is written: 3:05
 const timeSaid = (h, m) => m === 0 ? `${h} o'clock` : m === 30 ? `half past ${h}` : m === 15 ? `quarter past ${h}` : m === 45 ? `quarter to ${h % 12 + 1}` : `${h} ${m < 10 ? "oh " + m : m}`; // how it is said
 
+// The list of a grade's recorded story lines: recorded("audio/g1/", 3) means the files are in audio/g1/ and
+// there are "left1", "left2" and "left3" lines ("we need one more...", "two more...", "three more...").
+const recorded = (folder, lefts) => Object.fromEntries(["hello", "start", "won", "boarded", "finale", "again"].concat(Array.from({ length: lefts }, (_, i) => "left" + (i + 1)))
+  .map(k => [k, folder + k + ".mp3"]).concat([["replay", "audio/replay.mp3"]]));
+
 /* C (the story) has:
    title, sub ("A Grade 1 adventure"), gradeLabel, hostName, host (picture), scenery (background),
    saveKey, medal (id for the shelf), games, gameIds, stepNames, need (rewards to finish), starsToWin,
@@ -81,6 +86,8 @@ function StoryGame(C) {
   let S = Kit.load(C.saveKey, fresh);
   const save = () => Kit.save(C.saveKey, S);
   const got = () => GAME_IDS.filter(id => S.aboard[id]).map(id => S.aboard[id]);
+  // The host's story lines. If the grade has a recording for a line (C.voice), play it; if not, the device voice says the words.
+  const speak = (key, words) => C.voice && C.voice[key] ? Kit.playClip(C.voice[key], words) : say(words);
 
   // ---------- the page ----------
   const play = label => `<button class="bigbtn go" id="${label}" aria-label="Keep going"><span class="tri"></span></button>`;
@@ -160,7 +167,7 @@ function StoryGame(C) {
   }
   function finishGame() {
     const id = G.id; G = null;
-    if (S.aboard[id]) { sfx.party(); confetti(30); say(C.lines.replay); setTimeout(showMap, 2600); } // already won here this trip
+    if (S.aboard[id]) { sfx.party(); confetti(30); speak("replay", C.lines.replay); setTimeout(showMap, 2600); } // already won here this trip
     else startBoard(id);
   }
 
@@ -172,7 +179,7 @@ function StoryGame(C) {
     $("boardStage").textContent = who[1];
     $("boardGo").classList.remove("show");
     show("board"); sfx.party(); confetti(25); animate($("boardStage"), "pop");
-    say(C.lines.won(who[0]));
+    speak("won", C.lines.won(who[0]));
   }
   $("boardStage").addEventListener("click", () => {
     if (!B || B.done) return;
@@ -181,7 +188,7 @@ function StoryGame(C) {
       B.done = true;
       S.aboard[B.id] = B.who[1]; S.stickers.push(B.who[1]); save();
       sfx.party(); confetti(50);
-      say(C.lines.boarded(B.who[0]));
+      speak("boarded", C.lines.boarded(B.who[0]));
       setTimeout(() => $("boardGo").classList.add("show"), 1200);
     }
   });
@@ -192,12 +199,12 @@ function StoryGame(C) {
     $("finaleArt").innerHTML = C.finaleArt(got().slice(0, NEED));
     $("finaleGo").classList.remove("show");
     show("finale"); sfx.party(); confetti(80);
-    say(C.lines.finale(NAME));
+    speak("finale", C.lines.finale(NAME));
     setTimeout(() => $("finaleGo").classList.add("show"), 3000);
   }
   $("finaleGo").addEventListener("click", () => {
     sfx.tap(); S.aboard = {}; S.trips++; save(); Kit.stamp(C.medal);
-    showMap(C.lines.again);
+    showMap("again");
   });
 
   // ---------- the map ----------
@@ -217,11 +224,11 @@ function StoryGame(C) {
     $("stickers").innerHTML = earlier.length ? `<small>${C.stickersLabel}</small>` + earlier.map(e => `<span>${e}</span>`).join("") : "";
     show("map");
     const left = NEED - on.length;
-    say(typeof line === "string" ? line : left === NEED ? C.lines.start : C.lines.left(left));
+    if (line === "hello") speak("hello", C.lines.hello(NAME)); else if (line === "again") speak("again", C.lines.again); else if (left === NEED) speak("start", C.lines.start); else speak("left" + left, C.lines.left(left));
   }
 
   // ---------- buttons ----------
-  $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); showMap(got().length || S.trips ? undefined : C.lines.hello(NAME)); });
+  $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); Object.values(C.voice || {}).forEach(url => Kit.loadClip(url).catch(() => {})); showMap(got().length || S.trips ? undefined : "hello"); });
   $("gameHost").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameHost"), "wobble"); say(G.q.help || G.q.say); } }); // tap the host to hear it again ("help" is a fuller version, if the question has one)
   $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
   $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });

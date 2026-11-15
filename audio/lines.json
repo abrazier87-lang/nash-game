@@ -1,0 +1,53 @@
+{
+  "about": "Every recorded line in the games. The name on the left is the sound file; the words on the right are what the voice says. To change a line: edit the words, delete its sound file, and run tools/make-voice.py again. Only missing files are recorded, so nothing is paid for twice.",
+  "voices": {
+    "dr-somebody": "auq43ws1oslv0tO4BDa7"
+  },
+  "lines": {
+    "audio/replay.mp3": ["dr-somebody", "Great job! You did it again!"],
+
+    "audio/g1/hello.mp3": ["dr-somebody", "Hello! I am Doctor... um... Doctor Somebody! I forgot my name again. My clock balloon floated all the way up to space! I need four star crystals to fly home. Tap a planet to find one."],
+    "audio/g1/start.mp3": ["dr-somebody", "We need four star crystals to fly home. Tap a planet to find one."],
+    "audio/g1/left1.mp3": ["dr-somebody", "We need one more star crystal. Tap a planet!"],
+    "audio/g1/left2.mp3": ["dr-somebody", "We need two more star crystals. Tap a planet!"],
+    "audio/g1/left3.mp3": ["dr-somebody", "We need three more star crystals. Tap a planet!"],
+    "audio/g1/won.mp3": ["dr-somebody", "You did it! A space friend has a star crystal for us. Give them a tap!"],
+    "audio/g1/boarded.mp3": ["dr-somebody", "Thank you, friend! One more star crystal for the clock balloon!"],
+    "audio/g1/finale.mp3": ["dr-somebody", "Tick tock! The clock balloon is full of star power! Thank you! Now, where was I going? I forget!"],
+    "audio/g1/again.mp3": ["dr-somebody", "Oh dear. I floated back up to space! Let's find more star crystals."],
+
+    "audio/g2/hello.mp3": ["dr-somebody", "Hello! Doctor Somebody here. At least, I think that is my name. The clock balloon has landed in ancient Egypt, thousands of years ago! But a sandstorm blew four golden gears out of my clock. Tap a place to help me find one."],
+    "audio/g2/start.mp3": ["dr-somebody", "We need four golden gears to fix the clock balloon. Tap a place to find one."],
+    "audio/g2/left1.mp3": ["dr-somebody", "We need one more golden gear. Tap a place!"],
+    "audio/g2/left2.mp3": ["dr-somebody", "We need two more golden gears. Tap a place!"],
+    "audio/g2/left3.mp3": ["dr-somebody", "We need three more golden gears. Tap a place!"],
+    "audio/g2/won.mp3": ["dr-somebody", "You did it! An animal friend found a golden gear. Give them a tap!"],
+    "audio/g2/boarded.mp3": ["dr-somebody", "Thank you, friend! One more golden gear for the clock!"],
+    "audio/g2/finale.mp3": ["dr-somebody", "Tick tock! The clock is fixed! Thank you! Goodbye, Egypt! Now, when was I going next? I forget!"],
+    "audio/g2/again.mp3": ["dr-somebody", "Oh no. Another sandstorm! The gears have blown away again. Let's find them."],
+
+    "audio/g3/hello.mp3": ["dr-somebody", "Hello! Doctor Somebody here. Or is it Doctor Somewhere? The clock balloon has landed in ancient China, about two thousand years ago! But the balloon tore on the Great Wall. We need six rolls of silk to patch it. Tap a place to find one."],
+    "audio/g3/start.mp3": ["dr-somebody", "We need six rolls of silk to patch the clock balloon. Tap a place to find one."],
+    "audio/g3/left1.mp3": ["dr-somebody", "We need one more roll of silk. Tap a place!"],
+    "audio/g3/left2.mp3": ["dr-somebody", "We need two more rolls of silk. Tap a place!"],
+    "audio/g3/left3.mp3": ["dr-somebody", "We need three more rolls of silk. Tap a place!"],
+    "audio/g3/left4.mp3": ["dr-somebody", "We need four more rolls of silk. Tap a place!"],
+    "audio/g3/left5.mp3": ["dr-somebody", "We need five more rolls of silk. Tap a place!"],
+    "audio/g3/won.mp3": ["dr-somebody", "You did it! An animal friend has a roll of silk for us. Give them a tap!"],
+    "audio/g3/boarded.mp3": ["dr-somebody", "Thank you, friend! One more roll of silk for the balloon!"],
+    "audio/g3/finale.mp3": ["dr-somebody", "Tick tock! The balloon is as good as new! Thank you! Goodbye, China! Next stop, somewhen else!"],
+    "audio/g3/again.mp3": ["dr-somebody", "Oh dear. I bumped into the Great Wall again! The balloon has torn. Let's find more silk."],
+
+    "audio/g4/hello.mp3": ["dr-somebody", "Hello! Doctor Somebody here. I am almost sure of it. The clock balloon has landed in ancient Rome, about two thousand years ago! But the Roman numerals have fallen off my clock. We need six of them back. Tap a place to find one."],
+    "audio/g4/start.mp3": ["dr-somebody", "We need six Roman numerals to fix the clock. Tap a place to find one."],
+    "audio/g4/left1.mp3": ["dr-somebody", "We need one more Roman numeral. Tap a place!"],
+    "audio/g4/left2.mp3": ["dr-somebody", "We need two more Roman numerals. Tap a place!"],
+    "audio/g4/left3.mp3": ["dr-somebody", "We need three more Roman numerals. Tap a place!"],
+    "audio/g4/left4.mp3": ["dr-somebody", "We need four more Roman numerals. Tap a place!"],
+    "audio/g4/left5.mp3": ["dr-somebody", "We need five more Roman numerals. Tap a place!"],
+    "audio/g4/won.mp3": ["dr-somebody", "You did it! An animal friend found one of my Roman numerals. Give them a tap!"],
+    "audio/g4/boarded.mp3": ["dr-somebody", "Thank you, friend! One more numeral for the clock!"],
+    "audio/g4/finale.mp3": ["dr-somebody", "Tick tock! The clock can tell the time again! Thank you! Goodbye, Rome! Now, which century did I leave my lunch in?"],
+    "audio/g4/again.mp3": ["dr-somebody", "Oh dear. I sneezed, and the numerals fell off again! Let's find them."]
+  }
+}

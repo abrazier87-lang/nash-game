@@ -77,6 +77,7 @@ const Kit = (() => {
   let talking = null;
   function say(text, force) {
     return new Promise(resolve => {
+      stopClip(); // a new line always cuts off a recorded line that is still playing
       if ((!settings.voice && !force) || !("speechSynthesis" in window)) return resolve(false);
       try {
         speechSynthesis.cancel();
@@ -99,7 +100,38 @@ const Kit = (() => {
     if (!(await say(text))) return wait(quietPause); // voice is off: just a short pause
     await longEnough; await wait(600);
   }
-  const hush = () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+  const hush = () => { stopClip(); if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+
+  // ---------- recorded lines (a character's own voice, saved as sound files in the "audio" folder) ----------
+  // playClip plays one recorded line. If the file is missing or cannot play, it says "fallback" in the device voice instead,
+  // so a game never goes silent. Like say(), it hands back a promise that finishes when the line is over.
+  const clips = {}; let playing = null, turn = 0;
+  function loadClip(url) { // fetch a line ahead of time so it starts without a pause
+    if (!clips[url]) clips[url] = (async () => {
+      const ac = audio(), reply = await fetch(url);
+      if (!reply.ok) throw new Error("no recording at " + url);
+      const data = await reply.arrayBuffer();
+      return new Promise((ok, no) => { const p = ac.decodeAudioData(data, ok, no); if (p && p.catch) p.catch(() => {}); });
+    })().catch(e => { delete clips[url]; throw e; });
+    return clips[url];
+  }
+  function stopClip() { turn++; if (playing) { const src = playing; playing = null; try { src.onended = null; src.stop(); } catch (e) {} if (src.cutOff) src.cutOff(); } }
+  function playClip(url, fallback) {
+    return new Promise(async resolve => {
+      if (!settings.voice) { stopClip(); return resolve(false); }
+      hush(); const mine = turn; // if anything else starts talking while this line loads, "turn" moves on and this line stays quiet
+      try {
+        const ac = audio(), sound = await loadClip(url);
+        if (ac.state === "suspended") await ac.resume();
+        if (mine !== turn) return resolve(false);
+        if (ac.state !== "running") throw new Error("sound is blocked");
+        const src = ac.createBufferSource(); src.buffer = sound; src.connect(ac.destination);
+        src.onended = () => { if (playing === src) playing = null; resolve(true); };
+        src.cutOff = () => resolve(false); // another line interrupted this one
+        playing = src; src.start();
+      } catch (e) { if (mine === turn) say(fallback).then(resolve); else resolve(false); }
+    });
+  }
 
   // ---------- little sounds (made by the computer, no sound files) ----------
   let AC = null;
@@ -147,7 +179,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "10"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, sayAndWait, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "11"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();
