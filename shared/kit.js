@@ -169,9 +169,21 @@ const Kit = (() => {
   function hold(btn, fn) {
     let timer = null;
     const end = () => { btn.classList.remove("holding"); clearTimeout(timer); };
-    btn.addEventListener("pointerdown", e => { e.preventDefault(); btn.classList.add("holding"); timer = setTimeout(() => { end(); fn(); }, 1500); });
+    const start = () => { btn.classList.add("holding"); clearTimeout(timer); timer = setTimeout(() => { end(); fn(); }, 1500); };
+    btn.addEventListener("pointerdown", e => { e.preventDefault(); start(); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, end));
     btn.addEventListener("contextmenu", e => e.preventDefault());
+    // with a keyboard: hold Enter or the space bar on the gear
+    btn.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && !e.repeat) { e.preventDefault(); start(); } });
+    btn.addEventListener("keyup", e => { if (e.key === "Enter" || e.key === " ") end(); });
+    btn.addEventListener("blur", end);
+  }
+  // When talking is switched off, a question still has to make sense, so its words are shown in writing.
+  // A picture that only means "listen" (the ear) is replaced by the words; a passage already holds its own question.
+  function writtenBubble(q) {
+    if (settings.voice || q.bubble.includes('class="passage"')) return { html: q.bubble, quiet: false };
+    const words = q.read !== undefined ? q.read : q.say;
+    return { html: (q.bubble.includes("👂") ? "" : `<div class="rowx">${q.bubble}</div>`) + `<div class="said">${words}</div>`, quiet: true };
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -179,7 +191,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "13"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "14"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, writtenBubble, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

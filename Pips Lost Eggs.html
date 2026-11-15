@@ -711,6 +711,10 @@ const startHold = e => { e.preventDefault(); gb.classList.add("holding"); holdTi
 const endHold = () => { gb.classList.remove("holding"); clearTimeout(holdTimer); };
 gb.addEventListener("pointerdown", startHold); gb.addEventListener("pointerup", endHold); gb.addEventListener("pointerleave", endHold); gb.addEventListener("pointercancel", endHold);
 gb.addEventListener("contextmenu", e => e.preventDefault());
+// with a keyboard: hold Enter or the space bar on the gear
+gb.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && !e.repeat) startHold(e); });
+gb.addEventListener("keyup", e => { if (e.key === "Enter" || e.key === " ") endHold(); });
+gb.addEventListener("blur", endHold);
 function openGrown() {
   endHold(); hush();
   const stepNames = {

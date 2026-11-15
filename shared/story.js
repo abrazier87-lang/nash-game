@@ -129,7 +129,8 @@ function StoryGame(C) {
     let q, tries = 0;
     do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
     G.last = keyOf(q); G.q = q; G.first = true; G.busy = false;
-    $("bubble").innerHTML = q.bubble; $("bubble").classList.toggle("tall", !!q.tall); animate($("bubble"), "pop");
+    const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
+    $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
     const box = $("choices"); box.innerHTML = "";
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
     q.choices.forEach(ch => {
