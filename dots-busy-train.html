@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=11">
+<link rel="stylesheet" href="shared/kit.css?v=12">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -77,7 +77,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=11"></script>
+<script src="shared/kit.js?v=12"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -88,6 +88,8 @@
    The shared parts (voice, sounds, saving, names) come from shared/kit.js.
    ===================================================================== */
 const { say, sfx, animate, confetti } = Kit;
+// Dot's story lines are recorded (audio/dot/). If a recording is missing or cannot play, the device voice says the words instead.
+const speak = (name, words) => Kit.playClip("audio/dot/" + name + ".mp3", words);
 const PLAYER = Kit.currentPlayer();
 const NAME = PLAYER ? PLAYER.name : "";
 
@@ -305,9 +307,9 @@ function startGame(id) {
   $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
   $("gameDot").innerHTML = DOT;
   show("game");
-  nextQuestion(GAMES[id].intro + " ");
+  nextQuestion(id);
 }
-function nextQuestion(lead) {
+function nextQuestion(intro) { // "intro" is the station's id, only for the very first question: Dot says her welcome first, then asks
   let q, tries = 0;
   do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last);
   G.last = String(q.key !== undefined ? q.key : q.say + q.bubble);
@@ -320,7 +322,8 @@ function nextQuestion(lead) {
     b.addEventListener("click", () => choose(b, ch));
     box.appendChild(b);
   });
-  say((lead || "") + q.say);
+  if (intro) speak("intro-" + intro, GAMES[intro].intro).then(finished => { if (finished && G && G.q === q) say(q.say); }); // asks only if the welcome played to its end
+  else say(q.say);
 }
 async function choose(el, ch) {
   if (!G || G.busy || el.classList.contains("dim")) return;
@@ -351,7 +354,7 @@ function adjust(firstTry) {
 function finishGame() {
   const id = G.id; G = null;
   if (S.aboard[id]) { // this station's passenger is already on the train: just celebrate
-    sfx.party(); confetti(30); say("Great job! You did it again!");
+    sfx.party(); confetti(30); speak("replay", "Great job! You did it again!");
     setTimeout(showMap, 2600);
   } else startBoard(id);
 }
@@ -365,7 +368,8 @@ function startBoard(id) {
   $("boardStage").textContent = who[1];
   $("boardGo").classList.remove("show");
   show("board"); sfx.party(); confetti(25); animate($("boardStage"), "pop");
-  say(`You did it! The ${who[0]} wants a ride. Tap the ${who[0]}!`);
+  speak("won-" + who[0], `You did it! The ${who[0]} wants a ride. Tap the ${who[0]}!`);
+  Kit.loadClip("audio/dot/boarded-" + who[0] + ".mp3").catch(() => {}); // get the next line ready so it starts without a pause
 }
 $("boardStage").addEventListener("click", () => {
   if (!B || B.done) return;
@@ -374,7 +378,7 @@ $("boardStage").addEventListener("click", () => {
     B.done = true;
     S.aboard[B.id] = B.who[1]; S.stickers.push(B.who[1]); save();
     sfx.whistle(); confetti(50);
-    say(`All aboard! The ${B.who[0]} is on the train!`);
+    speak("boarded-" + B.who[0], `All aboard! The ${B.who[0]} is on the train!`);
     setTimeout(() => $("boardGo").classList.add("show"), 1200);
   }
 });
@@ -388,12 +392,12 @@ function showFinale() {
   $("finaleTrain").innerHTML = trainHTML(riders().slice(0, TRAIN_SIZE));
   $("finaleGo").classList.remove("show");
   show("finale"); sfx.chug(); sfx.whistle(); confetti(80);
-  say(`Choo choo! The train is full! Off to the fair we go! Thank you${NAME ? ", " + NAME : ""}!`);
+  speak("finale", `Choo choo! The train is full! Off to the fair we go! Thank you${NAME ? ", " + NAME : ""}!`);
   setTimeout(() => $("finaleGo").classList.add("show"), 3000);
 }
 $("finaleGo").addEventListener("click", () => {
   sfx.tap(); S.aboard = {}; S.trips++; save(); Kit.stamp("k");
-  showMap("The train is back! More animals want a ride. Tap a station!");
+  showMap("again");
 });
 
 // ---------- the stations (map) ----------
@@ -413,13 +417,21 @@ function showMap(line) {
   $("stickers").innerHTML = earlier.length ? `<small>At the fair:</small>` + earlier.map(e => `<span>${e}</span>`).join("") : "";
   show("map");
   const left = TRAIN_SIZE - on.length;
-  say(line || (left === TRAIN_SIZE ? "The animals want to go to the fair! Tap a station to pick up a passenger." : left === 1 ? "One more seat on the train! Tap a station." : `${cap(NUM[left])} more seats on the train! Tap a station.`));
+  if (line === "hello") speak("hello", `Hi${NAME ? " " + NAME : ""}! I'm Dot. The animals want to go to the fair! Tap a station to pick up a passenger.`);
+  else if (line === "again") speak("again", "The train is back! More animals want a ride. Tap a station!");
+  else if (left === TRAIN_SIZE) speak("start", "The animals want to go to the fair! Tap a station to pick up a passenger.");
+  else speak("left" + left, left === 1 ? "One more seat on the train! Tap a station." : `${cap(NUM[left])} more seats on the train! Tap a station.`);
 }
 
 // ---------- buttons ----------
 $("titleDot").innerHTML = DOT;
 if (NAME) $("titleSub").textContent = "A kindergarten adventure for " + NAME;
-$("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); showMap(riders().length ? undefined : `Hi${NAME ? " " + NAME : ""}! I'm Dot. The animals want to go to the fair! Tap a station to pick up a passenger.`); });
+$("playBtn").addEventListener("click", () => {
+  Kit.audio(); sfx.tap();
+  // get the most-used recorded lines ready, so they start without a pause (a missing file is simply skipped)
+  ["hello", "start", "left1", "left2", "left3", "again", "replay", "finale"].concat(GAME_IDS.map(id => "intro-" + id)).forEach(n => Kit.loadClip("audio/dot/" + n + ".mp3").catch(() => {}));
+  showMap(riders().length ? undefined : "hello");
+});
 $("gameDot").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameDot"), "wobble"); say(G.q.say); } });
 $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
 $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "index.html"; });

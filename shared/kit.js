@@ -77,7 +77,7 @@ const Kit = (() => {
   let talking = null;
   function say(text, force) {
     return new Promise(resolve => {
-      stopClip(); // a new line always cuts off a recorded line that is still playing
+      stopClip(); const mine = turn; // a new line always cuts off a recorded line that is still playing; "mine" lets this line notice if it is cut off in turn
       if ((!settings.voice && !force) || !("speechSynthesis" in window)) return resolve(false);
       try {
         speechSynthesis.cancel();
@@ -85,11 +85,11 @@ const Kit = (() => {
         if (voice) u.voice = voice;
         u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05;
         let finished = false;
-        const done = () => { if (!finished) { finished = true; resolve(true); } };
+        const done = () => { if (!finished) { finished = true; resolve(mine === turn); } }; // true only if nothing else started talking in the meantime
         u.onend = done; u.onerror = done;
         setTimeout(done, Math.max(8000, text.length * 260)); // safety net: some devices never report that they finished
         talking = u; // keeps the browser from forgetting the line half way through
-        setTimeout(() => speechSynthesis.speak(u), 60);
+        setTimeout(() => { if (mine === turn) speechSynthesis.speak(u); else done(); }, 60); // a line that was already cut off is not spoken late
       } catch (e) { resolve(false); }
     });
   }
@@ -179,7 +179,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "11"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "12"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, sayAndWait, playClip, loadClip, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

@@ -222,17 +222,58 @@ function chooseVoice() {
   voice = vs.find(v => v.name === S.voiceName) || vs[0] || null;
 }
 if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
+// ---------- recorded lines (Pip's own voice, saved as sound files in audio/pip/) ----------
+// playClip plays one recorded line. If the file is missing or cannot play, "fallback" is said in the device voice instead,
+// so the game never goes silent. It hands back a promise that is true if the line played all the way to its end,
+// and false if something else started talking first. ("turn" goes up each time any line starts.)
+const clips = {}; let playing = null, turn = 0, talking = null;
+function loadClip(url) { // fetch a line ahead of time so it starts without a pause
+  if (!clips[url]) clips[url] = (async () => {
+    const ac = audio(), reply = await fetch(url);
+    if (!reply.ok) throw new Error("no recording at " + url);
+    const data = await reply.arrayBuffer();
+    return new Promise((ok, no) => { const p = ac.decodeAudioData(data, ok, no); if (p && p.catch) p.catch(() => {}); });
+  })().catch(e => { delete clips[url]; throw e; });
+  return clips[url];
+}
+function stopClip() { turn++; if (playing) { const src = playing; playing = null; try { src.onended = null; src.stop(); } catch (e) {} if (src.cutOff) src.cutOff(); } }
+const hush = () => { stopClip(); if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+function playClip(url, fallback) {
+  return new Promise(async resolve => {
+    if (!S.voice) { stopClip(); return resolve(false); }
+    hush(); const mine = turn;
+    try {
+      const ac = audio(), sound = await loadClip(url);
+      if (ac.state === "suspended") await ac.resume();
+      if (mine !== turn) return resolve(false);
+      if (ac.state !== "running") throw new Error("sound is blocked");
+      const src = ac.createBufferSource(); src.buffer = sound; src.connect(ac.destination);
+      src.onended = () => { if (playing === src) playing = null; resolve(true); };
+      src.cutOff = () => resolve(false); // another line interrupted this one
+      playing = src; src.start();
+    } catch (e) { if (mine === turn) say(fallback).then(resolve); else resolve(false); }
+  });
+}
+const speak = (name, words) => playClip("audio/pip/" + name + ".mp3", words);
+
 let lastSaid = "";
 function say(text) {
-  lastSaid = text;
-  if (!S.voice || !("speechSynthesis" in window)) return;
-  try {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    if (voice) u.voice = voice;
-    u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05; // gentle and unhurried, close to the voice's natural sound
-    setTimeout(() => speechSynthesis.speak(u), 60);
-  } catch (e) {}
+  lastSaid = text; stopClip(); const mine = turn; // a new line always cuts off a recorded line that is still playing
+  return new Promise(resolve => {
+    if (!S.voice || !("speechSynthesis" in window)) return resolve(false);
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) u.voice = voice;
+      u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05; // gentle and unhurried, close to the voice's natural sound
+      let finished = false;
+      const done = () => { if (!finished) { finished = true; resolve(mine === turn); } };
+      u.onend = done; u.onerror = done;
+      setTimeout(done, Math.max(8000, text.length * 260)); // safety net: some devices never report that they finished
+      talking = u; // keeps the browser from forgetting the line half way through
+      setTimeout(() => { if (mine === turn) speechSynthesis.speak(u); else done(); }, 60);
+    } catch (e) { resolve(false); }
+  });
 }
 
 // ---------- little sounds (made by the computer, no sound files) ----------
@@ -507,9 +548,9 @@ function startGame(id) {
   $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
   $("gamePip").innerHTML = PIP();
   show("game");
-  nextQuestion(GAMES[id].intro + " ");
+  nextQuestion(id);
 }
-function nextQuestion(lead) {
+function nextQuestion(intro) { // "intro" is the place's id, only for the very first question: Pip says her welcome first, then asks
   let q, tries = 0;
   do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 6 && q.say + q.bubble === G.lastSay);
   G.lastSay = q.say + q.bubble;
@@ -525,7 +566,8 @@ function nextQuestion(lead) {
       box.appendChild(b);
     });
   }
-  say((lead || "") + q.say);
+  if (intro) speak("intro-" + intro, GAMES[intro].intro).then(finished => { if (finished && G && G.q === q) say(q.say); }); // asks only if the welcome played to its end
+  else say(q.say);
 }
 // el = what was tapped. "part" is true when it is a part of a bigger picture rather than a card.
 async function choose(el, ch, part) {
@@ -558,7 +600,7 @@ function adjust(firstTry) {
 function finishGame() {
   const id = G.id; G = null;
   if (S.found[id]) { // already rescued this egg: just celebrate
-    sfx.party(); confetti(30); say("Great job! You did it again!");
+    sfx.party(); confetti(30); speak("replay", "Great job! You did it again!");
     setTimeout(showMap, 2600);
   } else startHatch(id);
 }
@@ -572,7 +614,8 @@ function startHatch(id) {
   $("hatchStage").innerHTML = ART.egg(COLORS[colorName]);
   $("hatchGo").classList.remove("show");
   show("hatch"); sfx.party(); confetti(25); animate($("hatchStage"), "pop");
-  say("You found an egg! Tap the egg!");
+  speak("found", "You found an egg! Tap the egg!");
+  loadClip(`audio/pip/hatch-${colorName}-${kind}.mp3`).catch(() => {}); // get the hatching line ready so it starts without a pause
 }
 $("hatchStage").addEventListener("click", () => {
   if (!H || H.done) return;
@@ -583,7 +626,7 @@ $("hatchStage").addEventListener("click", () => {
     S.friends.push({ color: H.colorName, kind: H.kind }); save();
     $("hatchStage").innerHTML = ART[H.kind](COLORS[H.colorName]); animate($("hatchStage"), "pop");
     sfx.party(); confetti(50);
-    say(`Hello, baby dinosaur! A ${H.colorName} ${DINO_NAMES[H.kind]}!`);
+    speak(`hatch-${H.colorName}-${H.kind}`, `Hello, baby dinosaur! ${/^[aeiou]/.test(H.colorName) ? "An" : "A"} ${H.colorName} ${DINO_NAMES[H.kind]}!`);
     setTimeout(() => $("hatchGo").classList.add("show"), 1200);
   }
 });
@@ -597,12 +640,12 @@ function showFinale() {
   $("finaleRow").innerHTML = `<div>${PIP()}</div>` + foundList().slice(0, NEST_SIZE).map(f => `<div class="pop">${ART[f.kind](COLORS[f.color])}</div>`).join("");
   $("finaleGo").classList.remove("show");
   show("finale"); sfx.party(); confetti(80);
-  say("Hooray! All the eggs are home! Pip is so happy. Thank you!");
+  speak("finale", "Hooray! All the eggs are home! Pip is so happy. Thank you!");
   setTimeout(() => $("finaleGo").classList.add("show"), 2500);
 }
 $("finaleGo").addEventListener("click", () => {
   sfx.tap(); S.found = {}; S.clutches++; save();
-  showMap("Oh no! More eggs rolled away! Let's find them!");
+  showMap("again");
 });
 
 // ---------- the valley (map) ----------
@@ -624,14 +667,22 @@ function showMap(line) {
   $("family").innerHTML = earlier.map(f => `<div>${ART[f.kind](COLORS[f.color])}</div>`).join("");
   show("map");
   const left = NEST_SIZE - home.length;
-  say(line || (left === 3 ? "Pip's eggs rolled away! Tap a place to find an egg." : left === 1 ? "One more egg to find! Tap a place." : `${left} more eggs to find! Tap a place.`));
+  if (line === "again") speak("again", "Oh no! More eggs rolled away! Let's find them!");
+  else if (left === 3) speak("start", "Pip's eggs rolled away! Tap a place to find an egg.");
+  else if (left === 1) speak("left1", "One more egg to find! Tap a place.");
+  else speak("left2", "Two more eggs to find! Tap a place.");
 }
 
 // ---------- buttons ----------
 $("titlePip").innerHTML = PIP();
 if (NAME) $("titleSub").textContent = "A dinosaur adventure for " + NAME;
-$("shelfBtn").addEventListener("click", () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); location.href = "index.html"; });
-$("playBtn").addEventListener("click", () => { audio(); sfx.tap(); showMap(); });
+$("shelfBtn").addEventListener("click", () => { hush(); location.href = "index.html"; });
+$("playBtn").addEventListener("click", () => {
+  audio(); sfx.tap();
+  // get the most-used recorded lines ready, so they start without a pause (a missing file is simply skipped)
+  ["start", "left1", "left2", "again", "replay", "found", "finale"].concat(GAME_IDS.map(id => "intro-" + id)).forEach(n => loadClip("audio/pip/" + n + ".mp3").catch(() => {}));
+  showMap();
+});
 $("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); say(G.q.say); } });
 $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
 
@@ -643,7 +694,7 @@ const endHold = () => { gb.classList.remove("holding"); clearTimeout(holdTimer);
 gb.addEventListener("pointerdown", startHold); gb.addEventListener("pointerup", endHold); gb.addEventListener("pointerleave", endHold); gb.addEventListener("pointercancel", endHold);
 gb.addEventListener("contextmenu", e => e.preventDefault());
 function openGrown() {
-  endHold(); if ("speechSynthesis" in window) speechSynthesis.cancel();
+  endHold(); hush();
   const stepNames = {
     colors: ["2 colors", "3 colors", "3 of 6 colors", "4 colors"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"],
     sizes: ["find big", "big or small", "biggest / smallest of 3", "biggest / smallest of 4"], count: ["count to 2", "count to 3", "count to 4", "count to 5"],

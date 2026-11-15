@@ -18,9 +18,15 @@ MODEL = "eleven_multilingual_v2"
 with open(os.path.join(ROOT, "audio", "lines.json"), encoding="utf-8") as f:
     book = json.load(f)
 
-todo = [(path, who, words) for path, (who, words) in book["lines"].items() if not os.path.exists(os.path.join(ROOT, path))]
+missing = [(path, who, words) for path, (who, words) in book["lines"].items() if not os.path.exists(os.path.join(ROOT, path))]
+# A character whose voice id is still empty in lines.json has not been given a voice yet: their lines wait.
+waiting = [m for m in missing if not book["voices"].get(m[1])]
+todo = [m for m in missing if book["voices"].get(m[1])]
 letters = sum(len(words) for _, _, words in todo)
-print(f"{len(book['lines'])} lines in the book, {len(todo)} still to record, about {letters} credits")
+print(f"{len(book['lines'])} lines in the book, {len(todo)} ready to record, about {letters} credits")
+for who in sorted({m[1] for m in waiting}):
+    mine = [m for m in waiting if m[1] == who]
+    print(f"  waiting for a voice id for '{who}': {len(mine)} lines, about {sum(len(m[2]) for m in mine)} credits")
 if "count" in sys.argv or not todo:
     sys.exit(0)
 
