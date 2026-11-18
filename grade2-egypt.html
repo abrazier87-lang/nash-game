@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Egypt</title>
-<link rel="stylesheet" href="shared/kit.css?v=28">
+<link rel="stylesheet" href="shared/kit.css?v=29">
 <style>
   /* Desert look: blue sky fading to sand, pyramids, dunes. */
   :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=28"></script>
-<script src="shared/story.js?v=28"></script>
+<script src="shared/kit.js?v=29"></script>
+<script src="shared/story.js?v=29"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -495,7 +495,7 @@ const EGYPT_TOUR = [
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody in Ancient Egypt", sub: "A Grade 2 adventure", gradeLabel: "Grade 2 (ages 7-8)", hostName: "Dr. Somebody",
-  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g2/lesson/", lineVoice: "audio/g2/l/",
+  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g2/lesson/", lineVoice: "audio/g2/l/", written: true,
   celebrations: { art: EGYPT_ART, facts: EGYPT_FACTS, finale: EGYPT_TOUR }, sceneVoice: "audio/g2/scene/", // a short scene with a fun fact after each place, and a tour at the end // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g2/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud c2"></div><div class="pyr"></div><div class="pyr p2"></div><div class="hill back"></div><div class="hill"></div>`,
