@@ -97,6 +97,9 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .progress { display:flex; align-items:center; gap:2vmin; margin-top:2.5vmin; background:var(--strip, rgba(255,255,255,.14)); border-radius:5vmin; padding:1vmin 4vmin; }
 .balloon { width:15vmin; height:19vmin; }
 .slot { width:11vmin; height:11vmin; border-radius:50%; font-size:7vmin; line-height:11vmin; text-align:center; position:relative; background:rgba(255,255,255,.92); }
+.slot.tap { cursor:pointer; }
+.slot .from { position:absolute; left:50%; bottom:calc(100% + 1.4vmin); transform:translateX(-50%); background:#2b2d42; color:#fff; font-size:2.6vmin; line-height:1.2; font-weight:bold; white-space:nowrap; padding:.9vmin 1.8vmin; border-radius:2vmin; z-index:6; pointer-events:none; } /* where this friend came from */
+.slot .from::after { content:""; position:absolute; left:50%; top:100%; margin-left:-1.2vmin; border:1.2vmin solid transparent; border-top-color:#2b2d42; border-bottom:none; }
 .slot.empty { background:none; border:.8vmin dashed var(--strip-line, rgba(255,255,255,.7)); }
 .slot i { position:absolute; right:-1.5vmin; bottom:-1.5vmin; font-size:4.4vmin; line-height:1; font-style:normal; }
 #finaleArt { display:flex; align-items:flex-end; gap:2vmin; font-size:9vmin; }
@@ -193,4 +196,25 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
   @keyframes balloonbob { 50% { transform:translateY(-1vmin); } }
   svg .blink { animation:owlblink 5.5s infinite; transform-box:fill-box; transform-origin:center; }
   @keyframes owlblink { 0%,96%,100% { transform:scaleY(1); } 98% { transform:scaleY(.1); } }
+}
+
+/* Upright phones (much taller than wide): fewer, bigger place cards; the host sits above the bubble; answer cards two by two.
+   Tablets are not this narrow, so their layouts stay exactly as they were. */
+@media (max-aspect-ratio: 5/8) {
+  #places.places { grid-template-columns:repeat(2, auto); gap:3vmin; }
+  #places .place { width:42vmin; height:36vmin; }
+  #places .place .pic { width:32vmin; height:22vmin; font-size:10vmin; }
+  #places .place .name { font-size:4vmin; }
+  #places.many { display:grid; grid-template-columns:repeat(3, auto); gap:2.4vmin; max-width:none; margin-top:0; }
+  #places.many .place { width:29.5vmin; height:29vmin; }
+  #places.many .place .pic { width:24vmin; height:15vmin; font-size:8.4vmin; }
+  #places.many .place .name { font-size:3vmin; }
+  #places.many.lots { display:flex; max-width:96vmin; }
+  #places.many.lots .place { width:29.5vmin; height:25vmin; }
+  #places.many.lots .place .pic { height:13vmin; font-size:7.4vmin; }
+  #places.many.lots .place .name { font-size:2.9vmin; }
+  .ask { flex-direction:column; gap:3vmin; }
+  .bubble::before { left:50%; top:-3.4vmin; margin-left:-2.2vmin; border:2.2vmin solid transparent; border-bottom-color:#fff; border-top:none; }
+  .bubble.tall, .bubble.quiet { max-width:94vmin; }
+  #choices { --cs:42vmin !important; max-width:96vmin; }
 }
