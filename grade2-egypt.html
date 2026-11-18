@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Egypt</title>
-<link rel="stylesheet" href="shared/kit.css?v=26">
+<link rel="stylesheet" href="shared/kit.css?v=30">
 <style>
   /* Desert look: blue sky fading to sand, pyramids, dunes. */
   :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=26"></script>
-<script src="shared/story.js?v=26"></script>
+<script src="shared/kit.js?v=30"></script>
+<script src="shared/story.js?v=30"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -126,6 +126,14 @@ const EVENTS = [
 const howLong = e => `${e[2]} ${unitWord(e[3], e[2])}`;
 const LESSON_COINS = { 1: [10, 10, 5, 5], 2: [25, 25, 10, 5], 3: [200, 100, 25, 10] }; // the coins Dr. Somebody counts in the lesson, for each step
 const TRIPS = ["A boat trip on the Nile", "A visit to the pyramids", "A trip to the market", "A camel ride"];
+// A stone sundial showing an o'clock time: the shadow points at the hour, like the short hand of a clock.
+function sundial(h) {
+  const a = (h % 12) / 12 * 2 * Math.PI, sx = 50 + 31 * Math.sin(a), sy = 50 - 31 * Math.cos(a), px = Math.cos(a) * 5, py = Math.sin(a) * 5;
+  let marks = "";
+  for (let i = 1; i <= 12; i++) { const b = i / 12 * 2 * Math.PI, x = 50 + 39 * Math.sin(b), y = 50 - 39 * Math.cos(b);
+    marks += i % 3 ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.8" fill="#8a6a34"/>` : `<text x="${x.toFixed(1)}" y="${(y + 3.6).toFixed(1)}" font-size="10" font-weight="bold" text-anchor="middle" fill="#5c4520">${i}</text>`; }
+  return `<span style="display:inline-block;width:15vmin;height:15vmin;vertical-align:middle"><svg viewBox="0 0 100 100"><circle cx="50" cy="53" r="47" fill="#b98d45"/><circle cx="50" cy="50" r="47" fill="#f4e1b0" stroke="#2b2d42" stroke-width="2.5"/><circle cx="50" cy="50" r="30" fill="none" stroke="#e2c98a" stroke-width="1.5"/>${marks}<polygon points="${(50 - px).toFixed(1)},${(50 - py).toFixed(1)} ${(50 + px).toFixed(1)},${(50 + py).toFixed(1)} ${sx.toFixed(1)},${sy.toFixed(1)}" fill="#2b2d42" opacity=".75"/><circle cx="50" cy="50" r="5.5" fill="#d4a24c" stroke="#2b2d42" stroke-width="2"/></svg></span>`;
+}
 const mini = (h, m) => `<span style="display:inline-block;width:15vmin;height:15vmin;vertical-align:middle">${clock(h, m)}</span>`;
 
 // ---------- teaching helpers: lessons ("watch me do one"), hints and step-by-step explanations ----------
@@ -210,7 +218,7 @@ const litSentence = (H, s) => { const el = [...H.bubble.querySelectorAll(".sent"
 // lesson(L, step): the "watch me do one" lesson on the first visit (and from the 📖 button).
 const GAMES = {
   add: {
-    name: "Pyramid Sums", icon: "🔺", intro: "Let's add big numbers!",
+    name: "Pyramid Sums", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><circle cx='80' cy='20' r='10' fill='#ffd84d'/><polygon points='50,14 8,82 92,82' fill='#e9c46a'/><polygon points='50,14 92,82 50,82' fill='#d4a24c'/><rect x='6' y='80' width='88' height='9' rx='4' fill='#f4e1b0'/><rect x='41' y='56' width='18' height='6' rx='3' fill='#2b2d42'/><rect x='47' y='50' width='6' height='18' rx='3' fill='#2b2d42'/></svg>", intro: "Let's add big numbers!",
     lesson: (L, step) => frames(L, step === 4 ? countUpLesson(26, 40, "26 + <b>?</b> = 40", "What do we add to 26 to make 40? Count up from 26, and add up the jumps.")
       .concat([["26 + <b>14</b> = 40", "So 26 plus 14 is 40!"]]) : addSteps(...[[34, 5], [34, 25], [37, 28]][step - 1])),
     makeQuestion(step) {
@@ -232,7 +240,7 @@ const GAMES = {
     }
   },
   sub: {
-    name: "Nile Take-Away", icon: "🐊", intro: "Let's take away big numbers!",
+    name: "Nile Take-Away", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='6' y='68' width='88' height='24' rx='12' fill='#4d9de0'/><path d='M8 48 Q18 56 24 58 L76 58 Q82 56 92 48 Q90 70 74 74 L26 74 Q10 70 8 48Z' fill='#d4a24c'/><rect x='24' y='58' width='52' height='6' fill='#e9c46a'/><rect x='46' y='20' width='6' height='38' rx='3' fill='#58b368'/><rect x='24' y='24' width='40' height='9' rx='4.5' fill='#ff5a5f'/><path d='M14 82 Q22 76 30 82 T46 82 T62 82 T78 82' fill='none' stroke='#f4e1b0' stroke-width='3' stroke-linecap='round'/></svg>", intro: "Let's take away big numbers!",
     lesson: (L, step) => frames(L, step === 4 ? countUpLesson(25, 42, "42 − <b>?</b> = 25", "42 take away what leaves 25? Count up from 25 to 42. The jumps tell us.").concat([["42 − <b>17</b> = 25", "So 42 take away 17 leaves 25!"]])
       : step === 3 ? countUpLesson(17, 42, "42 − 17", "Here's a trick for taking away. To work out 42 take away 17, count up from 17 to 42.").concat([["42 − 17 = <b>25</b>", "So 42 take away 17 is 25!"]])
       : subSteps(...(step === 1 ? [47, 5] : [47, 25]))),
@@ -261,7 +269,7 @@ const GAMES = {
     }
   },
   tokens: { // the Canadian coins game (it keeps its old short name, "tokens", so saved progress still works)
-    name: "Market Coins", icon: "🪙", intro: "I brought my coins from home in Canada! A nickel is 5 cents. A dime is 10 cents. A quarter is 25 cents.",
+    name: "Market Coins", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><circle cx='34' cy='68' r='20' fill='#e9c46a' stroke='#2b2d42' stroke-width='3'/><circle cx='34' cy='68' r='12' fill='#ffd84d'/><circle cx='66' cy='64' r='20' fill='#e9c46a' stroke='#2b2d42' stroke-width='3'/><circle cx='66' cy='64' r='12' fill='#ffd84d'/><circle cx='50' cy='34' r='20' fill='#ffd84d' stroke='#2b2d42' stroke-width='3'/><circle cx='50' cy='34' r='12' fill='#e9c46a'/><rect x='47' y='26' width='6' height='16' rx='3' fill='#2b2d42'/></svg>", intro: "I brought my coins from home in Canada! A nickel is 5 cents. A dime is 10 cents. A quarter is 25 cents.",
     lesson: (L, step) => frames(L, step === 4 ? [[`<span class="big">65¢ → $1</span>`, "A fig costs 65 cents and you pay with a loonie, 1 dollar. To find your change, count up from 65 cents to 1 dollar."]].concat(jumpSteps(65, 100, fmt, moneySaid))
         .concat([["change: <b>35¢</b>", "Your change is 35 cents!"]])
       : coinSteps(LESSON_COINS[step]).concat([[coinRow(LESSON_COINS[step]) + `<b>${fmt(LESSON_COINS[step].reduce((a, b) => a + b))}</b>`, `Biggest coins first, then count on. That makes counting money easier!`]])),
@@ -294,7 +302,7 @@ const GAMES = {
     }
   },
   time: { // Grade 2 measures time: seconds, minutes and hours, and how long something takes
-    name: "Sundial Time", icon: "🕰️", intro: "Long ago, people in Egypt told the time with the sun. Let's think about how long things take!",
+    name: "Sundial Time", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><circle cx='82' cy='18' r='10' fill='#ffd84d'/><ellipse cx='46' cy='68' rx='40' ry='18' fill='#d4a24c'/><ellipse cx='46' cy='62' rx='40' ry='18' fill='#f4e1b0' stroke='#2b2d42' stroke-width='3'/><polygon points='46,62 38,24 52,62' fill='#e9c46a' stroke='#2b2d42' stroke-width='3' stroke-linejoin='round'/><polygon points='52,62 38,62 18,70 28,72' fill='#b08a3e'/><circle cx='70' cy='60' r='3' fill='#2b2d42'/><circle cx='22' cy='56' r='3' fill='#2b2d42'/></svg>", intro: "Long ago, people in Egypt told the time with the sun. Let's think about how long things take!",
     lesson: (L, step) => frames(L, step <= 2 ? [
         ["⏱️", "We measure how long things take in seconds, minutes and hours."],
         ["👏 &nbsp;1 second", "A second is very short. It's about as quick as one clap."],
@@ -325,7 +333,8 @@ const GAMES = {
       const countSteps = count.map((x, i) => [`${count.slice(0, i + 1).map(y => `${y}:00`).join(" → ")}<br><b>${i + 1} hour${i ? "s" : ""}</b>`, `${x} o'clock is ${i + 1} hour${i ? "s" : ""}.`]);
       if (step === 3) { // how many hours did it take?
         const trip = pick(TRIPS);
-        return { bubble: `<div class="rowx">${mini(h, 0)}<span style="font-size:6vmin">→</span>${mini(h2, 0)}</div>`, tall: true, key: [h, n].join(),
+        const dial = rand(2) ? x => mini(x, 0) : sundial; // half the time the two times are shown on stone sundials, where the shadow points at the hour
+        return { bubble: `<div class="rowx">${dial(h)}<span style="font-size:6vmin">→</span>${dial(h2)}</div>`, tall: true, key: [h, n].join(),
           say: `${trip} started at ${h} o'clock, and finished at ${h2} o'clock. How many hours did it take?`, again: "How many hours did it take?", read: `${trip} started at ${h}:00 and finished at ${h2}:00. How many hours did it take?`,
           yay: `Yes! It took ${n} hour${n > 1 ? "s" : ""}.`, choices: numCards(n, 1, 12, 4, [n + 1, n - 1, n + 2]),
           hint: H => { H.show(`${h}:00 → ${h2}:00`); return H.say(`Start at ${h} o'clock. Count each hour, until you get to ${h2} o'clock. Use your fingers!`); },
@@ -343,7 +352,7 @@ const GAMES = {
     }
   },
   words: {
-    name: "Hieroglyph Words", icon: "📜", intro: "Let's learn about words!",
+    name: "Hieroglyph Words", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='22' y='8' width='56' height='84' rx='28' fill='#f4e1b0' stroke='#2b2d42' stroke-width='4'/><path d='M50 22 l12 8 -12 8 -12 -8z' fill='#4d9de0'/><circle cx='50' cy='30' r='3' fill='#2b2d42'/><path d='M34 50 Q42 42 50 50 T66 50' fill='none' stroke='#3fc1c9' stroke-width='5' stroke-linecap='round'/><circle cx='42' cy='72' r='6' fill='#ff5a5f'/><path d='M54 78 L66 66 L66 78Z' fill='#58b368'/></svg>", intro: "Let's learn about words!",
     lesson: (L, step) => frames(L, step === 4 ? [
         ["<b>noun</b>: pyramid", "A naming word, called a noun, names a person, a place or a thing. Here's a test: can you put 'the' in front of it? The pyramid. Yes! It's a noun."],
         ["<b>verb</b>: dig", "An action word, called a verb, is something you do. Test it: can you say 'I can' in front of it? I can dig. Yes! It's a verb."],
@@ -375,7 +384,7 @@ const GAMES = {
     }
   },
   scribe: {
-    name: "Scribe School", icon: "✍️", intro: "A scribe had to spell every word the right way. Let's try!",
+    name: "Scribe School", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='8' y='50' width='76' height='36' rx='8' fill='#d4a24c' stroke='#2b2d42' stroke-width='3'/><rect x='16' y='58' width='38' height='8' rx='4' fill='#e9c46a'/><circle cx='64' cy='68' r='7' fill='#ff5a5f'/><circle cx='64' cy='68' r='3' fill='#2b2d42'/><circle cx='42' cy='76' r='5' fill='#2b2d42'/><path d='M40 52 L84 8' stroke='#58b368' stroke-width='9' stroke-linecap='round'/><path d='M40 52 L34 62 L46 58Z' fill='#2b2d42'/></svg>", intro: "A scribe had to spell every word the right way. Let's try!",
     lesson: (L, step) => frames(L, [
       [[`r<b>ai</b>n &nbsp; b<b>oa</b>t &nbsp; n<b>igh</b>t`, "Some sounds are spelled with a team of letters. In rain, the A and the I work together to make the long A sound. In boat, O A makes the long O sound. In night, I G H makes the long I sound."],
         [`c<b>a</b>k<b>e</b>`, "And in cake, the E at the end is silent. It makes the A say its name."]],
@@ -410,7 +419,7 @@ const GAMES = {
     }
   },
   scroll: {
-    name: "Explorer's Scroll", icon: "🏺", intro: "Let's read about Egypt, long ago and today!",
+    name: "Explorer's Scroll", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='10' y='20' width='80' height='60' rx='10' fill='#f4e1b0'/><ellipse cx='12' cy='50' rx='10' ry='34' fill='#e9c46a' stroke='#2b2d42' stroke-width='3'/><ellipse cx='88' cy='50' rx='10' ry='34' fill='#d4a24c' stroke='#2b2d42' stroke-width='3'/><rect x='28' y='32' width='44' height='6' rx='3' fill='#2b2d42'/><rect x='28' y='46' width='36' height='6' rx='3' fill='#4d9de0'/><rect x='28' y='60' width='44' height='6' rx='3' fill='#ff9f43'/></svg>", intro: "Let's read about Egypt, long ago and today!",
     lesson: L => frames(L, [
       [`<div class="passage" style="font-size:4vmin">Egyptians loved cats. Cats kept mice away from the food.<b>Why were cats helpful?</b></div>`, "Here's how good readers find answers. First, read the question. Why were cats helpful?"],
       [`<div class="passage" style="font-size:4vmin">Egyptians loved cats. <span class="sent glow">Cats kept mice away from the food.</span><b>Why were cats helpful?</b></div>`, "Then look in the scroll for the sentence that answers it. Cats kept mice away from the food."],
@@ -425,7 +434,7 @@ const GAMES = {
     }
   },
   rows: {
-    name: "Stone Rows", icon: "🧱", intro: "The pyramids were built from rows and rows of stones. Let's count them the quick way!",
+    name: "Stone Rows", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='8' y='64' width='40' height='24' rx='4' fill='#e9c46a' stroke='#2b2d42' stroke-width='3'/><rect x='52' y='64' width='40' height='24' rx='4' fill='#d4a24c' stroke='#2b2d42' stroke-width='3'/><rect x='28' y='38' width='44' height='22' rx='4' fill='#d4a24c' stroke='#2b2d42' stroke-width='3'/><rect x='34' y='12' width='32' height='22' rx='4' fill='#e9c46a' stroke='#2b2d42' stroke-width='3'/><circle cx='50' cy='23' r='4' fill='#ffd84d'/></svg>", intro: "The pyramids were built from rows and rows of stones. Let's count them the quick way!",
     lesson: L => { const grid = lit => `<div class="stones" style="grid-template-columns:repeat(4, auto);font-size:5vmin">${Array.from({ length: 12 }, (_, i) => `<span${Math.floor(i / 4) === lit ? ' class="glow"' : ""}>🧱</span>`).join("")}</div>`;
       return frames(L, [[grid(-1), "Here are 3 rows of 4 stones. Counting them one at a time is slow. Let's count by fours instead!"],
         [grid(0) + "<b>4</b>", "4"], [grid(1) + "<b>4, 8</b>", "8"], [grid(2) + "<b>4, 8, 12</b>", "12! 3 rows of 4 make 12."], ["4 + 4 + 4 = <b>12</b>", "That's the same as 4 plus 4 plus 4."]]); },
@@ -495,7 +504,7 @@ const EGYPT_TOUR = [
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody in Ancient Egypt", sub: "A Grade 2 adventure", gradeLabel: "Grade 2 (ages 7-8)", hostName: "Dr. Somebody",
-  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g2/lesson/", lineVoice: "audio/g2/l/",
+  host: HOST, saveKey: "grade2Egypt.v1", medal: "g2", need: 4, starsToWin: 5, hints: true, lessons: true, lessonVoice: "audio/g2/lesson/", lineVoice: "audio/g2/l/", written: true,
   celebrations: { art: EGYPT_ART, facts: EGYPT_FACTS, finale: EGYPT_TOUR }, sceneVoice: "audio/g2/scene/", // a short scene with a fun fact after each place, and a tour at the end // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g2/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="sun"></div><div class="cloud c2"></div><div class="pyr"></div><div class="pyr p2"></div><div class="hill back"></div><div class="hill"></div>`,

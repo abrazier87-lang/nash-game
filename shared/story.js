@@ -33,7 +33,7 @@ const owl = (behind, front) => `<svg viewBox="0 0 200 160"><ellipse cx="84" cy="
   ${behind || ""}<polygon points="62,34 70,6 88,26" fill="#7a4f2a"/><polygon points="138,34 130,6 112,26" fill="#7a4f2a"/>
   <ellipse cx="100" cy="50" rx="44" ry="36" fill="#9c6b3f"/><rect x="58" y="43" width="84" height="8" fill="#39405a"/>
   <circle cx="80" cy="48" r="19" fill="#d9a400"/><circle cx="120" cy="48" r="19" fill="#d9a400"/><circle cx="80" cy="48" r="14" fill="#fff"/><circle cx="120" cy="48" r="14" fill="#fff"/>
-  <circle cx="83" cy="50" r="6" fill="#2b2d42"/><circle cx="117" cy="50" r="6" fill="#2b2d42"/><polygon points="92,63 108,63 100,77" fill="#ff9f43"/>${front || ""}</svg>`;
+  <circle class="blink" cx="83" cy="50" r="6" fill="#2b2d42"/><circle class="blink" cx="117" cy="50" r="6" fill="#2b2d42"/><polygon points="92,63 108,63 100,77" fill="#ff9f43"/>${front || ""}</svg>`;
 // The clock balloon (the time machine).
 const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
   <path d="M80 6 C58 20 50 60 56 96 C60 118 72 134 80 140 C88 134 100 118 104 96 C110 60 102 20 80 6 Z" fill="#ffd23f"/>
@@ -119,7 +119,7 @@ function StoryGame(C) {
       <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
     <div class="screen" id="map"><div class="places" id="places"></div><div class="progress" id="progress"></div><div class="stickers" id="stickers"></div></div>
     <div class="screen" id="game"><div class="stars" id="stars"></div>
-      <div class="ask"><button class="host" id="gameHost" aria-label="Say it again">${C.host}</button><div class="bubble" id="bubble"></div></div>
+      <div class="ask"><button class="host" id="gameHost" aria-label="Say it again">${C.host}<span class="hear"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span></button><div class="bubble" id="bubble"></div></div>
       <div class="choices" id="choices"></div></div>
     <div class="screen" id="board"><button class="stage" id="boardStage" aria-label="Tap it"></button>${play("boardGo")}</div>
     <div class="screen" id="finale"><h1>${C.finaleTitle}</h1><div id="finaleArt"></div>${play("finaleGo")}</div>
@@ -188,7 +188,8 @@ function StoryGame(C) {
     if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = (lead || "") + "Here's a tricky one again. "; } // bring it back
     else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
     G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
-    const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
+    const shown = Kit.writtenBubble(q, C.written); // with talking off (or in a grade with C.written), the question is also shown in writing
+    $("gameHost").classList.toggle("mute", !Kit.settings.voice); // the little speaker on the host only shows when there is something to hear
     $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); $("bubble").classList.remove("lessonframe"); animate($("bubble"), "pop");
     const box = $("choices"); box.innerHTML = "";
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
@@ -319,6 +320,13 @@ function StoryGame(C) {
       $("places").appendChild(b);
     });
     $("progress").innerHTML = C.progress(Array.from({ length: NEED }, (_, i) => on[i] || null));
+    // Tap a friend on the strip to see where they came from: their place card hops, and a little tag names the place.
+    const homes = GAME_IDS.filter(id => S.aboard[id]);
+    [...$("progress").querySelectorAll(".slot:not(.empty)")].forEach((slot, i) => { const id = homes[i]; if (!id) return;
+      slot.classList.add("tap");
+      slot.addEventListener("click", () => { sfx.tap(); const card = $("places").children[GAME_IDS.indexOf(id)]; if (card) animate(card, "bounce");
+        $("progress").querySelectorAll(".from").forEach(f => f.remove());
+        const tag = document.createElement("span"); tag.className = "from"; tag.textContent = GAMES[id].name; slot.appendChild(tag); setTimeout(() => tag.remove(), 2600); }); });
     const earlier = S.stickers.slice(0, Math.max(0, S.stickers.length - on.length)).slice(-14);
     $("stickers").innerHTML = earlier.length ? `<small>${C.stickersLabel}</small>` + earlier.map(e => `<span>${e}</span>`).join("") : "";
     show("map");

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=26">
+<link rel="stylesheet" href="shared/kit.css?v=30">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -32,6 +32,20 @@
   .book.soon { background:#cbbfae; cursor:default; }
   .book.soon .pic { opacity:.6; }
   .gear { position:fixed; top:10px; right:10px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.75); font-size:24px; opacity:.6; z-index:5; }
+  /* a friendly pop-up card: adding a name, and "coming soon" for the books that are not written yet */
+  #pop { position:fixed; inset:0; background:rgba(43,45,66,.55); display:none; align-items:center; justify-content:center; z-index:30; padding:16px; }
+  #pop.on { display:flex; }
+  #pop .card { background:#fffaf0; border:6px solid #fff; border-radius:28px; padding:24px 26px 22px; width:min(440px, 100%); text-align:center; box-shadow:0 10px 0 rgba(0,0,0,.2); }
+  #pop .big { font-size:64px; line-height:1.1; }
+  #pop h2 { margin:6px 0 8px; font-size:26px; color:#8a4f1d; }
+  #pop p { margin:0 0 14px; font-size:18px; line-height:1.4; }
+  #pop input { width:100%; font:inherit; font-size:26px; font-weight:bold; text-align:center; padding:12px; border-radius:16px; border:4px solid #ffd84d; background:#fff; color:inherit; -webkit-user-select:text; user-select:text; outline:none; }
+  #pop input:focus { border-color:#ff8a3d; }
+  #pop .row { display:flex; gap:14px; justify-content:center; margin-top:18px; }
+  #pop .row button { flex:1 1 0; max-width:190px; font-size:22px; font-weight:bold; padding:14px 10px; border-radius:18px; background:#e9e2d4; box-shadow:0 5px 0 rgba(0,0,0,.18); }
+  #pop .row button.main { background:#58b368; color:#fff; }
+  #pop .row button:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
+  .book.soon { cursor:pointer; }
   .gear.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
 </style>
 </head>
@@ -45,8 +59,9 @@
 </div>
 <button class="gear" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
+<div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=26"></script>
+<script src="shared/kit.js?v=30"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -76,17 +91,40 @@ function drawWho() {
 $("who").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   Kit.audio(); Kit.sfx.tap();
-  if (t.dataset.add) { const name = prompt("What is the child's name?"); if (name) { const p = Kit.addPlayer(name); if (p) Kit.say("Hi " + p.name + "!"); } }
-  else { Kit.setCurrent(t.dataset.id); Kit.say("Hi " + t.textContent + "! Pick a book."); }
+  if (t.dataset.add) { askName(); return; }
+  Kit.setCurrent(t.dataset.id); Kit.say("Hi " + t.textContent + "! Pick a book.");
   drawWho();
 });
+
+// ---------- the pop-up card ----------
+const closePop = () => { $("pop").classList.remove("on"); $("popCard").innerHTML = ""; };
+$("pop").addEventListener("click", e => { if (e.target === $("pop")) closePop(); }); // a tap outside the card closes it
+// "+ Add a name": a card with a box to type in (instead of the browser's plain grey pop-up)
+function askName() {
+  $("popCard").innerHTML = `<div class="big">👋</div><h2>Who is playing?</h2><p>Type the child's first name.</p>
+    <input id="popName" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="The child's name">
+    <div class="row"><button id="popNo">Cancel</button><button class="main" id="popYes">Save</button></div>`;
+  $("pop").classList.add("on");
+  const box = $("popName"), save = () => { const name = box.value.trim(); closePop(); if (name) { const p = Kit.addPlayer(name); if (p) Kit.say("Hi " + p.name + "!"); } drawWho(); };
+  $("popYes").addEventListener("click", () => { Kit.sfx.tap(); save(); }); $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
+  box.addEventListener("keydown", e => { if (e.key === "Enter") save(); else if (e.key === "Escape") closePop(); });
+  box.focus();
+}
+// A book that is not written yet: a friendly "coming soon" (no hints about the story!)
+function comingSoon(grade) {
+  $("popCard").innerHTML = `<div class="big">🦉</div><h2>${grade} is coming soon!</h2><p>Dr. Somebody is still getting this adventure ready. Check back later!</p>
+    <div class="row"><button class="main" id="popYes">OK</button></div>`;
+  $("pop").classList.add("on");
+  $("popYes").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
+}
+$("shelf").addEventListener("click", e => { const b = e.target.closest(".book.soon"); if (b) { Kit.audio(); Kit.sfx.tap(); comingSoon(b.dataset.grade); } });
 
 // A medal shows on a book once the child who is playing has finished that story.
 function drawShelf() {
   const medals = Kit.stamps();
   $("shelf").innerHTML = BOOKS.map(b => b.file
     ? `<a class="book" href="${b.file}" style="--c:${b.color}">${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
-    : `<div class="book soon"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
+    : `<div class="book soon" data-grade="${b.grade}"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
 }
 drawShelf();
 

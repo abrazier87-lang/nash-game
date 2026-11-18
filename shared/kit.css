@@ -25,7 +25,7 @@ svg { display:block; width:100%; height:100%; overflow:visible; pointer-events:n
 h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shadow:0 .6vmin 0 var(--title-shadow,#2f7d44), 0 1vmin 2vmin rgba(0,0,0,.25); letter-spacing:.2vmin; }
 .sub { font-size:3.2vmin; margin:0 0 2vmin; text-align:center; }
 .bigbtn { width:30vmin; height:30vmin; border-radius:50%; background:#ff8a3d; box-shadow:0 1.6vmin 0 #c85a12, 0 3vmin 4vmin rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center; animation:pulse 1.6s ease-in-out infinite; }
-.bigbtn:active { transform:translateY(1vmin); box-shadow:0 .6vmin 0 #c85a12; }
+.bigbtn:active { animation:none; transform:translateY(.5vmin); box-shadow:0 .7vmin 0 #c85a12, 0 1.5vmin 2vmin rgba(0,0,0,.2); }
 .bigbtn .tri { width:0; height:0; border-left:12vmin solid #fff; border-top:8vmin solid transparent; border-bottom:8vmin solid transparent; margin-left:3vmin; }
 .bigbtn.go { margin-top:3vmin; width:20vmin; height:20vmin; visibility:hidden; }
 .bigbtn.go .tri { border-left-width:8vmin; border-top-width:5.5vmin; border-bottom-width:5.5vmin; margin-left:2vmin; }
@@ -43,7 +43,7 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 /* the map of places */
 .places { display:grid; grid-template-columns:repeat(4, auto); gap:2.5vmin; }
 .place { width:21vmin; height:24vmin; border-radius:4vmin; background:var(--card,#fffdf5); box-shadow:0 1.2vmin 0 rgba(0,0,0,.18); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; border:1vmin solid #fff; }
-.place:active { transform:translateY(.8vmin); }
+.place:active { transform:translateY(.5vmin); box-shadow:0 .5vmin 0 rgba(0,0,0,.18); }
 .place .pic { width:16vmin; height:13vmin; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:7vmin; white-space:nowrap; }
 .place .name { font-size:2.3vmin; font-weight:bold; margin-top:1vmin; }
 .place .badge { position:absolute; top:-2vmin; right:-2vmin; width:8vmin; height:8vmin; font-size:6.5vmin; line-height:8vmin; text-align:center; }
@@ -56,6 +56,10 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .star.got { opacity:1; filter:none; transform:scale(1.15); }
 .ask { display:flex; align-items:center; justify-content:center; gap:2vmin; }
 .ask .host { width:26vmin; height:22vmin; }
+.ask .host { position:relative; }
+.ask .host .hear { position:absolute; right:1vmin; bottom:-1vmin; width:7.4vmin; height:7.4vmin; border-radius:50%; background:#4d9de0; box-shadow:0 .5vmin 0 #2f6fab; display:flex; align-items:center; justify-content:center; } /* a little speaker: tap the host to hear the question again */
+.ask .host .hear svg { width:62%; height:62%; }
+.ask .host.mute .hear { display:none; }
 .bubble { min-width:26vmin; height:26vmin; border-radius:6vmin; background:#fff; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; gap:1.5vmin; padding:2vmin 3vmin; position:relative; font-weight:bold; }
 .bubble::before { content:""; position:absolute; left:-3.5vmin; top:55%; border:2.2vmin solid transparent; border-right-color:#fff; border-left:none; }
 .bubble .emoji { font-size:16vmin; line-height:1.2; }
@@ -69,7 +73,7 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .gone { opacity:.25; filter:grayscale(1); }
 .choices { display:flex; gap:3vmin; justify-content:center; align-items:center; flex-wrap:wrap; width:100%; }
 .choice { width:var(--cs,30vmin); height:var(--cs,30vmin); border-radius:5vmin; background:var(--card,#fffdf5); border:1vmin solid #fff; box-shadow:0 1.4vmin 0 rgba(0,0,0,.18); display:flex; align-items:center; justify-content:center; font-size:14vmin; font-weight:bold; flex-direction:column; }
-.choice:active { transform:translateY(.8vmin); }
+.choice:active { transform:translateY(.5vmin); box-shadow:0 .6vmin 0 rgba(0,0,0,.18); }
 .choice.right { background:#d6ffc4; border-color:#55b85c; }
 .choice.dim { opacity:.35; }
 .choice .emoji { font-size:calc(var(--cs, 30vmin) * .58); line-height:1.25; }
@@ -93,6 +97,9 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .progress { display:flex; align-items:center; gap:2vmin; margin-top:2.5vmin; background:var(--strip, rgba(255,255,255,.14)); border-radius:5vmin; padding:1vmin 4vmin; }
 .balloon { width:15vmin; height:19vmin; }
 .slot { width:11vmin; height:11vmin; border-radius:50%; font-size:7vmin; line-height:11vmin; text-align:center; position:relative; background:rgba(255,255,255,.92); }
+.slot.tap { cursor:pointer; }
+.slot .from { position:absolute; left:50%; bottom:calc(100% + 1.4vmin); transform:translateX(-50%); background:#2b2d42; color:#fff; font-size:2.6vmin; line-height:1.2; font-weight:bold; white-space:nowrap; padding:.9vmin 1.8vmin; border-radius:2vmin; z-index:6; pointer-events:none; } /* where this friend came from */
+.slot .from::after { content:""; position:absolute; left:50%; top:100%; margin-left:-1.2vmin; border:1.2vmin solid transparent; border-top-color:#2b2d42; border-bottom:none; }
 .slot.empty { background:none; border:.8vmin dashed var(--strip-line, rgba(255,255,255,.7)); }
 .slot i { position:absolute; right:-1.5vmin; bottom:-1.5vmin; font-size:4.4vmin; line-height:1; font-style:normal; }
 #finaleArt { display:flex; align-items:flex-end; gap:2vmin; font-size:9vmin; }
@@ -179,3 +186,35 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .scenecap { position:absolute; left:50%; transform:translateX(-50%); top:40vh; width:min(86vw, 120vmin); background:rgba(255,255,255,.92); border-radius:3vmin; padding:2vmin 3vmin; font-size:4.2vmin; line-height:1.3; font-weight:bold; text-align:center; box-shadow:0 1vmin 0 rgba(0,0,0,.12); z-index:3; }
 .bigbtn.sceneskip { position:absolute; right:3vmin; bottom:3vmin; width:15vmin; height:15vmin; z-index:4; }
 .bigbtn.sceneskip .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
+
+/* Gentle motion and tactile buttons (all off for people who ask for reduced motion) */
+@media (prefers-reduced-motion: no-preference) {
+  .place, .choice, .bigbtn { transition:transform 80ms ease-out, box-shadow 80ms ease-out; }
+  .sun { animation:sunglow 8s ease-in-out infinite; }
+  @keyframes sunglow { 50% { transform:scale(1.04); } }
+  .progress .balloon { animation:balloonbob 4.5s ease-in-out infinite; }
+  @keyframes balloonbob { 50% { transform:translateY(-1vmin); } }
+  svg .blink { animation:owlblink 5.5s infinite; transform-box:fill-box; transform-origin:center; }
+  @keyframes owlblink { 0%,96%,100% { transform:scaleY(1); } 98% { transform:scaleY(.1); } }
+}
+
+/* Upright phones (much taller than wide): fewer, bigger place cards; the host sits above the bubble; answer cards two by two.
+   Tablets are not this narrow, so their layouts stay exactly as they were. */
+@media (max-aspect-ratio: 5/8) {
+  #places.places { grid-template-columns:repeat(2, auto); gap:3vmin; }
+  #places .place { width:42vmin; height:36vmin; }
+  #places .place .pic { width:32vmin; height:22vmin; font-size:10vmin; }
+  #places .place .name { font-size:4vmin; }
+  #places.many { display:grid; grid-template-columns:repeat(3, auto); gap:2.4vmin; max-width:none; margin-top:0; }
+  #places.many .place { width:29.5vmin; height:29vmin; }
+  #places.many .place .pic { width:24vmin; height:15vmin; font-size:8.4vmin; }
+  #places.many .place .name { font-size:3vmin; }
+  #places.many.lots { display:flex; max-width:96vmin; }
+  #places.many.lots .place { width:29.5vmin; height:25vmin; }
+  #places.many.lots .place .pic { height:13vmin; font-size:7.4vmin; }
+  #places.many.lots .place .name { font-size:2.9vmin; }
+  .ask { flex-direction:column; gap:3vmin; }
+  .bubble::before { left:50%; top:-3.4vmin; margin-left:-2.2vmin; border:2.2vmin solid transparent; border-bottom-color:#fff; border-top:none; }
+  .bubble.tall, .bubble.quiet { max-width:94vmin; }
+  #choices { --cs:42vmin !important; max-width:96vmin; }
+}
