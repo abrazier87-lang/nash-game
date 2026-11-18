@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody's Space Balloon</title>
-<link rel="stylesheet" href="shared/kit.css?v=26">
+<link rel="stylesheet" href="shared/kit.css?v=27">
 <style>
   /* Space look: dark sky, stars, standing on a moon. */
   :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
@@ -15,6 +15,9 @@
   h1 { font-size:6.2vmin; width:52vmin; margin-left:auto; margin-right:auto; } /* a narrow title in the middle, clear of the ringed planet and the corner buttons */
   .spacedust { position:absolute; inset:0; opacity:.75; background-image:radial-gradient(#fff 1px, transparent 1.6px), radial-gradient(#fff 1.4px, transparent 2px), radial-gradient(#ffe9a8 1px, transparent 1.6px);
     background-size:90px 90px, 170px 170px, 130px 130px; background-position:0 0, 40px 70px, 90px 20px; }
+  @keyframes twinkle { 0%,100% { opacity:.75; } 50% { opacity:.45; } }
+  .spacedust { animation:twinkle 5s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .spacedust { animation:none; } }
   .ringed { position:absolute; top:5vmin; right:7vmin; width:15vmin; height:15vmin; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffd9a0, #ff9f43); }
   .ringed::after { content:""; position:absolute; left:-5vmin; right:-5vmin; top:5.6vmin; height:3.4vmin; border:.9vmin solid rgba(255,233,168,.85); border-radius:50%; transform:rotate(-18deg); }
   .stickers { color:#fff; }
@@ -29,8 +32,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=26"></script>
-<script src="shared/story.js?v=26"></script>
+<script src="shared/kit.js?v=27"></script>
+<script src="shared/story.js?v=27"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -86,7 +89,7 @@ const range = (a, b) => { const out = []; for (let k = a; a <= b ? k <= b : k >=
 // lesson(L, step): the "watch me do one" lesson on the first visit (and from the 📖 button).
 const GAMES = {
   read: {
-    name: "Word World", icon: "📖", intro: "Let's read!",
+    name: "Word World", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><circle cx='50' cy='50' r='40' fill='#4d9de0' stroke='#2b2d42' stroke-width='4'/><path d='M22 28q10-10 22-8q-6 10-4 20q-12 2-18-12z' fill='#58b368'/><path d='M66 70q12-6 16-18q4 14-6 26q-8 0-10-8z' fill='#58b368'/><text x='50' y='62' text-anchor='middle' font-family='inherit' font-weight='bold' font-size='30' fill='#fff'>abc</text></svg>", intro: "Let's read!",
     lesson: L => frames(L, [
       [`<span class="big">c a t</span>`, "Watch me read a word. I look at each letter, and say its sound."],
       [`<span class="big"><b>c</b> a t</span>`, "The first letter is C."], [`<span class="big">c <b>a</b> t</span>`, "Then A."], [`<span class="big">c a <b>t</b></span>`, "Then T."],
@@ -111,7 +114,7 @@ const GAMES = {
     }
   },
   spell: {
-    name: "Spelling Star", icon: "✏️", intro: "Let's spell!",
+    name: "Spelling Star", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><path d='M50 6l12 26 28 3-21 19 6 28-25-14-25 14 6-28L10 35l28-3z' fill='#ffd84d' stroke='#2b2d42' stroke-width='4' stroke-linejoin='round'/><path d='M40 70l26-30 8 7-26 30-11 4z' fill='#ff5a5f' stroke='#2b2d42' stroke-width='3' stroke-linejoin='round'/><path d='M40 70l-1 11 11-4z' fill='#fff' stroke='#2b2d42' stroke-width='3' stroke-linejoin='round'/></svg>", intro: "Let's spell!",
     lesson: L => frames(L, [
       [`🐶 ${tiles(["d", "o", "?"])}`, "Watch me! Dog. One letter is missing, at the end."],
       [`🐶 ${tiles(["d", "o", "?"])}`, "I say the word slowly, and listen to the very end. Dog."],
@@ -139,7 +142,7 @@ const GAMES = {
     }
   },
   sentence: {
-    name: "Sentence Station", icon: "💬", intro: "Let's finish the sentence!",
+    name: "Sentence Station", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='34' y='6' width='32' height='18' rx='4' fill='#4d9de0' stroke='#2b2d42' stroke-width='3'/><rect x='4' y='38' width='20' height='28' rx='4' fill='#3fc1c9' stroke='#2b2d42' stroke-width='3'/><rect x='76' y='38' width='20' height='28' rx='4' fill='#3fc1c9' stroke='#2b2d42' stroke-width='3'/><rect x='44' y='78' width='12' height='16' fill='#a06cd5' stroke='#2b2d42' stroke-width='3'/><circle cx='50' cy='52' r='28' fill='#fff' stroke='#2b2d42' stroke-width='4'/><circle cx='50' cy='52' r='13' fill='#ff9f43' stroke='#2b2d42' stroke-width='3'/></svg>", intro: "Let's finish the sentence!",
     lesson: L => frames(L, [
       [`<div class="sentence">The sun is <u>&nbsp;</u>.</div>`, "Watch me! A word is missing. I try each word in the sentence, and listen."],
       [`<div class="sentence">The sun is <b>desk</b>.</div>`, "The sun is desk. Hmm, that does not make sense."],
@@ -159,7 +162,7 @@ const GAMES = {
     }
   },
   plus: {
-    name: "Plus Planet", icon: "➕", intro: "Let's add!",
+    name: "Plus Planet", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><circle cx='50' cy='50' r='40' fill='#58b368' stroke='#2b2d42' stroke-width='4'/><circle cx='28' cy='72' r='8' fill='#3f9a52'/><circle cx='76' cy='28' r='6' fill='#3f9a52'/><path d='M50 26v48M26 50h48' stroke='#fff' stroke-width='14' stroke-linecap='round'/></svg>", intro: "Let's add!",
     lesson: (L, step) => step === 3 ? frames(L, [
         [`<span class="big">4 + <b>?</b> = 7</span>`, "Watch me! 4 plus what makes 7? I count up from 4 to 7."],
         [`<span class="big">4 → 5, 6, 7</span>`, "5, 6, 7. I counted 3 numbers."], [`<span class="big">4 + <b>3</b> = 7</span>`, "So 4 plus 3 makes 7!"]])
@@ -189,7 +192,7 @@ const GAMES = {
     }
   },
   minus: {
-    name: "Minus Moon", icon: "➖", intro: "Let's take away!",
+    name: "Minus Moon", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><path d='M62 8A42 42 0 1 0 92 66A34 34 0 1 1 62 8z' fill='#ffd84d' stroke='#2b2d42' stroke-width='4' stroke-linejoin='round'/><circle cx='40' cy='64' r='6' fill='#f0bf2a'/><path d='M34 38h30' stroke='#2b2d42' stroke-width='10' stroke-linecap='round'/></svg>", intro: "Let's take away!",
     lesson: L => frames(L, [
       [`<span class="big">8 − 3</span>`, "Watch me take 3 away from 8. I start at 8, and count back 3."],
       [`<span class="big">8 → 7</span>`, "7,"], [`<span class="big">8 → 7, 6</span>`, "6,"], [`<span class="big">8 → 7, 6, 5</span>`, "5. So 8 take away 3 is 5!"]]),
@@ -213,7 +216,7 @@ const GAMES = {
     }
   },
   tens: {
-    name: "Tens Tower", icon: "🧱", intro: "Let's count tens and ones! A long stick is ten. A little block is one.",
+    name: "Tens Tower", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><rect x='32' y='6' width='36' height='22' rx='5' fill='#4d9de0' stroke='#2b2d42' stroke-width='3'/><rect x='32' y='28' width='36' height='22' rx='5' fill='#6db3ee' stroke='#2b2d42' stroke-width='3'/><rect x='32' y='50' width='36' height='22' rx='5' fill='#4d9de0' stroke='#2b2d42' stroke-width='3'/><rect x='22' y='72' width='56' height='22' rx='5' fill='#6db3ee' stroke='#2b2d42' stroke-width='3'/><text x='50' y='24' text-anchor='middle' font-family='inherit' font-weight='bold' font-size='16' fill='#fff'>10</text></svg>", intro: "Let's count tens and ones! A long stick is ten. A little block is one.",
     lesson: L => frames(L, [
       [blocks(34), "Watch me count these blocks. Each long stick is ten. Each little block is one."],
       [blocks(34), "I count the long sticks by tens. 10, 20, 30."], [blocks(34), "Then I count on the little ones. 31, 32, 33, 34."],
@@ -237,7 +240,7 @@ const GAMES = {
     }
   },
   clock: { // Calendar Comet (it keeps its old short name, "clock", so saved progress still works)
-    name: "Calendar Comet", icon: "📅", intro: "Tick tock! I love time. Let's learn the days, the months and the seasons!",
+    name: "Calendar Comet", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><path d='M6 94L40 54' stroke='#ffd84d' stroke-width='10' stroke-linecap='round'/><path d='M6 78L30 58' stroke='#ff9f43' stroke-width='6' stroke-linecap='round'/><rect x='32' y='24' width='60' height='62' rx='8' fill='#fff' stroke='#2b2d42' stroke-width='4'/><path d='M32 32a8 8 0 0 1 8-8h44a8 8 0 0 1 8 8v12H32z' fill='#ff5a5f' stroke='#2b2d42' stroke-width='4'/><circle cx='46' cy='60' r='5' fill='#4d9de0'/><circle cx='62' cy='60' r='5' fill='#58b368'/><circle cx='78' cy='60' r='5' fill='#ff9f43'/><circle cx='46' cy='75' r='5' fill='#a06cd5'/></svg>", intro: "Tick tock! I love time. Let's learn the days, the months and the seasons!",
     lesson: (L, step) => frames(L, step <= 2 ? [
         ["📅", "Watch me! There are seven days in a week. They always come in the same order."],
         [DAYS.slice(0, 4).join(", "), "Sunday, Monday, Tuesday, Wednesday,"], [DAYS.slice(4).join(", "), "Thursday, Friday, Saturday. Then back to Sunday!"],
@@ -277,7 +280,7 @@ const GAMES = {
     }
   },
   skip: {
-    name: "Skip-Count Rings", icon: "🪐", intro: "Let's skip count!",
+    name: "Skip-Count Rings", icon: "<svg viewBox='0 0 100 100' style='width:1.6em;height:1.6em;vertical-align:middle'><circle cx='50' cy='50' r='26' fill='#a06cd5' stroke='#2b2d42' stroke-width='4'/><ellipse cx='50' cy='54' rx='44' ry='12' fill='none' stroke='#ffd84d' stroke-width='7' transform='rotate(-20 50 54)'/><path d='M34 40a20 20 0 0 1 14-10' fill='none' stroke='#c9a6ee' stroke-width='5' stroke-linecap='round'/></svg>", intro: "Let's skip count!",
     lesson: L => frames(L, [
       [tiles([5, 10, 15, "?"]), "Watch me skip count by fives. Each jump is five more."],
       [tiles([5, 10, 15, "?"]), "5, 10, 15."], [tiles([5, 10, 15, 20]), "Five more than 15 is 20. So 20 comes next!"]]),

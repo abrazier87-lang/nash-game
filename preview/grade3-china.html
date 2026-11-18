@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient China</title>
-<link rel="stylesheet" href="shared/kit.css?v=26">
+<link rel="stylesheet" href="shared/kit.css?v=27">
 <style>
   /* Misty mountains, green hills and a red pagoda. */
   :root { --sky1:#bfe6ef; --sky2:#fdf3dc; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#b03a2e; --strip:rgba(255,255,255,.45); --strip-line:rgba(60,110,70,.6); }
@@ -33,8 +33,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=26"></script>
-<script src="shared/story.js?v=26"></script>
+<script src="shared/kit.js?v=27"></script>
+<script src="shared/story.js?v=27"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -77,6 +77,17 @@ function bar(d, k) {
   for (let i = 0; i < d; i++) s += `<rect x="${(4 + i * 92 / d).toFixed(1)}" y="32" width="${(92 / d).toFixed(1)}" height="36" fill="${i < k ? "#ff9f43" : "#fff"}" stroke="#2b2d42" stroke-width="2.5"/>`;
   return `<svg viewBox="0 0 100 100">${s}</svg>`;
 }
+// a place-value abacus showing the number n: one rod per digit, as many beads as the digit, a label under each rod
+function abacusArt(n) {
+  const ds = String(n).split(""), L = ds.length, W = L * 26 + 14, x0 = 60 - W / 2, cols = ["#ff5a5f", "#4d9de0", "#58b368", "#ff9f43"];
+  let s = `<rect x="${x0}" y="2" width="${W}" height="46" rx="5" fill="#a0643c"/><rect x="${x0 + 3}" y="5" width="${W - 6}" height="40" rx="3" fill="#f6e3c5"/>`;
+  ds.forEach((c, i) => { const x = 60 + (i - (L - 1) / 2) * 26;
+    s += `<line x1="${x}" y1="6" x2="${x}" y2="44" stroke="#8d6e63" stroke-width="2"/>`;
+    for (let j = 0; j < +c; j++) s += `<ellipse cx="${x}" cy="${41 - j * 4}" rx="8" ry="1.9" fill="${cols[i % 4]}" stroke="#2b2d42" stroke-width=".6"/>`;
+    s += `<text x="${x}" y="61" font-size="12" font-weight="bold" text-anchor="middle" fill="#2b2d42">${c}</text>`; });
+  return `<svg viewBox="0 0 120 64" style="width:30vmin;height:16vmin;display:block">${s}</svg>`;
+}
+const tileIcon = b => `<svg viewBox="0 0 100 100" style="width:1.6em;height:1.6em;vertical-align:middle">${b}</svg>`;
 // a garden drawn as a rectangle, w wide and h tall, with its sides labelled; "grid" also draws the unit squares
 function garden(w, h, grid) {
   const s = Math.min(84 / w, 56 / h), W = w * s, H = h * s, x = (130 - W) / 2 + 8, y = (96 - H) / 2 + 6;
@@ -198,7 +209,7 @@ const WHEN_WORDS = /^(Yesterday|Tomorrow|Right now|Last year|Next week|Long ago|
 // lesson(L, step): the "watch me do one" lesson on the first visit (and from the 📖 button).
 const GAMES = {
   times: {
-    name: "Great Wall Times", icon: "✖️", intro: "The Great Wall was built row by row. Let's multiply!",
+    name: "Great Wall Times", icon: tileIcon(`<g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="6" y="50" width="88" height="38" fill="#d9b382"/><path d="M6 50V38h16v12M34 50V38h16v12M62 50V38h16v12M78 50V38h16v12" fill="#d9b382"/><path d="M6 69h88M30 50v19M58 50v19M44 69v19M76 69v19" fill="none" stroke="#a0643c" stroke-width="2.5"/><path d="M34 6l28 26M62 6L34 32" stroke="#c0392b" stroke-width="10"/></g>`), intro: "The Great Wall was built row by row. Let's multiply!",
     lesson: (L, step) => frames(L, step === 4 ? [
         [`<span class="big">4 × <b>?</b> = 20</span>`, "Watch me! 4 times what makes 20? I count by fours until I reach 20."],
         [`4, 8, 12, 16, 20`, "4, 8, 12, 16, 20."], [`<span class="big">4 × <b>5</b> = 20</span>`, "That was 5 jumps. So 4 times 5 makes 20!"]]
@@ -221,7 +232,7 @@ const GAMES = {
     }
   },
   share: {
-    name: "Silk Road Sharing", icon: "➗", intro: "Traders on the Silk Road shared things out equally. Let's divide!",
+    name: "Silk Road Sharing", icon: tileIcon(`<g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="10" y="10" width="66" height="40" rx="14" fill="#a06cd5"/><ellipse cx="76" cy="30" rx="11" ry="20" fill="#d6bdf2"/><circle cx="76" cy="30" r="5" fill="#a06cd5" stroke-width="2.5"/><path d="M14 30h52" stroke="#ffd84d" stroke-width="6"/><path d="M32 78h36" stroke-width="7"/><circle cx="50" cy="65" r="5.5" fill="#ff5a5f" stroke="none"/><circle cx="50" cy="91" r="5.5" fill="#ff5a5f" stroke="none"/></g>`), intro: "Traders on the Silk Road shared things out equally. Let's divide!",
     lesson: L => frames(L, [
       [`<span class="big">12 ÷ 3</span>`, "Watch me! 12 divided by 3 means sharing 12 into 3 equal groups."],
       [`🥟🥟🥟🥟 &nbsp; 🥟🥟🥟🥟 &nbsp; 🥟🥟🥟🥟`, "Each group gets 4."], [`3 × <b>4</b> = 12`, "Here's a quick way. Think: 3 times what makes 12? 3 times 4 is 12. So 12 divided by 3 is 4!"]]),
@@ -235,7 +246,7 @@ const GAMES = {
     }
   },
   fractions: {
-    name: "Dumpling Fractions", icon: "🥟", intro: "A fraction is a part of a whole. Let's share out the dumplings fairly!",
+    name: "Dumpling Fractions", icon: tileIcon(`<g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M16 50q10-22 24 0zM60 50q10-22 24 0zM38 44q12-24 26 0z" fill="#fff"/><path d="M8 56h84l-8 28q-4 8-14 8H30q-10 0-14-8z" fill="#d9b382"/><ellipse cx="50" cy="56" rx="42" ry="9" fill="#e9c9a0"/><path d="M32 66l4 24M50 66v26M68 66l-4 24" stroke="#a0643c"/></g>`), intro: "A fraction is a part of a whole. Let's share out the dumplings fairly!",
     lesson: (L, step) => frames(L, step === 4 ? [
         [`<span class="big">${frac(1, 3)} of 12</span>`, "Watch me find one third of 12. One third means one of 3 equal groups."],
         [`🥟🥟🥟🥟 &nbsp; 🥟🥟🥟🥟 &nbsp; 🥟🥟🥟🥟`, "I share 12 into 3 equal groups. Each group has 4."], [`${frac(1, 3)} of 12 = <b>4</b>`, "So one third of 12 is 4!"]]
@@ -273,7 +284,7 @@ const GAMES = {
     }
   },
   abacus: {
-    name: "Abacus Numbers", icon: "🧮", intro: "Long ago, people in China did sums on an abacus. Let's work with big numbers!",
+    name: "Abacus Numbers", icon: tileIcon(`<rect x="8" y="10" width="84" height="80" rx="8" fill="#a0643c" stroke="#2b2d42" stroke-width="3"/><rect x="16" y="18" width="68" height="64" rx="4" fill="#f6e3c5"/><path d="M34 18v64M50 18v64M66 18v64" stroke="#8d6e63" stroke-width="3"/><g stroke="#2b2d42" stroke-width="2"><ellipse cx="34" cy="72" rx="9" ry="5" fill="#ff5a5f"/><ellipse cx="34" cy="62" rx="9" ry="5" fill="#ff5a5f"/><ellipse cx="50" cy="72" rx="9" ry="5" fill="#4d9de0"/><ellipse cx="50" cy="62" rx="9" ry="5" fill="#4d9de0"/><ellipse cx="50" cy="52" rx="9" ry="5" fill="#4d9de0"/><ellipse cx="66" cy="72" rx="9" ry="5" fill="#58b368"/><ellipse cx="66" cy="28" rx="9" ry="5" fill="#58b368"/></g>`), intro: "Long ago, people in China did sums on an abacus. Let's work with big numbers!",
     lesson: (L, step) => frames(L, step === 4 ? [
         [`<span class="big">46</span> → nearest 10`, "Watch me round 46 to the nearest ten. 46 is between 40 and 50."],
         [`4<b>6</b>`, "I look at the ones digit. It's 6. Five or more rounds up."], [`46 → <b>50</b>`, "So 46 rounds up to 50!"]]
@@ -295,7 +306,7 @@ const GAMES = {
       else { a = 100 + rand(800); b = 100 + rand(plus ? 899 - a : a - 100 + 1); }
       const ans = plus ? a + b : a - b, op = plus ? "plus" : "minus", sign = plus ? "+" : "−";
       const jumps = [[100, "hundreds"], [10, "tens"], [1, "ones"]].map(([p, name]) => [Math.floor(b / p) % 10 * p, name]).filter(([v]) => v > 0);
-      return { bubble: `<span class="sum" style="font-size:8.6vmin">${a} ${sign} ${b} = <b>?</b></span>`, key: a + (plus ? "+" : "-") + b, say: `What is ${a} ${op} ${b}?`, yay: `Yes! ${a} ${op} ${b} is ${ans}!`,
+      return { bubble: `<div class="col">${abacusArt(a)}<span class="sum" style="font-size:8.6vmin">${a} ${sign} ${b} = <b>?</b></span></div>`, tall: true, key: a + (plus ? "+" : "-") + b, say: `What is ${a} ${op} ${b}?`, yay: `Yes! ${a} ${op} ${b} is ${ans}!`,
         hint: H => H.say(`Start at ${a}. ${plus ? "Add" : "Take away"} the hundreds, then the tens, then the ones.`),
         explain: async H => { let at = a; const list = jumps.map(([v, name]) => { const nx = plus ? at + v : at - v, row = [`${at} ${sign} ${v} = ${nx}`, `${plus ? "Add" : "Take away"} the ${name}. ${at} ${op} ${v} is ${nx}.`]; at = nx; return row; });
           return (await talkThrough(H, list)) && pointTo(H, `So the answer is ${ans}.`); },
@@ -303,7 +314,7 @@ const GAMES = {
     }
   },
   words: {
-    name: "Lantern Words", icon: "🏮", intro: "Some words sound the same but are spelled differently. Let's pick the right one!",
+    name: "Lantern Words", icon: tileIcon(`<g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 4v16"/><ellipse cx="50" cy="50" rx="34" ry="26" fill="#c0392b"/><ellipse cx="50" cy="50" rx="14" ry="26" fill="none" stroke="#e9b44c" stroke-width="4"/><rect x="34" y="18" width="32" height="9" rx="3" fill="#e9b44c"/><rect x="34" y="73" width="32" height="9" rx="3" fill="#e9b44c"/><path d="M42 82v11M50 82v13M58 82v11" stroke="#ff5a5f" stroke-width="4"/></g>`), intro: "Some words sound the same but are spelled differently. Let's pick the right one!",
     lesson: (L, step) => frames(L, step === 4 ? [
         [passageHtml("The traveller was exhausted after walking all day. She fell asleep at once."), "Watch me work out a hard word. Exhausted. I don't know it, so I look for clues."],
         [passageHtml("She fell asleep at once."), "The next sentence says she fell asleep at once. After walking all day!"], [`exhausted = <b>very tired</b>`, "So exhausted must mean very tired!"]]
@@ -333,7 +344,7 @@ const GAMES = {
     }
   },
   grammar: {
-    name: "Scholar's Grammar", icon: "🖌️", intro: "A scholar in China studied for years to write well. Let's study sentences!",
+    name: "Scholar's Grammar", icon: tileIcon(`<g stroke-linecap="round" stroke-linejoin="round"><path d="M84 10L50 54" stroke="#c0392b" stroke-width="11"/><path d="M52 52l-8 10" stroke="#e9b44c" stroke-width="13"/><path d="M44 62q-14 4-30 22 24 2 36-14z" fill="#2b2d42" stroke="#2b2d42" stroke-width="3"/><path d="M12 92Q44 80 88 92" fill="none" stroke="#2b2d42" stroke-width="5"/></g>`), intro: "A scholar in China studied for years to write well. Let's study sentences!",
     lesson: (L, step) => frames(L, step === 4 ? [
         [`<div class="sentence">mei lives in china</div>`, "Watch me fix a sentence. A sentence starts with a capital letter."],
         [`<div class="sentence"><b>M</b>ei lives in <b>C</b>hina</div>`, "Names of people and places start with capitals too. Mei. China."], [`<div class="sentence">Mei lives in China<b>.</b></div>`, "And it ends with a mark: a period, a question mark, or an exclamation mark."]]
@@ -372,7 +383,7 @@ const GAMES = {
     }
   },
   scroll: {
-    name: "Explorer's Scroll", icon: "📜", intro: "Let's read about ancient China!",
+    name: "Explorer's Scroll", icon: tileIcon(`<g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="18" y="20" width="64" height="62" fill="#f6e3c5"/><rect x="10" y="12" width="80" height="12" rx="6" fill="#c0392b"/><rect x="10" y="78" width="80" height="12" rx="6" fill="#c0392b"/><path d="M28 36h44M28 46h44M28 56h26" stroke-width="4"/></g><rect x="60" y="56" width="14" height="14" rx="2" fill="#ff5a5f"/>`), intro: "Let's read about ancient China!",
     lesson: L => frames(L, [
       [passageHtml("Giant pandas live in the mountains of China. They eat bamboo for most of the day.", "What do pandas eat most?"), "Watch me! Good readers read the question first. What do pandas eat most?"],
       [`<div class="passage">Giant pandas live in the mountains of China. <span class="sent glow">They eat bamboo for most of the day.</span></div>`, "Then I find the sentence that answers it. They eat bamboo for most of the day."],
@@ -386,7 +397,7 @@ const GAMES = {
     }
   },
   garden: {
-    name: "Palace Gardens", icon: "🏯", intro: "The emperor's gardeners need help measuring the gardens!",
+    name: "Palace Gardens", icon: tileIcon(`<ellipse cx="50" cy="88" rx="46" ry="8" fill="#58b368"/><g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round"><rect x="18" y="38" width="9" height="50" fill="#c0392b"/><rect x="73" y="38" width="9" height="50" fill="#c0392b"/><rect x="12" y="52" width="76" height="8" fill="#e9b44c"/><path d="M4 40Q50 -2 96 40z" fill="#c0392b"/></g><circle cx="50" cy="76" r="8" fill="#ff9f43"/><circle cx="50" cy="76" r="3" fill="#ffd84d"/>`), intro: "The emperor's gardeners need help measuring the gardens!",
     lesson: (L, step) => frames(L, step === 1 || step === 4 ? [
         [`<div class="shapebox" style="width:40vmin;height:28vmin;display:inline-block">${garden(5, 3)}</div>`, "Watch me find the perimeter. That's the distance all the way around the edge."],
         [`5 + 3 + 5 + 3`, "I add all four sides. 5, plus 3, plus 5, plus 3."], [`5 + 3 + 5 + 3 = <b>16</b>`, "That makes 16 metres all the way around!"]]
@@ -408,7 +419,7 @@ const GAMES = {
     }
   },
   money: {
-    name: "Coin Counting", icon: "🪙", intro: "I brought my coins from home in Canada! A nickel is 5 cents. A dime is 10 cents. A quarter is 25 cents. A loonie is 1 dollar. A toonie is 2 dollars.",
+    name: "Coin Counting", icon: tileIcon(`<circle cx="50" cy="50" r="42" fill="#ffd84d" stroke="#2b2d42" stroke-width="3"/><circle cx="50" cy="50" r="33" fill="none" stroke="#e9b44c" stroke-width="4"/><rect x="36" y="36" width="28" height="28" rx="3" fill="#fff" stroke="#2b2d42" stroke-width="3" stroke-linejoin="round"/><path d="M22 30q5-8 13-11" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none"/>`), intro: "I brought my coins from home in Canada! A nickel is 5 cents. A dime is 10 cents. A quarter is 25 cents. A loonie is 1 dollar. A toonie is 2 dollars.",
     lesson: (L, step) => frames(L, step >= 3 ? [
         [`🪁 $7 &nbsp; 💵 $10`, "Watch me work out change. A kite costs 7 dollars. I pay with 10 dollars."],
         [`$7 → $8, $9, $10`, "I count up from 7 to 10. 8, 9, 10."], [`change: <b>$3</b>`, "That's 3 dollars. My change is 3 dollars!"]]
@@ -444,7 +455,7 @@ const GAMES = {
     }
   },
   graphs: {
-    name: "Market Graphs", icon: "📊", intro: "The market keeps a graph of what it sells. Let's read it!",
+    name: "Market Graphs", icon: tileIcon(`<g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="12" y="52" width="20" height="36" rx="3" fill="#ff5a5f"/><rect x="40" y="22" width="20" height="66" rx="3" fill="#4d9de0"/><rect x="68" y="38" width="20" height="50" rx="3" fill="#58b368"/><path d="M6 92h88" stroke-width="4"/></g>`), intro: "The market keeps a graph of what it sells. Let's read it!",
     lesson: L => frames(L, [
       [`<div class="graphbox" style="width:44vmin;height:30vmin;display:inline-block">${barGraph(["tea", "silk", "rice", "salt"], [3, 5, 2, 4], 2)}</div>`, "Watch me read a bar graph. First, I look at the numbers on the side. They count by twos."],
       [`silk → <b>10</b>`, "Then I find the top of the silk bar, and look straight across. It lines up with 10."], [`<b>10</b> baskets of silk`, "So the market sold 10 baskets of silk!"]]),
@@ -465,7 +476,7 @@ const GAMES = {
     }
   },
   patterns: {
-    name: "Silk Patterns", icon: "🧩", intro: "Silk weavers follow patterns. Let's find the rule!",
+    name: "Silk Patterns", icon: tileIcon(`<g stroke="#2b2d42" stroke-linejoin="round"><path d="M10 12h80v68l-10 9-10-9-10 9-10-9-10 9-10-9-10 9-10-9z" fill="#4d9de0" stroke-width="3"/><path d="M30 22l12 14-12 14-12-14zM70 22l12 14-12 14-12-14z" fill="#ffd84d" stroke-width="2.5"/><path d="M50 46l12 14-12 14-12-14z" fill="#ff5a5f" stroke-width="2.5"/></g><circle cx="30" cy="36" r="3" fill="#fff"/><circle cx="70" cy="36" r="3" fill="#fff"/><circle cx="50" cy="60" r="3" fill="#fff"/>`), intro: "Silk weavers follow patterns. Let's find the rule!",
     lesson: (L, step) => frames(L, step === 4 ? [
         [`<span class="big"><b>?</b> + 5 = 12</span>`, "Watch me find a missing number. Something plus 5 equals 12."],
         [`12 − 5 = 7`, "I do the opposite. 12 take away 5 is 7."], [`<span class="big"><b>7</b> + 5 = 12</span>`, "Let me check. 7 plus 5 is 12. Yes! The missing number is 7."]]
@@ -501,7 +512,7 @@ const GAMES = {
     }
   },
   problems: {
-    name: "Problem Bridge", icon: "🌉", intro: "Read each problem carefully. Sometimes there are two steps!",
+    name: "Problem Bridge", icon: tileIcon(`<rect x="0" y="62" width="100" height="34" fill="#4d9de0"/><g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round"><path d="M4 58Q50 6 96 58v12H4z" fill="#d9b382"/><path d="M26 70Q50 36 74 70z" fill="#4d9de0"/></g><path d="M20 36v14M36 24v14M50 20v14M64 24v14M80 36v14" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/><path d="M8 84q10-5 20 0t20 0 20 0 20 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`), intro: "Read each problem carefully. Sometimes there are two steps!",
     lesson: L => frames(L, [
       [`<div class="passage">Mei has 3 bags with 4 buns in each bag. She gives away 5 buns. How many buns are left?</div>`, "Watch me solve a two step problem. First, what do I need to find? How many buns are left."],
       [`3 × 4 = 12`, "Step one. 3 bags of 4 buns is 12 buns."], [`12 − 5 = <b>7</b>`, "Step two. She gives away 5. 12 take away 5 is 7. So 7 buns are left!"]]),
