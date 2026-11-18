@@ -251,6 +251,22 @@ const Kit = (() => {
   }
 
   // ---------- little sounds (made by the computer, no sound files) ----------
+  // iPhones mute this kind of sound when the ring/silent switch is on silent, though the device's reading voice still talks.
+  // Telling Safari the game is "playback" (like a video) keeps the recordings and sound effects on. Older iPhones do not have that
+  // setting, so there a silent sound on a loop does the same job. It has to start from a tap, so it runs on the first touch.
+  let unmuted = false;
+  function unmute() {
+    if (unmuted) return; unmuted = true;
+    try { if (navigator.audioSession) { navigator.audioSession.type = "playback"; return; } } catch (e) {}
+    if (!/iPhone|iPad|iPod/.test(navigator.userAgent) && !(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return;
+    try { const n = 4000, b = new Uint8Array(44 + n), v = new DataView(b.buffer); // half a second of silence, as a tiny sound file
+      [[0, 0x52494646], [8, 0x57415645], [12, 0x666d7420], [36, 0x64617461]].forEach(([at, word]) => v.setUint32(at, word));
+      v.setUint32(4, 36 + n, true); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); v.setUint32(40, n, true);
+      b.fill(128, 44);
+      const a = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); a.loop = true; a.setAttribute("playsinline", "");
+      const p = a.play(); if (p && p.catch) p.catch(() => { unmuted = false; }); } catch (e) { unmuted = false; }
+  }
+  ["touchend", "pointerup", "click"].forEach(ev => document.addEventListener(ev, unmute, true));
   let AC = null;
   function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === "suspended") AC.resume(); return AC; }
   function tone(freq, start, len, type, vol) {
@@ -308,7 +324,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "30"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "31"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();
