@@ -320,6 +320,13 @@ function StoryGame(C) {
       $("places").appendChild(b);
     });
     $("progress").innerHTML = C.progress(Array.from({ length: NEED }, (_, i) => on[i] || null));
+    // Tap a friend on the strip to see where they came from: their place card hops, and a little tag names the place.
+    const homes = GAME_IDS.filter(id => S.aboard[id]);
+    [...$("progress").querySelectorAll(".slot:not(.empty)")].forEach((slot, i) => { const id = homes[i]; if (!id) return;
+      slot.classList.add("tap");
+      slot.addEventListener("click", () => { sfx.tap(); const card = $("places").children[GAME_IDS.indexOf(id)]; if (card) animate(card, "bounce");
+        $("progress").querySelectorAll(".from").forEach(f => f.remove());
+        const tag = document.createElement("span"); tag.className = "from"; tag.textContent = GAMES[id].name; slot.appendChild(tag); setTimeout(() => tag.remove(), 2600); }); });
     const earlier = S.stickers.slice(0, Math.max(0, S.stickers.length - on.length)).slice(-14);
     $("stickers").innerHTML = earlier.length ? `<small>${C.stickersLabel}</small>` + earlier.map(e => `<span>${e}</span>`).join("") : "";
     show("map");
