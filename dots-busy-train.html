@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=26">
+<link rel="stylesheet" href="shared/kit.css?v=27">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -119,7 +119,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=26"></script>
+<script src="shared/kit.js?v=27"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -179,7 +179,31 @@ const PASSENGERS = [
   { name: "pig", pic: "🐷", snack: ["apple", "apples", "🍎"], wish: "The pig wants to sit in the muddiest seat!", fair: "Oink! I found a mud puddle by the pony rides!" }
 ];
 const SOUVENIRS = ["🎈", "🧸", "🍭", "🪁", "👑", "🎏", "🌟", "🎀", "🍦", "🏆", "🎺", "🪀"];
-const trainHTML = riders => riders.map((r, i) => `<div class="car">${r ? `<span class="rider">${r}</span>` : `<span class="rider empty">?</span>`}<div class="box" style="background:${CAR_COLORS[i % CAR_COLORS.length]}"></div><i class="w1"></i><i class="w2"></i></div>`).reverse().join("") + `<div class="engine">${ENGINE}</div>`;
+// Hand-drawn passenger faces (drawn in place of the animal emoji; the emoji itself stays the saved/lookup key).
+const pD = "#2b2d42", pE = (y = 52) => `<circle cx="36" cy="${y}" r="4.5" fill="${pD}"/><circle cx="64" cy="${y}" r="4.5" fill="${pD}"/>`;
+const pM = d => `<path d="${d}" fill="none" stroke="${pD}" stroke-width="3" stroke-linecap="round"/>`;
+const PASSENGER_ART = {
+  "🦁": `<circle cx="50" cy="52" r="42" fill="#d9822b"/><circle cx="26" cy="22" r="11" fill="#ffc857"/><circle cx="74" cy="22" r="11" fill="#ffc857"/><circle cx="50" cy="56" r="30" fill="#ffc857"/>${pE()}<ellipse cx="50" cy="68" rx="14" ry="10" fill="#fff3dc"/><path d="M44 58h12l-6 7z" fill="${pD}"/>${pM("M50 65v4M42 71q8 6 16 0")}`,
+  "🐘": `<circle cx="16" cy="50" r="19" fill="#8ea6c8"/><circle cx="84" cy="50" r="19" fill="#8ea6c8"/><circle cx="16" cy="50" r="10" fill="#f2b8c6"/><circle cx="84" cy="50" r="10" fill="#f2b8c6"/><ellipse cx="50" cy="46" rx="27" ry="30" fill="#a9c0e0"/><rect x="41" y="56" width="18" height="38" rx="9" fill="#a9c0e0"/>${pE(40)}${pM("M44 70h12M44 80h12")}`,
+  "🐵": `<circle cx="14" cy="54" r="13" fill="#8a5a3c"/><circle cx="86" cy="54" r="13" fill="#8a5a3c"/><circle cx="14" cy="54" r="7" fill="#f3d2a6"/><circle cx="86" cy="54" r="7" fill="#f3d2a6"/><circle cx="50" cy="50" r="35" fill="#8a5a3c"/><circle cx="38" cy="46" r="13" fill="#f3d2a6"/><circle cx="62" cy="46" r="13" fill="#f3d2a6"/><ellipse cx="50" cy="64" rx="22" ry="20" fill="#f3d2a6"/>${pE(46)}<circle cx="46" cy="62" r="2" fill="${pD}"/><circle cx="54" cy="62" r="2" fill="${pD}"/>${pM("M40 72q10 8 20 0")}`,
+  "🐼": `<circle cx="22" cy="24" r="13" fill="${pD}"/><circle cx="78" cy="24" r="13" fill="${pD}"/><circle cx="50" cy="56" r="35" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="34" cy="52" rx="9" ry="11" fill="${pD}"/><ellipse cx="66" cy="52" rx="9" ry="11" fill="${pD}"/><circle cx="35" cy="51" r="3.5" fill="#fff"/><circle cx="65" cy="51" r="3.5" fill="#fff"/><ellipse cx="50" cy="65" rx="6" ry="4" fill="${pD}"/>${pM("M44 72q6 5 12 0")}`,
+  "🐧": `<ellipse cx="50" cy="54" rx="38" ry="40" fill="${pD}"/><ellipse cx="50" cy="58" rx="28" ry="28" fill="#fff"/>${pE(48)}<circle cx="30" cy="60" r="5" fill="#ffc0cb"/><circle cx="70" cy="60" r="5" fill="#ffc0cb"/><path d="M41 56h18l-9 12z" fill="#ffa62b"/>`,
+  "🦒": `<path d="M36 22L34 8M64 22L66 8" stroke="#c9822b" stroke-width="5" stroke-linecap="round"/><circle cx="34" cy="8" r="5" fill="#c9822b"/><circle cx="66" cy="8" r="5" fill="#c9822b"/><ellipse cx="15" cy="38" rx="10" ry="6" fill="#ffd84d"/><ellipse cx="85" cy="38" rx="10" ry="6" fill="#ffd84d"/><ellipse cx="50" cy="50" rx="28" ry="30" fill="#ffd84d"/><circle cx="36" cy="30" r="5" fill="#c9822b"/><circle cx="62" cy="28" r="4" fill="#c9822b"/><circle cx="72" cy="46" r="3.5" fill="#c9822b"/><ellipse cx="50" cy="70" rx="17" ry="13" fill="#ffe9a8"/><circle cx="44" cy="68" r="2" fill="${pD}"/><circle cx="56" cy="68" r="2" fill="${pD}"/>${pE(48)}${pM("M44 76q6 4 12 0")}`,
+  "🐨": `<circle cx="18" cy="34" r="17" fill="#aeb4c4"/><circle cx="82" cy="34" r="17" fill="#aeb4c4"/><circle cx="18" cy="34" r="9" fill="#f2d6de"/><circle cx="82" cy="34" r="9" fill="#f2d6de"/><circle cx="50" cy="56" r="32" fill="#aeb4c4"/>${pE()}<ellipse cx="50" cy="61" rx="8" ry="11" fill="${pD}"/>${pM("M42 77q8 5 16 0")}`,
+  "🐯": `<circle cx="24" cy="24" r="12" fill="#ff9f43"/><circle cx="76" cy="24" r="12" fill="#ff9f43"/><circle cx="24" cy="24" r="6" fill="#ffe0b8"/><circle cx="76" cy="24" r="6" fill="#ffe0b8"/><circle cx="50" cy="56" r="34" fill="#ff9f43"/><path d="M50 24v10M38 26l3 8M62 26l-3 8M17 50h9M18 62l8-2M83 50h-9M82 62l-8-2" stroke="${pD}" stroke-width="4" stroke-linecap="round"/><ellipse cx="50" cy="68" rx="15" ry="11" fill="#fff3dc"/>${pE()}<path d="M44 60h12l-6 7z" fill="${pD}"/>${pM("M50 67v4M43 72q7 5 14 0")}`,
+  "🦓": `<ellipse cx="28" cy="16" rx="7" ry="12" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="72" cy="16" rx="7" ry="12" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="50" cy="54" rx="28" ry="34" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><path d="M38 14Q50 6 62 14L60 26H40z" fill="${pD}"/><path d="M26 40l10 4M22 54l10 2M74 40l-10 4M78 54l-10 2" stroke="${pD}" stroke-width="5" stroke-linecap="round"/><ellipse cx="50" cy="73" rx="17" ry="12" fill="#cfd3dc"/><circle cx="44" cy="73" r="2" fill="${pD}"/><circle cx="56" cy="73" r="2" fill="${pD}"/>${pE(54)}`,
+  "🐰": `<ellipse cx="34" cy="24" rx="10" ry="22" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="66" cy="24" rx="10" ry="22" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="34" cy="26" rx="5" ry="15" fill="#ffb3c1"/><ellipse cx="66" cy="26" rx="5" ry="15" fill="#ffb3c1"/><circle cx="50" cy="64" r="28" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/>${pE(60)}<circle cx="29" cy="70" r="5" fill="#ffd1d9"/><circle cx="71" cy="70" r="5" fill="#ffd1d9"/><circle cx="50" cy="67" r="4" fill="#ff8fa3"/>${pM("M50 71v3q-5 5-9 1M50 74q5 5 9 1")}`,
+  "🦊": `<path d="M16 14L40 34L14 48z" fill="#ff7a2f"/><path d="M84 14L60 34L86 48z" fill="#ff7a2f"/><path d="M50 88L11 50Q10 36 28 34Q50 26 72 34Q90 36 89 50z" fill="#ff8a3d"/><path d="M50 88L11 50Q30 60 50 60Q70 60 89 50z" fill="#fff3dc"/>${pE(46)}<circle cx="50" cy="82" r="5" fill="${pD}"/>`,
+  "🐻": `<circle cx="22" cy="24" r="13" fill="#a0714f"/><circle cx="78" cy="24" r="13" fill="#a0714f"/><circle cx="22" cy="24" r="6" fill="#d9a37a"/><circle cx="78" cy="24" r="6" fill="#d9a37a"/><circle cx="50" cy="56" r="34" fill="#a0714f"/><ellipse cx="50" cy="68" rx="15" ry="12" fill="#f3d2a6"/>${pE()}<ellipse cx="50" cy="63" rx="6" ry="4.5" fill="${pD}"/>${pM("M50 67v5M43 73q7 5 14 0")}`,
+  "🐸": `<ellipse cx="50" cy="60" rx="40" ry="30" fill="#58b368"/><circle cx="30" cy="30" r="15" fill="#58b368"/><circle cx="70" cy="30" r="15" fill="#58b368"/><circle cx="30" cy="30" r="9" fill="#fff"/><circle cx="70" cy="30" r="9" fill="#fff"/><circle cx="30" cy="31" r="4.5" fill="${pD}"/><circle cx="70" cy="31" r="4.5" fill="${pD}"/><circle cx="22" cy="62" r="6" fill="#ff9fb0"/><circle cx="78" cy="62" r="6" fill="#ff9fb0"/><circle cx="45" cy="50" r="1.8" fill="${pD}"/><circle cx="55" cy="50" r="1.8" fill="${pD}"/>${pM("M28 64q22 18 44 0")}`,
+  "🐷": `<path d="M18 18L42 26L24 44z" fill="#ff9eb5"/><path d="M82 18L58 26L76 44z" fill="#ff9eb5"/><circle cx="50" cy="54" r="34" fill="#ffb3c1"/>${pE(46)}<ellipse cx="50" cy="64" rx="15" ry="11" fill="#ff8fa3"/><ellipse cx="44" cy="64" rx="2.5" ry="4" fill="${pD}"/><ellipse cx="56" cy="64" rx="2.5" ry="4" fill="${pD}"/>`
+};
+const faceSvg = (pic, size = "1.15em") => PASSENGER_ART[pic] ? `<svg viewBox="0 0 100 100" style="width:${size};height:${size};vertical-align:-0.2em">${PASSENGER_ART[pic]}</svg>` : pic;
+// Station icons that used to be emoji
+const ICON_EAR = `<svg viewBox="0 0 100 100" style="width:1.3em;height:1.3em;vertical-align:-0.25em"><path d="M7 34Q1 50 7 66M17 40Q12 50 17 60" fill="none" stroke="#4d9de0" stroke-width="4" stroke-linecap="round"/><path d="M58 8C33 8 28 32 34 48C38 60 46 62 46 76C46 90 62 94 70 82C76 74 78 70 82 60C92 34 84 8 58 8z" fill="#ffb98a"/><path d="M56 26C44 26 44 40 52 46C58 52 56 60 60 66" fill="none" stroke="#c9604a" stroke-width="4" stroke-linecap="round"/></svg>`;
+const ICON_CAT_HAT = `<svg viewBox="0 0 100 100" style="width:1.3em;height:1.3em;vertical-align:-0.25em"><path d="M16 52L18 22L40 40z" fill="#ffb347"/><path d="M84 52L82 22L60 40z" fill="#ffb347"/><ellipse cx="50" cy="64" rx="34" ry="28" fill="#ffb347"/><rect x="36" y="4" width="28" height="26" rx="3" fill="${pD}"/><rect x="36" y="20" width="28" height="5" fill="#ff5a5f"/><rect x="26" y="29" width="48" height="7" rx="3.5" fill="${pD}"/><circle cx="36" cy="62" r="4.5" fill="${pD}"/><circle cx="64" cy="62" r="4.5" fill="${pD}"/><path d="M46 70h8l-4 5z" fill="#ff8fa3"/><path d="M50 75q-5 5-9 1M50 75q5 5 9 1" fill="none" stroke="${pD}" stroke-width="3" stroke-linecap="round"/></svg>`;
+const ICON_SCALE = `<svg viewBox="0 0 100 100" style="width:1.3em;height:1.3em;vertical-align:-0.25em"><rect x="44" y="20" width="12" height="62" rx="4" fill="#8d93ab"/><path d="M28 92h44l-6-12H34z" fill="#8d93ab"/><rect x="10" y="20" width="80" height="7" rx="3.5" fill="#ff9f43"/><circle cx="50" cy="18" r="8" fill="#ffd84d"/><path d="M16 27L6 56M16 27L28 56M84 27L72 56M84 27L94 56" fill="none" stroke="${pD}" stroke-width="2.5" stroke-linecap="round"/><path d="M2 56h30q-2 14-15 14T2 56z" fill="#4d9de0"/><path d="M68 56h30q-2 14-15 14T68 56z" fill="#ff5a5f"/></svg>`;
+const trainHTML = riders => riders.map((r, i) => `<div class="car">${r ? `<span class="rider">${faceSvg(r)}</span>` : `<span class="rider empty">?</span>`}<div class="box" style="background:${CAR_COLORS[i % CAR_COLORS.length]}"></div><i class="w1"></i><i class="w2"></i></div>`).reverse().join("") + `<div class="engine">${ENGINE}</div>`;
 
 // ---------- little helpers for building questions ----------
 const NUM = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
@@ -280,7 +304,7 @@ const GAMES = {
     }
   },
   sounds: {
-    name: "Sound Station", icon: "👂", intro: "Listen to how the words start!",
+    name: "Sound Station", icon: ICON_EAR, intro: "Listen to how the words start!",
     lesson: P => { const c = P.demo(emo("🐶"), [emo("🐱"), emo("🦆")]);
       return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Dog. Listen to how it starts: duh, duh, dog."],
         [() => P.glow(c[0], true), "Cat. Cat starts with a different sound."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "Duck! Duh, duh, duck. Dog and duck start the same way!"]]); },
@@ -301,7 +325,7 @@ const GAMES = {
     }
   },
   rhymes: {
-    name: "Rhyme Station", icon: "🐱🎩", intro: "Rhyming words sound the same at the end!",
+    name: "Rhyme Station", icon: ICON_CAT_HAT, intro: "Rhyming words sound the same at the end!",
     lesson: P => { const c = P.demo(emo("🐱"), [emo("🐶"), emo("🎩")]);
       return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Rhyming words sound the same at the end. Cat."],
         [() => P.glow(c[0], true), "Cat, dog. They sound different at the end. No rhyme."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "Cat, hat! They sound the same at the end. Cat and hat rhyme!"]]); },
@@ -365,7 +389,7 @@ const GAMES = {
     }
   },
   moreless: {
-    name: "More or Less", icon: "⚖️", intro: "Which has more? Which has fewer?",
+    name: "More or Less", icon: ICON_SCALE, intro: "Which has more? Which has fewer?",
     lesson: P => { const th = snack(), c = P.demo(big("more", 7), [group(th[2], 2, 3.8), group(th[2], 5, 3.8)]);
       return steps(P, [[null, "Watch me! Which group has more? I count each group."], [() => { P.glow(c[0], true); P.label(c[0], 2); }, "This group has two."],
         [() => { P.glow(c[0], false); P.glow(c[1], true); P.label(c[1], 5); }, "This group has five."], [() => c[0].classList.add("dim"), "Five is more than two. This group has more!"]]); },
@@ -679,7 +703,7 @@ async function playScene(stops, then) {
     if (!alive()) return;
     stage.querySelectorAll(".sitem").forEach(e => e.classList.add("gone"));
     stop.show.forEach(([pic, x, y, size], i) => { const d = document.createElement("div"); d.className = "sitem"; d.style.cssText = `left:${x}%;bottom:${y}%;width:${size}vmin;height:${size}vmin;font-size:${(size * .85).toFixed(1)}vmin;animation-delay:${(i * .35).toFixed(2)}s`;
-      d.innerHTML = pic === "engine" ? ENGINE : `<span class="emo">${pic}</span>`; stage.appendChild(d); });
+      d.innerHTML = pic === "engine" ? ENGINE : PASSENGER_ART[pic] ? faceSvg(pic, "100%") : `<span class="emo">${pic}</span>`; stage.appendChild(d); });
     $("sceneCap").textContent = stop.say;
     const said = Kit.settings.voice ? await (stop.doc ? Kit.playClip("audio/dot/doc/" + Kit.clipName(stop.say) + ".mp3", stop.say) : talk(stop.say, true)) : (await wait(1500 + stop.say.length * 45), true); // fun facts are recorded whole
     if (!said || !alive()) return;
@@ -695,7 +719,7 @@ let B = null;
 function startBoard(id) {
   const who = passengerAt(id); // the passenger the child chose to help
   B = { id, who, taps: 0, done: false };
-  $("boardStage").textContent = who.pic;
+  $("boardStage").innerHTML = faceSvg(who.pic);
   $("boardGo").classList.remove("show");
   show("board"); sfx.party(); confetti(25); animate($("boardStage"), "pop");
   speak("won-" + who.name, `You did it! The ${who.name} wants a ride. Tap the ${who.name}!`);
@@ -738,7 +762,7 @@ function showFair(went) {
   F = { went, tapped: new Set(), offered: false, picked: false, since: performance.now(), lastTap: performance.now(), timer: null };
   $("fairFriends").innerHTML = "";
   went.forEach(p => {
-    const b = document.createElement("button"); b.textContent = p.pic; b.setAttribute("aria-label", p.name);
+    const b = document.createElement("button"); b.innerHTML = faceSvg(p.pic); b.setAttribute("aria-label", p.name);
     b.addEventListener("click", () => {
       if (!F) return; sfx.tap(); animate(b, "bounce"); F.tapped.add(p.name); F.lastTap = performance.now();
       speak("fair-" + p.name, p.fair).then(finished => { if ((finished || !Kit.settings.voice) && F && F.tapped.size >= F.went.length) offerSouvenirs(); }); // once everyone has had their turn
@@ -786,7 +810,7 @@ function showMap(line) {
     const g = GAMES[id], p = passengerAt(id), b = document.createElement("button");
     b.className = "place" + (S.aboard[id] ? " done" : "");
     // each station shows the passenger waiting there (bobbing), or the one already helped
-    b.innerHTML = `<div class="pic">${g.icon}</div><div class="name">${g.name}</div><div class="badge${S.aboard[id] ? "" : " wait"}">${p.pic}</div>`;
+    b.innerHTML = `<div class="pic">${g.icon}</div><div class="name">${g.name}</div><div class="badge${S.aboard[id] ? "" : " wait"}">${faceSvg(p.pic)}</div>`;
     b.setAttribute("aria-label", `${g.name}: help the ${p.name}`);
     b.addEventListener("click", () => { sfx.tap(); startGame(id); });
     $("places").appendChild(b);
