@@ -57,7 +57,7 @@ def main():
     git("checkout", "-q", "main"); git("pull", "-q", "--ff-only")
     try:
         shutil.rmtree(os.path.join(ROOT, "preview"), ignore_errors=True)
-        shutil.copytree(os.path.join(tmp, "preview"), os.path.join(ROOT, "preview"))
+        shutil.copytree(os.path.join(tmp, "preview"), os.path.join(ROOT, "preview"), dirs_exist_ok=True)  # the old folder may linger if something (OneDrive, a local server) holds it open
         for f in new_audio:
             if os.path.exists(os.path.join(tmp, f)):
                 os.makedirs(os.path.dirname(os.path.join(ROOT, f)), exist_ok=True); shutil.copy(os.path.join(tmp, f), os.path.join(ROOT, f))
