@@ -37,7 +37,7 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .bounce { animation:bounce .7s ease; } .wobble { animation:wobble .35s ease 2; } .pop { animation:pop .5s ease both; }
 
 .corner { position:absolute; top:2vmin; width:11vmin; height:11vmin; border-radius:50%; background:rgba(255,255,255,.75); font-size:6vmin; line-height:11vmin; text-align:center; z-index:5; }
-.corner.left { left:2vmin; } .corner.right { right:2vmin; opacity:.55; font-size:5vmin; }
+.corner.left { left:2vmin; } .corner.right { right:2vmin; background:rgba(255,255,255,.92); box-shadow:0 .4vmin 1.2vmin rgba(0,0,0,.18); font-size:5vmin; } /* a solid backdrop, so it never blends into the sun or a planet */
 .corner.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
 
 /* the map of places */
@@ -107,11 +107,11 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .places.many .place .name { font-size:2.1vmin; }
 @media (max-aspect-ratio: 13/10) { .places.many { grid-template-columns:repeat(4, auto); } }
 /* more than 12 places: smaller still, 7 across on a wide screen or 5 across on a squarer one */
-.places.many.lots { grid-template-columns:repeat(7, auto); gap:1.6vmin; }
+.places.many.lots { display:flex; flex-wrap:wrap; justify-content:center; gap:1.6vmin; max-width:126vmin; } /* rows of 7, and a short last row sits in the middle */
 .places.many.lots .place { width:16.5vmin; height:17vmin; border-radius:3vmin; }
 .places.many.lots .place .pic { width:13vmin; height:9vmin; font-size:5vmin; }
 .places.many.lots .place .name { font-size:1.9vmin; }
-@media (max-aspect-ratio: 13/10) { .places.many.lots { grid-template-columns:repeat(5, auto); margin-top:9vmin; } .places.many.lots .place { width:15vmin; } } /* three rows: leave room for the corner buttons */
+@media (max-aspect-ratio: 13/10) { .places.many.lots { max-width:82vmin; margin-top:9vmin; } .places.many.lots .place { width:15vmin; } } /* three rows: leave room for the corner buttons */
 .progress.many { gap:1.6vmin; }
 .progress.many .balloon { width:12vmin; height:15vmin; }
 .progress.many .slot { width:8.6vmin; height:8.6vmin; font-size:5.4vmin; line-height:8.6vmin; }
