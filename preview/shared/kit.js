@@ -297,8 +297,8 @@ const Kit = (() => {
   }
   // When talking is switched off, a question still has to make sense, so its words are shown in writing.
   // A picture that only means "listen" (the ear) is replaced by the words; a passage already holds its own question.
-  function writtenBubble(q) {
-    if (settings.voice || q.bubble.includes('class="passage"')) return { html: q.bubble, quiet: false };
+  function writtenBubble(q, always) { // always: the grade writes the question under the picture even when talking is on (older readers)
+    if ((settings.voice && !always) || q.bubble.includes('class="passage"')) return { html: q.bubble, quiet: false };
     const words = q.read !== undefined ? q.read : q.say;
     return { html: (q.bubble.includes("👂") ? "" : `<div class="rowx">${q.bubble}</div>`) + `<div class="said">${words}</div>`, quiet: true };
   }
@@ -308,7 +308,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "27"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "28"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

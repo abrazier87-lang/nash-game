@@ -56,6 +56,10 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 .star.got { opacity:1; filter:none; transform:scale(1.15); }
 .ask { display:flex; align-items:center; justify-content:center; gap:2vmin; }
 .ask .host { width:26vmin; height:22vmin; }
+.ask .host { position:relative; }
+.ask .host .hear { position:absolute; right:1vmin; bottom:-1vmin; width:7.4vmin; height:7.4vmin; border-radius:50%; background:#4d9de0; box-shadow:0 .5vmin 0 #2f6fab; display:flex; align-items:center; justify-content:center; } /* a little speaker: tap the host to hear the question again */
+.ask .host .hear svg { width:62%; height:62%; }
+.ask .host.mute .hear { display:none; }
 .bubble { min-width:26vmin; height:26vmin; border-radius:6vmin; background:#fff; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; gap:1.5vmin; padding:2vmin 3vmin; position:relative; font-weight:bold; }
 .bubble::before { content:""; position:absolute; left:-3.5vmin; top:55%; border:2.2vmin solid transparent; border-right-color:#fff; border-left:none; }
 .bubble .emoji { font-size:16vmin; line-height:1.2; }

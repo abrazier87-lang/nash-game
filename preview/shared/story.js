@@ -119,7 +119,7 @@ function StoryGame(C) {
       <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
     <div class="screen" id="map"><div class="places" id="places"></div><div class="progress" id="progress"></div><div class="stickers" id="stickers"></div></div>
     <div class="screen" id="game"><div class="stars" id="stars"></div>
-      <div class="ask"><button class="host" id="gameHost" aria-label="Say it again">${C.host}</button><div class="bubble" id="bubble"></div></div>
+      <div class="ask"><button class="host" id="gameHost" aria-label="Say it again">${C.host}<span class="hear"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span></button><div class="bubble" id="bubble"></div></div>
       <div class="choices" id="choices"></div></div>
     <div class="screen" id="board"><button class="stage" id="boardStage" aria-label="Tap it"></button>${play("boardGo")}</div>
     <div class="screen" id="finale"><h1>${C.finaleTitle}</h1><div id="finaleArt"></div>${play("finaleGo")}</div>
@@ -188,7 +188,8 @@ function StoryGame(C) {
     if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = (lead || "") + "Here's a tricky one again. "; } // bring it back
     else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
     G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
-    const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
+    const shown = Kit.writtenBubble(q, C.written); // with talking off (or in a grade with C.written), the question is also shown in writing
+    $("gameHost").classList.toggle("mute", !Kit.settings.voice); // the little speaker on the host only shows when there is something to hear
     $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); $("bubble").classList.remove("lessonframe"); animate($("bubble"), "pop");
     const box = $("choices"); box.innerHTML = "";
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
