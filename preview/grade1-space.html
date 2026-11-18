@@ -7,12 +7,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody's Space Balloon</title>
-<link rel="stylesheet" href="shared/kit.css?v=25">
+<link rel="stylesheet" href="shared/kit.css?v=26">
 <style>
   /* Space look: dark sky, stars, standing on a moon. */
   :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
   .sub { color:#fff; }
-  h1 { font-size:7.4vmin; padding:0 14vmin; }
+  h1 { font-size:6.2vmin; width:52vmin; margin-left:auto; margin-right:auto; } /* a narrow title in the middle, clear of the ringed planet and the corner buttons */
   .spacedust { position:absolute; inset:0; opacity:.75; background-image:radial-gradient(#fff 1px, transparent 1.6px), radial-gradient(#fff 1.4px, transparent 2px), radial-gradient(#ffe9a8 1px, transparent 1.6px);
     background-size:90px 90px, 170px 170px, 130px 130px; background-position:0 0, 40px 70px, 90px 20px; }
   .ringed { position:absolute; top:5vmin; right:7vmin; width:15vmin; height:15vmin; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffd9a0, #ff9f43); }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=25"></script>
-<script src="shared/story.js?v=25"></script>
+<script src="shared/kit.js?v=26"></script>
+<script src="shared/story.js?v=26"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -324,7 +324,7 @@ const SPACE_TOUR = [
 // ---------- the story ----------
 window.Story = StoryGame({
   title: "Dr. Somebody's Space Balloon", sub: "A Grade 1 adventure", gradeLabel: "Grade 1 (ages 6-7)", hostName: "Dr. Somebody",
-  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5, celebrations: { art: SPACE_ART, facts: SPACE_FACTS, finale: SPACE_TOUR }, sceneVoice: "../audio/g1/scene/", // a short scene with a fun fact after each planet, and a tour at the end hints: true, lessons: true, // one hint per round; a short lesson on the first visit to each planet
+  host: owl(), saveKey: "grade1Space.v1", medal: "g1", need: 4, starsToWin: 5, celebrations: { art: SPACE_ART, facts: SPACE_FACTS, finale: SPACE_TOUR }, sceneVoice: "../audio/g1/scene/", hints: true, lessons: true, // one hint per round; a short lesson on the first visit to each planet
   lineVoice: "../audio/g1/l/", lessonVoice: "../audio/g1/lesson/", // Dr. Somebody's recorded voice for every question (in pieces) and every lesson line
   voice: recorded("../audio/g1/", 3), // Dr. Somebody's own recorded voice for the story lines
   scenery: `<div class="spacedust"></div><div class="ringed"></div><div class="hill back"></div><div class="hill"></div>`,
