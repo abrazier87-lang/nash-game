@@ -6,37 +6,41 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Comes Home</title>
 <link rel="stylesheet" href="shared/kit.css?v=33">
+<link rel="stylesheet" href="shared/inked.css?v=33">
 <style>
   /* Grade 5: a storyboard. Each chapter is a row of story scenes; a locked scene opens when its questions are answered. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
   h1 { font-size:7vmin; padding:0 14vmin; }
   /* the list of chapters */
   .chapters { display:flex; flex-direction:column; gap:1.8vmin; width:min(92vw, 96vmin); }
-  .chap { display:flex; align-items:center; gap:2.4vmin; background:#fffdf5; border:1vmin solid #fff; border-radius:4vmin; padding:1.6vmin 2.6vmin; box-shadow:0 1vmin 0 rgba(0,0,0,.16); text-align:left; }
-  .chap .num { flex:0 0 auto; width:9vmin; height:9vmin; border-radius:50%; background:#2f6b3f; color:#fff; font-size:5vmin; font-weight:bold; line-height:9vmin; text-align:center; }
+  .chap { display:flex; align-items:center; gap:2.4vmin; background:#fffdf5; border:var(--line) solid var(--ink); border-radius:4vmin; padding:1.6vmin 2.6vmin; box-shadow:0 1.1vmin 0 var(--ink); text-align:left; color:var(--ink); }
+  .chap:active { box-shadow:0 .3vmin 0 var(--ink); transform:translateY(.8vmin); }
+  .chap .num { flex:0 0 auto; width:9vmin; height:9vmin; border-radius:50%; background:#e63946; border:var(--line) solid var(--ink); color:#fff; font-size:4.6vmin; font-weight:bold; line-height:7.8vmin; text-align:center; }
   .chap .what { flex:1 1 auto; min-width:0; } .chap .what b { display:block; font-size:3.6vmin; } .chap .what small { font-size:2.5vmin; color:#5a5f78; }
   .chap .state { flex:0 0 auto; font-size:5vmin; }
-  .chap.locked { background:#e7e2d6; box-shadow:none; opacity:.8; } .chap.locked .num { background:#a39c8c; }
+  .chap .state svg { width:6vmin; height:6vmin; }
+  .chap.locked { background:#e4dfd2; color:#8d877b; border-color:#8d877b; box-shadow:0 .5vmin 0 #8d877b; } .chap.locked .num { background:#b5ae9e; border-color:#8d877b; } .chap.locked .state { opacity:.6; }
   /* a story scene */
   #story { justify-content:flex-start; padding-top:15vmin; gap:2vmin; }
   .dots { position:absolute; top:4.6vmin; left:16vmin; right:16vmin; display:flex; gap:1vmin; justify-content:center; align-items:center; flex-wrap:wrap; }
-  .dots i { width:3vmin; height:3vmin; border-radius:50%; background:rgba(255,255,255,.55); border:.5vmin solid rgba(0,0,0,.12); font-style:normal; }
-  .dots i.q { border-radius:.8vmin; transform:rotate(45deg); } .dots i.done { background:#58b368; border-color:#2f7d44; } .dots i.now { background:#ffd84d; border-color:#e0a800; scale:1.3; }
-  .panel { width:min(94vw, 118vmin, 90vh); aspect-ratio:5 / 3; border-radius:5vmin; border:1.2vmin solid #fff; overflow:hidden; box-shadow:0 1.2vmin 0 rgba(0,0,0,.16); background:#cfe9f5; }
+  .dots i { width:3vmin; height:3vmin; border-radius:50%; background:#fffdf5; border:.5vmin solid var(--ink); font-style:normal; }
+  .dots i.q { border-radius:.8vmin; transform:rotate(45deg); } .dots i.done { background:#58b368; } .dots i.now { background:#ffd84d; scale:1.3; }
+  .panel { width:min(94vw, 118vmin, 90vh); aspect-ratio:5 / 3; border-radius:5vmin; border:.8vmin solid var(--ink); overflow:hidden; box-shadow:0 1.4vmin 0 var(--ink); background:#cfe9f5; }
   .panel svg { width:100%; height:100%; }
-  .caption { width:min(94vw, 118vmin, 90vh); min-height:15vmin; background:#fff; border-radius:4vmin; padding:2.2vmin 3.4vmin; font-size:3.5vmin; line-height:1.35; font-weight:bold; text-align:center; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; }
-  .caption em { font-style:normal; color:#2f6b3f; }
+  .caption { width:min(94vw, 118vmin, 90vh); min-height:15vmin; background:#fff; border-radius:4vmin; padding:2.2vmin 3.4vmin; font-size:3.5vmin; line-height:1.35; font-weight:bold; text-align:center; border:var(--line) solid var(--ink); box-shadow:0 1.1vmin 0 var(--ink); color:var(--ink); display:flex; align-items:center; justify-content:center; }
+  .caption em { font-style:normal; color:#d62839; }
   .nextrow { display:flex; gap:3vmin; align-items:center; }
   .bigbtn.small { width:15vmin; height:15vmin; animation:none; } .bigbtn.small .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
-  .bigbtn.back { background:#b8c2cc; box-shadow:0 1.2vmin 0 #8793a0; } .bigbtn.back .tri { border-left:none; border-right:6vmin solid #fff; margin-left:-1.4vmin; }
+  .bigbtn.back .tri { border-left:none; border-right:6vmin solid #fff; margin-left:-1.4vmin; }
   /* a challenge: answer 3 to open the next scene */
   #game .bubble { height:auto; min-height:22vmin; max-width:66vmin; flex-direction:column; gap:1.2vmin; padding:2.4vmin 3.4vmin; }
   #game .host { width:24vmin; height:27vmin; }
   .qtext { font-size:3.6vmin; line-height:1.3; text-align:center; } .qtext b { color:#d35400; }
-  .tip { min-height:6vmin; font-size:3vmin; font-weight:bold; text-align:center; color:#2f6b3f; max-width:90vmin; }
-  .tip.oops { color:#b03a2e; }
+  .tip { min-height:6vmin; font-size:3vmin; font-weight:bold; text-align:center; color:var(--ink); max-width:90vmin; background:#fff3b0; border:var(--line) solid var(--ink); border-radius:3vmin; padding:1vmin 3vmin; display:flex; align-items:center; justify-content:center; }
+  .tip:empty { visibility:hidden; }
+  .tip.oops { background:#ffd9d2; }
   .choice { font-size:8vmin; }
-  .rect { position:relative; background:#e8d3a8; border:.6vmin solid #7a5a2e; border-radius:1vmin; margin:3.4vmin 7vmin 1vmin 1vmin; }
+  .rect { position:relative; background:#e8c58a; border:.6vmin solid var(--ink); border-radius:1vmin; margin:3.4vmin 7vmin 1vmin 1vmin; }
   .rect .l, .rect .w { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .rect .l { top:-4.2vmin; left:50%; transform:translateX(-50%); } .rect .w { left:calc(100% + 1.2vmin); top:50%; transform:translateY(-50%); }
   @media (max-aspect-ratio: 5/8) { #story { padding-top:22vmin; } .caption { font-size:4.4vmin; } .qtext { font-size:4.4vmin; } #game .bubble { max-width:92vmin; } .tip { font-size:3.8vmin; } .chap .what b { font-size:4.4vmin; } .chap .what small { font-size:3.2vmin; } }
 </style>
@@ -106,6 +110,18 @@ const village = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><pat
   ${longhouse(120, 92, 150, 46)}${longhouse(96, 138, 120, 38)}${longhouse(234, 142, 98, 34)}${mound(96, 208, .7)}${mound(150, 214, .7)}${mound(206, 210, .7)}${mound(262, 216, .7)}${mound(316, 208, .7)}`;
 const fire = x => `<g ${THIN}><ellipse cx="${x}" cy="222" rx="26" ry="8" fill="#6b4a25"/><path d="M${x - 12} 221 Q${x - 14} 198 ${x - 2} 184 Q${x + 2} 196 ${x + 8} 190 Q${x + 18} 206 ${x + 12} 221 Z" fill="#ff8a3d"/><path d="M${x - 5} 221 Q${x - 6} 208 ${x + 1} 200 Q${x + 8} 210 ${x + 5} 221 Z" fill="#ffd84d"/>
   <path d="M${x - 20} 224 l14 -5 M${x + 20} 224 l-14 -5" stroke-width="4" stroke="#4a3518"/></g><path d="M${x} 176 q8 -14 -2 -26 q12 6 8 26" fill="#fff" opacity=".3"/>`;
+
+// the picture behind everything: sky, sun, drifting clouds and hills
+const backdrop = () => `<svg class="backdrop" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><rect width="400" height="240" fill="#9fd8f2"/><rect y="100" width="400" height="140" fill="#f4f1d8" opacity=".55"/>
+  ${sun(352, 34, 18)}<g class="drift">${cloud(218, 30, .75)}</g><g class="drift b">${cloud(300, 66, .6)}</g>
+  <g ${INKED}><path d="M-10 190 Q110 150 230 182 T410 168 V250 H-10 Z" fill="#9ed08f"/><path d="M-10 218 Q150 188 270 212 T410 206 V250 H-10 Z" fill="#7dbb7a"/></g></svg>`;
+const ICON = { // little outlined pictures for the buttons
+  home: `<svg viewBox="0 0 40 40"><g ${INKED}><path d="M5 20 L20 6 L35 20 V35 H5 Z" fill="#fbf1dc"/><path d="M2 21 L20 4 L38 21" fill="none" stroke-width="4"/><path d="M2 21 L20 4 L38 21" fill="none" stroke="#e63946" stroke-width="2"/><rect x="16" y="23" width="8" height="12" rx="1.5" fill="#8a5a2b"/></g></svg>`,
+  shelf: `<svg viewBox="0 0 40 40"><g ${INKED}><rect x="5" y="8" width="9" height="26" rx="2" fill="#58b368"/><rect x="15" y="5" width="9" height="29" rx="2" fill="#e63946"/><rect x="25" y="11" width="9" height="23" rx="2" fill="#3b82c4"/></g></svg>`,
+  star: `<svg viewBox="0 0 40 40"><polygon points="20,3 25,15 38,16 28,24 31,37 20,30 9,37 12,24 2,16 15,15" fill="#ffd23f" ${INKED}/></svg>`,
+  go: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#ff8a3d" ${INKED}/><polygon points="15,11 30,20 15,29" fill="#fff" ${THIN}/></svg>`,
+  lock: `<svg viewBox="0 0 40 40"><g ${INKED}><path d="M12 19 V13 Q12 5 20 5 Q28 5 28 13 V19" fill="none" stroke-width="4"/><rect x="7" y="18" width="26" height="18" rx="4" fill="#f4b942"/><circle cx="20" cy="27" r="3" fill="#2b1a10"/></g></svg>`
+};
 
 const ART = {
   arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[130, 40, .8], [250, 70, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 152, 1.7)}${tree(366, 152, 1.5, "#3f9a58")}
@@ -205,7 +221,7 @@ const NEED = 3; // right answers to open the next scene
 
 // ---------- the page ----------
 $("app").innerHTML = `
-  <div class="layer"><div class="sun"></div><div class="cloud"></div><div class="cloud c2"></div><div class="hill back"></div><div class="hill"></div></div><div class="layer" id="fx"></div>
+  <div class="layer">${backdrop()}</div><div class="layer" id="fx"></div>
   <div class="screen on" id="title"><h1>Dr. Somebody Comes Home</h1><p class="sub">A Grade 5 story${NAME ? " for " + NAME : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
     <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
   <div class="screen" id="map"><div class="chapters" id="chapters"></div></div>
@@ -213,8 +229,8 @@ $("app").innerHTML = `
     <div class="nextrow"><button class="bigbtn small back" id="backBtn" aria-label="Back"><span class="tri"></span></button><button class="bigbtn small" id="nextBtn" aria-label="Next"><span class="tri"></span></button></div></div>
   <div class="screen" id="game"><div class="stars" id="stars"></div><div class="cheer" id="cheer"></div>
     <div class="ask"><div class="host">${NEW_OWL}</div><div class="bubble" id="bubble"></div></div><div class="tip" id="tip"></div><div class="choices" id="choices"></div></div>
-  <button class="corner left" id="homeBtn" aria-label="Back to the chapters" style="display:none">🏠</button>
-  <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>`;
+  <button class="corner left" id="homeBtn" aria-label="Back to the chapters" style="display:none">${ICON.home}</button>
+  <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">${ICON.shelf}</button>`;
 
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
@@ -228,7 +244,7 @@ $("homeBtn").addEventListener("click", () => { sfx.tap(); showMap(); });
 // ---------- the chapters ----------
 function showMap() {
   $("chapters").innerHTML = CHAPTERS.map((c, i) => { const open = c.beats && (i === 0 || S.done.includes(i - 1)), done = S.done.includes(i);
-    return `<button class="chap${open ? "" : " locked"}" data-c="${i}"><span class="num">${i + 1}</span><span class="what"><b>${c.title}</b><small>${c.where}${c.beats ? "" : " · coming soon"}</small></span><span class="state">${done ? "⭐" : open ? "▶" : "🔒"}</span></button>`; }).join("");
+    return `<button class="chap${open ? "" : " locked"}" data-c="${i}"><span class="num">${i + 1}</span><span class="what"><b>${c.title}</b><small>${c.where}${c.beats ? "" : " · coming soon"}</small></span><span class="state">${done ? ICON.star : open ? ICON.go : ICON.lock}</span></button>`; }).join("");
   show("map");
 }
 $("chapters").addEventListener("click", e => { const b = e.target.closest(".chap"); if (!b) return; sfx.tap(); if (b.classList.contains("locked")) { animate(b, "wobble"); return; }
