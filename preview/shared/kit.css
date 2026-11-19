@@ -186,6 +186,12 @@ h1 { font-size:9vmin; margin:0 0 1vmin; text-align:center; color:#fff; text-shad
 [data-pick].dim { opacity:.3; } [data-pick] .ring { fill:transparent; stroke:transparent; stroke-width:1.4; }
 [data-pick].right .ring { fill:#d6ffc4; stroke:#55b85c; } [data-pick].glow .ring { stroke:#ffd23f; fill:#fff6cf; }
 
+/* the change: the host's last scene in his first look */
+#regen { gap:2vmin; }
+.regenwho { width:40vmin; height:46vmin; position:relative; } .regenwho > svg { width:100%; height:100%; }
+#regen .regencap { position:static; transform:none; left:auto; top:auto; width:min(88vw, 110vmin); min-height:11vmin; display:flex; align-items:center; justify-content:center; }
+.spark { position:absolute; left:50%; top:50%; width:5vmin; height:5vmin; margin:-2.5vmin; font-size:5vmin; line-height:1; pointer-events:none; }
+
 /* confetti */
 .confetti { position:absolute; top:-5vmin; width:2.4vmin; height:3.4vmin; border-radius:.5vmin; animation:fall linear forwards; pointer-events:none; z-index:8; }
 @keyframes fall { to { transform:translateY(115vh) rotate(720deg); } }
