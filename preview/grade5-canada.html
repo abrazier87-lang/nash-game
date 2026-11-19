@@ -31,6 +31,9 @@
   .caption em { font-style:normal; color:#d62839; }
   .nextrow { display:flex; gap:3vmin; align-items:center; }
   .bigbtn.small { width:15vmin; height:15vmin; animation:none; } .bigbtn.small .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
+  #intro { justify-content:flex-start; padding-top:8vmin; gap:2vmin; }
+  .again { margin-top:2.4vmin; background:#fffdf5; border:var(--line) solid var(--ink); border-radius:4vmin; padding:1vmin 3vmin; font-size:2.8vmin; font-weight:bold; color:var(--ink); box-shadow:0 .7vmin 0 var(--ink); }
+  .again:active { transform:translateY(.5vmin); box-shadow:0 .2vmin 0 var(--ink); }
   .bigbtn.back .tri { border-left:none; border-right:6vmin solid #fff; margin-left:-1.4vmin; }
   /* a challenge: answer 3 to open the next scene */
   #game .bubble { height:auto; min-height:22vmin; max-width:66vmin; flex-direction:column; gap:1.2vmin; padding:2.4vmin 3.4vmin; }
@@ -51,7 +54,7 @@
   .fr { display:inline-flex; flex-direction:column; align-items:center; line-height:1; font-weight:bold; vertical-align:middle; margin:0 .15em; } .fr b { border-bottom:.14em solid currentColor; padding:0 .25em .08em; } .fr i { font-style:normal; padding-top:.08em; }
   .rect { position:relative; background:#e8c58a; border:.6vmin solid var(--ink); border-radius:1vmin; margin:3.4vmin 7vmin 1vmin 1vmin; }
   .rect .l, .rect .w { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .rect .l { top:-4.2vmin; left:50%; transform:translateX(-50%); } .rect .w { left:calc(100% + 1.2vmin); top:50%; transform:translateY(-50%); }
-  @media (max-aspect-ratio: 5/8) { #story { padding-top:22vmin; } .caption { font-size:4.4vmin; } .qtext { font-size:4.4vmin; } #game .bubble { max-width:92vmin; } .tip { font-size:3.8vmin; } .chap .what b { font-size:4.4vmin; } .chap .what small { font-size:3.2vmin; } }
+  @media (max-aspect-ratio: 5/8) { #intro { padding-top:22vmin; } .again { font-size:3.8vmin; } #story { padding-top:22vmin; } .caption { font-size:4.4vmin; } .qtext { font-size:4.4vmin; } #game .bubble { max-width:92vmin; } .tip { font-size:3.8vmin; } .chap .what b { font-size:4.4vmin; } .chap .what small { font-size:3.2vmin; } }
 </style>
 </head>
 <body class="game">
@@ -312,6 +315,36 @@ Object.assign(ART, {
     ${kidAt(140, 150, .85, LILY)}${kidAt(206, 150, .85, NOAH)}${kidAt(272, 150, .85, MAYA)}${kidAt(338, 150, .85, NINA)}${letter(140, 104, "#e63946")}${letter(206, 96, "#3b82c4")}${letter(272, 104, "#8e5bd0")}${letter(338, 96, "#2aa7a0")}`)
 });
 
+// ---- the intro: "The Long Way Home" ----
+// the clock balloon with Dr. Somebody riding in it
+const riding = (x, y, h) => `${owlAt(x + h * .4 - h * .17, y + h * .56, h * .4)}${balloonAt(x, y, h)}`;
+const nightSky = pts => `<rect width="400" height="240" fill="#16224a"/>${starry(pts)}<circle cx="330" cy="46" r="20" fill="#fff6c9" ${INKED}/><circle cx="322" cy="40" r="20" fill="#16224a"/>`;
+const mapleLeaf = (x, y, s, r) => `<g transform="translate(${x} ${y}) rotate(${r || 0}) scale(${s})" ${THIN}><path d="M0 -20 L5 -11 L12 -14 L10 -4 L19 -5 L14 3 L20 9 L9 9 L10 17 L2 13 L0 22 L-2 13 L-10 17 L-9 9 L-20 9 L-14 3 L-19 -5 L-10 -4 L-12 -14 L-5 -11 Z" fill="#e63946"/></g>`;
+Object.assign(ART, {
+  intro1: () => frame(`${nightSky([[30, 30], [70, 64, 2], [120, 26], [170, 54], [250, 30, 2], [286, 76], [370, 96, 2], [48, 104], [214, 100]])}
+    <g ${INKED}><path d="M-10 196 Q200 180 410 196 V250 H-10 Z" fill="#3a3560"/><polygon points="20,150 66,126 112,150" fill="#514a82"/><rect x="26" y="150" width="80" height="46" fill="#5c5594"/>${[34, 52, 70, 88].map(x => `<rect x="${x}" y="156" width="8" height="40" fill="#6c64a8"/>`).join("")}
+    <path d="M250 196 V150 H410 V196 H388 V176 Q378 160 368 176 V196 H346 V176 Q336 160 326 176 V196 H304 V176 Q294 160 284 176 V196 Z" fill="#5c5594"/></g>${riding(150, 8, 150)}`),
+  intro2: () => frame(`<rect width="400" height="240" fill="#c48a4a"/><g stroke="#9c6830" stroke-width="3" fill="none">${[30, 70, 110, 150, 190, 230].map(y => `<path d="M0 ${y} Q100 ${y - 8} 200 ${y} T400 ${y}"/>`).join("")}${[40, 100, 160, 220, 280, 340].map(x => `<path d="M${x} 0 V240" opacity=".5"/>`).join("")}</g>
+    ${owlAt(26, 26, 214)}<g ${INKED}><rect x="232" y="132" width="132" height="70" rx="8" fill="#8a5a2b"/><rect x="226" y="122" width="144" height="18" rx="6" fill="#b07a45"/>
+    <path d="M254 112 Q300 92 346 112 Q352 122 346 126 H254 Q248 122 254 112 Z" fill="#e8c58a"/><path d="M250 124 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0" fill="#58b368"/><path d="M252 128 H348 Q352 136 346 138 H254 Q248 136 252 128 Z" fill="#e8c58a"/></g>
+    <g fill="none" stroke="#7fae62" stroke-width="3.4" stroke-linecap="round" opacity=".9"><path d="M276 92 q-8 -10 0 -20 q8 -10 0 -20"/><path d="M304 86 q-8 -10 0 -20 q8 -10 0 -20"/><path d="M332 92 q-8 -10 0 -20 q8 -10 0 -20"/></g><circle cx="356" cy="70" r="3" fill="#2b1a10"/><path d="M350 66 q6 -8 12 0" fill="none" stroke="#2b1a10" stroke-width="1.6"/>`),
+  intro3: () => frame(`${sky("#f7c59f", "#fdebd0", [60, 150, 30], [[110, 50, .8], [300, 40, .7], [220, 90, .5]])}${water(160, "#4a9fd4")}${riding(160, 6, 140)}`),
+  intro4: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[80, 44, .8], [230, 70, .6]])}${water(150, "#4a9fd4")}<g ${INKED}><path d="M140 250 Q150 180 210 160 Q280 138 410 150 V250 Z" fill="#9ed08f"/><path d="M250 190 Q300 176 340 192 Q310 208 250 190 Z" fill="#5db7e6"/></g>
+    ${pine(214, 170, .9)}${pine(250, 162, 1)}${pine(292, 160, 1.1, "#3f9a58")}${pine(346, 164, 1)}${pine(380, 176, .9, "#3f9a58")}${pine(196, 204, 1.1, "#3f9a58")}${pine(240, 228, 1.2)}${pine(372, 226, 1.2)}${riding(26, 0, 136)}`),
+  intro5: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[100, 36, .8]])}${hills("#9ed08f", "#7dbb7a")}<g ${INKED}><path d="M150 170 Q210 186 176 208 Q150 226 210 250 H300 Q240 226 262 206 Q290 184 232 168 Z" fill="#5db7e6"/></g>
+    ${house(30, 136, 44, 28, "#e63946")}${house(84, 142, 36, 24, "#3b82c4")}${house(300, 134, 46, 30, "#f4b942")}${tree(360, 152, 1.2)}${tree(14, 162, 1.1, "#3f9a58")}${riding(150, 0, 132)}${mapleLeaf(92, 66, 1.3, -18)}${mapleLeaf(304, 96, .9, 24)}${mapleLeaf(60, 196, .8, 40)}`),
+  intro6: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[90, 40, .8], [230, 58, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 152, 1.5)}${balloonAt(276, 28, 150)}${owlAt(116, 46, 200)}${mapleLeaf(86, 196, 1, 20)}`)
+});
+// what he says in the intro (each line is recorded whole, in audio/g5/intro/)
+const INTRO = [
+  ["intro1", "New goggles. New scarf. Same owl. And for the first time in a very long while, I know exactly where I'm going."],
+  ["intro2", "My lunch! So that's which century I left it in. It has not aged well."],
+  ["intro3", "I have seen pyramids. I have walked the Great Wall. I have counted every arch in Rome. Twice."],
+  ["intro4", "But there is one place I have never properly explored. I flew right over it every time, on my way to somewhere else."],
+  ["intro5", "Home. Canada. It turns out the biggest adventure was waiting right where I started."],
+  ["intro6", "Well? Are you coming? Tick tock!"]
+];
+
 // ---------- Chapter 1: the People of the Longhouse ----------
 // Every line is Dr. Somebody talking. "art" names the picture; "say" is a list of captions, one for each tap of the arrow.
 const para = t => `<div class="qtext">${t}</div>`;
@@ -319,9 +352,8 @@ const rect = (L, W) => `<div class="rect" style="width:${Math.min(42, 14 + L * .
 const cards = (n, near) => numCards(n, 1, 100000, 4, near.filter(k => k > 0 && k !== n));
 const CHAPTERS = [
   { title: "The People of the Longhouse", where: "Southern Ontario", beats: [
-    { art: "arrive", say: ["Home! Canada! The clock balloon finally found the way. <em>New goggles, same owl.</em>",
-      "I have been all over the world. Egypt, China, Rome. But do you know what? I never properly explored my own country.",
-      "So let's start right here, in southern Ontario. Somebody is waiting to show me around."] },
+    { art: "arrive", say: ["Where to begin? Right here, I think. Southern Ontario, where the balloon came down.",
+      "Somebody is waiting to show me around. I do hope they like owls."] },
     { art: "guide", say: ["This is my new friend Lily. Her family is <em>Haudenosaunee</em>. You say it <em>ho-dee-no-SHOW-nee</em>.",
       "Lily says it means <em>People of the Longhouse</em>. Her people have lived around these lakes for a very, very long time.",
       "They still do! Lily goes to school, plays lacrosse, and helps in her grandmother's garden. I asked what a longhouse is. She said, <em>look for yourself</em>."] },
@@ -628,7 +660,9 @@ $("app").innerHTML = `
   <div class="layer">${backdrop()}</div><div class="layer" id="fx"></div>
   <div class="screen on" id="title"><h1>Dr. Somebody Comes Home</h1><p class="sub">A Grade 5 story${NAME ? " for " + NAME : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
     <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
-  <div class="screen" id="map"><div class="chapters" id="chapters"></div></div>
+  <div class="screen" id="intro"><div class="panel" id="introPanel"></div><div class="caption" id="introCap"></div>
+    <div class="nextrow"><button class="bigbtn small" id="introNext" aria-label="Next"><span class="tri"></span></button></div></div>
+  <div class="screen" id="map"><div class="chapters" id="chapters"></div><button class="again" id="introAgain">▶ Watch the beginning again</button></div>
   <div class="screen" id="story"><div class="dots" id="dots"></div><div class="panel" id="panel"></div><div class="caption" id="caption"></div>
     <div class="nextrow"><button class="bigbtn small back" id="backBtn" aria-label="Back"><span class="tri"></span></button><button class="bigbtn small" id="nextBtn" aria-label="Next"><span class="tri"></span></button></div></div>
   <div class="screen" id="game"><div class="stars" id="stars"></div><div class="cheer" id="cheer"></div>
@@ -641,9 +675,30 @@ function show(id) {
   $("homeBtn").style.display = id === "story" || id === "game" ? "" : "none";
   $("shelfBtn").style.display = id === "title" || id === "map" ? "" : "none";
 }
-$("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); showMap(); });
+$("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); if (S.seenIntro) showMap(); else playIntro(); });
+
+// ---------- the intro: six pictures, each with one line in his recorded voice ----------
+// It plays by itself the first time the book is opened. The arrow skips ahead; a button on the chapter list plays it again.
+// If a recording is missing, the line is only shown in writing (never the device voice).
+let introAt = -1, introRun = 0;
+async function playIntro() {
+  const run = ++introRun; show("intro");
+  for (introAt = 0; introAt < INTRO.length; introAt++) {
+    const [art, words] = INTRO[introAt], at = introAt;
+    $("introPanel").innerHTML = ART[art](); animate($("introPanel"), "pop"); $("introCap").innerHTML = `<div>${words}</div>`;
+    const read = wait(1200 + words.length * 55), spoken = Kit.playClip("../audio/g5/intro/" + Kit.clipName(words) + ".mp3", "");
+    await Promise.race([Promise.all([read, spoken]), new Promise(r => { introSkip = r; })]);
+    if (run !== introRun) return; // it was left, or started again
+    if (introAt !== at) introAt = at; await wait(350); if (run !== introRun) return;
+  }
+  Kit.hush(); if (!S.seenIntro) { S.seenIntro = true; save(); } showMap();
+}
+let introSkip = () => {};
+$("introNext").addEventListener("click", () => { sfx.tap(); Kit.hush(); introSkip(); });
+$("introAgain").addEventListener("click", () => { sfx.tap(); playIntro(); });
 $("shelfBtn").addEventListener("click", () => { location.href = "index.html"; });
 $("homeBtn").addEventListener("click", () => { sfx.tap(); showMap(); });
+$("shelfBtn").addEventListener("click", () => { introRun++; Kit.hush(); }, true);
 
 // ---------- the chapters ----------
 function showMap() {
