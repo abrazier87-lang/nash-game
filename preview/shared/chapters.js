@@ -164,7 +164,7 @@ function ChapterGame(C) {
     $("tip").className = "tip"; $("tip").textContent = lead || "";
     const box = $("choices"); box.innerHTML = ""; box.style.setProperty("--cs", "22vmin");
     q.choices.forEach(ch => { const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b.addEventListener("click", () => choose(b, ch)); box.appendChild(b);
-      const len = String(ch.html).replace(/<small>.*<\/small>|<[^>]+>/g, "").length; if (len > 3) b.style.fontSize = len > 4 ? "5.2vmin" : "6vmin"; b.style.flexDirection = "row"; });
+      const len = String(ch.html).replace(/<small>.*<\/small>|<[^>]+>/g, "").length; if (len > 3) b.style.fontSize = len > 7 ? "3.9vmin" : len > 4 ? "5.2vmin" : "6vmin"; b.style.flexDirection = "row"; });
   }
   async function choose(el, ch) {
     if (!G || G.busy || el.classList.contains("dim")) return;

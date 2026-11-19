@@ -25,13 +25,13 @@
 <script>
 "use strict";
 /* =====================================================================
-   DR. SOMEBODY GOES EAST  -  the Grade 6 story (first try-out: Chapter 1)
+   DR. SOMEBODY GOES EAST  -  the Grade 6 story
    The clock pointed east at the end of Grade 5. Dr. Somebody follows the St. Lawrence River to the Atlantic coast,
    meeting a child in each place today and looking through the clock's window at the same place long ago.
    New in this grade: the chapters are places on a map, he collects French words as he goes, and now and then
    the child chooses what he does next. The engine is shared/chapters.js; the drawing tools are shared/inkart.js.
    Every line is shown in writing only for now: the words are recorded once they are settled.
-   The guide's name (Léa) is a stand-in until the family chooses one.
+   Chapter 1 is in this page. Chapters 2 to 6 are in shared/g6-ch2.js to shared/g6-ch6.js.
    ===================================================================== */
 
 // ---------- pictures ----------
@@ -168,9 +168,18 @@ const ASK = {
   }
 };
 
+</script>
+<!-- Chapters 2 to 6 each live in their own file. Each one adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
+<script src="shared/g6-ch2.js?v=34"></script>
+<script src="shared/g6-ch3.js?v=34"></script>
+<script src="shared/g6-ch4.js?v=34"></script>
+<script src="shared/g6-ch5.js?v=34"></script>
+<script src="shared/g6-ch6.js?v=34"></script>
+<script>
+"use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
 window.Chapters = ChapterGame({ title: "Dr. Somebody Goes East", sub: "A Grade 6 story", saveKey: "grade6East.v1", medal: "g6",
-  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My French words",
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words",
   map: { art: eastMap, stops: [[15.5, 52.5], [29, 43.5], [61.5, 88], [90, 67.5], [76, 80], [88.5, 33]] } });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>

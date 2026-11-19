@@ -64,9 +64,10 @@ h1 { font-size:7vmin; padding:0 14vmin; }
 .cheer.wordcheer { top:1.6vmin; } .cheer.wordcheer b { color:#d62839; }
 #wordbook { position:fixed; inset:0; background:rgba(43,26,16,.55); display:none; align-items:center; justify-content:center; z-index:20; }
 #wordbook.on { display:flex; }
-#wordbook .panel { width:min(92vw, 100vmin); aspect-ratio:auto; height:auto; max-height:90vh; overflow:auto; background:#fffaf0; padding:3vmin 4vmin; text-align:center; }
-#wordbook h2 { margin:0 0 2vmin; font-size:5vmin; } #wordbook h2 small { font-size:.6em; color:#6a5a4c; margin-left:1.4vmin; }
-.wordlist { display:grid; grid-template-columns:repeat(auto-fill, minmax(34vmin, 1fr)); gap:1.4vmin; margin-bottom:1vmin; }
-.word { background:#fff; border:.5vmin solid var(--ink); border-radius:2.4vmin; padding:1.2vmin 2vmin; display:flex; flex-direction:column; font-size:3.2vmin; }
+#wordbook .panel { width:min(94vw, 150vmin); aspect-ratio:auto; height:auto; max-height:90vh; overflow:auto; background:#fffaf0; padding:2.4vmin 3vmin 0; text-align:center; }
+#wordbook .again { position:sticky; bottom:0; margin:0 auto; display:block; } #wordbook .panel::after { content:""; display:block; height:2vmin; }
+#wordbook h2 { margin:0 0 1.6vmin; font-size:4.4vmin; } #wordbook h2 small { font-size:.6em; color:#6a5a4c; margin-left:1.4vmin; }
+.wordlist { display:grid; grid-template-columns:repeat(auto-fill, minmax(27vmin, 1fr)); gap:1vmin; margin-bottom:1.4vmin; }
+.word { background:#fff; border:.5vmin solid var(--ink); border-radius:2.4vmin; padding:.6vmin 1.2vmin; display:flex; flex-direction:column; font-size:2.5vmin; line-height:1.2; }
 .word b { color:#d62839; font-size:1.15em; } .word.unmet { background:#ece6da; border-color:#b5ab99; color:#b5ab99; } .word.unmet b { color:#b5ab99; }
-@media (max-aspect-ratio: 5/8) { .cheer.wordcheer { top:auto; bottom:3vmin; } #map:has(.mappanel) { padding-top:22vmin; } .option { font-size:4.6vmin; min-width:40vmin; } .word { font-size:4.2vmin; } .wordlist { grid-template-columns:1fr 1fr; } }
+@media (max-aspect-ratio: 5/8) { .cheer.wordcheer { top:auto; bottom:3vmin; } #map:has(.mappanel) { padding-top:22vmin; } .option { font-size:4.6vmin; min-width:40vmin; } .word { font-size:3.6vmin; } .wordlist { grid-template-columns:1fr 1fr; } }
