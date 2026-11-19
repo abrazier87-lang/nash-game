@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Rome</title>
-<link rel="stylesheet" href="shared/kit.css?v=30">
+<link rel="stylesheet" href="shared/kit.css?v=33">
 <style>
   /* Blue sky, olive hills, a temple and an aqueduct. */
   :root { --sky1:#8fd3f4; --sky2:#fdebd0; --grass:#a9b665; --grass2:#7d9a4b; --title-shadow:#8e2f25; --strip:rgba(255,255,255,.45); --strip-line:rgba(90,100,40,.6); }
@@ -26,6 +26,7 @@
   .chips { display:flex; gap:1vmin; flex-wrap:wrap; justify-content:center; max-width:56vmin; }
   .places.many.lots { max-width:90vmin; } /* 15 places: three even rows of 5 */
   .mapbox { width:48vmin; height:40vmin; } .mapbox svg { width:100%; height:100%; }
+  .tapgame #bubble > .mapbox, .tapgame #bubble > .rowx > .mapbox { width:58vmin; height:48vmin; } /* a bigger map when the answer is tapped on it */
   .lessonart .mapbox { width:38vmin; height:32vmin; display:inline-block; }
   .picto { display:flex; flex-direction:column; gap:.8vmin; font-size:3.4vmin; text-align:left; }
   .picto div { display:flex; align-items:center; gap:1.4vmin; } .picto b { width:13vmin; font-size:3vmin; } .picto span { font-size:4.2vmin; letter-spacing:.3vmin; }
@@ -45,8 +46,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=30"></script>
-<script src="shared/story.js?v=30"></script>
+<script src="shared/kit.js?v=33"></script>
+<script src="shared/story.js?v=33"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -143,8 +144,12 @@ const TOKEN = { red: "#ff5a5f", blue: "#4d9de0", gold: "#f4c430", green: "#58b36
 // mode "points": numbers name the LINES, and things sit where lines cross, at coordinates like (3, 5).
 const CAMP_THINGS = [["⛺", "tent"], ["🛡️", "shield"], ["🦅", "eagle standard"], ["🔥", "campfire"], ["🐎", "horse"], ["🏺", "water jar"], ["⚔️", "swords"], ["🌳", "tree"]];
 const LETTERS = "ABCDEFGH";
-function campMap(o) { // o: { mode, w, h, items: [[emoji, x, y, faded]], path: [[x, y], ...], river: x, soldier: [x, y] }
-  const sq = o.mode === "squares", c = 12, x0 = 12, y0 = 6 + o.h * c, X = x => x0 + x * c + (sq ? c / 2 : 0), Y = y => y0 - y * c - (sq ? c / 2 : 0);
+const campXY = o => { const sq = o.mode === "squares", c = 12, x0 = 12, y0 = 6 + o.h * c; return { sq, c, x0, y0, X: x => x0 + x * c + (sq ? c / 2 : 0), Y: y => y0 - y * c - (sq ? c / 2 : 0) }; };
+const campTrail = (o, path) => { const { X, Y } = campXY(o); return `<polyline class="trail" points="${path.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}" fill="none" stroke="#ff5a5f" stroke-width="2.2" stroke-dasharray="3 2" stroke-linejoin="round" marker-end="url(#arrow)"/>`; };
+// draws (or redraws) the dotted trail on the map that is showing in the bubble: used when the answer is tapped on the map itself
+function trailOnMap(H, o, path) { const svg = H.bubble.querySelector(".mapbox svg"); if (!svg) return; svg.querySelectorAll(".trail").forEach(e => e.remove()); svg.insertAdjacentHTML("beforeend", campTrail(o, path)); }
+function campMap(o) { // o: { mode, w, h, items: [[emoji, x, y, faded, pick]], path: [[x, y], ...], river: x }. An item with a "pick" key can be tapped.
+  const { sq, c, x0, y0, X, Y } = campXY(o);
   let s = `<rect x="${x0}" y="6" width="${o.w * c}" height="${o.h * c}" fill="#f3e6c4" stroke="#b89a64" stroke-width="1"/>`;
   if (o.river != null) s += `<rect x="${x0 + o.river * c - 2.5}" y="6" width="5" height="${o.h * c}" fill="#7cc3ec"/>`;
   for (let i = 0; i <= o.w; i++) s += `<line x1="${x0 + i * c}" y1="6" x2="${x0 + i * c}" y2="${y0}" stroke="#b89a64" stroke-width=".6"/>`;
@@ -153,8 +158,9 @@ function campMap(o) { // o: { mode, w, h, items: [[emoji, x, y, faded]], path: [
     for (let j = 0; j < o.h; j++) s += `<text x="${x0 - 4}" y="${Y(j) + 2}" font-size="6" text-anchor="middle" font-weight="bold" fill="#8e2f25">${j + 1}</text>`; }
   else { for (let i = 0; i <= o.w; i++) s += `<text x="${X(i)}" y="${y0 + 7}" font-size="5.6" text-anchor="middle" font-weight="bold" fill="#8e2f25">${i}</text>`;
     for (let j = 1; j <= o.h; j++) s += `<text x="${x0 - 4}" y="${Y(j) + 2}" font-size="5.6" text-anchor="middle" font-weight="bold" fill="#8e2f25">${j}</text>`; }
-  if (o.path && o.path.length > 1) s += `<polyline points="${o.path.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}" fill="none" stroke="#ff5a5f" stroke-width="2.2" stroke-dasharray="3 2" stroke-linejoin="round" marker-end="url(#arrow)"/>`;
-  for (const [e, x, y, faded] of o.items || []) s += `<text x="${X(x)}" y="${Y(y) + 3.4}" font-size="11" text-anchor="middle"${faded ? ` opacity=".35"` : ""}>${e}</text>`;
+  if (o.path && o.path.length > 1) s += campTrail(o, o.path);
+  for (const [e, x, y, faded, pick] of o.items || []) { const pic = `<text x="${X(x)}" y="${Y(y) + 3.4}" font-size="11" text-anchor="middle"${faded ? ` opacity=".35"` : ""}>${e}</text>`;
+    s += pick ? `<g data-pick="${pick}"><circle class="ring" cx="${X(x)}" cy="${Y(y)}" r="6.4"/>${pic}</g>` : pic; }
   return `<div class="mapbox"><svg viewBox="0 0 ${x0 + o.w * c + 4} ${y0 + 10}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#ff5a5f"/></marker></defs>${s}</svg></div>`;
 }
 const at = (x, y) => `(${x}, ${y})`, atSaid = at;
@@ -513,9 +519,11 @@ const GAMES = {
         if (rand(3)) { const wrong = nearPoints(x, y, W - 1, H - 1);
           return { bubble: map, tall: true, key: "s" + ps.join(";"), say: `Which square is the ${name} in?`, yay: `Yes! The ${name} is in square ${said(x, y)}.`, hint, explain,
             choices: shuffle(wrong.concat([[x, y]])).map(([a, b]) => ({ html: wordCard(label(a, b)), ok: a === x && b === y, wrong: "Not quite. Find the letter first, then the number." })) }; }
-        const decoys = shuffle(CAMP_THINGS.filter(t => !things.slice(0, 3).includes(t))).slice(0, 1).concat(things.slice(1, 3));
-        return { bubble: map, tall: true, key: "w" + ps.join(";"), say: `What is in square ${said(x, y)}?`, yay: `Yes! The ${name} is in square ${said(x, y)}.`, hint: H2 => H2.say(`Find the letter ${LETTERS[x]} along the bottom. Go up from there to row ${y + 1}.`), explain,
-          choices: shuffle(decoys.concat([things[0]])).map(t => ({ html: emoCard(t[0]), ok: t === things[0], wrong: "Not quite. Find the letter first, then go up to the number." })) };
+        const o = { mode: "squares", w: W, h: H, items: items.map(it => it.concat([false, it[0]])) }; // every thing on this map can be tapped
+        return { bubble: campMap(o), tall: true, tap: true, key: "w" + ps.join(";"), say: `What is in square ${said(x, y)}?`, yay: `Yes! The ${name} is in square ${said(x, y)}.`, hint: H2 => H2.say(`Find the letter ${LETTERS[x]} along the bottom. Go up from there to row ${y + 1}.`),
+          explain: async H2 => { trailOnMap(H2, o, [[x, -0.5], [x, y - 0.5]]); if (!(await H2.say(`The ${name} is above the letter ${LETTERS[x]}.`))) return false;
+            trailOnMap(H2, o, [[-0.5, y], [x - 0.5, y]]); return (await H2.say(`It is beside the number ${y + 1}.`)) && pointTo(H2, `So it's in square ${said(x, y)}.`); },
+          choices: things.slice(0, 3).map(t => ({ html: emoCard(t[0]), pick: t[0], ok: t === things[0], wrong: "Not quite. Find the letter first, then go up to the number." })) };
       }
       if (step === 2) { // coordinates, like (3, 5). A decoy often sits at the swapped spot, (5, 3), to catch the usual mix-up.
         const ps = spots(1, 1, W); let [x, y] = ps[0]; if (x === y) x = x > 1 ? x - 1 : x + 1;
@@ -525,8 +533,11 @@ const GAMES = {
         const explain = async H2 => (await talkThrough(H2, [[show([[0, 0], [x, 0]]), `Start at zero. Go across ${x}.`], [show([[0, 0], [x, 0], [x, y - 0.4]]), `Then go up ${y}.`]])) && pointTo(H2, `So the ${name} is at ${atSaid(x, y)}.`);
         if (rand(2)) return { bubble: map, tall: true, key: "c" + ps.join(";"), say: `What are the coordinates of the ${name}?`, again: `Where is the ${name}? Across first, then up.`, yay: `Yes! The ${name} is at ${atSaid(x, y)}.`, hint, explain,
           choices: shuffle(nearPoints(x, y, W, H).concat([[x, y]])).map(([a, b]) => ({ html: coordCard(a, b), ok: a === x && b === y, wrong: a === y && b === x ? "Careful! Go across first, then up." : "Not quite. Go across first, then up." })) };
-        return { bubble: map, tall: true, key: "t" + ps.join(";"), say: `What is at ${atSaid(x, y)}?`, again: `What is at ${atSaid(x, y)}? Across first, then up.`, yay: `Yes! The ${name} is at ${atSaid(x, y)}.`, hint, explain,
-          choices: shuffle(things.slice(0, 3)).map((t, i) => ({ html: emoCard(t[0]), ok: t === things[0], wrong: t === things[1] ? "Careful! That one is across " + y + " and up " + x + ". Go across first." : "Not quite. Go across first, then up." })) };
+        const o = { mode: "points", w: W, h: H, items: items.map(it => it.concat([false, it[0]])) }; // every thing on this map can be tapped
+        return { bubble: campMap(o), tall: true, tap: true, key: "t" + ps.join(";"), say: `What is at ${atSaid(x, y)}?`, again: `What is at ${atSaid(x, y)}? Across first, then up.`, yay: `Yes! The ${name} is at ${atSaid(x, y)}.`, hint,
+          explain: async H2 => { trailOnMap(H2, o, [[0, 0], [x, 0]]); if (!(await H2.say(`Start at zero. Go across ${x}.`))) return false;
+            trailOnMap(H2, o, [[0, 0], [x, 0], [x, y - 0.5]]); return (await H2.say(`Then go up ${y}.`)) && pointTo(H2, `So the ${name} is at ${atSaid(x, y)}.`); },
+          choices: shuffle(things.slice(0, 3)).map((t, i) => ({ html: emoCard(t[0]), pick: t[0], ok: t === things[0], wrong: t === things[1] ? "Careful! That one is across " + y + " and up " + x + ". Go across first." : "Not quite. Go across first, then up." })) };
       }
       if (step === 3) { // slides
         let x, y, dx, dy; do { x = rand(W + 1); y = rand(H + 1); dx = pick([-3, -2, -1, 0, 1, 2, 3, 4]); dy = pick([-3, -2, -1, 0, 1, 2, 3, 4]); } while (!dx && !dy || x + dx < 0 || x + dx > W || y + dy < 0 || y + dy > H || (rand(3) && (dx < 0 || dy < 0)));
