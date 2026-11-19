@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dr. Somebody Comes Home</title>
+<link rel="stylesheet" href="shared/kit.css?v=33">
+<style>
+  /* Grade 5: a storyboard. Each chapter is a row of story scenes; a locked scene opens when its questions are answered. */
+  :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
+  h1 { font-size:7vmin; padding:0 14vmin; }
+  /* the list of chapters */
+  .chapters { display:flex; flex-direction:column; gap:1.8vmin; width:min(92vw, 96vmin); }
+  .chap { display:flex; align-items:center; gap:2.4vmin; background:#fffdf5; border:1vmin solid #fff; border-radius:4vmin; padding:1.6vmin 2.6vmin; box-shadow:0 1vmin 0 rgba(0,0,0,.16); text-align:left; }
+  .chap .num { flex:0 0 auto; width:9vmin; height:9vmin; border-radius:50%; background:#2f6b3f; color:#fff; font-size:5vmin; font-weight:bold; line-height:9vmin; text-align:center; }
+  .chap .what { flex:1 1 auto; min-width:0; } .chap .what b { display:block; font-size:3.6vmin; } .chap .what small { font-size:2.5vmin; color:#5a5f78; }
+  .chap .state { flex:0 0 auto; font-size:5vmin; }
+  .chap.locked { background:#e7e2d6; box-shadow:none; opacity:.8; } .chap.locked .num { background:#a39c8c; }
+  /* a story scene */
+  #story { justify-content:flex-start; padding-top:15vmin; gap:2vmin; }
+  .dots { position:absolute; top:4.6vmin; left:16vmin; right:16vmin; display:flex; gap:1vmin; justify-content:center; align-items:center; flex-wrap:wrap; }
+  .dots i { width:3vmin; height:3vmin; border-radius:50%; background:rgba(255,255,255,.55); border:.5vmin solid rgba(0,0,0,.12); font-style:normal; }
+  .dots i.q { border-radius:.8vmin; transform:rotate(45deg); } .dots i.done { background:#58b368; border-color:#2f7d44; } .dots i.now { background:#ffd84d; border-color:#e0a800; scale:1.3; }
+  .panel { width:min(94vw, 118vmin, 90vh); aspect-ratio:5 / 3; border-radius:5vmin; border:1.2vmin solid #fff; overflow:hidden; box-shadow:0 1.2vmin 0 rgba(0,0,0,.16); background:#cfe9f5; }
+  .panel svg { width:100%; height:100%; }
+  .caption { width:min(94vw, 118vmin, 90vh); min-height:15vmin; background:#fff; border-radius:4vmin; padding:2.2vmin 3.4vmin; font-size:3.5vmin; line-height:1.35; font-weight:bold; text-align:center; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; }
+  .caption em { font-style:normal; color:#2f6b3f; }
+  .nextrow { display:flex; gap:3vmin; align-items:center; }
+  .bigbtn.small { width:15vmin; height:15vmin; animation:none; } .bigbtn.small .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
+  .bigbtn.back { background:#b8c2cc; box-shadow:0 1.2vmin 0 #8793a0; } .bigbtn.back .tri { border-left:none; border-right:6vmin solid #fff; margin-left:-1.4vmin; }
+  /* a challenge: answer 3 to open the next scene */
+  #game .bubble { height:auto; min-height:22vmin; max-width:66vmin; flex-direction:column; gap:1.2vmin; padding:2.4vmin 3.4vmin; }
+  #game .host { width:24vmin; height:27vmin; }
+  .qtext { font-size:3.6vmin; line-height:1.3; text-align:center; } .qtext b { color:#d35400; }
+  .tip { min-height:6vmin; font-size:3vmin; font-weight:bold; text-align:center; color:#2f6b3f; max-width:90vmin; }
+  .tip.oops { color:#b03a2e; }
+  .choice { font-size:8vmin; }
+  .rect { position:relative; background:#e8d3a8; border:.6vmin solid #7a5a2e; border-radius:1vmin; margin:3.4vmin 7vmin 1vmin 1vmin; }
+  .rect .l, .rect .w { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .rect .l { top:-4.2vmin; left:50%; transform:translateX(-50%); } .rect .w { left:calc(100% + 1.2vmin); top:50%; transform:translateY(-50%); }
+  @media (max-aspect-ratio: 5/8) { #story { padding-top:22vmin; } .caption { font-size:4.4vmin; } .qtext { font-size:4.4vmin; } #game .bubble { max-width:92vmin; } .tip { font-size:3.8vmin; } .chap .what b { font-size:4.4vmin; } .chap .what small { font-size:3.2vmin; } }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=33"></script>
+<script src="shared/story.js?v=33"></script>
+<script src="shared/newowl.js?v=33"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY COMES HOME  -  the Grade 5 story (first try-out: Chapter 1)
+   Dr. Somebody is home in Canada, in his new flying gear. In each chapter a young guide shows him a place as it is
+   today, and the clock balloon opens a WINDOW INTO THE PAST to show the same place long ago.
+   A chapter is a row of "beats": story scenes to read, and challenges (3 right answers) that unlock the next scene.
+   This first version shows every line in writing and says nothing aloud: the words are recorded once they are settled.
+   The guide's name (Lily) is a stand-in until the family chooses one.
+   ===================================================================== */
+
+// ---------- pictures ----------
+const frame = inner => `<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice">${inner}</svg>`; // the panel is the same shape, so this only trims a hair
+const sky = (a, b) => `<defs></defs><rect width="400" height="240" fill="${a}"/><rect y="120" width="400" height="120" fill="${b}" opacity=".5"/>`;
+const owlAt = (x, y, h) => `<svg x="${x}" y="${y}" width="${h * 200 / 232}" height="${h}" viewBox="0 0 200 232">${NEW_OWL.replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>`;
+// the guide: a child of today, in a hoodie and jeans
+const kidAt = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" stroke="#2b1a10" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
+  <rect x="-9" y="52" width="8" height="26" rx="3" fill="#3b5b8c"/><rect x="2" y="52" width="8" height="26" rx="3" fill="#3b5b8c"/><ellipse cx="-6" cy="80" rx="8" ry="4" fill="#fff"/><ellipse cx="7" cy="80" rx="8" ry="4" fill="#fff"/>
+  <path d="M-16 24 Q0 16 16 24 L18 56 H-18 Z" fill="#e63946"/><path d="M-16 26 L-25 46" fill="none" stroke-width="7" stroke="#2b1a10"/><path d="M-16 26 L-25 46" fill="none" stroke-width="4" stroke="#e63946"/>
+  <path d="M16 26 L27 12" fill="none" stroke-width="7" stroke="#2b1a10"/><path d="M16 26 L27 12" fill="none" stroke-width="4" stroke="#e63946"/><circle cx="28" cy="10" r="4" fill="#b9794a"/>
+  <circle cx="0" cy="6" r="15" fill="#b9794a"/><path d="M-15 4 Q-14 -12 0 -12 Q14 -12 15 4 Q8 -4 0 -4 Q-8 -4 -15 4 Z" fill="#2b1a10"/><path d="M-15 4 Q-20 20 -14 30" fill="none" stroke-width="5"/><path d="M15 4 Q20 20 14 30" fill="none" stroke-width="5"/>
+  <circle cx="-5" cy="8" r="1.6" fill="#2b1a10" stroke="none"/><circle cx="5" cy="8" r="1.6" fill="#2b1a10" stroke="none"/><path d="M-5 14 Q0 18 5 14" fill="none" stroke-width="1.8"/></g>`;
+const balloonAt = (x, y, h) => `<svg x="${x}" y="${y}" width="${h * .8}" height="${h}" viewBox="0 0 160 200">${BALLOON.replace(/^<svg[^>]*>|<\/svg>$/g, "").replace(/<circle cx="\d+" cy="15\d"[^>]*\/>/g, "")}</svg>`; // (the basket is empty: he has climbed out)
+const hills = (c1, c2) => `<path d="M0 170 Q100 130 210 165 T400 150 V240 H0 Z" fill="${c1}"/><path d="M0 200 Q140 170 260 195 T400 190 V240 H0 Z" fill="${c2}"/>`;
+const tree = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="0" width="6" height="16" fill="#7a5a2e"/><ellipse cx="0" cy="-10" rx="16" ry="20" fill="${c || "#3f8f55"}"/></g>`;
+const longhouse = (x, y, w, h) => `<g stroke="#5c4322" stroke-width="1.6"><path d="M${x} ${y + h} V${y + h * .45} Q${x + w / 2} ${y - h * .35} ${x + w} ${y + h * .45} V${y + h} Z" fill="#b98b54"/>
+  ${Array.from({ length: Math.floor(w / 14) }, (_, i) => `<line x1="${x + 10 + i * 14}" y1="${y + h * .3}" x2="${x + 10 + i * 14}" y2="${y + h}" stroke-width=".8" opacity=".5"/>`).join("")}
+  <rect x="${x + 4}" y="${y + h * .62}" width="${w * .09}" height="${h * .38}" rx="2" fill="#4a3518"/></g>
+  <path d="M${x + w * .3} ${y - h * .02} q4 -12 -2 -22 q8 6 6 22" fill="#fff" opacity=".7"/><path d="M${x + w * .7} ${y - h * .02} q4 -12 -2 -22 q8 6 6 22" fill="#fff" opacity=".7"/>`;
+const corn = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V-46" stroke="#4c9f50" stroke-width="3" fill="none"/><path d="M0 -14 q-14 -6 -18 -20 M0 -24 q14 -6 18 -20 M0 -34 q-10 -4 -13 -14" stroke="#4c9f50" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <ellipse cx="5" cy="-26" rx="4" ry="9" fill="#f4c430" stroke="#b98900" stroke-width="1"/><path d="M0 -8 q8 -10 4 -22 q-8 -8 -2 -18" stroke="#8a5a2b" stroke-width="1.6" fill="none"/><circle cx="6" cy="-12" r="2.4" fill="#7b3f1d"/><circle cx="2" cy="-40" r="2.4" fill="#7b3f1d"/></g>`;
+const squash = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="-12" cy="0" rx="13" ry="7" fill="#3f8f55"/><ellipse cx="12" cy="1" rx="13" ry="7" fill="#4aa862"/><ellipse cx="0" cy="-3" rx="9" ry="7" fill="#f08a24" stroke="#b55e0c" stroke-width="1"/></g>`;
+const mound = (x, y, s) => `<ellipse cx="${x}" cy="${y}" rx="${22 * s}" ry="${7 * s}" fill="#8a6238"/>${squash(x, y - 2 * s, s * .8)}${corn(x, y - 4 * s, s)}`;
+// the window into the past: a round brass clock rim around a scene from long ago
+const windowAt = (cx, cy, r, inner) => `<clipPath id="w${cx}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><g clip-path="url(#w${cx})">${inner}</g>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#c98a1b" stroke-width="7"/><circle cx="${cx}" cy="${cy}" r="${r + 5}" fill="none" stroke="#f4b942" stroke-width="3"/>
+  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => { const a = i / 12 * 2 * Math.PI; return `<circle cx="${(cx + (r + 5) * Math.sin(a)).toFixed(1)}" cy="${(cy - (r + 5) * Math.cos(a)).toFixed(1)}" r="2.2" fill="#7a4a24"/>`; }).join("")}`;
+const village = `<rect width="400" height="240" fill="#f6e3b4"/><path d="M0 150 Q200 110 400 150 V240 H0 Z" fill="#9cc47a"/>${tree(60, 96, 1.5, "#2f7d44")}${tree(92, 104, 1.2)}${tree(318, 98, 1.5, "#2f7d44")}${tree(346, 108, 1.1)}
+  ${longhouse(120, 96, 150, 44)}${longhouse(96, 138, 120, 36)}${longhouse(232, 142, 96, 32)}${mound(96, 206, .7)}${mound(150, 212, .7)}${mound(206, 208, .7)}${mound(262, 214, .7)}${mound(316, 206, .7)}`;
+
+const ART = {
+  arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8")}<circle cx="340" cy="46" r="24" fill="#ffd84d"/>${hills("#8cc084", "#6fae6f")}${tree(40, 150, 1.6)}${tree(366, 150, 1.4, "#2f7d44")}
+    <rect x="250" y="138" width="44" height="30" fill="#f3ead7" stroke="#8a6238" stroke-width="1.5"/><polygon points="246,138 272,120 298,138" fill="#b03a2e"/><rect x="266" y="150" width="10" height="18" fill="#7a5a2e"/>
+    <path d="M0 214 Q200 196 400 216 V240 H0 Z" fill="#b7b7b7"/><path d="M20 224 h30 M90 222 h30 M160 221 h30 M230 222 h30 M300 224 h30" stroke="#fff" stroke-width="2"/>
+    ${balloonAt(60, 10, 120)}${owlAt(150, 96, 118)}`),
+  guide: () => frame(`${sky("#9fd8f2", "#f4f1d8")}<circle cx="340" cy="46" r="24" fill="#ffd84d"/>${hills("#8cc084", "#6fae6f")}${tree(30, 146, 1.6)}
+    <rect x="286" y="126" width="84" height="46" fill="#f3ead7" stroke="#8a6238" stroke-width="1.5"/><polygon points="280,126 328,100 376,126" fill="#2e6fab"/><rect x="320" y="146" width="16" height="26" fill="#7a5a2e"/><rect x="296" y="138" width="14" height="12" fill="#bfe1f6"/><rect x="346" y="138" width="14" height="12" fill="#bfe1f6"/>
+    ${owlAt(96, 96, 124)}${kidAt(238, 128, 1.15)}`),
+  window: () => frame(`${sky("#9fd8f2", "#f4f1d8")}${hills("#8cc084", "#6fae6f")}${windowAt(232, 108, 96, village)}${owlAt(20, 118, 108)}${kidAt(120, 150, .95)}`),
+  inside: () => frame(`<rect width="400" height="240" fill="#3a2a17"/><path d="M10 240 V120 Q200 -40 390 120 V240 Z" fill="#8a6238"/><path d="M26 240 V124 Q200 -18 374 124 V240 Z" fill="#c79a62"/>
+    ${[70, 130, 200, 270, 330].map(x => `<path d="M${x} 240 V${126 - 90 * Math.sin((x - 26) / 348 * Math.PI)}" stroke="#8a6238" stroke-width="3"/>`).join("")}
+    <rect x="26" y="150" width="348" height="10" fill="#7a5a2e"/><rect x="26" y="160" width="6" height="80" fill="#7a5a2e"/><rect x="368" y="160" width="6" height="80" fill="#7a5a2e"/>
+    ${[96, 200, 304].map(x => `<ellipse cx="${x}" cy="222" rx="24" ry="7" fill="#5c4322"/><path d="M${x - 10} 220 q4 -26 10 -34 q8 14 4 22 q10 -6 8 12 Z" fill="#ff8a3d"/><path d="M${x - 4} 220 q2 -14 6 -18 q4 8 2 18 Z" fill="#ffd84d"/><path d="M${x} 180 q6 -16 -2 -30 q10 8 8 30" fill="#fff" opacity=".35"/>`).join("")}
+    ${[52, 148, 252, 348].map(x => `<rect x="${x - 18}" y="138" width="36" height="12" rx="3" fill="#e8d3a8" stroke="#7a5a2e" stroke-width="1"/>`).join("")}
+    ${[60, 120, 180, 240, 300, 340].map((x, i) => `<path d="M${x} 60 v18" stroke="#5c4322" stroke-width="1.5"/><ellipse cx="${x}" cy="${84}" rx="4" ry="9" fill="${i % 2 ? "#f4c430" : "#e9a73b"}"/>`).join("")}`),
+  garden: () => frame(`${sky("#bfe6ef", "#fdf3dc")}<circle cx="60" cy="44" r="22" fill="#ffd84d"/>${hills("#9cc47a", "#7fae62")}${longhouse(250, 96, 130, 40)}${tree(30, 140, 1.5, "#2f7d44")}
+    ${mound(70, 196, 1.2)}${mound(150, 206, 1.25)}${mound(232, 198, 1.2)}${mound(316, 208, 1.25)}${mound(112, 232, 1.1)}${mound(196, 236, 1.1)}${mound(280, 234, 1.1)}`),
+  today: () => frame(`${sky("#9fd8f2", "#f4f1d8")}<circle cx="340" cy="46" r="24" fill="#ffd84d"/>${hills("#8cc084", "#6fae6f")}
+    <rect x="20" y="118" width="96" height="52" fill="#f3ead7" stroke="#8a6238" stroke-width="1.5"/><polygon points="14,118 68,92 122,118" fill="#2e6fab"/><rect x="58" y="142" width="18" height="28" fill="#7a5a2e"/>
+    <rect x="150" y="176" width="150" height="6" fill="#8a6238"/><rect x="150" y="176" width="6" height="40" fill="#8a6238"/><rect x="294" y="176" width="6" height="40" fill="#8a6238"/>
+    ${mound(186, 214, .95)}${mound(232, 218, .95)}${mound(276, 214, .95)}${kidAt(340, 138, 1.05)}${owlAt(100, 122, 104)}
+    <path d="M362 150 L384 96" stroke="#7a5a2e" stroke-width="3"/><path d="M384 96 q10 -10 4 -22 q-12 2 -14 14 z" fill="none" stroke="#7a5a2e" stroke-width="2.4"/><path d="M378 92 l10 -14 M376 86 l10 -6" stroke="#c9b89a" stroke-width="1"/>`),
+  end: () => frame(`${sky("#ffd9a0", "#fdebd0")}<circle cx="200" cy="150" r="46" fill="#ff9f43" opacity=".8"/>${hills("#8cc084", "#6fae6f")}${balloonAt(292, 8, 124)}${owlAt(96, 102, 122)}${kidAt(228, 132, 1.15)}`)
+};
+
+// ---------- Chapter 1: the People of the Longhouse ----------
+// Every line is Dr. Somebody talking. "art" names the picture; "say" is a list of captions, one for each tap of the arrow.
+const para = t => `<div class="qtext">${t}</div>`;
+const rect = (L, W) => `<div class="rect" style="width:${Math.min(42, 14 + L * .7)}vmin;height:${6 + W * 1.2}vmin"><span class="l">${L} m</span><span class="w">${W} m</span></div>`;
+const cards = (n, near) => numCards(n, 1, 100000, 4, near.filter(k => k > 0 && k !== n));
+const CHAPTERS = [
+  { title: "The People of the Longhouse", where: "Southern Ontario", beats: [
+    { art: "arrive", say: ["Home! Canada! The clock balloon finally found the way. <em>New goggles, same owl.</em>",
+      "I have been all over the world. Egypt, China, Rome. But do you know what? I never properly explored my own country.",
+      "So let's start right here, in southern Ontario. Somebody is waiting to show me around."] },
+    { art: "guide", say: ["This is my new friend Lily. Her family is <em>Haudenosaunee</em>. You say it <em>ho-dee-no-SHOW-nee</em>.",
+      "Lily says it means <em>People of the Longhouse</em>. Her people have lived around these lakes for a very, very long time.",
+      "They still do! Lily goes to school, plays lacrosse, and helps in her grandmother's garden. I asked what a longhouse is. She said, <em>look for yourself</em>."] },
+    { art: "window", say: ["My balloon can't fly through time any more. But look what its clock can do now. A <em>window into the past</em>!",
+      "This is the very same spot, about 600 years ago. A whole village! Those long buildings are the longhouses.",
+      "They are made of wooden poles covered in sheets of bark. Lily wants to know how big one is. Good question. Let's measure."] },
+    { ask: "longhouse", intro: "Help me measure the longhouses. Three right answers opens the door!" },
+    { art: "inside", say: ["We can look inside! One longhouse was home to many families, all related through their mothers and grandmothers.",
+      "Fires burn in a row down the middle. Each fire is shared by two families, one on each side.",
+      "Corn hangs from the roof to dry. Lily wonders how many people lived in here. Hmm. I'll need my multiplying goggles."] },
+    { ask: "families", intro: "How many people lived in a longhouse? Three right answers and we step back outside." },
+    { art: "garden", say: ["Outside the village are the gardens. Lily's grandmother still plants hers this way. It's called the <em>Three Sisters</em>.",
+      "Corn, beans and squash grow together on little hills of earth. The corn is a pole for the beans to climb.",
+      "The beans feed the soil. The big squash leaves shade the ground and keep the weeds away. Three plants helping each other!"] },
+    { ask: "sisters", intro: "Let's count the garden. Three right answers and the window closes." },
+    { art: "today", say: ["The window is closed, and here we are, today. And look. The same three plants, in Lily's grandmother's garden.",
+      "The longhouse is still here too. Not for sleeping in. It is where the community gathers for ceremonies and big decisions.",
+      "One more thing before we go. I want to know how long ago that village was. Help me with the years."] },
+    { ask: "years", intro: "How long ago was it? Three right answers finishes the chapter." },
+    { art: "end", say: ["What a day. I thought I knew my own country. I had hardly looked!",
+      "Thank you, Lily. <em>Nia:wen</em>. That means thank you. I practised.",
+      "Next, Lily says we should follow the water north, by canoe. But that is another chapter. Tick tock!"] }
+  ] },
+  { title: "The Canoe Routes", where: "The Great Lakes" },
+  { title: "Following the Seasons", where: "Northern Ontario" },
+  { title: "The Land of Ice and Stars", where: "The Arctic" },
+  { title: "Home Again", where: "Where we began" }
+];
+
+// The questions. Each maker returns { html, text, choices, why }.  "why" is shown after two wrong tries, and after a right answer.
+const ASK = {
+  longhouse() {
+    const L = pick([20, 24, 25, 30, 32, 36, 40]), W = pick([5, 6, 7, 8]);
+    if (rand(2)) { const A = L * W; return { html: rect(L, W), text: `This longhouse is <b>${L} metres</b> long and <b>${W} metres</b> wide. What is the <b>area</b> of its floor, in square metres?`, choices: cards(A, [2 * (L + W), A + L, A - L, A + 10, L + W]), why: `Area is length times width. ${L} × ${W} = ${A} square metres.` }; }
+    const P = 2 * (L + W); return { html: rect(L, W), text: `This longhouse is <b>${L} metres</b> long and <b>${W} metres</b> wide. How far is it to walk all the way <b>around</b> it?`, choices: cards(P, [L + W, L * W, P + 10, P - 10, P + 2]), why: `Walking around is the perimeter: two lengths and two widths. ${L} + ${L} + ${W} + ${W} = ${P} metres.` };
+  },
+  families() {
+    const fires = 3 + rand(6), each = pick([5, 6, 7, 8]), fam = fires * 2, people = fam * each;
+    if (rand(3) === 0) return { html: "", text: `A longhouse has <b>${fires} fires</b>. Each fire is shared by <b>2 families</b>. How many families live there?`, choices: cards(fam, [fires + 2, fam + 2, fam - 2, fires]), why: `${fires} fires, 2 families at each. ${fires} × 2 = ${fam} families.` };
+    return { html: "", text: `A longhouse has <b>${fires} fires</b>, with <b>2 families</b> at each fire. Each family has about <b>${each} people</b>. About how many people live there?`, choices: cards(people, [fires * each, fam + each, people + each, people - each, people + 10]), why: `Two steps. ${fires} × 2 = ${fam} families. Then ${fam} × ${each} = ${people} people.` };
+  },
+  sisters() {
+    const kind = rand(3);
+    if (kind === 0) { const r = 11 + rand(9), c = 11 + rand(9), n = r * c, tens = r * 10, rest = r * (c - 10); return { html: "", text: `A garden has <b>${r} rows</b> with <b>${c} mounds</b> in each row. How many mounds is that?`, choices: cards(n, [n + r, n - r, n + 10, n - 10, r + c]), why: `Split ${c} into 10 and ${c - 10}. ${r} × 10 = ${tens}, and ${r} × ${c - 10} = ${rest}. ${tens} + ${rest} = ${n}.` }; }
+    if (kind === 1) { const m = 20 + 4 * rand(11), corn = m * 4; return { html: "", text: `Each mound gets <b>4 corn seeds</b>. How many corn seeds are needed for <b>${m} mounds</b>?`, choices: cards(corn, [m + 4, corn + 4, corn - 4, corn + 40, m * 2]), why: `${m} groups of 4. Double ${m} is ${m * 2}, and double again is ${corn}.` }; }
+    const m = 3 * (8 + rand(13)), third = m / 3; return { html: "", text: `A garden has <b>${m} mounds</b>. One third of them have squash ready to pick. How many mounds is that?`, choices: cards(third, [m - 3, third + 3, third - 3, m / 3 * 2, third + 1]), why: `One third means share into 3 equal groups. ${m} ÷ 3 = ${third}.` };
+  },
+  years() {
+    const now = new Date().getFullYear(), kind = rand(3);
+    if (kind === 0) { const then = pick([1400, 1425, 1450, 1475]), n = now - then; return { html: "", text: `The window showed the year <b>${then}</b>. This year is <b>${now}</b>. How many years ago was that?`, choices: cards(n, [n + 100, n - 100, n + 10, n - 10, n + 1]), why: `Count up from ${then} to ${now}. ${now} − ${then} = ${n} years.` }; }
+    if (kind === 1) { const ago = pick([550, 575, 600, 625]), then = now - ago; return { html: "", text: `A village stood here <b>${ago} years ago</b>. This year is <b>${now}</b>. What year was that?`, choices: cards(then, [then + 100, then - 100, then + 10, then - 10, now + ago]), why: `Go back ${ago} years from ${now}. ${now} − ${ago} = ${then}.` }; }
+    const each = pick([20, 25]), ago = each * (22 + rand(4)), n = ago / each; return { html: "", text: `Say a new generation is born about every <b>${each} years</b>. About how many generations fit into <b>${ago} years</b>?`, choices: cards(n, [n + 2, n - 2, n + 10, ago - each, n + 1]), why: `How many ${each}s are in ${ago}? ${ago} ÷ ${each} = ${n} generations of Lily's family.` };
+  }
+};
+
+// ---------- saved progress ----------
+const SAVE = "grade5Canada.v1";
+let S = Kit.load(SAVE, () => ({ beat: [0, 0, 0, 0, 0], done: [] })); // beat[c]: how far chapter c has been opened
+const save = () => Kit.save(SAVE, S);
+const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
+const { sfx, confetti, animate } = Kit;
+const NEED = 3; // right answers to open the next scene
+
+// ---------- the page ----------
+$("app").innerHTML = `
+  <div class="layer"><div class="sun"></div><div class="cloud"></div><div class="cloud c2"></div><div class="hill back"></div><div class="hill"></div></div><div class="layer" id="fx"></div>
+  <div class="screen on" id="title"><h1>Dr. Somebody Comes Home</h1><p class="sub">A Grade 5 story${NAME ? " for " + NAME : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
+    <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
+  <div class="screen" id="map"><div class="chapters" id="chapters"></div></div>
+  <div class="screen" id="story"><div class="dots" id="dots"></div><div class="panel" id="panel"></div><div class="caption" id="caption"></div>
+    <div class="nextrow"><button class="bigbtn small back" id="backBtn" aria-label="Back"><span class="tri"></span></button><button class="bigbtn small" id="nextBtn" aria-label="Next"><span class="tri"></span></button></div></div>
+  <div class="screen" id="game"><div class="stars" id="stars"></div><div class="cheer" id="cheer"></div>
+    <div class="ask"><div class="host">${NEW_OWL}</div><div class="bubble" id="bubble"></div></div><div class="tip" id="tip"></div><div class="choices" id="choices"></div></div>
+  <button class="corner left" id="homeBtn" aria-label="Back to the chapters" style="display:none">🏠</button>
+  <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>`;
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  $("homeBtn").style.display = id === "story" || id === "game" ? "" : "none";
+  $("shelfBtn").style.display = id === "title" || id === "map" ? "" : "none";
+}
+$("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); showMap(); });
+$("shelfBtn").addEventListener("click", () => { location.href = "index.html"; });
+$("homeBtn").addEventListener("click", () => { sfx.tap(); showMap(); });
+
+// ---------- the chapters ----------
+function showMap() {
+  $("chapters").innerHTML = CHAPTERS.map((c, i) => { const open = c.beats && (i === 0 || S.done.includes(i - 1)), done = S.done.includes(i);
+    return `<button class="chap${open ? "" : " locked"}" data-c="${i}"><span class="num">${i + 1}</span><span class="what"><b>${c.title}</b><small>${c.where}${c.beats ? "" : " · coming soon"}</small></span><span class="state">${done ? "⭐" : open ? "▶" : "🔒"}</span></button>`; }).join("");
+  show("map");
+}
+$("chapters").addEventListener("click", e => { const b = e.target.closest(".chap"); if (!b) return; sfx.tap(); if (b.classList.contains("locked")) { animate(b, "wobble"); return; }
+  const c = +b.dataset.c; openBeat(c, S.done.includes(c) ? 0 : Math.min(S.beat[c], CHAPTERS[c].beats.length - 1)); });
+
+// ---------- a beat: a story scene, or a challenge ----------
+let at = null; // { c, b, line }
+function drawDots() { const beats = CHAPTERS[at.c].beats; $("dots").innerHTML = beats.map((bt, i) => `<i class="${bt.ask ? "q " : ""}${i < at.b ? "done" : i === at.b ? "now" : ""}"></i>`).join(""); }
+function openBeat(c, b) {
+  const beats = CHAPTERS[c].beats; at = { c, b, line: 0 };
+  if (b > S.beat[c]) { S.beat[c] = b; save(); }
+  const beat = beats[b];
+  if (beat.ask) return startAsk(beat);
+  drawDots(); $("panel").innerHTML = ART[beat.art](); animate($("panel"), "pop"); drawLine(); show("story");
+}
+function drawLine() { const beat = CHAPTERS[at.c].beats[at.b]; $("caption").innerHTML = `<div>${beat.say[at.line]}</div>`; $("backBtn").style.visibility = at.b === 0 && at.line === 0 ? "hidden" : ""; }
+$("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats, beat = beats[at.b];
+  if (at.line < beat.say.length - 1) { at.line++; drawLine(); return; }
+  if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
+  if (!S.done.includes(at.c)) { S.done.push(at.c); save(); } sfx.party(); confetti(80); showMap(); }); // the chapter is finished
+$("backBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); if (at.line > 0) { at.line--; drawLine(); return; }
+  let b = at.b - 1; while (b >= 0 && CHAPTERS[at.c].beats[b].ask) b--; // step back over challenges already won
+  if (b >= 0) { openBeat(at.c, b); at.line = CHAPTERS[at.c].beats[b].say.length - 1; drawLine(); } });
+
+// ---------- a challenge: three right answers open the next scene ----------
+let G = null;
+function cheer(text) { const c = $("cheer"); c.textContent = text; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); }
+function startAsk(beat) {
+  G = { beat, stars: 0, wrongs: 0, busy: false, last: "", perfect: true };
+  $("stars").innerHTML = Array(NEED).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
+  show("game"); nextAsk(beat.intro);
+}
+function nextAsk(lead) {
+  let q, tries = 0; do { q = ASK[G.beat.ask](); tries++; } while (tries < 10 && q.text === G.last);
+  G.q = q; G.last = q.text; G.wrongs = 0; G.busy = false;
+  $("bubble").innerHTML = (q.html || "") + para(q.text); animate($("bubble"), "pop");
+  $("tip").className = "tip"; $("tip").textContent = lead || "";
+  const box = $("choices"); box.innerHTML = ""; box.style.setProperty("--cs", "22vmin");
+  q.choices.forEach(ch => { const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b.addEventListener("click", () => choose(b, ch)); box.appendChild(b); if (String(ch.html).length > 3) b.style.fontSize = "6vmin"; });
+}
+async function choose(el, ch) {
+  if (!G || G.busy || el.classList.contains("dim")) return;
+  const q = G.q, g = G;
+  if (ch.ok) {
+    G.busy = true; sfx.yes(); el.classList.add("right"); [...$("choices").children].forEach(b => { if (b !== el) b.classList.add("dim"); });
+    G.stars++; $("stars").children[G.stars - 1].classList.add("got"); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
+    await wait(2600); if (G !== g) return;
+    if (G.stars < NEED) return nextAsk();
+    if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer("Perfect!"); } sfx.party(); confetti(40);
+    await wait(1300); if (G !== g) return;
+    G = null; openBeat(at.c, at.b + 1);
+  } else {
+    sfx.oops(); G.wrongs++; G.perfect = false; animate(el, "wobble"); el.classList.add("dim");
+    $("tip").className = "tip oops"; $("tip").textContent = G.wrongs >= 2 ? q.why : "Not quite. Have another look.";
+  }
+}
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>
