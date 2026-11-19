@@ -42,6 +42,8 @@
   .choice { font-size:8vmin; }
   .choice small { font-size:.42em; margin-left:.25em; }
   .graph { width:54vmin; height:26vmin; } .graph svg { width:100%; height:100%; }
+  .thermo { width:25vmin; height:30vmin; } .thermo svg { width:100%; height:100%; }
+  #game .bubble:has(.thermo) { flex-direction:row; gap:2vmin; } #game .bubble:has(.thermo) .qtext { max-width:40vmin; text-align:left; }
   .fr { display:inline-flex; flex-direction:column; align-items:center; line-height:1; font-weight:bold; vertical-align:middle; margin:0 .15em; } .fr b { border-bottom:.14em solid currentColor; padding:0 .25em .08em; } .fr i { font-style:normal; padding-top:.08em; }
   .rect { position:relative; background:#e8c58a; border:.6vmin solid var(--ink); border-radius:1vmin; margin:3.4vmin 7vmin 1vmin 1vmin; }
   .rect .l, .rect .w { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .rect .l { top:-4.2vmin; left:50%; transform:translateX(-50%); } .rect .w { left:calc(100% + 1.2vmin); top:50%; transform:translateY(-50%); }
@@ -80,7 +82,7 @@ const kidAt = (x, y, s, o) => { o = o || {}; const hood = o.hood || "#e63946"; r
   <path d="M-16 24 Q0 16 16 24 L18 56 H-18 Z" fill="${hood}"/><path d="M-16 26 L-25 46" fill="none" stroke-width="7" stroke="#2b1a10"/><path d="M-16 26 L-25 46" fill="none" stroke-width="4" stroke="${hood}"/>
   <path d="M16 26 L27 12" fill="none" stroke-width="7" stroke="#2b1a10"/><path d="M16 26 L27 12" fill="none" stroke-width="4" stroke="${hood}"/><circle cx="28" cy="10" r="4" fill="#b9794a"/>
   ${o.vest ? `<path d="M-13 24 Q0 20 13 24 L14 50 H-14 Z" fill="#ff8a3d"/><path d="M0 22 V50 M-13 36 H13" fill="none" stroke-width="1.6"/>` : `<path d="M-6 40 h12 v8 h-12 z" fill="rgba(0,0,0,.14)" stroke-width="1.4"/>`}
-  <circle cx="0" cy="6" r="15" fill="#b9794a"/><path d="M-15 4 Q-14 -12 0 -12 Q14 -12 15 4 Q8 -4 0 -4 Q-8 -4 -15 4 Z" fill="#2b1a10"/>${o.short ? "" : `<path d="M-15 4 Q-20 20 -14 30" fill="none" stroke-width="5"/><path d="M15 4 Q20 20 14 30" fill="none" stroke-width="5"/>`}
+  ${o.parka ? `<circle cx="0" cy="5" r="20" fill="#f3e6cf"/><circle cx="0" cy="5" r="16.5" fill="${hood}" stroke-width="1.6"/>` : ""}<circle cx="0" cy="6" r="15" fill="#b9794a"/><path d="M-15 4 Q-14 -12 0 -12 Q14 -12 15 4 Q8 -4 0 -4 Q-8 -4 -15 4 Z" fill="#2b1a10"/>${o.short ? "" : `<path d="M-15 4 Q-20 20 -14 30" fill="none" stroke-width="5"/><path d="M15 4 Q20 20 14 30" fill="none" stroke-width="5"/>`}
   <circle cx="-5" cy="8" r="2" fill="#2b1a10" stroke="none"/><circle cx="5" cy="8" r="2" fill="#2b1a10" stroke="none"/><circle cx="-4.3" cy="7.3" r=".7" fill="#fff" stroke="none"/><circle cx="5.7" cy="7.3" r=".7" fill="#fff" stroke="none"/><path d="M-5 14 Q0 18 5 14" fill="none" stroke-width="1.8"/>
   <circle cx="-9" cy="12" r="2.4" fill="#e58b6b" stroke="none" opacity=".6"/><circle cx="9" cy="12" r="2.4" fill="#e58b6b" stroke="none" opacity=".6"/></g>`; };
 const NOAH = { hood: "#3b82c4", short: true, vest: true }; // Chapter 2's guide: short hair, a blue hoodie and a life jacket
@@ -163,6 +165,29 @@ const seasonWheel = () => { const names = [["winter", "#dfeaf7"], ["break-up", "
   return `<rect width="400" height="240" fill="#f6e3b4"/>${names.map(([n, c], i) => { const a0 = i / 6 * 2 * Math.PI, a1 = (i + 1) / 6 * 2 * Math.PI, am = (a0 + a1) / 2, [tx, ty] = pt(am, r * .62).split(",");
     return `<path d="M${cx},${cy} L${pt(a0, r)} A${r},${r} 0 0 1 ${pt(a1, r)} Z" fill="${c}" ${INKED}/><text x="${tx}" y="${+ty + 4}" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#2b1a10">${n}</text>`; }).join("")}<circle cx="${cx}" cy="${cy}" r="12" fill="#f4b942" ${INKED}/>`; };
 
+// ---- the Arctic: snow, snow houses, dog teams, stone markers, the night sky ----
+const NINA = { hood: "#2aa7a0", parka: true, short: true }; // Chapter 4's guide: a teal parka with a fur-trimmed hood
+const snow = (y, c1, c2) => `<g ${INKED}><path d="M-10 ${y} Q110 ${y - 22} 220 ${y - 4} T410 ${y - 8} V250 H-10 Z" fill="${c1 || "#fff"}"/><path d="M-10 ${y + 44} Q140 ${y + 22} 270 ${y + 40} T410 ${y + 34} V250 H-10 Z" fill="${c2 || "#e6f0fa"}"/></g>`;
+const iglu = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><g ${INKED}><path d="M30 0 Q30 -16 44 -16 Q56 -16 56 0 Z" fill="#fff"/><path d="M-36 0 Q-36 -44 0 -44 Q36 -44 36 0 Z" fill="#fff"/><path d="M36 0 Q36 -12 44 -12 Q50 -12 50 0 Z" fill="#4a5a70"/></g>
+  <g fill="none" stroke="#9fb6d0" stroke-width="1.5" stroke-linecap="round"><path d="M-34 -12 Q0 -18 34 -12 M-29 -24 Q0 -30 29 -24 M-20 -35 Q0 -39 20 -35"/><path d="M-18 -1 V-13 M0 -1 V-15 M18 -1 V-13 M-10 -15 V-26 M10 -15 V-26 M-2 -28 V-37"/></g></g>`;
+const dog = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><path d="M-14 -8 Q-22 -18 -17 -24" fill="none" stroke-width="4.4" stroke="#2b1a10"/><path d="M-14 -8 Q-22 -18 -17 -24" fill="none" stroke="${c || "#d9dde6"}" stroke-width="2.4"/>
+  <rect x="-12" y="-2" width="4" height="12" rx="2" fill="${c || "#d9dde6"}"/><rect x="8" y="-2" width="4" height="12" rx="2" fill="${c || "#d9dde6"}"/><ellipse cx="0" cy="-6" rx="15" ry="8" fill="${c || "#d9dde6"}"/>
+  <path d="M10 -12 L13 -24 L18 -15 L23 -23 L24 -12 Q30 -9 28 -4 Q20 0 12 -4 Z" fill="${c || "#d9dde6"}"/><circle cx="20" cy="-11" r="1.4" fill="#2b1a10" stroke="none"/><circle cx="28" cy="-6" r="1.6" fill="#2b1a10" stroke="none"/></g>`;
+const qamutiik = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><rect x="-26" y="-18" width="18" height="13" rx="3" fill="#b03a2e"/><rect x="-6" y="-20" width="22" height="15" rx="3" fill="#8a6238"/><path d="M-34 -4 H30 M-28 -4 V2 M-10 -4 V2 M10 -4 V2 M26 -4 V2" fill="none" stroke="#8a5a2b" stroke-width="2.4"/>
+  <path d="M-36 4 H28 Q36 4 38 -4" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M-36 4 H28 Q36 4 38 -4" fill="none" stroke="#c89a5e" stroke-width="2.6"/></g>`;
+const inuksuk = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><rect x="-13" y="-16" width="9" height="16" rx="2" fill="#aab2bd"/><rect x="4" y="-16" width="9" height="16" rx="2" fill="#9aa3af"/><rect x="-22" y="-24" width="44" height="9" rx="3" fill="#b9c0ca"/><rect x="-9" y="-36" width="18" height="12" rx="3" fill="#a3abb6"/><rect x="-6" y="-45" width="12" height="9" rx="3" fill="#b9c0ca"/></g>`;
+const aurora = `<g fill="none" stroke-linecap="round" opacity=".75"><path d="M-10 70 Q80 20 170 60 T330 40 T410 56" stroke="#58e0a0" stroke-width="16"/><path d="M-10 92 Q90 50 190 84 T410 74" stroke="#4fd0c8" stroke-width="9"/><path d="M-10 52 Q120 8 220 40 T410 24" stroke="#9be7a8" stroke-width="6"/></g>`;
+const starry = pts => pts.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r || 1.6}" fill="#fff"/>`).join("");
+const winterCamp = `<rect width="400" height="240" fill="#1d2b55"/>${starry([[160, 36], [196, 28, 2], [236, 44], [270, 30], [304, 46, 2], [180, 62], [326, 68]])}<g transform="translate(60 -8) scale(.7)">${aurora}</g>
+  <g ${INKED}><path d="M130 136 Q236 114 342 136 V250 H130 Z" fill="#fff"/><path d="M130 182 Q236 166 342 184 V250 H130 Z" fill="#e6f0fa"/></g>${iglu(196, 152, .8)}${iglu(272, 148, .65)}${inuksuk(318, 132, .5)}
+  ${qamutiik(256, 186, .6)}${dog(214, 188, .55)}${dog(190, 192, .55, "#c9b8a6")}${person(292, 158, .4, "#d9c7a0")}`;
+const sledTrip = `<rect width="400" height="240" fill="#cfe0f2"/>${sun(170, 70, 14)}<g ${INKED}><path d="M130 130 Q200 96 270 120 Q310 132 342 118 V250 H130 Z" fill="#fff"/><path d="M130 178 Q236 160 342 180 V250 H130 Z" fill="#e6f0fa"/></g>${inuksuk(296, 120, .8)}
+  ${dog(176, 178, .6)}${dog(204, 172, .6, "#c9b8a6")}${dog(232, 178, .6)}<path d="M244 172 L266 174" stroke="#8a5a2b" stroke-width="1.6"/>${qamutiik(292, 178, .65)}${person(306, 132, .42, "#d9c7a0")}`;
+// a thermometer for the bubble, marked every 10 degrees
+const thermo = t => { const y = v => 118 - (v + 40) * 2.1; return `<div class="thermo"><svg viewBox="0 0 110 140">${[-40, -30, -20, -10, 0, 10].map(v => `<line x1="50" y1="${y(v)}" x2="62" y2="${y(v)}" stroke="#2b1a10" stroke-width="1.8"/><text x="68" y="${y(v) + 4}" font-size="11" font-weight="bold" fill="#2b1a10">${v < 0 ? "−" + -v : v}°</text>`).join("")}
+  ${[-35, -25, -15, -5, 5].map(v => `<line x1="50" y1="${y(v)}" x2="57" y2="${y(v)}" stroke="#2b1a10" stroke-width="1.2"/>`).join("")}
+  <rect x="34" y="6" width="14" height="118" rx="7" fill="#fff" ${INKED}/><rect x="37.5" y="${y(t)}" width="7" height="${120 - y(t)}" fill="#e63946"/><circle cx="41" cy="124" r="11" fill="#e63946" ${INKED}/></svg></div>`; };
+
 // the picture behind everything: sky, sun, drifting clouds and hills
 const backdrop = () => `<svg class="backdrop" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><rect width="400" height="240" fill="#9fd8f2"/><rect y="100" width="400" height="140" fill="#f4f1d8" opacity=".55"/>
   ${sun(352, 34, 18)}<g class="drift">${cloud(218, 30, .75)}</g><g class="drift b">${cloud(300, 66, .6)}</g>
@@ -233,6 +258,24 @@ Object.assign(ART, {
   goosebreak: () => frame(`${sky("#bfe6ef", "#f4f1d8", [336, 46, 20], [[70, 50, .8]])}${geese(190, 30, .9, 9)}${geese(300, 84, .5, 5)}<g ${INKED}><path d="M-10 156 Q200 140 410 156 V250 H-10 Z" fill="#b9cf8e"/><path d="M-10 214 Q200 200 410 216 V250 H-10 Z" fill="#5db7e6"/></g>
     ${pine(26, 150, 1.2)}${pine(64, 156, .9, "#3f9a58")}<g ${INKED}><path d="M250 176 V140 L296 120 L342 140 V176 Z" fill="#fbf6ea"/><path d="M244 142 L296 118 L348 142" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M244 142 L296 118 L348 142" fill="none" stroke="#3b82c4" stroke-width="2.6"/><path d="M288 176 V150 h16 v26 Z" fill="#d9c7a0"/></g>
     ${owlAt(88, 106, 110)}${kidAt(208, 128, 1.05, MAYA)}`)
+});
+
+Object.assign(ART, {
+  arctic: () => frame(`${sky("#cfe6f5", "#f6fbff", [336, 46, 18], [[110, 40, .8], [240, 28, .6]])}${snow(150)}<g ${INKED}><path d="M250 150 L288 96 L318 132 L346 104 L400 150 Z" fill="#dfe9f5"/><path d="M276 114 L288 96 L302 114 Q289 108 276 114 Z" fill="#fff"/></g>
+    ${inuksuk(72, 148, 1)}${balloonAt(176, 2, 112)}${owlAt(148, 116, 112)}`),
+  nina: () => frame(`${sky("#cfe6f5", "#f6fbff", [336, 46, 18], [[90, 44, .8]])}${snow(156)}${house(34, 122, 62, 34, "#e63946")}${house(292, 118, 70, 38, "#f4b942")}<g ${INKED}>${[40, 86, 300, 352].map(x => `<rect x="${x}" y="${x < 200 ? 156 : 156}" width="5" height="10" fill="#8a5a2b"/>`).join("")}</g>
+    ${owlAt(112, 100, 122)}${kidAt(232, 130, 1.15, NINA)}`),
+  campwindow: () => frame(`${sky("#cfe6f5", "#f6fbff", null, [[60, 40, .7]])}${snow(186)}${windowAt(236, 112, 92, winterCamp)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, NINA)}`),
+  building: () => frame(`<rect width="400" height="240" fill="#cfe0f2"/>${snow(170)}
+    <g ${INKED}><path d="M96 190 Q96 60 200 60 Q304 60 304 190 Z" fill="#fff"/><path d="M168 190 Q168 150 200 150 Q232 150 232 190 Z" fill="#4a5a70"/></g>
+    <g fill="none" stroke="#9fb6d0" stroke-width="2.4" stroke-linecap="round"><path d="M100 160 Q200 142 300 160 M108 128 Q200 110 292 128 M126 98 Q200 82 274 98 M156 74 Q200 64 244 74"/><path d="M130 188 V158 M270 188 V158 M150 156 V126 M200 148 V120 M250 156 V126 M172 122 V96 M228 122 V96 M200 92 V70"/></g>
+    <g ${INKED}><rect x="322" y="170" width="34" height="20" rx="3" fill="#fff"/><rect x="330" y="150" width="34" height="20" rx="3" fill="#f6fbff"/><ellipse cx="200" cy="184" rx="13" ry="5" fill="#8a94a3"/><path d="M192 182 Q196 166 200 172 Q204 164 208 182 Z" fill="#ffb347"/></g>${person(58, 150, .9, "#d9c7a0")}`),
+  sledwindow: () => frame(`${sky("#cfe6f5", "#f6fbff", null, [[60, 40, .7]])}${snow(186)}${windowAt(236, 112, 92, sledTrip)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, NINA)}`),
+  night: () => frame(`<rect width="400" height="240" fill="#16224a"/>${starry([[30, 30], [70, 60, 2], [110, 24], [150, 50], [250, 30, 2], [290, 64], [330, 26], [370, 54, 2], [200, 76], [56, 96], [346, 96]])}
+    <g stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M200 22 v12 M194 28 h12"/></g><circle cx="200" cy="28" r="3.4" fill="#ffe58a"/>${aurora}${snow(166, "#dfe9f8", "#c6d6ee")}${inuksuk(300, 164, 1.2)}${owlAt(60, 112, 110)}${kidAt(176, 140, 1, NINA)}`),
+  town: () => frame(`${sky("#ffd9a0", "#fdebd0", [330, 70, 22], [[90, 40, .8], [220, 56, .6]])}${snow(152)}${house(24, 114, 64, 36, "#e63946")}${house(108, 110, 64, 38, "#3b82c4")}${house(292, 112, 72, 38, "#58b368")}
+    <g ${INKED}><path d="M190 204 H250 Q262 204 264 194" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M190 204 H250 Q262 204 264 194" fill="none" stroke="#3a3f4f" stroke-width="2.6"/><path d="M196 198 Q200 178 226 180 L246 186 Q256 190 254 198 Z" fill="#f4b942"/><path d="M226 180 L234 168 H242" fill="none" stroke-width="3"/></g>
+    ${qamutiik(310, 208, .8)}${owlAt(64, 126, 104)}${kidAt(166, 146, 1.05, NINA)}`)
 });
 
 // ---------- Chapter 1: the People of the Longhouse ----------
@@ -324,7 +367,34 @@ const CHAPTERS = [
       "Meegwetch, Maya. I counted six seasons, one thousand geese and four mosquitoes. The mosquitoes found me first.",
       "Maya says if I liked the snow, I should keep going north. All the way north. That is another chapter. Tick tock!"] }
   ] },
-  { title: "The Land of Ice and Stars", where: "The Arctic" },
+  { title: "The Land of Ice and Stars", where: "The Arctic", beats: [
+    { art: "arctic", say: ["All the way north! This is Nunavut. I am wearing every scarf I own, all at once.",
+      "There are no trees here at all. Just rock, snow, sea ice, and the biggest sky I have ever seen.",
+      "Maya said somebody here could teach me how to live in the cold. I hope so. My beak has frozen shut twice."] },
+    { art: "nina", say: ["This is Nina. She is an <em>Inuk</em>. Her people are the <em>Inuit</em>, which means <em>the people</em>. They have lived in the Arctic for thousands of years.",
+      "Nina's word for thank you is <em>nakurmiik</em>. You say it <em>na-koor-MEEK</em>. That is three languages I can say thank you in now. Four, with hoot.",
+      "I asked Nina how anyone could live where it is this cold. She said, <em>very cleverly</em>. Clock, show us!"] },
+    { art: "campwindow", say: ["The window into the past! A winter camp, long ago. Those round houses are made of snow.",
+      "Nina's word for a house is <em>iglu</em>. A snow iglu kept a family warm on winter journeys, even when the wind outside was fierce.",
+      "And look up. The northern lights! First things first, though. Just how cold is it out there?"] },
+    { ask: "cold", intro: "How cold is it? Three right answers and Nina shows us how to build a snow house." },
+    { art: "building", say: ["Here is how. You cut blocks of hard snow and stand them in a ring. Then you build round and round in a spiral, leaning in a little each time.",
+      "The last block fits in the top, like a lid. Inside, a stone lamp called a <em>qulliq</em> burns oil for light and heat.",
+      "Nina says it can be freezing outside and warm enough inside to take your coat off. Snow, keeping you warm! Let's count the blocks."] },
+    { ask: "blocks", intro: "Help build the iglu. Three right answers and we go travelling." },
+    { art: "sledwindow", say: ["To travel, families used a long sled called a <em>qamutiik</em>, pulled by a team of dogs.",
+      "See the pile of stones on the hill? That is an <em>inuksuk</em>. People built them to mark the way, so that travellers would not get lost.",
+      "Nina's grandfather still drives a dog team. He says the dogs know the way home better than he does. Let's pack the sled."] },
+    { ask: "sled", intro: "Pack the sled. Three right answers and night falls." },
+    { art: "night", say: ["In the middle of winter here, the sun only comes up for a few hours. The rest is night. So how did people find their way?",
+      "They read the land and the sky. The shapes the wind carves in the snow. The inuksuk on the hill. And the stars.",
+      "One star hardly moves at all, and the others slowly turn around it, like the hands of my clock. I like that star."] },
+    { ask: "stars", intro: "Read the stars. Three right answers finishes the chapter." },
+    { art: "town", say: ["The window is closed. This is Nina's town, today. Bright houses, a school, and snowmobiles parked beside the sleds.",
+      "<em>Nunavut</em> means <em>our land</em>. It became Canada's newest territory in 1999. Nina's grandmother remembers the day.",
+      "Nakurmiik, Nina. I have learned that snow can be warm, that stones can give directions, and that I need a much bigger scarf.",
+      "I have been all the way to the top of my country. There is only one place left to go. Home. Tick tock!"] }
+  ] },
   { title: "Home Again", where: "Where we began" }
 ];
 
@@ -422,6 +492,36 @@ Object.assign(ASK, {
       choices: others.concat([[h, a, b]]).sort((x, y) => x[0] - y[0]).map(f => ({ html: fr(f[1], f[2]), ok: f[0] === h })), why: `${h} out of 24. ${b === 2 ? "12 is half of 24" : `24 ÷ ${b} = ${24 / b}, and ${a} of those is ${h}`}. So it is ${a} out of ${b}.` }; }
     if (kind === 1) { const hi = 160 + 5 * rand(5), lo = 60 + 5 * rand(5), n = hi - lo; return { html: "", text: `In June the day is <b>${tenths(hi)} hours</b> long. In December it is only <b>${tenths(lo)} hours</b>. How much longer is the June day?`, choices: dcards(n, [hi + lo, n + 10, n - 10, n + 5], " h"), why: `Find the difference. ${tenths(hi)} − ${tenths(lo)} = ${tenths(n)} hours.` }; }
     const [pc, h] = pick([[25, 6], [50, 12], [75, 18]]); return { html: "", text: `On this day the sun is up for <b>${pc}%</b> of the 24 hours. How many <b>hours</b> is that?`, choices: cards(h, [6, 12, 18, 8, pc, 24 - h + 2].filter(k => k !== h)), why: `${pc}% is ${pc === 25 ? "one quarter" : pc === 50 ? "one half" : "three quarters"}. ${pc === 25 ? "24 ÷ 4" : pc === 50 ? "24 ÷ 2" : "24 ÷ 4 = 6, and 3 × 6"} = ${h} hours.` };
+  }
+});
+
+// Answer cards for temperatures (they can be below zero) and for angles
+const deg = n => `${n < 0 ? "−" + -n : n}°`;
+const tcards = (n, near) => { const wrong = [...new Set(near.concat([n + 1, n - 1, n + 10, n - 10, n + 5]))].filter(k => k !== n).slice(0, 3); return wrong.concat(n).sort((a, b) => a - b).map(k => ({ html: deg(k), ok: k === n })); };
+Object.assign(ASK, {
+  cold() { // temperatures below zero, read from a thermometer
+    const kind = rand(3);
+    if (kind === 0) { const t = -(5 + rand(22)), drop = 3 + rand(9), n = t - drop; return { html: thermo(t), text: `At noon it is <b>${deg(t)}C</b>. By night it is <b>${drop} degrees colder</b>. What is the temperature at night?`, choices: tcards(n, [t + drop, -n, n + 10, n + 2]), why: `Colder means farther below zero. Start at ${deg(t)} and go down ${drop} more: ${deg(n)}C.` }; }
+    if (kind === 1) { const out = -(15 + rand(24)), inn = 2 + rand(9), n = inn - out; return { html: thermo(out), text: `Outside it is <b>${deg(out)}C</b>. Inside the iglu it is <b>${deg(inn)}C</b>. How many degrees warmer is it inside?`, choices: cards(n, [-out - inn, -out, n + 10, n - 10, n + 2]), why: `From ${deg(out)} up to zero is ${-out} degrees. Then ${inn} more up to ${deg(inn)}. ${-out} + ${inn} = ${n} degrees.` }; }
+    const t = -(8 + rand(25)), rise = 4 + rand(Math.min(12, -t - 3)), n = t + rise; return { html: thermo(t), text: `In the morning it is <b>${deg(t)}C</b>. By afternoon it has warmed up by <b>${rise} degrees</b>. What is the temperature now?`, choices: tcards(n, [t - rise, -n, n - 10, n + 2]), why: `Warmer means closer to zero. Start at ${deg(t)} and go up ${rise}: ${deg(n)}C.` };
+  },
+  blocks() { // building with snow blocks: patterns, multiplying, measuring
+    const kind = rand(3);
+    if (kind === 0) { const first = 16 + 2 * rand(5), rings = [0, 1, 2, 3, 4].map(i => first - 2 * i), n = rings.reduce((a, b) => a + b, 0); return { html: "", text: `Each ring of an iglu needs 2 fewer blocks than the ring below: <b>${rings.join(", ")}</b>. How many blocks is that for all five rings?`, choices: cards(n, [n + 2, n - 2, n + 10, first * 5, n - first]), why: `Add the five rings. ${rings.join(" + ")} = ${n} blocks.` }; }
+    if (kind === 1) { const w = 12 + rand(8), b = 21 + rand(18), n = w * b, tens = w * 10 * Math.floor(b / 10), ones = w * (b % 10); return { html: "", text: `One snow block weighs about <b>${w} kg</b>. An iglu uses <b>${b} blocks</b>. About how many kilograms of snow is that?`, choices: cards(n, [n + w, n - w, n + 100, n - 10, w + b]), why: `Split ${b} into ${b - b % 10} and ${b % 10}. ${w} × ${b - b % 10} = ${tens}, and ${w} × ${b % 10} = ${ones}. ${tens} + ${ones} = ${n} kg.` }; }
+    const len = 5 + rand(4), k = 12 + rand(9), n = len * k; return { html: "", text: `Each block is <b>${tenths(len)} metres</b> long. The bottom ring has <b>${k} blocks</b>. How far is it around the bottom of the iglu?`, choices: dcards(n, [n + len, n - len, n + 10, k * 10 + len], " m"), why: `${k} blocks, each ${tenths(len)} m. ${k} × ${tenths(len)} = ${tenths(n)} metres.` };
+  },
+  sled() { // food, distance and sharing a load
+    const kind = rand(3), dogs = 6 + rand(7);
+    if (kind === 0) { const n = dogs * 15; return { html: "", text: `A team has <b>${dogs} dogs</b>. Each dog eats <b>1.5 kg</b> of food a day. How much food does the team need for one day?`, choices: dcards(n, [dogs * 10, n + 15, n - 15, dogs * 10 + 5], " kg"), why: `${dogs} × 1 = ${dogs}, and ${dogs} halves make ${tenths(dogs * 5)}. ${dogs} + ${tenths(dogs * 5)} = ${tenths(n)} kg.` }; }
+    if (kind === 1) { const perDay = pick([35, 40, 45]), days = 11 + rand(8), n = perDay * days; return { html: "", text: `A dog team can travel <b>${perDay} km</b> in a day. How far can it go in <b>${days} days</b>?`, choices: cards(n, [n + perDay, n - perDay, n + 100, perDay + days, n - 10]), why: `${perDay} × 10 = ${perDay * 10}, and ${perDay} × ${days - 10} = ${perDay * (days - 10)}. ${perDay * 10} + ${perDay * (days - 10)} = ${n} km.` }; }
+    const each = 18 + 2 * rand(9), total = each * dogs; return { html: "", text: `The loaded sled weighs <b>${total} kg</b>. The <b>${dogs} dogs</b> share the pulling equally. How many kilograms is each dog pulling?`, choices: cards(each, [each + 2, each - 2, each + 10, total - dogs, each + 1]), why: `Share ${total} among ${dogs}. ${total} ÷ ${dogs} = ${each} kg each.` };
+  },
+  stars() { // angles: the sky turns 15 degrees every hour, and a full turn is 360 degrees
+    const kind = rand(3);
+    if (kind === 0) { const h = 2 + rand(9), n = 15 * h; return { html: "", text: `The stars turn <b>15°</b> around the still star every hour. How far do they turn in <b>${h} hours</b>?`, choices: cards(n, [n + 15, n - 15, h + 15, n + 10, 10 * h]).map(c => ({ ...c, html: c.html + "°" })), why: `15 for each hour. 15 × ${h} = ${n} degrees.` }; }
+    if (kind === 1) { const h = pick([2, 3, 4, 6, 8, 12]), a = 15 * h; return { html: "", text: `The stars turn <b>15°</b> every hour. They have turned <b>${a}°</b> since Nina's grandfather set out. How many <b>hours</b> ago was that?`, choices: cards(h, [h + 1, h - 1, h + 2, a - 15, h * 2]), why: `How many 15s are in ${a}? ${a} ÷ 15 = ${h} hours.` }; }
+    const turned = 15 * (5 + rand(15)), n = 360 - turned; return { html: "", text: `A full turn is <b>360°</b>. The stars have turned <b>${turned}°</b> so far. How many more degrees until they are back where they started?`, choices: cards(n, [n + 10, n - 10, n + 100, 180 - turned > 0 ? 180 - turned : n + 15, turned]).map(c => ({ ...c, html: c.html + "°" })), why: `Take away what they have turned. 360 − ${turned} = ${n} degrees.` };
   }
 });
 
