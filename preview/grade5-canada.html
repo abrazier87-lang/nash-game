@@ -42,6 +42,10 @@
   .choice { font-size:8vmin; }
   .choice small { font-size:.42em; margin-left:.25em; }
   .graph { width:54vmin; height:26vmin; } .graph svg { width:100%; height:100%; }
+  .band { position:relative; width:46vmin; height:16vmin; background:#bfe1a0; border:.6vmin solid var(--ink); border-radius:1vmin; margin:4.4vmin 13vmin 1vmin 1vmin; }
+  .band i { position:absolute; left:0; right:0; top:50%; height:1.6vmin; margin-top:-.8vmin; background:#5db7e6; border-top:.4vmin solid var(--ink); border-bottom:.4vmin solid var(--ink); }
+  .band span { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .band .l { top:-4.4vmin; left:50%; transform:translateX(-50%); } .band .w { left:calc(100% + 1.2vmin); } .band .w.a { top:8%; } .band .w.b { bottom:8%; }
+  .qtext .from { display:block; font-size:.8em; color:#d62839; }
   .thermo { width:25vmin; height:30vmin; } .thermo svg { width:100%; height:100%; }
   #game .bubble:has(.thermo) { flex-direction:row; gap:2vmin; } #game .bubble:has(.thermo) .qtext { max-width:40vmin; text-align:left; }
   .fr { display:inline-flex; flex-direction:column; align-items:center; line-height:1; font-weight:bold; vertical-align:middle; margin:0 .15em; } .fr b { border-bottom:.14em solid currentColor; padding:0 .25em .08em; } .fr i { font-style:normal; padding-top:.08em; }
@@ -188,6 +192,24 @@ const thermo = t => { const y = v => 118 - (v + 40) * 2.1; return `<div class="t
   ${[-35, -25, -15, -5, 5].map(v => `<line x1="50" y1="${y(v)}" x2="57" y2="${y(v)}" stroke="#2b1a10" stroke-width="1.2"/>`).join("")}
   <rect x="34" y="6" width="14" height="118" rx="7" fill="#fff" ${INKED}/><rect x="37.5" y="${y(t)}" width="7" height="${120 - y(t)}" fill="#e63946"/><circle cx="41" cy="124" r="11" fill="#e63946" ${INKED}/></svg></div>`; };
 
+// ---- home: the Grand River at Brantford ----
+const LILY = {};
+const bridge = (x, y, w) => `<g ${INKED}><path d="M${x} ${y} H${x + w} V${y + 26} H${x + w * .86} Q${x + w * .68} ${y - 2} ${x + w * .5} ${y + 26} Q${x + w * .32} ${y - 2} ${x + w * .14} ${y + 26} H${x} Z" fill="#d9c7a0"/><path d="M${x - 4} ${y} H${x + w + 4}" fill="none" stroke-width="6" stroke="#2b1a10"/><path d="M${x - 4} ${y} H${x + w + 4}" fill="none" stroke="#b9a37c" stroke-width="3"/></g>`;
+const carrier = (x, y, s, top) => `${person(x, y, s, top)}<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><rect x="-8" y="-28" width="16" height="11" rx="4" fill="#b03a2e"/></g>`;
+const ford1784 = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M130 112 Q236 92 342 112 V250 H130 Z" fill="#a9cf86"/></g>${tree(160, 110, .9, "#3f9a58")}${tree(190, 114, .7)}${tree(300, 108, .9)}${tree(324, 114, .7, "#3f9a58")}
+  <g ${INKED}><path d="M130 142 Q236 128 342 146 V250 H130 Z" fill="#8fd0f0"/></g><g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"><path d="M160 170 q7 -4 14 0 M250 162 q7 -4 14 0 M300 190 q7 -4 14 0 M190 200 q7 -4 14 0"/></g>
+  ${carrier(196, 122, .45, "#3b6ea5")}${person(222, 126, .45)}${carrier(246, 130, .48, "#b98b54")}${person(272, 136, .5, "#7a4a24")}${carrier(298, 142, .5)}${person(216, 152, .4, "#b03a2e")}${canoe(190, 196, .5, { who: 2, packs: 2 })}`;
+const tractMap = () => { const river = "M110 6 Q160 58 200 90 T264 200"; // the river runs down to the lake; the green band is the promised land beside it
+  return `<rect width="400" height="240" fill="#f6e3b4"/><path d="${river}" fill="none" stroke="#2b1a10" stroke-width="72"/><path d="${river}" fill="none" stroke="#bfe1a0" stroke-width="66"/>
+  <path d="${river}" fill="none" stroke="#2b1a10" stroke-width="10"/><path d="${river}" fill="none" stroke="#5db7e6" stroke-width="6"/>
+  <path d="M-10 198 Q200 182 410 202 V250 H-10 Z" fill="#6cc0ea" ${INKED}/><text x="110" y="226" font-size="14" font-weight="bold" text-anchor="middle" fill="#fff">Lake Erie</text>
+  <g fill="none" stroke="#2b1a10" stroke-width="2.2" stroke-linecap="round"><path d="M160 60 L136 82 M160 60 L184 38"/><path d="M132 78 l4 4 l4 -4 M180 42 l4 -4 l-4 -4" stroke-width="1.6"/></g>
+  <g font-size="13" font-weight="bold" fill="#2b1a10"><text x="112" y="104" text-anchor="middle">10 km</text><text x="230" y="48" text-anchor="middle">10 km</text><text x="296" y="150">the Grand River</text><text x="262" y="96">Brant's ford</text></g>
+  <path d="M292 146 L258 158" fill="none" stroke="#2b1a10" stroke-width="2" stroke-linecap="round"/><path d="M258 92 L212 91" fill="none" stroke="#2b1a10" stroke-width="2" stroke-linecap="round"/><circle cx="201" cy="91" r="6" fill="#e63946" ${THIN}/>`; };
+const chapel = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><rect x="-44" y="-40" width="74" height="40" fill="#fbfbf5"/><polygon points="-50,-40 -7,-70 36,-40" fill="#5a6470"/><rect x="26" y="-62" width="24" height="62" fill="#fbfbf5"/><polygon points="22,-62 38,-96 54,-62" fill="#5a6470"/><path d="M38 -96 V-108" fill="none"/>
+  <path d="M32 0 V-18 Q38 -26 44 -18 V0 Z" fill="#8a5a2b"/>${[-34, -14, 6].map(wx => `<path d="M${wx} -8 V-24 Q${wx + 5} -31 ${wx + 10} -24 V-8 Z" fill="#bfe6f7"/>`).join("")}<circle cx="38" cy="-46" r="5" fill="#bfe6f7"/></g>`;
+const letter = (x, y, c) => `<g ${THIN}><rect x="${x - 13}" y="${y - 9}" width="26" height="18" rx="3" fill="#fffdf5"/><path d="M${x - 13} ${y - 8} L${x} ${y + 2} L${x + 13} ${y - 8}" fill="none"/><circle cx="${x}" cy="${y + 3}" r="3" fill="${c}"/></g>`;
+
 // the picture behind everything: sky, sun, drifting clouds and hills
 const backdrop = () => `<svg class="backdrop" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><rect width="400" height="240" fill="#9fd8f2"/><rect y="100" width="400" height="140" fill="#f4f1d8" opacity=".55"/>
   ${sun(352, 34, 18)}<g class="drift">${cloud(218, 30, .75)}</g><g class="drift b">${cloud(300, 66, .6)}</g>
@@ -276,6 +298,18 @@ Object.assign(ART, {
   town: () => frame(`${sky("#ffd9a0", "#fdebd0", [330, 70, 22], [[90, 40, .8], [220, 56, .6]])}${snow(152)}${house(24, 114, 64, 36, "#e63946")}${house(108, 110, 64, 38, "#3b82c4")}${house(292, 112, 72, 38, "#58b368")}
     <g ${INKED}><path d="M190 204 H250 Q262 204 264 194" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M190 204 H250 Q262 204 264 194" fill="none" stroke="#3a3f4f" stroke-width="2.6"/><path d="M196 198 Q200 178 226 180 L246 186 Q256 190 254 198 Z" fill="#f4b942"/><path d="M226 180 L234 168 H242" fill="none" stroke-width="3"/></g>
     ${qamutiik(310, 208, .8)}${owlAt(64, 126, 104)}${kidAt(166, 146, 1.05, NINA)}`)
+});
+
+Object.assign(ART, {
+  homeair: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[100, 36, .8], [230, 60, .6]])}${hills("#9ed08f", "#7dbb7a")}<g ${INKED}><path d="M150 170 Q210 186 176 208 Q150 226 210 250 H300 Q240 226 262 206 Q290 184 232 168 Z" fill="#5db7e6"/></g>
+    ${house(36, 136, 40, 26, "#e63946")}${house(84, 142, 36, 24, "#3b82c4")}${house(300, 134, 44, 28, "#f4b942")}${tree(354, 150, 1.2)}${tree(16, 160, 1.1, "#3f9a58")}${balloonAt(160, 0, 104)}${owlAt(18, 132, 100)}`),
+  brantford: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[110, 40, .8]])}${hills("#9ed08f", "#7dbb7a")}${house(20, 110, 54, 34, "#e63946")}${house(318, 106, 60, 38, "#3b82c4")}${tree(96, 142, 1.3)}${tree(296, 144, 1.1, "#3f9a58")}
+    ${bridge(120, 132, 170)}${water(166)}<g ${INKED}><path d="M-10 214 Q100 198 210 216 T410 214 V250 H-10 Z" fill="#9ed08f"/></g>${owlAt(70, 124, 108)}${kidAt(206, 150, 1, LILY)}`),
+  fordwindow: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176)}<g ${INKED}><path d="M-10 214 Q100 198 210 216 T410 214 V250 H-10 Z" fill="#9ed08f"/></g>${windowAt(236, 112, 92, ford1784)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, LILY)}`),
+  tract: () => frame(tractMap()),
+  chapelnow: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 44, 20], [[190, 40, .8], [320, 60, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 156, 1.6, "#3f9a58")}${tree(364, 156, 1.5)}${chapel(250, 176, 1.25)}${owlAt(60, 124, 106)}${kidAt(156, 150, 1, LILY)}`),
+  letters: () => frame(`${sky("#ffd9a0", "#fdebd0", [340, 48, 20], [[90, 36, .8]])}${hills("#9ed08f", "#7dbb7a")}${owlAt(14, 112, 112)}
+    ${kidAt(140, 150, .85, LILY)}${kidAt(206, 150, .85, NOAH)}${kidAt(272, 150, .85, MAYA)}${kidAt(338, 150, .85, NINA)}${letter(140, 104, "#e63946")}${letter(206, 96, "#3b82c4")}${letter(272, 104, "#8e5bd0")}${letter(338, 96, "#2aa7a0")}`)
 });
 
 // ---------- Chapter 1: the People of the Longhouse ----------
@@ -395,7 +429,34 @@ const CHAPTERS = [
       "Nakurmiik, Nina. I have learned that snow can be warm, that stones can give directions, and that I need a much bigger scarf.",
       "I have been all the way to the top of my country. There is only one place left to go. Home. Tick tock!"] }
   ] },
-  { title: "Home Again", where: "Where we began" }
+  { title: "Home Again", where: "The Grand River", beats: [
+    { art: "homeair", say: ["Home at last. I started this trip right here in southern Ontario, and I have come all the way around.",
+      "That river below is the <em>Grand River</em>. It winds for about 280 kilometres, all the way down to Lake Erie.",
+      "And there is Lily, waving! She says there is one more story, and it belongs to this very spot."] },
+    { art: "brantford", say: ["This town is called <em>Brantford</em>. Lily asked if I knew where the name came from. I guessed a man named Ford. I was half right.",
+      "It is named for <em>Joseph Brant</em>. He was a Mohawk leader, and his Mohawk name was <em>Thayendanegea</em>. You say it <em>tie-en-da-NAY-ga</em>.",
+      "The Mohawk are one of the Haudenosaunee nations, like Lily's family. Clock, one last window, please!"] },
+    { art: "fordwindow", say: ["The year is <em>1784</em>. Not so very long ago, this time. And look how many people!",
+      "There had been a long war, far to the south, and these families lost their homes because of it. Joseph Brant led them here, to the Grand River, to begin again.",
+      "They crossed the river at a shallow place. People called it <em>Brant's ford</em>. Say it quickly. Brant's ford. <em>Brantford!</em>"] },
+    { ask: "journey", intro: "A long journey to a new home. Three right answers and we look at the land." },
+    { art: "tract", say: ["The families were promised land of their own: along the Grand River, from its mouth to where it begins, and about 10 kilometres back from the water on each side.",
+      "Six nations settled here together. The Mohawk, Oneida, Onondaga, Cayuga, Seneca and Tuscarora.",
+      "That is why Lily's community is called <em>Six Nations of the Grand River</em>. Let's see how much land that promise was."] },
+    { ask: "river", intro: "Measure the land along the river. Three right answers and Lily shows us something very old." },
+    { art: "chapelnow", say: ["One of the first things they built was this little chapel, in 1785. It is still standing! It is the oldest church still standing in Ontario.",
+      "Lily says the story did not end there. Over the years, most of that promised land was lost, and people are still working to put that right today.",
+      "History is not only long ago. Some of it is still happening. Now then. How old is that chapel?"] },
+    { ask: "dates", intro: "Work out the years. Three right answers and the post arrives." },
+    { art: "letters", say: ["Before I go, some post has arrived. Four letters! From Lily, Noah, Maya and Nina.",
+      "Each of them has sent me one last question, to see if I was paying attention.",
+      "I was. Mostly. You had better help me."] },
+    { ask: "home", need: 4, intro: "One question from each friend. Four right answers finishes the story!" },
+    { art: "end", say: ["I did it! With a great deal of help from you.",
+      "I went looking for my country, and I found the peoples who have always been here. Haudenosaunee, Anishinaabe, Cree and Inuit. Still here. Still teaching.",
+      "<em>Nia:wen. Miigwech. Meegwetch. Nakurmiik.</em> And thank you.",
+      "The clock is ticking again, and it is pointing east. There is a lot more of Canada to see. But that is another grade. Tick tock!"] }
+  ] }
 ];
 
 // The questions. Each maker returns { html, text, choices, why }.  "why" is shown after two wrong tries, and after a right answer.
@@ -525,6 +586,35 @@ Object.assign(ASK, {
   }
 });
 
+// a strip of land along the river, for the bubble: the river down the middle, 10 km on each side
+const band = L => `<div class="band"><span class="l">${L} km</span><span class="w a">10 km</span><span class="w b">10 km</span><i></i></div>`;
+const FRIENDS = [["Lily asks", ["longhouse", "families", "sisters"]], ["Noah asks", ["route", "load", "speed", "rice"]], ["Maya asks", ["geese", "calendar", "snow", "daylight"]], ["Nina asks", ["cold", "blocks", "sled", "stars"]]];
+Object.assign(ASK, {
+  journey() { // big numbers: sharing into groups, distance over many days, decimals
+    const kind = rand(3);
+    if (kind === 0) { const g = pick([20, 25, 30, 36, 40, 45, 50, 60, 75]), n = 1800 / g; return { html: "", text: `About <b>1,800 people</b> made the journey. Suppose they travelled in groups of <b>${g}</b>. How many groups would that be?`, choices: cards(n, [n + 1, n - 1, n + 10, n * 2, n + 5]), why: `Share 1,800 into groups of ${g}. 1,800 ÷ ${g} = ${n} groups.` }; }
+    if (kind === 1) { const perDay = pick([16, 18, 22, 24]), days = 13 + rand(12), n = perDay * days; return { html: "", text: `Walking with children and everything they own, a group covers about <b>${perDay} km</b> a day. How far do they go in <b>${days} days</b>?`, choices: cards(n, [n + perDay, n - perDay, n + 100, perDay + days, n - 10]), why: `${perDay} × 10 = ${perDay * 10}, and ${perDay} × ${days - 10} = ${perDay * (days - 10)}. ${perDay * 10} + ${perDay * (days - 10)} = ${n} km.` }; }
+    const total = 3000 + 5 * rand(300), done = 800 + 5 * rand(300), n = total - done; return { html: "", text: `The whole journey is <b>${tenths(total)} km</b>. One group has travelled <b>${tenths(done)} km</b>. How far do they still have to go?`, choices: dcards(n, [total + done, n + 100, n - 100, n + 10], " km"), why: `Take away what is done. ${tenths(total)} − ${tenths(done)} = ${tenths(n)} km.` };
+  },
+  river() { // area and perimeter of a strip of land 20 km wide; distance left along the river
+    const kind = rand(3), L = 12 + rand(34);
+    if (kind === 0) { const A = L * 20; return { html: band(L), text: `This stretch of river is <b>${L} km</b> long, with <b>10 km</b> of land on each side. What is the <b>area</b> of the land, in square kilometres?`, choices: cards(A, [L * 10, A + 20, A - 20, 2 * (L + 20), A + 100]), why: `The strip is 10 + 10 = 20 km wide. Area is length times width: ${L} × 20 = ${A} square kilometres.` }; }
+    if (kind === 1) { const P = 2 * (L + 20); return { html: band(L), text: `This stretch of river is <b>${L} km</b> long, with <b>10 km</b> of land on each side. How far is it all the way <b>around</b> the edge of the land?`, choices: cards(P, [L + 20, L * 20, P + 10, P - 20, 2 * L + 20]), why: `The strip is ${L} km long and 20 km wide. ${L} + ${L} + 20 + 20 = ${P} km.` }; }
+    const done = 40 + 5 * rand(40), n = 280 - done; return { html: "", text: `The Grand River is about <b>280 km</b> long. A canoe has come <b>${done} km</b> from where the river begins. How far is it to Lake Erie?`, choices: cards(n, [n + 10, n - 10, 280 + done, n + 100, n + 5]), why: `Take away what is done. 280 − ${done} = ${n} km.` };
+  },
+  dates() { // working with years
+    const now = new Date().getFullYear(), kind = rand(4);
+    if (kind === 0) { const n = now - 1785; return { html: "", text: `The chapel was built in <b>1785</b>. This year is <b>${now}</b>. How many years old is it?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Count from 1785 to ${now}. ${now} − 1785 = ${n} years.` }; }
+    if (kind === 1) return { html: "", text: `Joseph Brant was born in about <b>1743</b>. He led the families to the Grand River in <b>1784</b>. About how old was he then?`, choices: cards(41, [31, 51, 43, 39, 40]), why: `1784 − 1743 = 41. He was about 41 years old.` };
+    if (kind === 2) return { html: "", text: `For a long time there were five Haudenosaunee nations. The Tuscarora joined in about <b>1722</b>, making six. How many years was that before <b>1784</b>?`, choices: cards(62, [52, 72, 60, 64, 162]), why: `1784 − 1722 = 62 years.` };
+    const add = pick([200, 250, 300]), n = 1784 + add; return { html: "", text: `The families arrived in <b>1784</b>. In what year is it exactly <b>${add} years</b> since they came?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Add ${add} to 1784. 1784 + ${add} = ${n}.` };
+  },
+  home() { // the finale: one question from each friend, in the order we met them
+    const [who, kinds] = FRIENDS[Math.min(G.stars, FRIENDS.length - 1)], q = ASK[pick(kinds)]();
+    return { ...q, text: `<span class="from">${who}:</span> ${q.text}` };
+  }
+});
+
 // ---------- saved progress ----------
 const SAVE = "grade5Canada.v1";
 let S = Kit.load(SAVE, () => ({ beat: [0, 0, 0, 0, 0], done: [] })); // beat[c]: how far chapter c has been opened
@@ -578,7 +668,9 @@ function drawLine() { const beat = CHAPTERS[at.c].beats[at.b]; $("caption").inne
 $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats, beat = beats[at.b];
   if (at.line < beat.say.length - 1) { at.line++; drawLine(); return; }
   if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
-  if (!S.done.includes(at.c)) { S.done.push(at.c); save(); } sfx.party(); confetti(80); showMap(); }); // the chapter is finished
+  if (!S.done.includes(at.c)) { S.done.push(at.c); save(); } sfx.party(); confetti(80); // the chapter is finished
+  if (CHAPTERS.every((c, i) => S.done.includes(i))) { Kit.stamp("g5"); confetti(120); } // every chapter done: the medal goes on the book shelf
+  showMap(); });
 $("backBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); if (at.line > 0) { at.line--; drawLine(); return; }
   let b = at.b - 1; while (b >= 0 && CHAPTERS[at.c].beats[b].ask) b--; // step back over challenges already won
   if (b >= 0) { openBeat(at.c, b); at.line = CHAPTERS[at.c].beats[b].say.length - 1; drawLine(); } });
@@ -587,8 +679,8 @@ $("backBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); if (a
 let G = null;
 function cheer(text) { const c = $("cheer"); c.textContent = text; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); }
 function startAsk(beat) {
-  G = { beat, stars: 0, wrongs: 0, busy: false, last: "", perfect: true };
-  $("stars").innerHTML = Array(NEED).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
+  G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true };
+  $("stars").innerHTML = Array(G.need).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
   show("game"); nextAsk(beat.intro);
 }
 function nextAsk(lead) {
@@ -606,7 +698,7 @@ async function choose(el, ch) {
     G.busy = true; sfx.yes(); el.classList.add("right"); [...$("choices").children].forEach(b => { if (b !== el) b.classList.add("dim"); });
     G.stars++; $("stars").children[G.stars - 1].classList.add("got"); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
     await wait(2600); if (G !== g) return;
-    if (G.stars < NEED) return nextAsk();
+    if (G.stars < G.need) return nextAsk();
     if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer("Perfect!"); } sfx.party(); confetti(40);
     await wait(1300); if (G !== g) return;
     G = null; openBeat(at.c, at.b + 1);
