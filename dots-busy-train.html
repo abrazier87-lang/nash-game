@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=32">
+<link rel="stylesheet" href="shared/kit.css?v=33">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -82,6 +82,7 @@
 
   <div class="screen" id="game">
     <div class="stars" id="stars"></div>
+    <div class="cheer" id="cheer"></div>
     <div class="ask">
       <button class="host" id="gameDot" aria-label="Say it again"></button>
       <div class="bubble" id="bubble"></div>
@@ -119,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=32"></script>
+<script src="shared/kit.js?v=33"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -552,11 +553,13 @@ function helper(q, alive, whole) {
 // The next two questions come with Dot's help already showing. One 💡 hint per round. After a second wrong try,
 // Dot shows the answer and why (counting questions: Dot counts along). A question that needed help comes back later.
 let G = null;
+function cheer(text) { const c = $("cheer"); c.textContent = text; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); } // a little pop-up under the stars (pictures and numbers only)
 const REVIEW = {}; // questions to bring back, while the game is open: { station: [{ q, due }] }
 function startGame(id) {
   const p = passengerAt(id); // the passenger the child is helping at this station
-  G = { id, p, need: starsNeeded(), stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0 }; // one hint per round
+  G = { id, p, need: starsNeeded(), stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0, seen: new Set(), run: 0, perfect: true, asked: false }; // one hint per round
   $("hintBtn").classList.remove("used");
+  $("stars").classList.remove("perfect"); $("cheer").classList.remove("show");
   $("stars").innerHTML = Array(G.need).fill(`<div class="star">${p.snack[2]}</div>`).join(""); // each right answer packs one of their snacks
   $("gameDot").innerHTML = DOT;
   show("game");
@@ -586,8 +589,8 @@ function nextQuestion(intro) { // "intro" is the station's id, only for the very
   let q, tries = 0, lead = null;
   const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
   if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = "Let's try this one again!"; } // bring it back
-  else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last);
-  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble); G.hinted = false;
+  else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 14 && (String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last || G.seen.has(String(q.key !== undefined ? q.key : q.say + q.bubble)))); // not one already asked this round
+  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble); G.seen.add(G.last); G.hinted = false; G.asked = false;
   G.q = q; G.first = true; G.busy = false; G.wrongs = 0;
   const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
   $("bubble").className = "bubble"; $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
@@ -616,15 +619,19 @@ async function choose(el, ch) {
     animate($("gameDot"), "bounce");
     el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
     G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
-    if ((!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: try it again a little later
+    if ((!G.first || G.asked) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help (a wrong tap or a hint the child asked for): try it again a little later
+    if (G.first && !G.asked) { G.run++; if (G.run === 3 || (G.run === 5 && G.need >= 5)) { sfx.sparkle(); cheer("⭐".repeat(G.run) + " " + G.run + " in a row!"); } } else G.run = 0;
     const spoken = talkAndWait(q.yay, q.pause || 2300); // waits for Dot to finish; with the voice off, a short pause
     Kit.track("k", "Dot's Busy Train", G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
     adjust(G.first && !G.hinted); // an answer found with help does not make the station harder
     await spoken;
     if (!G || G.q !== q) return;
-    if (G.stars >= G.need) finishGame(); else nextQuestion();
+    if (G.stars >= G.need) {
+      if (G.perfect) { $("stars").classList.add("perfect"); sfx.party(); confetti(40); cheer("🌟 Perfect!"); await wait(1500); if (!G || G.q !== q) return; }
+      finishGame();
+    } else nextQuestion();
   } else {
-    sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
+    sfx.oops(); G.run = 0; G.perfect = false; G.first = false; G.wrongs = (G.wrongs || 0) + 1;
     animate(el, "wobble"); el.classList.add("dim");
     if (G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
     const g = G, still = () => G === g && g.q === q && !g.busy;
@@ -839,11 +846,23 @@ $("playBtn").addEventListener("click", () => {
   showMap(riders().length ? undefined : "hello");
 });
 $("gameDot").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gameDot"), "wobble"); talk(G.q.sayParts || G.q.say); } });
+// little surprises: tap the scenery (the sun, a cloud) and it hops or spins; every 7th tap throws a little confetti
+let sceneryPokes = 0;
+$("app").addEventListener("click", e => {
+  if (!e.target.classList || !e.target.classList.contains("screen")) return; // only taps on the empty background
+  const things = [...document.querySelector("#app > .layer").children].reverse();
+  const hit = things.find(el => { const r = el.getBoundingClientRect(); return r.width && r.width < innerWidth * .6 && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && getComputedStyle(el).opacity !== "0"; });
+  if (!hit || !hit.animate) return;
+  Kit.audio(); sfx.boing(); sceneryPokes++;
+  if (hit.classList.contains("sun")) hit.animate([{ rotate: "0deg", scale: "1" }, { rotate: "180deg", scale: "1.25" }, { rotate: "360deg", scale: "1" }], { duration: 800, easing: "ease-in-out" });
+  else hit.animate([{ translate: "0 0", rotate: "0deg" }, { translate: "0 -4vmin", rotate: "-5deg" }, { translate: "0 0", rotate: "4deg" }, { translate: "0 -1.5vmin", rotate: "0deg" }, { translate: "0 0" }], { duration: 650, easing: "ease-out" });
+  if (sceneryPokes % 7 === 0) { sfx.sparkle(); confetti(14); }
+});
 $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; Kit.hush(); showMap(); });
 // The hint button: one per round. It takes away one wrong answer, then shows how to think about the question.
 $("hintBtn").addEventListener("click", async () => {
   if (!G || G.busy || !G.q || G.hints <= 0) return;
-  const q = G.q; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
+  const q = G.q; G.hints--; G.hinted = true; G.asked = true; G.perfect = false; G.run = 0; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
   Kit.dropOneWrong($("choices"));
   const g = G, H = helper(q, () => G === g && g.q === q && !g.busy);
   if (q.hint) await q.hint(H); else if (q.teach) await countAlong(q); else await H.say(q.say);

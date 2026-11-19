@@ -281,6 +281,8 @@ const Kit = (() => {
     tap:     () => tone(520, 0, .08, "triangle", .12),
     yes:     () => { tone(523, 0, .15, "triangle"); tone(659, .12, .15, "triangle"); tone(784, .24, .25, "triangle"); },
     oops:    () => { tone(300, 0, .18, "sine", .12); tone(250, .12, .22, "sine", .12); },
+    sparkle: () => { [1319, 1568, 2093].forEach((f, i) => tone(f, i * .07, .12, "sine", .12)); },
+    boing:   () => { tone(220, 0, .09, "sine"); tone(330, .07, .14, "sine"); },
     party:   () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .13, .22, "triangle")); },
     whistle: () => { [0, .45].forEach(s => { tone(740, s, s ? .7 : .3, "square", .05); tone(932, s, s ? .7 : .3, "square", .05); }); },
     chug:    () => { for (let i = 0; i < 8; i++) tone(110, i * .22, .1, "sawtooth", .07); }
@@ -324,7 +326,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "32"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "33"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();

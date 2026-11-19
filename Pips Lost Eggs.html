@@ -70,6 +70,11 @@
   .stars { display:flex; gap:1.5vmin; height:9vmin; align-items:center; }
   .star { width:8vmin; height:8vmin; opacity:.3; filter:grayscale(1); transition:all .3s; font-size:7vmin; line-height:8vmin; text-align:center; }
   .star.got { opacity:1; filter:none; transform:scale(1.15); }
+  /* the fun pack: a cheer made of pictures, and a glowing row of stars after a perfect round */
+  .stars.perfect .star.got { filter:drop-shadow(0 0 1.6vmin #ffd23f) drop-shadow(0 0 .8vmin #fff3a0); transform:scale(1.3); }
+  .cheer { position:absolute; top:13vmin; left:50%; translate:-50% 0; padding:.8vmin 3vmin; border-radius:6vmin; background:#ffd84d; box-shadow:0 .6vmin 0 #d9a400; font-size:6vmin; font-weight:bold; white-space:nowrap; pointer-events:none; z-index:6; opacity:0; }
+  .cheer.show { animation:cheerPop 1.9s ease both; }
+  @keyframes cheerPop { 0% { opacity:0; transform:scale(.3); } 12% { opacity:1; transform:scale(1.15); } 22% { transform:scale(1); } 80% { opacity:1; transform:scale(1); } 100% { opacity:0; transform:scale(.9); } }
   .ask { display:flex; align-items:center; justify-content:center; gap:2vmin; }
   .ask .pip { width:26vmin; height:22vmin; }
   .bubble { min-width:26vmin; height:26vmin; border-radius:6vmin; background:#fff; box-shadow:0 1vmin 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; gap:1vmin; padding:2vmin 3vmin; position:relative; font-weight:bold; }
@@ -180,6 +185,7 @@
 
   <div class="screen" id="game">
     <div class="stars" id="stars"></div>
+    <div class="cheer" id="cheer"></div>
     <div class="ask">
       <button class="pip" id="gamePip" aria-label="Say it again"></button>
       <div class="bubble" id="bubble"></div>
@@ -402,7 +408,9 @@ const sfx = {
   yes:   () => { tone(523, 0, .15, "triangle"); tone(659, .12, .15, "triangle"); tone(784, .24, .25, "triangle"); },
   oops:  () => { tone(300, 0, .18, "sine", .12); tone(250, .12, .22, "sine", .12); },
   crack: () => { tone(900, 0, .05, "square", .08); tone(600, .05, .06, "square", .08); },
-  party: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .13, .22, "triangle")); }
+  party: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .13, .22, "triangle")); },
+  sparkle: () => { [1319, 1568, 2093].forEach((f, i) => tone(f, i * .07, .12, "sine", .12)); },
+  boing: () => { tone(220, 0, .12, "sine", .14); tone(330, .08, .16, "sine", .14); }
 };
 
 // ---------- pictures (drawn with simple shapes, all original) ----------
@@ -454,6 +462,10 @@ function show(id) {
   $("myTurn").style.display = "none"; // shown only while a lesson is playing
 }
 function animate(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function cheer(html) { // a small yellow pill under the stars: pictures only, no words
+  const c = $("cheer"); if (!c) return;
+  c.innerHTML = html; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show");
+}
 function confetti(n) {
   const cols = Object.values(COLORS).map(c => c[0]);
   for (let i = 0; i < (n || 40); i++) {
@@ -731,7 +743,8 @@ const foundList = () => Object.values(S.found);
 let G = null; // the game being played right now
 const REVIEW = {}; // questions to bring back, while the game is open: { place: [{ q, due }] }
 function startGame(id) {
-  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "", hints: 1, count: 0, guided: 0 };
+  G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "", hints: 1, count: 0, guided: 0, seen: new Set(), run: 0, perfect: true, asked: false };
+  $("stars").classList.remove("perfect");
   $("stars").innerHTML = Array(STARS_TO_WIN).fill('<div class="star">⭐</div>').join("");
   $("gamePip").innerHTML = PIP();
   $("hintBtn").classList.remove("used");
@@ -784,9 +797,12 @@ function nextQuestion(intro) { // "intro" is the place's id, only for the very f
   let q, tries = 0, lead = null;
   const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
   if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = "Let's try this one again!"; } // bring it back
-  else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 6 && q.say + q.bubble === G.lastSay);
+  else {
+    do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 14 && (q.say + q.bubble === G.lastSay || G.seen.has(q.say + q.bubble))); // not the last one, and none already asked this round
+    G.seen.add(q.say + q.bubble);
+  }
   G.lastSay = q.say + q.bubble;
-  G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
+  G.q = q; G.first = true; G.busy = false; G.hinted = false; G.asked = false; G.wrongs = 0;
   $("bubble").innerHTML = q.bubble; animate($("bubble"), "pop");
   const box = $("choices"); box.innerHTML = "";
   if (q.render) q.render(box); // a game can draw its own picture to tap (the body parts game does)
@@ -816,16 +832,26 @@ async function choose(el, ch, part) {
     if (part) { el.classList.add("glow"); animate(box.firstChild, "bounce"); }
     else { el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); }
     G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
-    if ((!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: try it again a little later
+    if ((!G.first || G.asked) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help (a wrong tap or a hint asked for): try it again a little later
+    if (G.first && !G.asked) G.run++; else G.run = 0; // right first time, in a row (Pip's own "try together" help does not break it)
+    const last = G.stars >= STARS_TO_WIN;
+    if (!(last && G.perfect) && (G.run === 3 || (G.run === 4 && STARS_TO_WIN === 4))) { cheer("⭐".repeat(G.run)); sfx.sparkle(); }
     const spoken = talkAndWait(q.yay, q.pause || 2100); // waits for Pip to finish; with the voice off, a short pause
     track(G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
     adjust(G.first && !G.hinted);
     await spoken;
     if (q.after) await wait(q.after); // extra time when Pip asks the child to do something ("Where is your tummy?")
     if (!G || G.q !== q) return;
-    if (G.stars >= STARS_TO_WIN) finishGame(); else nextQuestion();
+    if (G.stars >= STARS_TO_WIN) {
+      if (G.perfect) { // every answer right the first time: the stars glow
+        $("stars").classList.add("perfect"); sfx.party(); confetti(60); cheer("🌟");
+        await wait(1500);
+        if (!G || G.q !== q) return;
+      }
+      finishGame();
+    } else nextQuestion();
   } else {
-    sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
+    sfx.oops(); G.first = false; G.perfect = false; G.run = 0; G.wrongs = (G.wrongs || 0) + 1;
     if (part) animate(box.firstChild, "wobble"); else { animate(el, "wobble"); el.classList.add("dim"); }
     if (G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
     const wrong = ch.wrong || `That is the ${ch.name}.`, g = G;
@@ -976,10 +1002,22 @@ $("playBtn").addEventListener("click", () => {
 });
 $("gamePip").addEventListener("click", () => { if (G && G.q && !G.busy) { animate($("gamePip"), "wobble"); talk(G.q.sayParts || G.q.say); } });
 $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; hush(); showMap(); });
+// little surprises: tap the scenery (the sun, a cloud) and it hops or spins
+let pokes = 0;
+$("app").addEventListener("click", e => {
+  if (!e.target.classList || !e.target.classList.contains("screen")) return; // only taps on the empty background
+  const things = [...document.querySelector("#app > .layer").children].reverse();
+  const hit = things.find(el => { const r = el.getBoundingClientRect(); return r.width && r.width < innerWidth * .6 && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && getComputedStyle(el).opacity !== "0"; });
+  if (!hit || !hit.animate) return;
+  sfx.boing(); pokes++;
+  if (hit.classList.contains("sun")) hit.animate([{ rotate: "0deg", scale: "1" }, { rotate: "180deg", scale: "1.25" }, { rotate: "360deg", scale: "1" }], { duration: 800, easing: "ease-in-out" });
+  else hit.animate([{ translate: "0 0", rotate: "0deg" }, { translate: "0 -4vmin", rotate: "-5deg" }, { translate: "0 0", rotate: "4deg" }, { translate: "0 -1.5vmin", rotate: "0deg" }, { translate: "0 0" }], { duration: 650, easing: "ease-out" });
+  if (pokes % 7 === 0) { sfx.sparkle(); confetti(14); }
+});
 // The hint: one per round. It takes away one wrong card (only when 3 or more are left), then Pip shows how to think about it.
 $("hintBtn").addEventListener("click", async () => {
   if (!G || G.busy || !G.q || G.hints <= 0) return;
-  const q = G.q, g = G; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); hush();
+  const q = G.q, g = G; G.hints--; G.hinted = true; G.asked = true; G.perfect = false; $("hintBtn").classList.add("used"); sfx.tap(); hush();
   const left = [...$("choices").querySelectorAll(".choice")].filter(b => b._ch && !b.classList.contains("dim"));
   if (left.length >= 3) pick(left.filter(b => !b._ch.ok)).classList.add("dim", "struck");
   const P = helper(() => G === g && g.q === q && !g.busy);
