@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Rome</title>
-<link rel="stylesheet" href="shared/kit.css?v=33">
+<link rel="stylesheet" href="shared/kit.css?v=34">
 <style>
   /* Blue sky, olive hills, a temple and an aqueduct. */
   :root { --sky1:#8fd3f4; --sky2:#fdebd0; --grass:#a9b665; --grass2:#7d9a4b; --title-shadow:#8e2f25; --strip:rgba(255,255,255,.45); --strip-line:rgba(90,100,40,.6); }
@@ -46,8 +46,9 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=33"></script>
-<script src="shared/story.js?v=33"></script>
+<script src="shared/kit.js?v=34"></script>
+<script src="shared/story.js?v=34"></script>
+<script src="shared/newowl.js?v=34"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -915,6 +916,8 @@ window.Story = StoryGame({
   title: "Dr. Somebody in Ancient Rome", sub: "A Grade 4 adventure", gradeLabel: "Grade 4 (ages 9-10)", hostName: "Dr. Somebody",
   host: HOST, saveKey: "grade4Rome.v1", medal: "g4", need: 6, starsToWin: 5, celebrations: { art: ROME_ART, facts: ROME_FACTS, finale: ROME_TOUR }, sceneVoice: "audio/g4/scene/", hints: true, lessons: true, lessonVoice: "audio/g4/lesson/", lineVoice: "audio/g4/l/", numberPieces: true, written: true, // one hint per round; a short lesson on the first visit to each place, in Dr. Somebody's recorded voice
   voice: recorded("audio/g4/", 5), // Dr. Somebody's own recorded voice for the story lines
+  // The very last scene, the first time the story is finished: he changes into his new look for the grades to come.
+  newLook: { owl: NEW_OWL, line: "Out with the old, in with the new! It's been a hoooot!", clip: "audio/g5/intro/out-with-the-old-in-with-the-new-ad3eb0df.mp3", after: ["New goggles, same owl!", "Dr. Somebody will be back, in Grade 5."] },
   scenery: `<div class="sun"></div><div class="cloud c2"></div>${AQUEDUCT}${TEMPLE}<div class="hill back"></div><div class="hill"></div>`,
   games: GAMES, gameIds: ["numerals", "multiply", "divide", "fractions", "decimals", "shapes", "measure", "camp", "formations", "data", "problems", "market", "roots", "grammar", "scroll"],
   stepNames: {

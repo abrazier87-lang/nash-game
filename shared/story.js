@@ -124,6 +124,7 @@ function StoryGame(C) {
       <div class="choices" id="choices"></div></div>
     <div class="screen" id="board"><div class="newtag" id="boardNew">New friend!</div><button class="stage" id="boardStage" aria-label="Tap it"></button>${play("boardGo")}</div>
     <div class="screen" id="finale"><h1>${C.finaleTitle}</h1><div id="finaleArt"></div>${play("finaleGo")}</div>
+    <div class="screen" id="regen"><div class="regenwho" id="regenWho"></div><div class="scenecap regencap" id="regenCap"></div>${play("regenGo")}</div>
     <div class="screen" id="scene"><div class="scenestage" id="sceneStage"></div><div class="scenecap" id="sceneCap"></div><button class="bigbtn sceneskip" id="sceneGo" aria-label="Keep going"><span class="tri"></span></button></div>
     <button class="corner left" id="homeBtn" aria-label="Back to the map" style="display:none">🏠</button>
     <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">📚</button>
@@ -321,8 +322,32 @@ function StoryGame(C) {
   }
   $("finaleGo").addEventListener("click", () => {
     sfx.tap(); S.aboard = {}; S.trips++; S.toured = false; save(); Kit.stamp(C.medal);
+    if (C.newLook && !S.changed) { S.changed = true; save(); playChange(); return; } // the very last scene, once: the host changes into his new look
     showMap("again");
   });
+
+  // ---------- the change: the last scene of the last story with the first Dr. Somebody ----------
+  // C.newLook = { owl: the new picture, line: what he says as he changes, clip: its recording, after: [captions shown afterwards] }
+  // Like the last scene of a season: he says his line, spins away in sparkles, and comes back in his new gear. It plays once.
+  let changing = false;
+  async function playChange() {
+    const N = C.newLook, who = $("regenWho"), cap = $("regenCap"), alive = () => changing && current === "regen";
+    changing = true; Kit.hush(); who.innerHTML = C.host; cap.textContent = ""; cap.style.visibility = "hidden"; $("regenGo").classList.remove("show");
+    show("regen"); await wait(900); if (!alive()) return;
+    cap.textContent = N.line; cap.style.visibility = "";
+    if (who.firstElementChild.animate) who.firstElementChild.animate([{ rotate: "0deg" }, { rotate: "-6deg" }, { rotate: "6deg" }, { rotate: "0deg" }], { duration: 500, iterations: 3 });
+    await Promise.all([Kit.playClip(N.clip, N.line), wait(2600)]); if (!alive()) return;
+    sfx.sparkle();
+    if (who.firstElementChild.animate) await who.firstElementChild.animate([{ rotate: "0deg", scale: "1" }, { rotate: "720deg", scale: ".1" }], { duration: 900, easing: "ease-in", fill: "forwards" }).finished;
+    if (!alive()) return;
+    who.innerHTML = N.owl; sfx.party(); confetti(80);
+    for (let i = 0; i < 12; i++) { const s = document.createElement("div"); s.className = "spark"; s.textContent = "✨"; who.appendChild(s); const a = i / 12 * 2 * Math.PI;
+      if (s.animate) s.animate([{ translate: "0 0", opacity: 1, scale: ".4" }, { translate: `${Math.cos(a) * 26}vmin ${Math.sin(a) * 26}vmin`, opacity: 0, scale: "1.4" }], { duration: 900, easing: "ease-out" }).finished.then(() => s.remove()); else s.remove(); }
+    if (who.firstElementChild.animate) who.firstElementChild.animate([{ scale: ".1", rotate: "-360deg" }, { scale: "1.15", rotate: "0deg" }, { scale: "1" }], { duration: 800, easing: "ease-out" });
+    for (const line of N.after || []) { cap.textContent = line; await wait(2600); if (!alive()) return; }
+    $("regenGo").classList.add("show");
+  }
+  $("regenGo").addEventListener("click", () => { sfx.tap(); changing = false; showMap("again"); });
 
   // ---------- the map ----------
   function showMap(line) {
