@@ -55,61 +55,79 @@
    today, and the clock balloon opens a WINDOW INTO THE PAST to show the same place long ago.
    A chapter is a row of "beats": story scenes to read, and challenges (3 right answers) that unlock the next scene.
    This first version shows every line in writing and says nothing aloud: the words are recorded once they are settled.
-   The guide's name (Lily) is a stand-in until the family chooses one.
+   The guide is Lily (the family chose the name).
    ===================================================================== */
 
 // ---------- pictures ----------
+// Everything is drawn the way the new Dr. Somebody is: bold dark outlines, round shapes, and a little shine.
+const INKED = `stroke="#2b1a10" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"`, THIN = `stroke="#2b1a10" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"`;
 const frame = inner => `<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice">${inner}</svg>`; // the panel is the same shape, so this only trims a hair
-const sky = (a, b) => `<defs></defs><rect width="400" height="240" fill="${a}"/><rect y="120" width="400" height="120" fill="${b}" opacity=".5"/>`;
+const cloud = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><path d="M-30 10 Q-44 10 -40 -2 Q-38 -14 -24 -12 Q-18 -28 0 -24 Q12 -34 24 -20 Q42 -22 42 -4 Q46 10 30 10 Z" fill="#fff"/></g>`;
+const sun = (x, y, r) => `<g ${INKED}>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i / 8 * 2 * Math.PI; return `<line x1="${(x + (r + 5) * Math.cos(a)).toFixed(1)}" y1="${(y + (r + 5) * Math.sin(a)).toFixed(1)}" x2="${(x + (r + 13) * Math.cos(a)).toFixed(1)}" y2="${(y + (r + 13) * Math.sin(a)).toFixed(1)}" stroke="#e0a800" stroke-width="4"/>`; }).join("")}<circle cx="${x}" cy="${y}" r="${r}" fill="#ffd84d"/></g><circle cx="${x - r * .35}" cy="${y - r * .35}" r="${r * .22}" fill="#fff" opacity=".7"/>`;
+const sky = (a, b, sunAt, clouds) => `<rect width="400" height="240" fill="${a}"/><rect y="110" width="400" height="130" fill="${b}" opacity=".55"/>${sunAt ? sun(sunAt[0], sunAt[1], sunAt[2] || 22) : ""}${(clouds || []).map(c => cloud(c[0], c[1], c[2] || 1)).join("")}`;
+const hills = (c1, c2) => `<g ${INKED}><path d="M-10 172 Q100 128 210 164 T410 150 V250 H-10 Z" fill="${c1}"/><path d="M-10 204 Q140 170 260 196 T410 190 V250 H-10 Z" fill="${c2}"/></g>`;
 const owlAt = (x, y, h) => `<svg x="${x}" y="${y}" width="${h * 200 / 232}" height="${h}" viewBox="0 0 200 232">${NEW_OWL.replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>`;
 // the guide: a child of today, in a hoodie and jeans
 const kidAt = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" stroke="#2b1a10" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
   <rect x="-9" y="52" width="8" height="26" rx="3" fill="#3b5b8c"/><rect x="2" y="52" width="8" height="26" rx="3" fill="#3b5b8c"/><ellipse cx="-6" cy="80" rx="8" ry="4" fill="#fff"/><ellipse cx="7" cy="80" rx="8" ry="4" fill="#fff"/>
   <path d="M-16 24 Q0 16 16 24 L18 56 H-18 Z" fill="#e63946"/><path d="M-16 26 L-25 46" fill="none" stroke-width="7" stroke="#2b1a10"/><path d="M-16 26 L-25 46" fill="none" stroke-width="4" stroke="#e63946"/>
   <path d="M16 26 L27 12" fill="none" stroke-width="7" stroke="#2b1a10"/><path d="M16 26 L27 12" fill="none" stroke-width="4" stroke="#e63946"/><circle cx="28" cy="10" r="4" fill="#b9794a"/>
+  <path d="M-6 40 h12 v8 h-12 z" fill="#c92f3c" stroke-width="1.4"/>
   <circle cx="0" cy="6" r="15" fill="#b9794a"/><path d="M-15 4 Q-14 -12 0 -12 Q14 -12 15 4 Q8 -4 0 -4 Q-8 -4 -15 4 Z" fill="#2b1a10"/><path d="M-15 4 Q-20 20 -14 30" fill="none" stroke-width="5"/><path d="M15 4 Q20 20 14 30" fill="none" stroke-width="5"/>
-  <circle cx="-5" cy="8" r="1.6" fill="#2b1a10" stroke="none"/><circle cx="5" cy="8" r="1.6" fill="#2b1a10" stroke="none"/><path d="M-5 14 Q0 18 5 14" fill="none" stroke-width="1.8"/></g>`;
-const balloonAt = (x, y, h) => `<svg x="${x}" y="${y}" width="${h * .8}" height="${h}" viewBox="0 0 160 200">${BALLOON.replace(/^<svg[^>]*>|<\/svg>$/g, "").replace(/<circle cx="\d+" cy="15\d"[^>]*\/>/g, "")}</svg>`; // (the basket is empty: he has climbed out)
-const hills = (c1, c2) => `<path d="M0 170 Q100 130 210 165 T400 150 V240 H0 Z" fill="${c1}"/><path d="M0 200 Q140 170 260 195 T400 190 V240 H0 Z" fill="${c2}"/>`;
-const tree = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="0" width="6" height="16" fill="#7a5a2e"/><ellipse cx="0" cy="-10" rx="16" ry="20" fill="${c || "#3f8f55"}"/></g>`;
-const longhouse = (x, y, w, h) => `<g stroke="#5c4322" stroke-width="1.6"><path d="M${x} ${y + h} V${y + h * .45} Q${x + w / 2} ${y - h * .35} ${x + w} ${y + h * .45} V${y + h} Z" fill="#b98b54"/>
-  ${Array.from({ length: Math.floor(w / 14) }, (_, i) => `<line x1="${x + 10 + i * 14}" y1="${y + h * .3}" x2="${x + 10 + i * 14}" y2="${y + h}" stroke-width=".8" opacity=".5"/>`).join("")}
-  <rect x="${x + 4}" y="${y + h * .62}" width="${w * .09}" height="${h * .38}" rx="2" fill="#4a3518"/></g>
-  <path d="M${x + w * .3} ${y - h * .02} q4 -12 -2 -22 q8 6 6 22" fill="#fff" opacity=".7"/><path d="M${x + w * .7} ${y - h * .02} q4 -12 -2 -22 q8 6 6 22" fill="#fff" opacity=".7"/>`;
-const corn = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V-46" stroke="#4c9f50" stroke-width="3" fill="none"/><path d="M0 -14 q-14 -6 -18 -20 M0 -24 q14 -6 18 -20 M0 -34 q-10 -4 -13 -14" stroke="#4c9f50" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <ellipse cx="5" cy="-26" rx="4" ry="9" fill="#f4c430" stroke="#b98900" stroke-width="1"/><path d="M0 -8 q8 -10 4 -22 q-8 -8 -2 -18" stroke="#8a5a2b" stroke-width="1.6" fill="none"/><circle cx="6" cy="-12" r="2.4" fill="#7b3f1d"/><circle cx="2" cy="-40" r="2.4" fill="#7b3f1d"/></g>`;
-const squash = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="-12" cy="0" rx="13" ry="7" fill="#3f8f55"/><ellipse cx="12" cy="1" rx="13" ry="7" fill="#4aa862"/><ellipse cx="0" cy="-3" rx="9" ry="7" fill="#f08a24" stroke="#b55e0c" stroke-width="1"/></g>`;
-const mound = (x, y, s) => `<ellipse cx="${x}" cy="${y}" rx="${22 * s}" ry="${7 * s}" fill="#8a6238"/>${squash(x, y - 2 * s, s * .8)}${corn(x, y - 4 * s, s)}`;
+  <circle cx="-5" cy="8" r="2" fill="#2b1a10" stroke="none"/><circle cx="5" cy="8" r="2" fill="#2b1a10" stroke="none"/><circle cx="-4.3" cy="7.3" r=".7" fill="#fff" stroke="none"/><circle cx="5.7" cy="7.3" r=".7" fill="#fff" stroke="none"/><path d="M-5 14 Q0 18 5 14" fill="none" stroke-width="1.8"/>
+  <circle cx="-9" cy="12" r="2.4" fill="#e58b6b" stroke="none" opacity=".6"/><circle cx="9" cy="12" r="2.4" fill="#e58b6b" stroke="none" opacity=".6"/></g>`;
+// the clock balloon, redrawn with outlines (the basket is empty: he has climbed out)
+const balloonAt = (x, y, h) => `<svg x="${x}" y="${y}" width="${h * .8}" height="${h}" viewBox="0 0 160 200"><g stroke="#2b1a10" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+  <line x1="52" y1="118" x2="62" y2="160"/><line x1="108" y1="118" x2="98" y2="160"/>
+  <path d="M80 6 C26 6 12 52 22 86 C30 110 56 124 60 132 H100 C104 124 130 110 138 86 C148 52 134 6 80 6 Z" fill="#e63946"/>
+  <path d="M80 6 C58 20 52 90 66 132 H94 C108 90 102 20 80 6 Z" fill="#ffd84d"/>
+  <circle cx="80" cy="66" r="30" fill="#fff"/><line x1="80" y1="66" x2="80" y2="46"/><line x1="80" y1="66" x2="94" y2="74" stroke="#e63946"/><circle cx="80" cy="66" r="3" fill="#2b1a10"/>
+  <path d="M56 160 H104 L100 192 H60 Z" fill="#c48a4a"/><path d="M54 158 H106 V168 H54 Z" fill="#9c6830"/></g>
+  <ellipse cx="50" cy="40" rx="8" ry="14" fill="#fff" opacity=".45" transform="rotate(24 50 40)"/></svg>`;
+const tree = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><rect x="-3.5" y="-2" width="7" height="18" rx="2" fill="#8a5a2b"/><path d="M0 -34 Q16 -34 15 -18 Q24 -8 12 0 Q0 6 -12 0 Q-24 -8 -15 -18 Q-16 -34 0 -34 Z" fill="${c || "#4aa862"}"/></g><ellipse cx="${x - 5 * s}" cy="${y - 22 * s}" rx="${4 * s}" ry="${6 * s}" fill="#fff" opacity=".28"/>`;
+const house = (x, y, w, h, roof) => `<g ${INKED}><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fbf1dc"/><polygon points="${x - 6},${y} ${x + w / 2},${y - h * .55} ${x + w + 6},${y}" fill="${roof}"/><rect x="${x + w * .42}" y="${y + h * .45}" width="${w * .18}" height="${h * .55}" rx="2" fill="#8a5a2b"/>
+  <rect x="${x + w * .1}" y="${y + h * .22}" width="${w * .2}" height="${h * .28}" fill="#bfe6f7"/><rect x="${x + w * .7}" y="${y + h * .22}" width="${w * .2}" height="${h * .28}" fill="#bfe6f7"/></g>`;
+// a longhouse: a long bark-covered house with a rounded roof and smoke holes
+const longhouse = (x, y, w, h) => `<g ${INKED}><path d="M${x} ${y + h} V${y + h * .45} Q${x + w / 2} ${y - h * .4} ${x + w} ${y + h * .45} V${y + h} Z" fill="#c89a5e"/>
+  <path d="M${x} ${y + h * .45} Q${x + w / 2} ${y - h * .4} ${x + w} ${y + h * .45}" fill="none" stroke="#8a5a2b" stroke-width="5"/>
+  <rect x="${x + 5}" y="${y + h * .6}" width="${Math.max(7, w * .08)}" height="${h * .4}" rx="3" fill="#4a3518"/></g>
+  <g stroke="#7a5326" stroke-width="1.1" opacity=".7">${Array.from({ length: Math.floor(w / 16) }, (_, i) => `<line x1="${x + 20 + i * 16}" y1="${y + h * .34}" x2="${x + 20 + i * 16}" y2="${y + h - 2}"/>`).join("")}<line x1="${x + 2}" y1="${y + h * .7}" x2="${x + w - 2}" y2="${y + h * .7}"/></g>
+  ${[.32, .68].map(k => `<path d="M${x + w * k} ${y - h * .1} q-7 -7 0 -13 q7 -6 0 -13 q-6 -6 1 -11" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity=".8"/>`).join("")}`; // a curl of smoke from each smoke hole
+const corn = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><path d="M-2 0 Q-3 -24 0 -48 Q3 -24 2 0 Z" fill="#58b368"/><path d="M0 -14 Q-16 -18 -20 -34 Q-6 -30 0 -20 Z" fill="#4aa862"/><path d="M0 -24 Q16 -28 20 -44 Q6 -40 0 -30 Z" fill="#58b368"/><path d="M0 -36 Q-10 -38 -13 -50 Q-3 -47 0 -40 Z" fill="#4aa862"/>
+  <path d="M3 -18 Q10 -28 6 -38 Q0 -30 3 -18 Z" fill="#ffd23f"/><path d="M-1 -6 Q8 -14 5 -22" fill="none" stroke="#8a5a2b"/><circle cx="6" cy="-13" r="2.6" fill="#a8452a"/><circle cx="-4" cy="-28" r="2.4" fill="#a8452a"/></g>`;
+const squash = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><path d="M-26 2 Q-22 -10 -8 -4 Q-10 6 -26 2 Z" fill="#4aa862"/><path d="M26 3 Q22 -9 8 -3 Q10 7 26 3 Z" fill="#58b368"/><ellipse cx="0" cy="-3" rx="10" ry="8" fill="#f79a2e"/><path d="M0 -11 v-4" stroke-width="2.4" stroke="#4c7a2e"/></g>`;
+const mound = (x, y, s) => `<ellipse cx="${x}" cy="${y}" rx="${24 * s}" ry="${8 * s}" fill="#9a6b3c" ${THIN}/>${squash(x, y - 2 * s, s * .8)}${corn(x, y - 4 * s, s)}`;
 // the window into the past: a round brass clock rim around a scene from long ago
 const windowAt = (cx, cy, r, inner) => `<clipPath id="w${cx}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><g clip-path="url(#w${cx})">${inner}</g>
-  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#c98a1b" stroke-width="7"/><circle cx="${cx}" cy="${cy}" r="${r + 5}" fill="none" stroke="#f4b942" stroke-width="3"/>
-  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => { const a = i / 12 * 2 * Math.PI; return `<circle cx="${(cx + (r + 5) * Math.sin(a)).toFixed(1)}" cy="${(cy - (r + 5) * Math.cos(a)).toFixed(1)}" r="2.2" fill="#7a4a24"/>`; }).join("")}`;
-const village = `<rect width="400" height="240" fill="#f6e3b4"/><path d="M0 150 Q200 110 400 150 V240 H0 Z" fill="#9cc47a"/>${tree(60, 96, 1.5, "#2f7d44")}${tree(92, 104, 1.2)}${tree(318, 98, 1.5, "#2f7d44")}${tree(346, 108, 1.1)}
-  ${longhouse(120, 96, 150, 44)}${longhouse(96, 138, 120, 36)}${longhouse(232, 142, 96, 32)}${mound(96, 206, .7)}${mound(150, 212, .7)}${mound(206, 208, .7)}${mound(262, 214, .7)}${mound(316, 206, .7)}`;
+  <circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="none" stroke="#2b1a10" stroke-width="14"/><circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="none" stroke="#f4b942" stroke-width="9"/><circle cx="${cx}" cy="${cy}" r="${r + 1}" fill="none" stroke="#c98a1b" stroke-width="2.4"/>
+  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => { const a = i / 12 * 2 * Math.PI; return `<circle cx="${(cx + (r + 4) * Math.sin(a)).toFixed(1)}" cy="${(cy - (r + 4) * Math.cos(a)).toFixed(1)}" r="2.4" fill="#7a4a24" stroke="#2b1a10" stroke-width="1"/>`; }).join("")}
+  <path d="M${cx - r * .62} ${cy - r * .5} Q${cx - r * .2} ${cy - r * .86} ${cx + r * .2} ${cy - r * .8}" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".5"/>`;
+const village = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M-10 150 Q200 108 410 150 V250 H-10 Z" fill="#a9cf86"/></g>${tree(58, 100, 1.6, "#3f9a58")}${tree(92, 108, 1.2)}${tree(322, 102, 1.6, "#3f9a58")}${tree(350, 112, 1.1)}
+  ${longhouse(120, 92, 150, 46)}${longhouse(96, 138, 120, 38)}${longhouse(234, 142, 98, 34)}${mound(96, 208, .7)}${mound(150, 214, .7)}${mound(206, 210, .7)}${mound(262, 216, .7)}${mound(316, 208, .7)}`;
+const fire = x => `<g ${THIN}><ellipse cx="${x}" cy="222" rx="26" ry="8" fill="#6b4a25"/><path d="M${x - 12} 221 Q${x - 14} 198 ${x - 2} 184 Q${x + 2} 196 ${x + 8} 190 Q${x + 18} 206 ${x + 12} 221 Z" fill="#ff8a3d"/><path d="M${x - 5} 221 Q${x - 6} 208 ${x + 1} 200 Q${x + 8} 210 ${x + 5} 221 Z" fill="#ffd84d"/>
+  <path d="M${x - 20} 224 l14 -5 M${x + 20} 224 l-14 -5" stroke-width="4" stroke="#4a3518"/></g><path d="M${x} 176 q8 -14 -2 -26 q12 6 8 26" fill="#fff" opacity=".3"/>`;
 
 const ART = {
-  arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8")}<circle cx="340" cy="46" r="24" fill="#ffd84d"/>${hills("#8cc084", "#6fae6f")}${tree(40, 150, 1.6)}${tree(366, 150, 1.4, "#2f7d44")}
-    <rect x="250" y="138" width="44" height="30" fill="#f3ead7" stroke="#8a6238" stroke-width="1.5"/><polygon points="246,138 272,120 298,138" fill="#b03a2e"/><rect x="266" y="150" width="10" height="18" fill="#7a5a2e"/>
-    <path d="M0 214 Q200 196 400 216 V240 H0 Z" fill="#b7b7b7"/><path d="M20 224 h30 M90 222 h30 M160 221 h30 M230 222 h30 M300 224 h30" stroke="#fff" stroke-width="2"/>
-    ${balloonAt(60, 10, 120)}${owlAt(150, 96, 118)}`),
-  guide: () => frame(`${sky("#9fd8f2", "#f4f1d8")}<circle cx="340" cy="46" r="24" fill="#ffd84d"/>${hills("#8cc084", "#6fae6f")}${tree(30, 146, 1.6)}
-    <rect x="286" y="126" width="84" height="46" fill="#f3ead7" stroke="#8a6238" stroke-width="1.5"/><polygon points="280,126 328,100 376,126" fill="#2e6fab"/><rect x="320" y="146" width="16" height="26" fill="#7a5a2e"/><rect x="296" y="138" width="14" height="12" fill="#bfe1f6"/><rect x="346" y="138" width="14" height="12" fill="#bfe1f6"/>
-    ${owlAt(96, 96, 124)}${kidAt(238, 128, 1.15)}`),
-  window: () => frame(`${sky("#9fd8f2", "#f4f1d8")}${hills("#8cc084", "#6fae6f")}${windowAt(232, 108, 96, village)}${owlAt(20, 118, 108)}${kidAt(120, 150, .95)}`),
-  inside: () => frame(`<rect width="400" height="240" fill="#3a2a17"/><path d="M10 240 V120 Q200 -40 390 120 V240 Z" fill="#8a6238"/><path d="M26 240 V124 Q200 -18 374 124 V240 Z" fill="#c79a62"/>
-    ${[70, 130, 200, 270, 330].map(x => `<path d="M${x} 240 V${126 - 90 * Math.sin((x - 26) / 348 * Math.PI)}" stroke="#8a6238" stroke-width="3"/>`).join("")}
-    <rect x="26" y="150" width="348" height="10" fill="#7a5a2e"/><rect x="26" y="160" width="6" height="80" fill="#7a5a2e"/><rect x="368" y="160" width="6" height="80" fill="#7a5a2e"/>
-    ${[96, 200, 304].map(x => `<ellipse cx="${x}" cy="222" rx="24" ry="7" fill="#5c4322"/><path d="M${x - 10} 220 q4 -26 10 -34 q8 14 4 22 q10 -6 8 12 Z" fill="#ff8a3d"/><path d="M${x - 4} 220 q2 -14 6 -18 q4 8 2 18 Z" fill="#ffd84d"/><path d="M${x} 180 q6 -16 -2 -30 q10 8 8 30" fill="#fff" opacity=".35"/>`).join("")}
-    ${[52, 148, 252, 348].map(x => `<rect x="${x - 18}" y="138" width="36" height="12" rx="3" fill="#e8d3a8" stroke="#7a5a2e" stroke-width="1"/>`).join("")}
-    ${[60, 120, 180, 240, 300, 340].map((x, i) => `<path d="M${x} 60 v18" stroke="#5c4322" stroke-width="1.5"/><ellipse cx="${x}" cy="${84}" rx="4" ry="9" fill="${i % 2 ? "#f4c430" : "#e9a73b"}"/>`).join("")}`),
-  garden: () => frame(`${sky("#bfe6ef", "#fdf3dc")}<circle cx="60" cy="44" r="22" fill="#ffd84d"/>${hills("#9cc47a", "#7fae62")}${longhouse(250, 96, 130, 40)}${tree(30, 140, 1.5, "#2f7d44")}
+  arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[130, 40, .8], [250, 70, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 152, 1.7)}${tree(366, 152, 1.5, "#3f9a58")}
+    ${house(250, 138, 46, 32, "#e63946")}
+    <g ${INKED}><path d="M-10 216 Q200 196 410 218 V250 H-10 Z" fill="#c9c9c9"/></g><path d="M20 226 h30 M90 224 h30 M160 223 h30 M230 224 h30 M300 226 h30" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    ${balloonAt(52, 6, 128)}${owlAt(150, 96, 118)}`),
+  guide: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[90, 44, .8], [210, 30, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(30, 148, 1.7)}
+    ${house(286, 126, 84, 46, "#3b82c4")}${owlAt(96, 96, 124)}${kidAt(238, 128, 1.15)}`),
+  window: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${hills("#9ed08f", "#7dbb7a")}${windowAt(236, 112, 92, village)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95)}`),
+  inside: () => frame(`<rect width="400" height="240" fill="#3a2a17"/><g ${INKED}><path d="M10 250 V120 Q200 -40 390 120 V250 Z" fill="#9a6b3c"/><path d="M28 250 V126 Q200 -16 372 126 V250 Z" fill="#d6aa72"/></g>
+    <g stroke="#9a6b3c" stroke-width="3.4" stroke-linecap="round">${[70, 130, 200, 270, 330].map(x => `<path d="M${x} 240 V${128 - 90 * Math.sin((x - 28) / 344 * Math.PI)}"/>`).join("")}</g>
+    <g ${INKED}><rect x="28" y="148" width="344" height="11" rx="3" fill="#8a5a2b"/>${[52, 148, 252, 348].map(x => `<rect x="${x - 19}" y="134" width="38" height="14" rx="4" fill="#f1ddb5"/>`).join("")}</g>
+    ${[60, 120, 180, 240, 300, 340].map((x, i) => `<path d="M${x} 58 v16" stroke="#2b1a10" stroke-width="1.6"/><ellipse cx="${x}" cy="84" rx="5" ry="10" fill="${i % 2 ? "#ffd23f" : "#f0a93b"}" ${THIN}/><path d="M${x} 74 q-6 -4 -7 -10 M${x} 74 q6 -4 7 -10" fill="none" stroke="#7fae62" stroke-width="2" stroke-linecap="round"/>`).join("")}
+    ${fire(96)}${fire(200)}${fire(304)}`),
+  garden: () => frame(`${sky("#bfe6ef", "#fdf3dc", [60, 44, 22], [[200, 40, .8], [330, 64, .6]])}${hills("#a9cf86", "#8dbd6c")}${longhouse(252, 96, 130, 42)}${tree(30, 142, 1.6, "#3f9a58")}
     ${mound(70, 196, 1.2)}${mound(150, 206, 1.25)}${mound(232, 198, 1.2)}${mound(316, 208, 1.25)}${mound(112, 232, 1.1)}${mound(196, 236, 1.1)}${mound(280, 234, 1.1)}`),
-  today: () => frame(`${sky("#9fd8f2", "#f4f1d8")}<circle cx="340" cy="46" r="24" fill="#ffd84d"/>${hills("#8cc084", "#6fae6f")}
-    <rect x="20" y="118" width="96" height="52" fill="#f3ead7" stroke="#8a6238" stroke-width="1.5"/><polygon points="14,118 68,92 122,118" fill="#2e6fab"/><rect x="58" y="142" width="18" height="28" fill="#7a5a2e"/>
-    <rect x="150" y="176" width="150" height="6" fill="#8a6238"/><rect x="150" y="176" width="6" height="40" fill="#8a6238"/><rect x="294" y="176" width="6" height="40" fill="#8a6238"/>
+  today: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[190, 38, .8]])}${hills("#9ed08f", "#7dbb7a")}
+    ${house(20, 118, 96, 52, "#3b82c4")}
+    <g ${INKED}><rect x="148" y="174" width="154" height="8" rx="3" fill="#b07a45"/><rect x="148" y="174" width="8" height="44" rx="3" fill="#b07a45"/><rect x="294" y="174" width="8" height="44" rx="3" fill="#b07a45"/></g>
     ${mound(186, 214, .95)}${mound(232, 218, .95)}${mound(276, 214, .95)}${kidAt(340, 138, 1.05)}${owlAt(100, 122, 104)}
-    <path d="M362 150 L384 96" stroke="#7a5a2e" stroke-width="3"/><path d="M384 96 q10 -10 4 -22 q-12 2 -14 14 z" fill="none" stroke="#7a5a2e" stroke-width="2.4"/><path d="M378 92 l10 -14 M376 86 l10 -6" stroke="#c9b89a" stroke-width="1"/>`),
-  end: () => frame(`${sky("#ffd9a0", "#fdebd0")}<circle cx="200" cy="150" r="46" fill="#ff9f43" opacity=".8"/>${hills("#8cc084", "#6fae6f")}${balloonAt(292, 8, 124)}${owlAt(96, 102, 122)}${kidAt(228, 132, 1.15)}`)
+    <g ${INKED}><path d="M362 150 L384 98" fill="none" stroke-width="4" stroke="#2b1a10"/><path d="M362 150 L384 98" fill="none" stroke="#b07a45" stroke-width="2"/><path d="M384 98 q12 -8 6 -24 q-14 2 -15 16 z" fill="#fbf1dc"/></g>`),
+  end: () => frame(`${sky("#ffd9a0", "#fdebd0", [200, 148, 40], [[70, 50, .8], [330, 40, .7]])}${hills("#9ed08f", "#7dbb7a")}${balloonAt(288, 6, 128)}${owlAt(96, 102, 122)}${kidAt(228, 132, 1.15)}`)
 };
 
 // ---------- Chapter 1: the People of the Longhouse ----------
