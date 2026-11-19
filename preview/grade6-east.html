@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dr. Somebody Goes East</title>
+<link rel="stylesheet" href="shared/kit.css?v=34">
+<link rel="stylesheet" href="shared/inked.css?v=34">
+<link rel="stylesheet" href="shared/chapters.css?v=34">
+<style>
+  /* Grade 6's own colours. The storyboard look is in shared/chapters.css. */
+  :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2a6fa8; }
+  .choice .ratio { white-space:nowrap; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=34"></script>
+<script src="shared/story.js?v=34"></script>
+<script src="shared/newowl.js?v=34"></script>
+<script src="shared/inkart.js?v=34"></script>
+<script src="shared/chapters.js?v=34"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY GOES EAST  -  the Grade 6 story (first try-out: Chapter 1)
+   The clock pointed east at the end of Grade 5. Dr. Somebody follows the St. Lawrence River to the Atlantic coast,
+   meeting a child in each place today and looking through the clock's window at the same place long ago.
+   New in this grade: the chapters are places on a map, he collects French words as he goes, and now and then
+   the child chooses what he does next. The engine is shared/chapters.js; the drawing tools are shared/inkart.js.
+   Every line is shown in writing only for now: the words are recorded once they are settled.
+   The guide's name (Léa) is a stand-in until the family chooses one.
+   ===================================================================== */
+
+// ---------- pictures ----------
+const LEA = { hood: "#f4b942" }; // Chapter 1's guide: long hair and a yellow hoodie
+const cliff = (y, c) => `<g ${INKED}><path d="M-10 ${y} Q40 ${y - 8} 90 ${y - 2} L110 ${y + 40} Q130 ${y + 62} 120 ${y + 86} H-10 Z" fill="${c || "#b9a58c"}"/><path d="M410 ${y - 6} Q330 ${y - 14} 250 ${y - 4} L236 ${y + 40} Q222 ${y + 64} 232 ${y + 86} H410 Z" fill="${c || "#b9a58c"}"/></g>`;
+// the great hotel on the cliff: brick walls, steep green copper roofs, a tall middle tower
+const chateau = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><rect x="-52" y="-34" width="104" height="34" fill="#c98f58"/><polygon points="-56,-34 -40,-58 -24,-34" fill="#3f9a80"/><polygon points="24,-34 40,-58 56,-34" fill="#3f9a80"/><rect x="-24" y="-34" width="48" height="6" fill="#3f9a80"/>
+  <rect x="-13" y="-70" width="26" height="70" fill="#d6a06a"/><polygon points="-17,-70 0,-104 17,-70" fill="#3f9a80"/><path d="M0 -104 V-114" fill="none"/>
+  <rect x="-60" y="-26" width="10" height="26" rx="2" fill="#d6a06a"/><polygon points="-63,-26 -55,-42 -47,-26" fill="#3f9a80"/><rect x="50" y="-26" width="10" height="26" rx="2" fill="#d6a06a"/><polygon points="47,-26 55,-42 63,-26" fill="#3f9a80"/></g>
+  <g fill="#fff6c9" stroke="#2b1a10" stroke-width="1">${[-42, -30, 30, 42].map(wx => `<rect x="${x + wx * s - 2 * s}" y="${y - 24 * s}" width="${4 * s}" height="${7 * s}"/>`).join("")}${[-52, -36, -20].map(wy => `<rect x="${x - 3 * s}" y="${y + wy * s}" width="${6 * s}" height="${8 * s}"/>`).join("")}</g>`;
+const ship = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><path d="M-6 -4 V-66 M22 -4 V-52" fill="none" stroke-width="3"/><path d="M-30 -58 Q-6 -66 18 -58 V-30 Q-6 -22 -30 -30 Z" fill="#fbf6ea"/><path d="M6 -46 Q22 -52 40 -46 V-24 Q22 -18 6 -24 Z" fill="#fbf6ea"/><path d="M-6 -66 l16 5 l-16 5 z" fill="#fff"/>
+  <path d="M-44 -6 H50 Q46 12 34 16 H-28 Q-40 12 -44 -6 Z" fill="#8a5a2b"/><path d="M-42 -2 H48" fill="none" stroke="#b07a45" stroke-width="3"/></g>`;
+// Champlain's first wooden fort at the foot of the cliff
+const habitation = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><rect x="-44" y="-20" width="88" height="20" fill="#b07a45"/>${[-36, -4, 26].map(hx => `<rect x="${hx}" y="-40" width="24" height="26" fill="#c89a5e"/><polygon points="${hx - 3},-40 ${hx + 12},-58 ${hx + 27},-40" fill="#7a4a24"/>`).join("")}
+  <path d="M8 -58 V-78" fill="none" stroke-width="2.4"/><path d="M8 -78 h16 v10 h-16 z" fill="#fff"/><path d="M-4 0 V-12 Q4 -18 12 -12 V0 Z" fill="#4a3518"/></g>
+  <g stroke="#7a4a24" stroke-width="1.4">${Array.from({ length: 9 }, (_, i) => `<line x1="${x + (-40 + i * 10) * s}" y1="${y - 20 * s}" x2="${x + (-40 + i * 10) * s}" y2="${y}"/>`).join("")}</g>`;
+// the old stone wall with its gate
+const cityWall = (y, s) => `<g ${INKED}><path d="M-10 ${y} V${y - 40 * s} ${Array.from({ length: 21 }, (_, i) => `h${10 * s} v${i % 2 ? 8 * s : -8 * s}`).join(" ")} H410 V${y} Z" fill="#b9b3a6"/>
+  <rect x="${200 - 46 * s}" y="${y - 78 * s}" width="${22 * s}" height="${78 * s}" fill="#c9c3b6"/><rect x="${200 + 24 * s}" y="${y - 78 * s}" width="${22 * s}" height="${78 * s}" fill="#c9c3b6"/>
+  <polygon points="${200 - 50 * s},${y - 78 * s} ${200 - 35 * s},${y - 106 * s} ${200 - 20 * s},${y - 78 * s}" fill="#3f9a80"/><polygon points="${200 + 20 * s},${y - 78 * s} ${200 + 35 * s},${y - 106 * s} ${200 + 50 * s},${y - 78 * s}" fill="#3f9a80"/>
+  <rect x="${200 - 26 * s}" y="${y - 62 * s}" width="${52 * s}" height="${62 * s}" fill="#b9b3a6"/><path d="M${200 - 16 * s} ${y} V${y - 30 * s} Q200 ${y - 52 * s} ${200 + 16 * s} ${y - 30 * s} V${y} Z" fill="#6a5a4c"/></g>
+  <g stroke="#8d877b" stroke-width="1.2" opacity=".8">${[40, 90, 130, 270, 320, 370].map((bx, i) => `<path d="M${bx} ${y - (12 + (i % 3) * 8) * s} h${14 * s}"/>`).join("")}</g>`;
+const kettle = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><path d="M-9 -12 Q0 -24 9 -12" fill="none" stroke-width="2.4"/><path d="M-11 -12 H11 Q13 4 6 8 H-6 Q-13 4 -11 -12 Z" fill="#6a6f7a"/></g>`;
+const furs = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><ellipse cx="0" cy="0" rx="16" ry="6" fill="#7a4a24"/><ellipse cx="2" cy="-6" rx="15" ry="6" fill="#8a5a2b"/><ellipse cx="-1" cy="-12" rx="14" ry="6" fill="#9a6b3c"/></g>`;
+const blanket = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><rect x="-13" y="-12" width="26" height="14" rx="4" fill="#fbf6ea"/><path d="M-13 -8 h26 M-13 -3 h26" stroke="#e63946" stroke-width="2.4"/></g>`;
+const trader = (x, y, s) => `${person(x, y, s, "#3b6ea5")}<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><path d="M-11 -14 H11 L7 -19 H-7 Z" fill="#2b1a10"/></g>`; // a French trader: blue coat and a brimmed hat
+const quebec1608 = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M130 40 Q200 30 342 44 V130 H130 Z" fill="#b9a58c"/><path d="M130 44 Q230 34 342 48" fill="none" stroke="#4aa862" stroke-width="8"/></g>${tree(160, 46, .6, "#3f9a58")}${tree(196, 42, .7)}${tree(300, 46, .6)}
+  <g ${INKED}><path d="M130 130 Q236 122 342 132 V160 H130 Z" fill="#a9cf86"/></g>${habitation(214, 150, .7)}${water(160, "#6cc0ea")}${ship(290, 190, .75)}${canoe(182, 206, .5, { who: 2 })}`;
+const tradeLongAgo = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M130 60 Q236 50 342 62 V140 H130 Z" fill="#b9a58c"/><path d="M130 140 Q236 130 342 142 V250 H130 Z" fill="#d9c7a0"/></g>${habitation(292, 138, .5)}
+  ${water(196, "#6cc0ea")}${canoe(176, 212, .5, { who: 0 })}${person(186, 136, .5)}${person(214, 140, .5, "#b98b54")}${trader(274, 142, .5)}${furs(204, 180, .7)}${kettle(250, 178, .8)}${blanket(278, 182, .7)}`;
+const ART = {
+  qc_arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8", [344, 40, 20], [[90, 36, .8], [210, 26, .6]])}${cliff(96)}${chateau(318, 92, .8)}${house(22, 72, 30, 22, "#e63946")}${house(58, 76, 26, 20, "#3b82c4")}
+    <g ${INKED}><path d="M-10 184 Q200 170 410 186 V250 H-10 Z" fill="#5db7e6"/></g>${house(256, 160, 28, 22, "#f4b942")}${house(290, 164, 26, 20, "#e63946")}${house(326, 160, 30, 22, "#58b368")}${riding(120, 0, 120)}`),
+  qc_lea: () => frame(`${sky("#9fd8f2", "#f4f1d8", [344, 40, 20], [[70, 44, .8]])}${cliff(96)}${chateau(318, 92, .8)}${water(176)}<g ${INKED}><path d="M-10 214 Q100 200 210 216 T410 214 V250 H-10 Z" fill="#d9c7a0"/></g>${owlAt(66, 116, 112)}${kidAt(204, 146, 1.05, LEA)}`),
+  qc_window1608: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176)}<g ${INKED}><path d="M-10 214 Q100 200 210 216 T410 214 V250 H-10 Z" fill="#d9c7a0"/></g>${windowAt(236, 112, 92, quebec1608)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, LEA)}`),
+  qc_walls: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 40, 20], [[230, 30, .8], [340, 56, .6]])}${cityWall(190, 1.1)}<g ${INKED}><path d="M-10 190 H410 V250 H-10 Z" fill="#c9c3b6"/><path d="M150 250 L184 190 H216 L250 250 Z" fill="#d9d3c6"/></g>${owlAt(46, 126, 106)}${kidAt(300, 152, 1, LEA)}`),
+  qc_windowtrade: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176)}<g ${INKED}><path d="M-10 214 Q100 200 210 216 T410 214 V250 H-10 Z" fill="#d9c7a0"/></g>${windowAt(236, 112, 92, tradeLongAgo)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, LEA)}`),
+  qc_choice: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 40, 20], [[240, 30, .8]])}<g ${INKED}><path d="M-10 60 H410 V250 H-10 Z" fill="#b9a58c"/><path d="M-10 60 Q200 48 410 60" fill="none" stroke="#4aa862" stroke-width="10"/></g>${chateau(200, 58, .7)}
+    <g ${INKED}><path d="M40 210 L70 190 L70 176 L100 156 L100 142 L130 122 L130 108 L160 88" fill="none" stroke-width="9" stroke="#2b1a10"/><path d="M40 210 L70 190 L70 176 L100 156 L100 142 L130 122 L130 108 L160 88" fill="none" stroke="#d9d3c6" stroke-width="5"/>
+    <path d="M360 214 L250 84" fill="none" stroke-width="9" stroke="#2b1a10"/><path d="M360 214 L250 84" fill="none" stroke="#8d877b" stroke-width="5"/><rect x="286" y="118" width="34" height="26" rx="5" fill="#bfe6f7" transform="rotate(50 303 131)"/></g>
+    <g ${INKED}><path d="M-10 214 H410 V250 H-10 Z" fill="#c9c3b6"/></g>${owlAt(150, 148, 84)}${kidAt(236, 172, .8, LEA)}`),
+  qc_stairs: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 40, 20], [[250, 30, .8]])}${house(-6, 70, 96, 150, "#e63946")}${house(310, 60, 100, 160, "#3b82c4")}
+    <g ${INKED}>${Array.from({ length: 9 }, (_, i) => `<rect x="${104 + i * 2}" y="${200 - i * 18}" width="${192 - i * 4}" height="18" fill="${i % 2 ? "#c9c3b6" : "#d9d3c6"}"/>`).join("")}<path d="M100 214 L120 46 M300 214 L280 46" fill="none" stroke-width="4"/></g>
+    <g ${INKED}><path d="M-10 218 H410 V250 H-10 Z" fill="#c9c3b6"/></g>${kidAt(214, 60, .7, LEA)}${owlAt(150, 128, 90)}`),
+  qc_funicular: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 40, 20], [[250, 30, .8]])}<g ${INKED}><path d="M-10 250 V214 L120 214 L330 50 H410 V250 Z" fill="#b9a58c"/><path d="M330 50 H410" fill="none" stroke="#4aa862" stroke-width="10"/>
+    <path d="M110 222 L334 46 M130 222 L354 46" fill="none" stroke-width="4" stroke="#6a5a4c"/></g>${chateau(372, 48, .45)}
+    <g transform="translate(226 132) rotate(-38)" ${INKED}><rect x="-34" y="-30" width="68" height="44" rx="8" fill="#bfe6f7"/><path d="M-34 0 H34" fill="none"/><rect x="-34" y="4" width="68" height="12" rx="4" fill="#e63946"/></g>
+    <svg x="196" y="92" width="34" height="40" viewBox="0 0 200 232">${NEW_OWL.replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg><g ${INKED}><path d="M-10 222 H140 V250 H-10 Z" fill="#c9c3b6"/></g>${house(20, 176, 50, 40, "#f4b942")}`),
+  qc_terrace: () => frame(`${sky("#ffd9a0", "#fdebd0", [330, 70, 24], [[90, 40, .8], [220, 56, .6]])}${water(118, "#6cc0ea")}${ship(120, 150, .6)}<g ${INKED}><path d="M300 118 Q350 104 410 112 V150 H280 Z" fill="#9ed08f"/></g>
+    <g ${INKED}><path d="M-10 190 H410 V250 H-10 Z" fill="#c89a5e"/><path d="M-10 168 H410" fill="none" stroke-width="5"/>${Array.from({ length: 14 }, (_, i) => `<path d="M${10 + i * 30} 168 V190" fill="none"/>`).join("")}</g><g stroke="#8a5a2b" stroke-width="1.4">${[204, 218, 232].map(yy => `<path d="M-10 ${yy} H410"/>`).join("")}</g>
+    ${chateau(346, 168, .5)}${owlAt(70, 112, 110)}${kidAt(206, 140, 1.05, LEA)}`)
+};
+
+// ---------- the map: the places of this grade, along the river and the coast ----------
+const eastMap = () => `<svg viewBox="0 0 400 240" preserveAspectRatio="none"><rect width="400" height="240" fill="#6cc0ea"/>
+  <g ${INKED}><path d="M-10 -10 H320 Q296 30 250 44 Q190 60 150 84 Q110 104 60 118 Q30 126 -10 130 Z" fill="#a9cf86"/>
+  <path d="M-10 250 V150 Q60 138 120 118 Q170 100 214 104 Q226 112 214 124 Q196 134 196 150 Q206 164 226 168 Q232 190 214 214 Q200 232 196 250 Z" fill="#b9d98f"/>
+  <path d="M212 228 Q232 196 276 180 Q312 166 338 170 Q346 184 326 198 Q286 216 250 242 Q224 252 212 228 Z" fill="#b9d98f"/><path d="M340 164 Q348 138 368 142 Q380 162 362 180 Q346 184 340 164 Z" fill="#b9d98f"/>
+  <path d="M246 150 Q270 138 296 148 Q270 160 246 150 Z" fill="#f2c9a0"/><path d="M318 62 Q350 34 386 56 Q398 88 372 110 Q340 118 322 96 Q310 78 318 62 Z" fill="#a9cf86"/></g>
+  <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"><path d="M250 100 q8 -5 16 0 t16 0 M290 126 q8 -5 16 0 t16 0 M360 214 q8 -5 16 0 M150 226 q0 0 0 0"/></g>
+  <g font-size="11" font-weight="bold" fill="#2b1a10" opacity=".7"><text x="60" y="44">Quebec</text><text x="150" y="74" transform="rotate(-24 150 74)">the St. Lawrence River</text><text x="318" y="28">Newfoundland</text><text x="40" y="210">New Brunswick</text><text x="300" y="232" fill="#fff" opacity="1">Atlantic Ocean</text></g></svg>`;
+
+// ---------- Chapter 1: the city on the cliff ----------
+const cards = (n, near) => numCards(n, 1, 1000000, 4, near.filter(k => k > 0 && k !== n && Number.isInteger(k)));
+const tenths = n => (n / 10).toFixed(1);
+const textCards = (right, wrongs, make) => shuffle([...new Set(wrongs.filter(w => w !== right))].slice(0, 3).concat([right])).map(x => ({ html: make ? make(x) : x, ok: x === right }));
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const CHAPTERS = [
+  { title: "The City on the Cliff", where: "Quebec City", beats: [
+    { art: "qc_arrive", word: ["bonjour", "hello"], say: ["East we go! The clock pointed this way, and look what it found. A city on a cliff, with a castle on top.",
+      "This is <em>Quebec City</em>. It is one of the oldest cities in all of North America. And nearly everyone here speaks French.",
+      "I know one French word. <em>Bonjour!</em> It means hello. I have said it to nine people and a pigeon."] },
+    { art: "qc_lea", word: ["le fleuve", "the river"], say: ["This is Léa. She has lived here all her life, and she speaks French at home and at school.",
+      "She says the castle is really a hotel, called the <em>Château Frontenac</em>. But the river is the real star.",
+      "That is the St. Lawrence. Léa calls it <em>le fleuve</em>, the river. It runs all the way to the ocean, and for a long time it was the only road there was. Clock, show us!"] },
+    { art: "qc_window1608", say: ["The window into the past! The year is <em>1608</em>. A French explorer named Samuel de Champlain has just built a wooden fort right here, at the foot of the cliff.",
+      "First Nations peoples had lived along this river for thousands of years before he came. The name Quebec comes from one of their words. It means <em>where the river narrows</em>.",
+      "Champlain's ship took about two months to cross the ocean. Two months! I get restless in the bath. Let's work out that journey."] },
+    { ask: "crossing", intro: "Sail the ocean with Champlain. Three right answers and we climb to the walls." },
+    { art: "qc_walls", word: ["la porte", "the gate"], say: ["The little fort grew into a town, and the town became the heart of <em>New France</em>.",
+      "To protect it, people built stone walls all the way around. They are still here! Quebec is the only city north of Mexico that has kept its old walls.",
+      "You walk in through a great stone gate. Léa says a gate is <em>la porte</em>. The walls are 4.6 kilometres around. Léa has a map. Shall we measure?"] },
+    { ask: "walls", intro: "Read Léa's map. Three right answers and the window opens again." },
+    { art: "qc_windowtrade", word: ["merci", "thank you"], say: ["Back to the window. The riverbank is busy! People are trading.",
+      "The French wanted beaver furs, to make hats back in France. First Nations hunters and traders brought the furs, and traded them for things like kettles, cloth and blankets.",
+      "Every good trade ends with a thank you. In French, that is <em>merci</em>. Now then. How many furs for a kettle?"] },
+    { ask: "trade", intro: "Make a fair trade. Three right answers and we head up the cliff." },
+    { art: "qc_choice", pick: "The old town is at the top of the cliff, and we are at the bottom. Léa says there are two ways up. Which shall we take?", options: [
+      { label: "The Breakneck Stairs", art: "qc_stairs", word: ["l'escalier", "the stairs"], say: ["The stairs it is! They are called the Breakneck Stairs, and they are the oldest stairs in the city.",
+        "Fifty-nine steps. Léa skipped up. I counted every one, out loud. In French, stairs are <em>l'escalier</em>."] },
+      { label: "The funicular", art: "qc_funicular", word: ["le funiculaire", "the cliff railway"], say: ["The funicular it is! A little glass cabin that rides up the cliff on rails.",
+        "It has carried people up and down since 1879. Léa says it is <em>le funiculaire</em>. I say it is my new favourite word."] }] },
+    { ask: "climb", intro: "Nearly at the top. Three right answers finishes the chapter." },
+    { art: "qc_terrace", word: ["au revoir", "goodbye"], say: ["We made it to the top. What a view! The whole river, and ships still sailing for the sea.",
+      "Léa says about nine out of every ten people in this city speak French first. It has been spoken here for more than 400 years.",
+      "Merci, Léa. And <em>au revoir</em>. That means goodbye, or really, until we see each other again.",
+      "The river keeps going east, and so shall we. But that is another chapter. Tick tock!"] }
+  ] },
+  { title: "The Long Farms", where: "Along the St. Lawrence" },
+  { title: "Holding Back the Sea", where: "The Acadian shore, Nova Scotia" },
+  { title: "The People of the Dawn", where: "Mi'kmaw country, Cape Breton" },
+  { title: "The Harbour of Arrivals", where: "Halifax" },
+  { title: "The Edge of the Map", where: "Newfoundland" }
+];
+
+// The questions. Each maker returns { html, text, choices, why }.  "why" is shown after two wrong tries, and after a right answer.
+const ASK = {
+  crossing() { // rates and ratios: an ocean crossing
+    const kind = rand(3);
+    if (kind === 0) { const perDay = pick([80, 90, 100, 110, 120]), days = 45 + rand(21), D = perDay * days; return { html: "", text: `A ship sails about <b>${perDay} km</b> a day. The crossing is <b>${D.toLocaleString("en-CA")} km</b>. About how many days does it take?`, choices: cards(days, [days + 1, days - 1, days + 10, days - 10, days + 5]), why: `Distance divided by speed. ${D.toLocaleString("en-CA")} ÷ ${perDay} = ${days} days.` }; }
+    if (kind === 1) { const perDay = pick([12, 15, 18, 24]), days = pick([50, 60, 70]), total = perDay * days; return { html: "", text: `The ship carries <b>${total.toLocaleString("en-CA")} litres</b> of fresh water for a voyage of <b>${days} days</b>. How many litres is that for each day?`, choices: cards(perDay, [perDay + 1, perDay - 1, perDay + 6, perDay * 2, perDay - 3]), why: `Share the water over the days. ${total.toLocaleString("en-CA")} ÷ ${days} = ${perDay} litres a day.` }; }
+    const [a, b] = pick([[3, 2], [4, 1], [5, 2], [3, 1], [5, 3], [7, 2]]), m = pick([4, 5, 6, 8]), right = `${a} : ${b}`;
+    return { html: "", text: `On board are <b>${a * m} sailors</b> and <b>${b * m} passengers</b>. What is the ratio of sailors to passengers, in its simplest form?`, choices: textCards(right, [`${b} : ${a}`, `${a * m} : ${b}`, `${a + 1} : ${b}`, `${a} : ${b + 1}`, `${a * 2} : ${b}`], x => `<span class="ratio">${x}</span>`), why: `Divide both numbers by ${m}. ${a * m} ÷ ${m} = ${a}, and ${b * m} ÷ ${m} = ${b}. The ratio is ${a} to ${b}.` };
+  },
+  walls() { // map scale: a ratio between the map and the real world
+    const kind = rand(3), scale = pick([100, 200, 250, 500]);
+    if (kind === 0) { const km = 20 + rand(60), n = km * 100; return { html: "", text: `The walls are measured in kilometres, but Léa's map uses metres. How many <b>metres</b> is <b>${tenths(km)} km</b>?`, choices: cards(n, [n / 10, n * 10, n + 100, n - 100, km]), why: `There are 1,000 metres in a kilometre. ${tenths(km)} × 1,000 = ${n.toLocaleString("en-CA")} metres.` }; }
+    if (kind === 1) { const cm2 = 3 + rand(14), n = scale * cm2 / 2; return { html: "", text: `On the map, <b>1 cm</b> stands for <b>${scale} m</b>. A street measures <b>${tenths(cm2 * 5)} cm</b> on the map. How long is the real street, in metres?`, choices: cards(n, [n + scale, n - scale, scale + cm2, n * 2, n + scale / 2]), why: `Multiply by the scale. ${tenths(cm2 * 5)} × ${scale} = ${n.toLocaleString("en-CA")} metres.` }; }
+    const cm = 4 + rand(15), real = scale * cm; return { html: "", text: `On the map, <b>1 cm</b> stands for <b>${scale} m</b>. The gate is really <b>${real.toLocaleString("en-CA")} m</b> away. How many centimetres is that on the map?`, choices: cards(cm, [cm + 1, cm - 1, cm + 2, cm * 2, cm + 10]), why: `Divide by the scale. ${real.toLocaleString("en-CA")} ÷ ${scale} = ${cm} cm.` };
+  },
+  trade() { // equal ratios, sharing with a remainder, and percent
+    const kind = rand(3);
+    if (kind === 0) { const each = 2 + rand(5), b1 = 2 + rand(3), b2 = b1 + 2 + rand(5), n = each * b2; return { html: "", text: `<b>${b1} blankets</b> are traded for <b>${each * b1} furs</b>. At the same rate, how many furs for <b>${b2} blankets</b>?`, choices: cards(n, [n + each, n - each, each * b1 + b2, n + b1, each + b2]), why: `One blanket is ${each * b1} ÷ ${b1} = ${each} furs. So ${b2} blankets is ${b2} × ${each} = ${n} furs.` }; }
+    if (kind === 1) { const each = 3 + rand(5), q = 6 + rand(9), r = 1 + rand(each - 1), N = each * q + r; return { html: "", text: `A hunter brings <b>${N} furs</b>. One kettle costs <b>${each} furs</b>. He trades for as many kettles as he can. How many furs does he have left over?`, choices: cards(r, [q, r + 1, r - 1, each, r + 2].filter(k => k !== r)), why: `${q} kettles cost ${q} × ${each} = ${q * each} furs. ${N} − ${q * each} = ${r} left over.` }; }
+    const [pc, part, whole] = pick([[25, 20, 80], [50, 30, 60], [75, 60, 80], [20, 10, 50], [40, 20, 50], [60, 30, 50], [80, 40, 50], [25, 15, 60], [75, 45, 60], [10, 8, 80]]);
+    return { html: "", text: `Of the <b>${whole} furs</b> in the canoe, <b>${part}</b> are beaver. What percent of the furs are beaver?`, choices: textCards(pc + "%", [pc + 10, pc - 10, pc + 5, 100 - pc, part].filter(k => k > 0 && k < 100).map(k => k + "%")), why: `${part} out of ${whole}. ${part} ÷ ${whole} = ${(part / whole).toFixed(2).replace(/0$/, "")}, which is ${pc} percent.` };
+  },
+  climb() { // percents of an amount
+    const kind = rand(3);
+    if (kind === 0) { const [pc, len] = pick([[25, 64], [50, 64], [75, 64], [25, 80], [75, 80], [10, 60], [20, 60], [30, 60]]), n = len * pc / 100; return { html: "", text: `The track up the cliff is <b>${len} metres</b> long. The cabin has gone <b>${pc}%</b> of the way. How many metres has it gone?`, choices: cards(n, [len - n, n + 4, n - 4, pc, n * 2]), why: `${pc}% of ${len}. ${pc === 25 ? `One quarter: ${len} ÷ 4` : pc === 50 ? `One half: ${len} ÷ 2` : pc === 75 ? `Three quarters: ${len} ÷ 4 = ${len / 4}, times 3` : `10% is ${len / 10}, so ${pc / 10} lots of that`} = ${n} metres.` }; }
+    if (kind === 1) { const [pc, done] = pick([[25, 15], [50, 30], [75, 45], [20, 12], [40, 24], [60, 36], [80, 48], [10, 6], [90, 54]]); return { html: "", text: `Léa has climbed <b>${done}</b> of the <b>60</b> steps. What percent of the way up is she?`, choices: textCards(pc + "%", [pc + 10, pc - 10, done, 100 - pc, pc + 5].filter(k => k > 0 && k < 100).map(k => k + "%")), why: `${done} out of 60. ${done} ÷ 60 = ${(done / 60).toFixed(2).replace(/0$/, "")}, which is ${pc} percent.` }; }
+    const price = pick([4, 5, 6]), people = pick([4, 5, 6, 8, 10]), total = price * people, pc = pick([10, 20, 50]), off = total * pc / 100, n = total - off;
+    return { html: "", text: `A ride up costs <b>$${price}</b> each. A group of <b>${people}</b> gets <b>${pc}% off</b> the total. How much do they pay altogether?`, choices: textCards(`$${n % 1 ? n.toFixed(2) : n}`, [total, total - pc, n + price, off, n - price].filter(k => k > 0).map(k => `$${k % 1 ? k.toFixed(2) : k}`)), why: `The total is ${people} × $${price} = $${total}. ${pc}% of $${total} is $${off % 1 ? off.toFixed(2) : off}. $${total} − $${off % 1 ? off.toFixed(2) : off} = $${n % 1 ? n.toFixed(2) : n}.` };
+  }
+};
+
+// ---------- start the game (the engine is shared/chapters.js) ----------
+window.Chapters = ChapterGame({ title: "Dr. Somebody Goes East", sub: "A Grade 6 story", saveKey: "grade6East.v1", medal: "g6",
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My French words",
+  map: { art: eastMap, stops: [[15.5, 52.5], [29, 43.5], [61.5, 88], [90, 67.5], [76, 80], [88.5, 33]] } });
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>
