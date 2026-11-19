@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dr. Somebody Heads West</title>
+<link rel="stylesheet" href="shared/kit.css?v=34">
+<link rel="stylesheet" href="shared/inked.css?v=34">
+<link rel="stylesheet" href="shared/chapters.css?v=34">
+<style>
+  /* Grade 7's own colours. The storyboard look is in shared/chapters.css. */
+  :root { --sky1:#a9daf0; --sky2:#f6edc8; --grass:#d9c56a; --grass2:#b9a24a; --title-shadow:#8a5a2b; }
+  .choice .ratio { white-space:nowrap; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=34"></script>
+<script src="shared/story.js?v=34"></script>
+<script src="shared/newowl.js?v=34"></script>
+<script src="shared/inkart.js?v=34"></script>
+<script src="shared/chapters.js?v=34"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY HEADS WEST  -  the Grade 7 story
+   The clock pointed west at the end of Grade 6. Dr. Somebody crosses the prairies, from the head of Lake Superior
+   to the first sight of the mountains, meeting a child in each place today and looking through the clock's window
+   at the same place long ago. Hard history is told plainly.
+   New in this grade: right answers earn fur trade money (Made Beaver) to spend at the trading post, some scenes are
+   told by two people who see things differently, and a choice in the story can change the numbers in the maths.
+   Each chapter lives in its own file, shared/g7-ch1.js to shared/g7-ch6.js: it adds its pictures to ART,
+   its questions to ASK and its story to CHAPTERS. The engine is shared/chapters.js; the drawing tools are shared/inkart.js.
+   Every line is shown in writing only for now: the words are recorded once they are settled.
+   ===================================================================== */
+
+// ---------- helpers every chapter can use ----------
+const cards = (n, near) => numCards(n, 1, 1000000, 4, near.filter(k => k > 0 && k !== n && Number.isInteger(k)));
+const tenths = n => (n / 10).toFixed(1);
+const textCards = (right, wrongs, make) => shuffle([...new Set(wrongs.filter(w => w !== right))].slice(0, 3).concat([right])).map(x => ({ html: make ? make(x) : x, ok: x === right }));
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const fmt = n => n.toLocaleString("en-CA");
+// Pip and Dot, the little dinosaurs from the first two books, drawn the way everything is in this grade.
+// x, y is the top left, h the height (the picture is 1.25 times as wide as it is tall). who: "pip" (green) or "dot" (purple, with her train driver's cap).
+const dinoAt = (x, y, h, who) => { const [m, d] = who === "dot" ? ["#a06cd5", "#7445a8"] : ["#58b368", "#2f7d44"];
+  return `<svg x="${x}" y="${y}" width="${h * 1.25}" height="${h}" viewBox="0 0 200 160"><g stroke="#2b1a10" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M72 108 Q30 115 14 92 Q38 132 82 136 Z" fill="${d}"/><rect x="80" y="134" width="18" height="22" rx="8" fill="${d}"/><rect x="108" y="134" width="18" height="22" rx="8" fill="${d}"/>
+  <ellipse cx="100" cy="104" rx="38" ry="42" fill="${m}"/><ellipse cx="109" cy="112" rx="22" ry="28" fill="#fff3c9" stroke-width="3"/><ellipse cx="136" cy="98" rx="12" ry="6" fill="${d}" stroke-width="3"/>
+  <path d="M84 50 Q84 18 118 18 Q150 18 154 42 Q168 44 166 58 Q164 72 146 72 Q132 80 112 78 Q84 76 84 50 Z" fill="${m}"/>
+  <circle cx="128" cy="42" r="9" fill="#fff" stroke-width="3"/><circle cx="130" cy="43" r="4.5" fill="#2b1a10" stroke="none"/><circle cx="158" cy="52" r="1.8" fill="#2b1a10" stroke="none"/><path d="M138 62 Q150 70 160 61" fill="none" stroke-width="3.4"/>
+  ${who === "dot" ? `<path d="M86 34 Q116 -6 150 30 Z" fill="#4d9de0"/><rect x="134" y="24" width="38" height="9" rx="4" fill="#2f6fab"/>` : ""}</g></svg>`; };
+
+// each chapter file fills these in
+const ART = {}, ASK = {}, CHAPTERS = [
+  { title: "Where the Canoes Met", where: "Fort William, Thunder Bay" }, { title: "The Forks", where: "Winnipeg" }, { title: "The People of the Red River", where: "The Red River valley" },
+  { title: "The Sea of Grass", where: "The grasslands of Saskatchewan" }, { title: "The Land of Giants", where: "The Alberta Badlands" }, { title: "Wheat and Sky", where: "Wheat country, Alberta" }];
+
+// ---------- the map: the prairies, from the great lake to the mountains ----------
+const westMap = () => `<svg viewBox="0 0 400 240" preserveAspectRatio="none"><rect width="400" height="240" fill="#e6d68a"/>
+  <g ${INKED}><path d="M-10 -10 H410 V70 Q360 84 300 76 Q240 66 180 80 Q110 92 60 78 Q20 70 -10 84 Z" fill="#8fbf7a"/>
+  <path d="M-10 250 V40 Q10 36 22 60 Q34 100 26 150 Q20 200 36 250 Z" fill="#b9b3a6"/>
+  <path d="M0 250 L8 200 L16 250 M6 150 L16 110 L26 150 M2 90 L10 56 L20 90" fill="#fff" stroke-width="2"/>
+  <path d="M330 -10 Q318 30 352 48 Q386 60 410 44 V-10 Z" fill="#6cc0ea"/>
+  <path d="M352 150 Q372 132 410 138 V190 Q380 196 360 180 Q346 166 352 150 Z" fill="#6cc0ea"/>
+  <path d="M250 66 Q262 50 270 70 Q276 96 264 112 Q252 104 250 66 Z" fill="#6cc0ea"/></g>
+  <g fill="none" stroke="#5db7e6" stroke-width="3" stroke-linecap="round"><path d="M264 112 Q262 132 250 150 Q244 170 250 196"/><path d="M262 134 Q220 128 170 140 Q110 152 60 130"/><path d="M352 152 Q320 140 300 146"/></g>
+  <g fill="none" stroke="#b9a24a" stroke-width="2" stroke-linecap="round" opacity=".8"><path d="M90 196 q6 -10 12 0 M130 206 q6 -10 12 0 M170 190 q6 -10 12 0 M200 214 q6 -10 12 0 M70 220 q6 -10 12 0 M150 224 q6 -10 12 0"/></g>
+  <g font-size="11" font-weight="bold" fill="#2b1a10" opacity=".7"><text x="60" y="30">Alberta</text><text x="150" y="30">Saskatchewan</text><text x="254" y="30">Manitoba</text><text x="350" y="20" fill="#fff" opacity="1">Hudson Bay</text>
+  <text x="340" y="212">Ontario</text><text x="356" y="170" fill="#fff" opacity="1" font-size="9">Lake Superior</text><text x="30" y="236" font-size="9">the Rocky Mountains</text><text x="120" y="182" font-size="10">the prairies</text></g></svg>`;
+
+// ---------- fur trade money, and the trading post where it is spent ----------
+const MB = `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#8a5a2b" stroke="#2b1a10" stroke-width="3.4"/><ellipse cx="20" cy="20" rx="10" ry="12" fill="#b07a45" stroke="#2b1a10" stroke-width="2"/><path d="M15 16 q5 -4 10 0 M15 24 q5 4 10 0" fill="none" stroke="#2b1a10" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+const thing = inner => `<svg viewBox="0 0 70 55"><g ${INKED}>${inner}</g></svg>`;
+const SHOP = { title: "The trading post", items: [
+  { id: "cup", name: "A tin cup", cost: 4, art: () => thing(`<path d="M22 14 H46 L43 44 H25 Z" fill="#c9ced6"/><path d="M46 20 Q58 22 54 32 Q52 38 44 36" fill="none"/>`) },
+  { id: "paddle", name: "A paddle", cost: 6, art: () => thing(`<path d="M14 46 L44 16" fill="none" stroke-width="5"/><path d="M40 20 Q46 4 60 6 Q62 20 46 26 Z" fill="#c89a5e"/>`) },
+  { id: "lantern", name: "A lantern", cost: 10, art: () => thing(`<path d="M27 8 Q35 0 43 8" fill="none"/><rect x="25" y="10" width="20" height="6" rx="2" fill="#6a6f7a"/><rect x="24" y="16" width="22" height="26" rx="4" fill="#ffe08a"/><rect x="22" y="42" width="26" height="7" rx="2" fill="#6a6f7a"/><path d="M35 34 Q30 28 35 22 Q40 28 35 34 Z" fill="#ff8a3d" stroke-width="1.6"/>`) },
+  { id: "blanket", name: "A wool blanket", cost: 10, art: () => thing(`<rect x="10" y="14" width="50" height="30" rx="7" fill="#fbf6ea"/><path d="M10 22 H60 M10 36 H60" stroke="#e63946" stroke-width="5"/><path d="M10 29 H60" stroke="#3b82c4" stroke-width="4"/>`) },
+  { id: "kettle", name: "A copper kettle", cost: 12, art: () => thing(`<path d="M20 18 Q35 0 50 18" fill="none"/><path d="M16 18 H54 Q58 40 46 48 H24 Q12 40 16 18 Z" fill="#c9793a"/>`) },
+  { id: "snowshoes", name: "Snowshoes", cost: 14, art: () => thing(`<ellipse cx="24" cy="26" rx="11" ry="20" fill="#e8d2a0" transform="rotate(-12 24 26)"/><ellipse cx="47" cy="28" rx="11" ry="20" fill="#e8d2a0" transform="rotate(12 47 28)"/><path d="M17 20 L31 30 M18 32 L30 20 M40 22 L54 34 M41 34 L53 22" stroke-width="1.6"/>`) },
+  { id: "compass", name: "A compass", cost: 15, art: () => thing(`<circle cx="35" cy="28" r="20" fill="#f4b942"/><circle cx="35" cy="28" r="14" fill="#fffdf5"/><path d="M35 16 L40 28 L35 40 L30 28 Z" fill="#e63946" stroke-width="1.6"/>`) },
+  { id: "canoe", name: "A birchbark canoe", cost: 30, art: () => thing(`<path d="M4 18 Q10 30 22 30 H48 Q60 30 66 18 Q64 42 48 46 H22 Q6 42 4 18 Z" fill="#e8d2a0"/><path d="M9 26 Q16 34 24 34 H46 Q54 34 61 26" fill="none" stroke="#8a5a2b" stroke-width="2"/>`) }] };
+</script>
+<!-- The six chapters. Each file adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
+<script src="shared/g7-ch1.js?v=34"></script>
+<script src="shared/g7-ch2.js?v=34"></script>
+<script src="shared/g7-ch3.js?v=34"></script>
+<script src="shared/g7-ch4.js?v=34"></script>
+<script src="shared/g7-ch5.js?v=34"></script>
+<script src="shared/g7-ch6.js?v=34"></script>
+<script>
+"use strict";
+// ---------- start the game (the engine is shared/chapters.js) ----------
+window.Chapters = ChapterGame({ title: "Dr. Somebody Heads West", sub: "A Grade 7 story", saveKey: "grade7West.v1", medal: "g7",
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", coin: { name: "Made Beaver", icon: MB }, shop: SHOP,
+  map: { art: westMap, stops: [[83, 62], [66, 54], [63, 76], [41, 72], [22, 58], [17, 34]] } });
+</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>

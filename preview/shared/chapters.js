@@ -5,12 +5,16 @@
      { art, say: [captions], word: [new word, meaning] }          a story scene to read
      { ask, intro, need }                                         a challenge: right answers unlock the next scene
      { pick: "the question", art, options: [{ label, art, say }] } a choice: the child decides what happens next
-   Start a game with ChapterGame({ title, sub, saveKey, medal, chapters, ask, art, intro, introVoice, map, wordsLabel }).
+     A scene may have who: "a name" (shown before its lines), for stories told by two people in turn.
+   Start a game with ChapterGame({ title, sub, saveKey, medal, chapters, ask, art, intro, introVoice, map, wordsLabel, coin, shop }).
      ask[name](G) makes one question: { html, text, choices: [{ html, ok }], why }.
      art[name]() draws one picture.
      intro: [[art name, line]], played once when the book is first opened, in the recorded voice from introVoice.
      map: { art(), stops: [[left %, top %], ...] } shows the chapters as places on a map instead of a list.
      wordsLabel: turns on the word collection (a scene with "word" adds to it).
+     coin: { name, icon } turns on money: 1 for each right answer, 2 more for a challenge with no mistakes.
+     shop: { title, items: [{ id, name, cost, art() }] } is where the money is spent (things for the journey, to keep).
+     The question makers get G.choice: which option (0 or 1) was picked at this chapter's choice, so the maths can follow it.
    Every line is shown in writing. A missing recording is never replaced by the device voice.
    Needs shared/kit.js, shared/story.js (for its helpers), shared/newowl.js and shared/inkart.js.
    ===================================================================== */
@@ -22,6 +26,7 @@ function ChapterGame(C) {
   let S = Kit.load(C.saveKey, () => ({ beat: CHAPTERS.map(() => 0), done: [], words: [] })); // beat[c]: how far chapter c has been opened
   while (S.beat.length < CHAPTERS.length) S.beat.push(0);
   if (!S.words) S.words = [];
+  if (!S.coins) S.coins = 0; if (!S.bought) S.bought = []; if (!S.picks) S.picks = {};
   const save = () => Kit.save(C.saveKey, S);
   const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
   const { sfx, confetti, animate } = Kit;
@@ -36,7 +41,7 @@ function ChapterGame(C) {
   <div class="screen" id="intro"><div class="panel" id="introPanel"></div><div class="caption" id="introCap"></div>
     <div class="nextrow"><button class="bigbtn small" id="introNext" aria-label="Next"><span class="tri"></span></button></div></div>
   <div class="screen" id="map">${C.map ? `<div class="panel mappanel" id="mapPanel"></div><div class="caption mapcap" id="mapCap"></div><div class="nextrow"><button class="bigbtn small" id="mapGo" aria-label="Go"><span class="tri"></span></button></div>` : `<div class="chapters" id="chapters"></div>`}
-    <button class="again" id="introAgain"${INTRO.length ? "" : " hidden"}>▶ Watch the beginning again</button></div>
+    <button class="again" id="introAgain"${INTRO.length ? "" : " hidden"}>▶ Watch the beginning again</button>${C.shop ? `<button class="again shopbtn" id="shopBtn"></button>` : ""}</div>
   <div class="screen" id="story"><div class="dots" id="dots"></div><div class="panel" id="panel"></div><div class="caption" id="caption"></div>
     <div class="nextrow" id="nextRow"><button class="bigbtn small back" id="backBtn" aria-label="Back"><span class="tri"></span></button><button class="bigbtn small" id="nextBtn" aria-label="Next"><span class="tri"></span></button></div>
     <div class="options" id="options"></div><div class="cheer wordcheer" id="wordCheer"></div></div>
@@ -45,13 +50,30 @@ function ChapterGame(C) {
   <button class="corner left" id="homeBtn" aria-label="Back to the chapters" style="display:none">${ICON.home}</button>
   <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">${ICON.shelf}</button>
   <button class="corner right words" id="wordsBtn" aria-label="My words" style="display:none">${ICON.words || "Aa"}</button>
-  <div id="wordbook"><div class="panel" id="wordPanel"></div></div>`;
+  <div class="coinchip" id="coinChip" style="display:none"></div>
+  <div id="wordbook"><div class="panel" id="wordPanel"></div></div><div id="shop"><div class="panel" id="shopPanel"></div></div>`;
 
   function show(id) {
     document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
     $("homeBtn").style.display = id === "story" || id === "game" ? "" : "none";
     $("shelfBtn").style.display = id === "title" || id === "map" ? "" : "none";
     $("wordsBtn").style.display = C.wordsLabel && (id === "map" || id === "story") ? "" : "none";
+    $("coinChip").style.display = C.coin && id === "game" ? "" : "none"; drawCoins();
+  }
+  // ---------- money: earned by right answers, spent at the trading post ----------
+  const coinText = n => `${C.coin.icon}<b>${n}</b>`;
+  function drawCoins() { if (!C.coin) return; $("coinChip").innerHTML = coinText(S.coins); if (C.shop) $("shopBtn").innerHTML = `${coinText(S.coins)} <span>${C.shop.title}</span>`; }
+  function earn(n) { if (!C.coin) return; S.coins += n; save(); drawCoins(); animate($("coinChip"), "pop"); }
+  function drawShop() {
+    $("shopPanel").innerHTML = `<h2>${C.shop.title} <small>You have ${coinText(S.coins)} ${C.coin.name}</small></h2><div class="shoplist">${C.shop.items.map(it => { const mine = S.bought.includes(it.id);
+      return `<div class="item${mine ? " mine" : ""}">${it.art()}<b>${it.name}</b>${mine ? `<span class="yours">Yours!</span>` : `<button class="buy" data-id="${it.id}"${S.coins >= it.cost ? "" : " disabled"}>${coinText(it.cost)}</button>`}</div>`; }).join("")}</div><button class="again" id="shopClose">OK</button>`;
+    $("shopClose").addEventListener("click", () => { sfx.tap(); $("shop").classList.remove("on"); });
+  }
+  if (C.shop) {
+    $("shopBtn").addEventListener("click", () => { sfx.tap(); drawShop(); $("shop").classList.add("on"); });
+    $("shop").addEventListener("click", e => { if (e.target === $("shop")) return $("shop").classList.remove("on");
+      const b = e.target.closest(".buy"); if (!b || b.disabled) return; const it = C.shop.items.find(i => i.id === b.dataset.id); if (!it || S.coins < it.cost) return;
+      S.coins -= it.cost; S.bought.push(it.id); save(); sfx.sparkle(); confetti(30); drawCoins(); drawShop(); });
   }
   $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); if (S.seenIntro || !INTRO.length) showMap(); else playIntro(); });
 
@@ -122,13 +144,17 @@ function ChapterGame(C) {
     drawScene();
   }
   function drawScene() { const sc = sceneAt(); $("options").innerHTML = ""; $("nextRow").style.display = ""; $("panel").innerHTML = ART[sc.art](); animate($("panel"), "pop"); drawLine(); learn(sc.word); }
-  function drawLine() { $("caption").innerHTML = `<div>${sceneAt().say[at.line]}</div>`; $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
+  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${sc.who}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
+  function fitCaption() { // a long line gets slightly smaller writing, so it never spills out of its box
+    const cap = $("caption"); cap.style.fontSize = ""; const base = parseFloat(getComputedStyle(cap).fontSize);
+    for (let i = 1; i <= 6 && cap.scrollHeight > cap.clientHeight + 1; i++) cap.style.fontSize = (base * (1 - .06 * i)).toFixed(2) + "px";
+  }
   function drawPick() { // a choice: the question, and a big button for each way to go
     const beat = beatAt(); at.opt = null;
-    $("panel").innerHTML = ART[beat.art](); animate($("panel"), "pop"); $("caption").innerHTML = `<div>${beat.pick}</div>`; $("nextRow").style.display = "none";
+    $("panel").innerHTML = ART[beat.art](); animate($("panel"), "pop"); $("caption").innerHTML = `<div>${beat.pick}</div>`; fitCaption(); $("nextRow").style.display = "none";
     $("options").innerHTML = beat.options.map((o, i) => `<button class="option" data-o="${i}">${o.label}</button>`).join("");
   }
-  $("options").addEventListener("click", e => { const b = e.target.closest(".option"); if (!b || !at) return; sfx.tap(); at.opt = +b.dataset.o; at.line = 0; drawScene(); });
+  $("options").addEventListener("click", e => { const b = e.target.closest(".option"); if (!b || !at) return; sfx.tap(); at.opt = +b.dataset.o; at.line = 0; S.picks[at.c] = at.opt; save(); drawScene(); });
   $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats;
     if (at.line < sceneAt().say.length - 1) { at.line++; drawLine(); return; }
     if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
@@ -153,7 +179,7 @@ function ChapterGame(C) {
   let G = null;
   function cheer(text) { const c = $("cheer"); c.textContent = text; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); }
   function startAsk(beat) {
-    G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true };
+    G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true, choice: S.picks[at.c] || 0 };
     $("stars").innerHTML = Array(G.need).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
     show("game"); nextAsk(beat.intro);
   }
@@ -171,10 +197,10 @@ function ChapterGame(C) {
     const q = G.q, g = G;
     if (ch.ok) {
       G.busy = true; sfx.yes(); el.classList.add("right"); [...$("choices").children].forEach(b => { if (b !== el) b.classList.add("dim"); });
-      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
+      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); earn(1); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
       await wait(2600); if (G !== g) return;
       if (G.stars < G.need) return nextAsk();
-      if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer("Perfect!"); } sfx.party(); confetti(40);
+      if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } sfx.party(); confetti(40);
       await wait(1300); if (G !== g) return;
       G = null; openBeat(at.c, at.b + 1);
     } else {
@@ -184,6 +210,6 @@ function ChapterGame(C) {
   }
 
   // for testing by hand: the moving parts of the game
-  return { get S() { return S; }, set S(v) { S = v; while (S.beat.length < CHAPTERS.length) S.beat.push(0); if (!S.words) S.words = []; }, get G() { return G; }, set G(v) { G = v; }, get at() { return at; }, get introAt() { return introAt; },
-    show, showMap, openBeat, drawLine, drawScene, nextAsk, playIntro, CHAPTERS, ASK, ART, INTRO };
+  return { get S() { return S; }, set S(v) { S = v; while (S.beat.length < CHAPTERS.length) S.beat.push(0); if (!S.words) S.words = []; if (!S.coins) S.coins = 0; if (!S.bought) S.bought = []; if (!S.picks) S.picks = {}; }, get G() { return G; }, set G(v) { G = v; }, get at() { return at; }, get introAt() { return introAt; },
+    show, showMap, openBeat, drawShop, drawLine, drawScene, nextAsk, playIntro, CHAPTERS, ASK, ART, INTRO };
 }

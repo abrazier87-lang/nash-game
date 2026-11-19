@@ -71,3 +71,19 @@ h1 { font-size:7vmin; padding:0 14vmin; }
 .word { background:#fff; border:.5vmin solid var(--ink); border-radius:2.4vmin; padding:.6vmin 1.2vmin; display:flex; flex-direction:column; font-size:2.5vmin; line-height:1.2; }
 .word b { color:#d62839; font-size:1.15em; } .word.unmet { background:#ece6da; border-color:#b5ab99; color:#b5ab99; } .word.unmet b { color:#b5ab99; }
 @media (max-aspect-ratio: 5/8) { .cheer.wordcheer { top:auto; bottom:3vmin; } #map:has(.mappanel) { padding-top:22vmin; } .option { font-size:4.6vmin; min-width:40vmin; } .word { font-size:3.6vmin; } .wordlist { grid-template-columns:1fr 1fr; } }
+/* a named speaker (two people telling one story) */
+.caption .who { display:inline-block; background:var(--ink); color:#fff; border-radius:2vmin; padding:.1em .7em; margin-right:.5em; font-size:.8em; vertical-align:.08em; }
+/* money and the trading post */
+.coinchip { position:fixed; top:3vmin; right:3vmin; z-index:5; background:#fffdf5; border:var(--line) solid var(--ink); border-radius:5vmin; box-shadow:0 .7vmin 0 var(--ink); padding:1vmin 2.4vmin 1vmin 1.4vmin; font-size:4vmin; font-weight:bold; color:var(--ink); display:flex; align-items:center; gap:1vmin; }
+.coinchip svg, .shopbtn svg, #shop h2 svg, .buy svg { display:inline-block; width:1.2em; height:1.2em; vertical-align:-.25em; flex:0 0 auto; }
+.again.shopbtn { display:inline-flex; align-items:center; gap:.4em; } .again.shopbtn span { margin-left:.3em; }
+#shop { position:fixed; inset:0; background:rgba(43,26,16,.55); display:none; align-items:center; justify-content:center; z-index:20; } #shop.on { display:flex; }
+#shop .panel { width:min(94vw, 150vmin); aspect-ratio:auto; height:auto; max-height:90vh; overflow:auto; background:#fffaf0; padding:2.4vmin 3vmin 0; text-align:center; }
+#shop .panel::after { content:""; display:block; height:2vmin; } #shop .again { position:sticky; bottom:0; margin:0 auto; display:block; }
+#shop h2 { margin:0 0 1.6vmin; font-size:4.4vmin; } #shop h2 small { display:block; font-size:.62em; color:#6a5a4c; white-space:nowrap; }
+.shoplist { display:grid; grid-template-columns:repeat(auto-fill, minmax(24vmin, 1fr)); gap:1.4vmin; margin-bottom:1.6vmin; }
+.item { background:#fff; border:.5vmin solid var(--ink); border-radius:2.4vmin; padding:1vmin; display:flex; flex-direction:column; align-items:center; gap:.6vmin; font-size:2.6vmin; }
+.item > svg { width:14vmin; height:11vmin; } .item.mine { background:#e9f6e4; } .item .yours { color:#2f7d57; font-weight:bold; }
+.buy { background:#ffd84d; border:.5vmin solid var(--ink); border-radius:3vmin; box-shadow:0 .5vmin 0 var(--ink); padding:.4vmin 2vmin; font-size:3vmin; font-weight:bold; color:var(--ink); display:inline-flex; align-items:center; gap:.4em; }
+.buy:disabled { background:#ece6da; color:#9a907f; border-color:#b5ab99; box-shadow:none; }
+@media (max-aspect-ratio: 5/8) { .shoplist { grid-template-columns:1fr 1fr; } .item { font-size:3.8vmin; } .item > svg { width:26vmin; height:20vmin; } .buy { font-size:4.4vmin; } .coinchip { font-size:5vmin; } }
