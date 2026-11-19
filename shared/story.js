@@ -98,6 +98,7 @@ function StoryGame(C) {
   const helperFor = (q, alive) => { // the hint tools (shared/kit.js), speaking in the host's recorded voice
     const H = Kit.hintHelper({ bubble: $("bubble"), box: $("choices"), q, alive });
     if (C.lineVoice) { const plain = H.say; H.say = (words, clip) => plain(words, clip || (() => talk(words))); }
+    if (q.tap) H.cards = () => [...$("bubble").querySelectorAll("[data-pick]")].filter(el => el._ch && !el.classList.contains("dim")).map(el => ({ el, ch: el._ch }));
     return H;
   };
   const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
@@ -118,10 +119,10 @@ function StoryGame(C) {
     <div class="screen on" id="title"><h1>${C.title}</h1><p class="sub" id="titleSub"></p><div class="host big" id="titleHost">${C.titleArt || C.host}</div>
       <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
     <div class="screen" id="map"><div class="places" id="places"></div><div class="progress" id="progress"></div><div class="stickers" id="stickers"></div></div>
-    <div class="screen" id="game"><div class="stars" id="stars"></div>
+    <div class="screen" id="game"><div class="stars" id="stars"></div><div class="cheer" id="cheer"></div>
       <div class="ask"><button class="host" id="gameHost" aria-label="Say it again">${C.host}<span class="hear"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span></button><div class="bubble" id="bubble"></div></div>
       <div class="choices" id="choices"></div></div>
-    <div class="screen" id="board"><button class="stage" id="boardStage" aria-label="Tap it"></button>${play("boardGo")}</div>
+    <div class="screen" id="board"><div class="newtag" id="boardNew">New friend!</div><button class="stage" id="boardStage" aria-label="Tap it"></button>${play("boardGo")}</div>
     <div class="screen" id="finale"><h1>${C.finaleTitle}</h1><div id="finaleArt"></div>${play("finaleGo")}</div>
     <div class="screen" id="scene"><div class="scenestage" id="sceneStage"></div><div class="scenecap" id="sceneCap"></div><button class="bigbtn sceneskip" id="sceneGo" aria-label="Keep going"><span class="tri"></span></button></div>
     <button class="corner left" id="homeBtn" aria-label="Back to the map" style="display:none">🏠</button>
@@ -129,6 +130,7 @@ function StoryGame(C) {
     <button class="corner right" id="grownBtn" aria-label="Grown-ups: press and hold">⚙️</button>
     <button class="corner right hint" id="hintBtn" aria-label="Hint (one each round)" style="display:none">💡</button>
     <button class="corner right lesson" id="lessonBtn" aria-label="Show me how" style="display:none">📖</button>
+    <div id="book"><div class="panel" id="bookPanel"></div></div>
     <div id="grown"><div class="panel" id="grownPanel"></div></div>`;
   $("titleSub").textContent = C.sub + (NAME ? " for " + NAME : "");
 
@@ -148,12 +150,14 @@ function StoryGame(C) {
   // the next two questions come with the help already showing, and the 📖 button replays the lesson any time.
   // After a second wrong try the host explains the answer step by step, and a question that needed help
   // comes back a little later ("bring it back"), because practising again after a short gap helps it stick.
-  let G = null;
+  let G = null, newMedal = null;
+  // A little cheer that pops up under the stars ("3 in a row!"). It is only a picture and a sound: nothing new is spoken.
+  function cheer(text) { const c = $("cheer"); c.textContent = text; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); }
   const REVIEW = {}; // questions to bring back, for as long as the game is open: { place: [{ q, due }] }
   function startGame(id) {
-    G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0 }; // one hint per round
+    G = { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0, seen: new Set(), run: 0, perfect: true }; // one hint per round
     $("hintBtn").classList.remove("used");
-    $("stars").innerHTML = Array(STARS).fill('<div class="star">⭐</div>').join("");
+    $("stars").innerHTML = Array(STARS).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect"); $("cheer").classList.remove("show");
     show("game");
     if (C.lessons && GAMES[id].lesson && !(S.learned || {})[id]) runLesson(true);
     else nextQuestion(GAMES[id].intro + " ");
@@ -186,20 +190,27 @@ function StoryGame(C) {
     let q, tries = 0;
     const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
     if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = (lead || "") + "Here's a tricky one again. "; } // bring it back
-    else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 8 && keyOf(q) === G.last);
-    G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
+    else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 14 && (keyOf(q) === G.last || G.seen.has(keyOf(q)))); // not one already asked this round
+    const guide = C.lessons && G.guided > 0 && q.hint; // "Try together": show the help straight after asking
+    q.golden = !q.reviewed && !guide && G.count > 0 && G.stars < STARS - 1 && rand(7) === 0; // now and then, a golden question: right first time wins two stars
+    G.seen.add(keyOf(q)); G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
     const shown = Kit.writtenBubble(q, C.written); // with talking off (or in a grade with C.written), the question is also shown in writing
     $("gameHost").classList.toggle("mute", !Kit.settings.voice); // the little speaker on the host only shows when there is something to hear
     $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); $("bubble").classList.remove("lessonframe"); animate($("bubble"), "pop");
+    $("bubble").classList.toggle("golden", !!q.golden); if (q.golden) { sfx.sparkle(); cheer("Golden question!"); }
+    $("game").classList.toggle("tapgame", !!q.tap);
     const box = $("choices"); box.innerHTML = "";
+    if (q.tap) { // the answer is tapped on the picture itself (anything marked data-pick), not on a card
+      box.innerHTML = `<div class="taphint"><span>👆</span></div>`;
+      $("bubble").querySelectorAll("[data-pick]").forEach(el => { const ch = q.choices.find(c => String(c.pick) === el.dataset.pick); if (ch) { el._ch = ch; el.addEventListener("click", () => choose(el, ch)); } });
+    } else {
     box.style.setProperty("--cs", q.choices.length >= 4 ? "22vmin" : q.choices.length === 3 ? "27vmin" : "32vmin");
     q.choices.forEach(ch => {
       const b = document.createElement("button"); b.className = "choice pop"; b.innerHTML = ch.html; b._ch = ch; // (the hint needs to know which card is which)
       b.addEventListener("click", () => choose(b, ch));
       box.appendChild(b); fitText(b);
-    });
-    const guide = C.lessons && G.guided > 0 && q.hint; // "Try together": show the help straight after asking
-    if (guide) { G.guided--; G.hinted = true; }
+    }); }
+    if (guide) { G.guided--; G.hinted = true; q.guided = true; }
     const asked = say((lead || "") + q.say), g = G;
     if (guide) asked.then(done => { if (G === g && g.q === q && !g.busy && (done || !Kit.settings.voice)) q.hint(helperFor(q, () => G === g && g.q === q && !g.busy)); });
   }
@@ -209,17 +220,20 @@ function StoryGame(C) {
     if (ch.ok) {
       G.busy = true; sfx.yes();
       animate($("gameHost"), "bounce");
-      el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); });
+      el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); $("bubble").classList.remove("golden");
       G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
-      if (C.lessons && (!G.first || G.hinted) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: ask it again a little later
+      const clean = G.first && (!G.hinted || q.guided); // right first time (the "try together" help does not spoil it)
+      if (clean) { G.run++; if (G.run === 3 || G.run === 5) { sfx.sparkle(); cheer(G.run + " in a row!"); } } else { G.run = 0; G.perfect = false; }
+      if (q.golden && clean && G.stars < STARS) { G.stars++; $("stars").children[G.stars - 1].classList.add("got", "gold"); $("stars").children[G.stars - 2].classList.add("gold"); S.gold = (S.gold || 0) + 1; confetti(25); cheer("Golden star!"); }
+      if (C.lessons && (!G.first || (G.hinted && !q.guided)) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: ask it again a little later
       const spoken = sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
       Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
       adjust(G.first && !G.hinted); // an answer found with a hint does not make the place harder
       await spoken;
       if (!G || G.q !== q) return;
-      if (G.stars >= STARS) finishGame(); else nextQuestion();
+      if (G.stars >= STARS) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.party(); confetti(40); cheer("Perfect round!"); await wait(1500); if (!G || G.q !== q) return; } finishGame(); } else nextQuestion();
     } else {
-      sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1;
+      sfx.oops(); G.first = false; G.wrongs = (G.wrongs || 0) + 1; G.run = 0; G.perfect = false;
       animate(el, "wobble"); el.classList.add("dim");
       if (C.hints && G.hints > 0) animate($("hintBtn"), "wobble"); // a gentle nudge: a hint is there if they want it
       if (C.lessons && G.wrongs >= 2 && q.explain && !q.explained) { // a second wrong try: show how to work it out, step by step
@@ -237,6 +251,8 @@ function StoryGame(C) {
   }
   function finishGame() {
     const id = G.id; G = null;
+    const step = S.skill[id], level = step >= 4 ? 3 : step >= 3 ? 2 : 1, medals = S.medals || (S.medals = {});
+    if (level > (medals[id] || 0)) { medals[id] = level; newMedal = id; save(); }
     if (S.aboard[id]) { sfx.party(); confetti(30); Promise.all([speak("replay", C.lines.replay), wait(2600)]).then(() => { if (current === "game") showMap(); }); } // back to the map once the host has finished // already won here this trip
     else if (C.celebrations) { // a short celebration scene first, with a fun fact about the place (a different one each time)
       const facts = C.celebrations.facts, k = (S.factAt || 0) % facts.length; S.factAt = k + 1; save();
@@ -273,8 +289,9 @@ function StoryGame(C) {
   // ---------- the reward after winning a place ----------
   let B = null;
   function startBoard(id) {
-    const taken = got(), who = pick(C.rewards.filter(r => !taken.includes(r[1])));
+    const taken = got(), left = C.rewards.filter(r => !taken.includes(r[1])), unmet = left.filter(r => !S.stickers.includes(r[1])), who = pick(unmet.length ? unmet : left);
     B = { id, who, taps: 0, done: false };
+    $("boardNew").classList.toggle("show", !S.stickers.includes(who[1]));
     $("boardStage").textContent = who[1];
     $("boardGo").classList.remove("show");
     show("board"); sfx.party(); confetti(25); animate($("boardStage"), "pop");
@@ -315,7 +332,9 @@ function StoryGame(C) {
     GAME_IDS.forEach(id => {
       const g = GAMES[id], b = document.createElement("button");
       b.className = "place" + (S.aboard[id] ? " done" : "");
-      b.innerHTML = `<div class="pic">${g.icon}</div><div class="name">${g.name}</div>` + (S.aboard[id] ? `<div class="badge">${S.aboard[id]}</div>` : "");
+      const lvl = (S.medals || {})[id] || 0;
+      b.innerHTML = `<div class="pic">${g.icon}</div><div class="name">${g.name}</div>` + (S.aboard[id] ? `<div class="badge">${S.aboard[id]}</div>` : "")
+        + `<div class="medals${newMedal === id ? " new" : ""}">${[1, 2, 3].map(k => `<i class="${k <= lvl ? "m" + k : ""}"></i>`).join("")}</div>`; // bronze, silver, gold: one for each harder step finished here
       b.addEventListener("click", () => { sfx.tap(); startGame(id); });
       $("places").appendChild(b);
     });
@@ -327,8 +346,10 @@ function StoryGame(C) {
       slot.addEventListener("click", () => { sfx.tap(); const card = $("places").children[GAME_IDS.indexOf(id)]; if (card) animate(card, "bounce");
         $("progress").querySelectorAll(".from").forEach(f => f.remove());
         const tag = document.createElement("span"); tag.className = "from"; tag.textContent = GAMES[id].name; slot.appendChild(tag); setTimeout(() => tag.remove(), 2600); }); });
-    const earlier = S.stickers.slice(0, Math.max(0, S.stickers.length - on.length)).slice(-14);
-    $("stickers").innerHTML = earlier.length ? `<small>${C.stickersLabel}</small>` + earlier.map(e => `<span>${e}</span>`).join("") : "";
+    newMedal = null;
+    const met = C.rewards.filter(r => S.stickers.includes(r[1])).length;
+    $("stickers").innerHTML = `<button class="friendsbtn" id="bookBtn" aria-label="My friends">${C.stickersLabel} <b>${met} / ${C.rewards.length}</b></button>`;
+    $("bookBtn").addEventListener("click", () => { sfx.tap(); openBook(); });
     show("map");
     const left = NEED - on.length;
     if (line === "hello") speak("hello", C.lines.hello(NAME)); else if (line === "again") speak("again", C.lines.again); else if (left === NEED) speak("start", C.lines.start); else speak("left" + left, C.lines.left(left));
@@ -373,6 +394,32 @@ function StoryGame(C) {
     $("grown").classList.add("on");
   }
   Kit.hold($("grownBtn"), openGrown);
+
+  // ---------- the friends book: every friend there is to meet, and the medals won ----------
+  function openBook() {
+    const medals = Object.values(S.medals || {}), count = k => medals.filter(m => m >= k).length;
+    $("bookPanel").innerHTML = `<h2>${C.stickersLabel.replace(/:$/, "")}</h2>
+      <div class="friends">${C.rewards.map(r => S.stickers.includes(r[1]) ? `<button class="friend"><span>${r[1]}</span><small>${r[0]}</small></button>` : `<div class="friend unmet"><span>?</span><small>&nbsp;</small></div>`).join("")}</div>
+      <div class="tally"><span><i class="m1"></i> ${count(1)} / ${GAME_IDS.length}</span><span><i class="m2"></i> ${count(2)} / ${GAME_IDS.length}</span><span><i class="m3"></i> ${count(3)} / ${GAME_IDS.length}</span><span>⭐ ${S.gold || 0}</span></div>
+      <button class="main" id="bookClose">OK</button>`;
+    $("book").classList.add("on");
+    $("bookClose").addEventListener("click", () => { sfx.tap(); $("book").classList.remove("on"); });
+    $("bookPanel").querySelectorAll("button.friend").forEach(b => b.addEventListener("click", () => { sfx.boing(); animate(b, "bounce"); }));
+  }
+  $("book").addEventListener("click", e => { if (e.target === $("book")) $("book").classList.remove("on"); });
+
+  // ---------- little surprises: tap the scenery (the sun, a cloud, a pyramid...) and it hops or spins ----------
+  let pokes = 0;
+  $("app").addEventListener("click", e => {
+    if (!e.target.classList || !e.target.classList.contains("screen")) return; // only taps on the empty background
+    const things = [...document.querySelector("#app > .layer").children].reverse();
+    const hit = things.find(el => { const r = el.getBoundingClientRect(); return r.width && r.width < innerWidth * .6 && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && getComputedStyle(el).opacity !== "0"; });
+    if (!hit || !hit.animate) return;
+    Kit.audio(); sfx.boing(); pokes++;
+    if (hit.classList.contains("sun") || hit.classList.contains("ringed")) hit.animate([{ rotate: "0deg", scale: "1" }, { rotate: "180deg", scale: "1.25" }, { rotate: "360deg", scale: "1" }], { duration: 800, easing: "ease-in-out" });
+    else hit.animate([{ translate: "0 0", rotate: "0deg" }, { translate: "0 -4vmin", rotate: "-5deg" }, { translate: "0 0", rotate: "4deg" }, { translate: "0 -1.5vmin", rotate: "0deg" }, { translate: "0 0" }], { duration: 650, easing: "ease-out" });
+    if (pokes % 7 === 0) { sfx.sparkle(); confetti(14); } // every so often, a sprinkle of confetti too
+  });
   $("grownPanel").addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
     const act = t.dataset.act, id = t.dataset.id;
