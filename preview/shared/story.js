@@ -413,6 +413,7 @@ function StoryGame(C) {
       <div class="line"><div>Adjust difficulty automatically</div><button data-act="auto">${S.auto ? "On" : "Off"}</button></div>
       <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
       <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
+    <div class="line"><div>Music</div><button data-act="music">${Kit.settings.music ? "On" : "Off"}</button></div>
       <div class="foot"><button class="warn" data-act="reset">Start over (erase progress)</button><button class="main" data-act="close">Done</button></div>`;
     $("grown").classList.add("on");
   }
@@ -451,6 +452,7 @@ function StoryGame(C) {
     if (act === "auto") S.auto = !S.auto;
     if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
     if (act === "sound") Kit.settings.sound = !Kit.settings.sound;
+  if (act === "music") { Kit.settings.music = !Kit.settings.music; if (!Kit.settings.music) Kit.stopMusic(); }
     if (act === "reset") { if (!confirm("Erase this game's progress and start over?")) return; S = fresh(); }
     save(); Kit.saveSettings();
     if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }

@@ -86,7 +86,7 @@ function ChapterGame(C) {
       const b = e.target.closest(".buy"); if (!b || b.disabled) return; const it = C.shop.items.find(i => i.id === b.dataset.id); if (!it || S.coins < it.cost) return;
       S.coins -= it.cost; S.bought.push(it.id); save(); sfx.sparkle(); confetti(30); drawCoins(); drawShop(); });
   }
-  $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); if (S.seenIntro || !INTRO.length) showMap(); else playIntro(); });
+  $("playBtn").addEventListener("click", () => { Kit.audio(); sfx.tap(); if (S.seenIntro || !INTRO.length) { showMap(); Kit.music("theme", 0.4); } else playIntro(); }); // the theme plays over the map, where nobody is talking
 
   // ---------- the intro: a few pictures, each with one line in the recorded voice ----------
   // It plays by itself the first time the book is opened. The arrow skips ahead; a button on the chapter screen plays it again.
@@ -179,8 +179,9 @@ function ChapterGame(C) {
   $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats;
     if (at.line < sceneAt().say.length - 1) { at.line++; drawLine(); return; }
     if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
-    const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } if (!CHAPTERS[at.c].quiet) { sfx.party(); confetti(80); } // the chapter is finished
-    if (CHAPTERS.every((c, i) => !c.beats || S.done.includes(i)) && CHAPTERS.every(c => c.beats)) { Kit.stamp(C.medal); confetti(120); } // every chapter done: the medal goes on the book shelf
+    const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } const quietOne = CHAPTERS[at.c].quiet; Kit.hush(); if (!quietOne) confetti(80); // the chapter is finished
+    if (CHAPTERS.every((c, i) => !c.beats || S.done.includes(i)) && CHAPTERS.every(c => c.beats)) { const had = Kit.stamps().includes(C.medal); Kit.stamp(C.medal); confetti(120); if (had && !quietOne && !Kit.music("chapter-complete")) sfx.party(); } // every chapter done: the medal goes on the book shelf (a new medal plays its own tune)
+    else if (!quietOne && !Kit.music("chapter-complete")) sfx.party();
     showMap(); if (C.certificate && first && allDone()) showCert(); });
   $("backBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); if (at.line > 0) { at.line--; drawLine(); return; }
     if (beatAt().pick && at.opt !== null) return drawPick(); // back from a choice's scene to the choice itself
@@ -223,7 +224,7 @@ function ChapterGame(C) {
       G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
       await wait(2600); if (G !== g) return;
       if (G.stars < G.need) return nextAsk();
-      if (!G.quiet) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } sfx.party(); confetti(40); }
+      if (!G.quiet) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } const tune = Kit.music("well-done"); if (!tune) sfx.party(); confetti(40); await wait(tune ? 1900 : 0); } // with music on, the jingle gets a little longer before the story moves on
       await wait(1300); if (G !== g) return;
       G = null; openBeat(at.c, at.b + 1);
     } else {

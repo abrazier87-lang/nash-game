@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=35">
+<link rel="stylesheet" href="shared/kit.css?v=36">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=35"></script>
+<script src="shared/kit.js?v=36"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -885,6 +885,7 @@ function openGrown() {
     <div class="line"><div>Adjust difficulty automatically</div><button data-act="auto">${S.auto ? "On" : "Off"}</button></div>
     <div class="line"><div>Dot's talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
+    <div class="line"><div>Music</div><button data-act="music">${Kit.settings.music ? "On" : "Off"}</button></div>
     <div class="foot"><button class="warn" data-act="reset">Start over (erase progress)</button><button class="main" data-act="close">Done</button></div>`;
   $("grown").classList.add("on");
 }
@@ -897,6 +898,7 @@ $("grownPanel").addEventListener("click", e => {
   if (act === "auto") S.auto = !S.auto;
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
   if (act === "sound") Kit.settings.sound = !Kit.settings.sound;
+  if (act === "music") { Kit.settings.music = !Kit.settings.music; if (!Kit.settings.music) Kit.stopMusic(); }
   if (act === "reset") { if (!confirm("Erase this game's progress and start over?")) return; S = fresh(); }
   save(); Kit.saveSettings();
   if (act === "close") { $("grown").classList.remove("on"); if (current === "map") showMap(); return; }
