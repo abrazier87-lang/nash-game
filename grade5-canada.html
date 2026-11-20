@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dr. Somebody Comes Home</title>
+<link rel="stylesheet" href="shared/kit.css?v=37">
+<link rel="stylesheet" href="shared/inked.css?v=37">
+<link rel="stylesheet" href="shared/chapters.css?v=37">
+<style>
+  /* Grade 5's own colours. The storyboard look is in shared/chapters.css. */
+  :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=37"></script>
+<script src="shared/story.js?v=37"></script>
+<script src="shared/newowl.js?v=37"></script>
+<script src="shared/inkart.js?v=37"></script>
+<script src="shared/chapters.js?v=37"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY COMES HOME  -  the Grade 5 story (first try-out: Chapter 1)
+   Dr. Somebody is home in Canada, in his new flying gear. In each chapter a young guide shows him a place as it is
+   today, and the clock balloon opens a WINDOW INTO THE PAST to show the same place long ago.
+   A chapter is a row of "beats": story scenes to read, and challenges (3 right answers) that unlock the next scene.
+   This first version shows every line in writing and says nothing aloud: the words are recorded once they are settled.
+   The guide is Lily (the family chose the name).
+   ===================================================================== */
+
+// ---------- pictures (the drawing tools are in shared/inkart.js) ----------
+const ART = {
+  arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[130, 40, .8], [250, 70, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 152, 1.7)}${tree(366, 152, 1.5, "#3f9a58")}
+    ${house(250, 138, 46, 32, "#e63946")}
+    <g ${INKED}><path d="M-10 216 Q200 196 410 218 V250 H-10 Z" fill="#c9c9c9"/></g><path d="M20 226 h30 M90 224 h30 M160 223 h30 M230 224 h30 M300 226 h30" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    ${balloonAt(52, 6, 128)}${owlAt(150, 96, 118)}`),
+  guide: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[90, 44, .8], [210, 30, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(30, 148, 1.7)}
+    ${house(286, 126, 84, 46, "#3b82c4")}${owlAt(96, 96, 124)}${kidAt(238, 128, 1.15)}`),
+  window: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${hills("#9ed08f", "#7dbb7a")}${windowAt(236, 112, 92, village)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95)}`),
+  inside: () => frame(`<rect width="400" height="240" fill="#3a2a17"/><g ${INKED}><path d="M10 250 V120 Q200 -40 390 120 V250 Z" fill="#9a6b3c"/><path d="M28 250 V126 Q200 -16 372 126 V250 Z" fill="#d6aa72"/></g>
+    <g stroke="#9a6b3c" stroke-width="3.4" stroke-linecap="round">${[70, 130, 200, 270, 330].map(x => `<path d="M${x} 240 V${128 - 90 * Math.sin((x - 28) / 344 * Math.PI)}"/>`).join("")}</g>
+    <g ${INKED}><rect x="28" y="148" width="344" height="11" rx="3" fill="#8a5a2b"/>${[52, 148, 252, 348].map(x => `<rect x="${x - 19}" y="134" width="38" height="14" rx="4" fill="#f1ddb5"/>`).join("")}</g>
+    ${[60, 120, 180, 240, 300, 340].map((x, i) => `<path d="M${x} 58 v16" stroke="#2b1a10" stroke-width="1.6"/><ellipse cx="${x}" cy="84" rx="5" ry="10" fill="${i % 2 ? "#ffd23f" : "#f0a93b"}" ${THIN}/><path d="M${x} 74 q-6 -4 -7 -10 M${x} 74 q6 -4 7 -10" fill="none" stroke="#7fae62" stroke-width="2" stroke-linecap="round"/>`).join("")}
+    ${fire(96)}${fire(200)}${fire(304)}`),
+  garden: () => frame(`${sky("#bfe6ef", "#fdf3dc", [60, 44, 22], [[200, 40, .8], [330, 64, .6]])}${hills("#a9cf86", "#8dbd6c")}${longhouse(252, 96, 130, 42)}${tree(30, 142, 1.6, "#3f9a58")}
+    ${mound(70, 196, 1.2)}${mound(150, 206, 1.25)}${mound(232, 198, 1.2)}${mound(316, 208, 1.25)}${mound(112, 232, 1.1)}${mound(196, 236, 1.1)}${mound(280, 234, 1.1)}`),
+  today: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 46, 22], [[190, 38, .8]])}${hills("#9ed08f", "#7dbb7a")}
+    ${house(20, 118, 96, 52, "#3b82c4")}
+    <g ${INKED}><rect x="148" y="174" width="154" height="8" rx="3" fill="#b07a45"/><rect x="148" y="174" width="8" height="44" rx="3" fill="#b07a45"/><rect x="294" y="174" width="8" height="44" rx="3" fill="#b07a45"/></g>
+    ${mound(186, 214, .95)}${mound(232, 218, .95)}${mound(276, 214, .95)}${kidAt(340, 138, 1.05)}${owlAt(100, 122, 104)}
+    <g ${INKED}><path d="M362 150 L384 98" fill="none" stroke-width="4" stroke="#2b1a10"/><path d="M362 150 L384 98" fill="none" stroke="#b07a45" stroke-width="2"/><path d="M384 98 q12 -8 6 -24 q-14 2 -15 16 z" fill="#fbf1dc"/></g>`),
+  end: () => frame(`${sky("#ffd9a0", "#fdebd0", [200, 148, 40], [[70, 50, .8], [330, 40, .7]])}${hills("#9ed08f", "#7dbb7a")}${balloonAt(288, 6, 128)}${owlAt(96, 102, 122)}${kidAt(228, 132, 1.15)}`)
+};
+
+Object.assign(ART, {
+  lake: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[110, 40, .8], [230, 64, .6]])}${rock(-10, 150, 170, 46)}${pine(34, 116, 1.3)}${pine(76, 124, 1, "#3f9a58")}${rock(250, 140, 170, 36)}${pine(318, 112, 1.2, "#3f9a58")}${pine(356, 118, 1)}
+    ${water(146)}${rock(150, 176, 60, 16)}${pine(180, 164, .6)}${balloonAt(176, 2, 112)}<g ${INKED}><path d="M-10 222 Q110 204 190 226 V250 H-10 Z" fill="#c9b8a6"/></g>${owlAt(30, 122, 112)}`),
+  dock: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[120, 44, .8]])}${rock(240, 142, 180, 40)}${pine(312, 112, 1.2, "#3f9a58")}${pine(352, 118, 1)}${water(150)}
+    <g ${INKED}><rect x="-6" y="176" width="210" height="12" rx="3" fill="#b07a45"/>${[20, 80, 140, 196].map(x => `<rect x="${x}" y="184" width="8" height="50" rx="3" fill="#8a5a2b"/>`).join("")}</g>
+    ${canoe(292, 206, 1.15, { who: 0, today: true })}${owlAt(18, 76, 104)}${kidAt(150, 100, 1.05, NOAH)}
+    <g ${INKED}><path d="M182 112 L196 178" fill="none" stroke-width="4" stroke="#2b1a10"/><path d="M182 112 L196 178" fill="none" stroke="#b07a45" stroke-width="2"/><path d="M194 168 q8 4 6 18 q-10 0 -10 -14 z" fill="#b07a45"/></g>`),
+  lakewindow: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(170)}${shore}${windowAt(236, 112, 92, lakeLongAgo)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, NOAH)}`),
+  bark: () => frame(`<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M-10 190 Q200 170 410 190 V250 H-10 Z" fill="#a9cf86"/></g>${pine(40, 150, 1.5)}${pine(360, 150, 1.5, "#3f9a58")}
+    <g ${INKED}><rect x="92" y="30" width="18" height="150" rx="6" fill="#fbf6ea"/><rect x="290" y="30" width="18" height="150" rx="6" fill="#fbf6ea"/></g><g stroke="#2b1a10" stroke-width="2" stroke-linecap="round">${[50, 78, 110, 142].map(yy => `<path d="M95 ${yy} h8 M293 ${yy + 10} h8"/>`).join("")}</g>
+    <g ${INKED}><path d="M70 150 Q50 112 76 108 Q90 150 200 152 Q310 150 324 108 Q350 112 330 150 Q300 196 200 196 Q100 196 70 150 Z" fill="#ecd3a3"/><path d="M76 150 Q200 162 324 150" fill="none" stroke="#8a5a2b" stroke-width="5"/></g>
+    <g stroke="#8a5a2b" stroke-width="2.4" stroke-linecap="round" fill="none">${[110, 140, 170, 200, 230, 260, 290].map(x => `<path d="M${x} 156 q-3 18 0 36"/>`).join("")}<path d="M78 120 l12 6 M80 132 l12 6 M322 120 l-12 6 M320 132 l-12 6"/></g>
+    <g ${INKED}><path d="M150 206 q14 -10 30 0 q-14 12 -30 0 z" fill="#7a4a24"/><path d="M226 210 q20 -14 44 -2" fill="none" stroke="#8a5a2b" stroke-width="3"/></g>`),
+  portage: () => frame(`${sky("#bfe6ef", "#fdf3dc", [60, 44, 22], [[210, 38, .8]])}${water(120, "#6cc0ea")}<g ${INKED}><path d="M-10 150 Q120 120 220 150 T410 140 V250 H-10 Z" fill="#a9cf86"/><path d="M-10 230 Q120 190 230 206 T410 176 V250 H-10 Z" fill="#d9c7a0"/></g>
+    ${pine(40, 150, 1.5)}${pine(92, 158, 1.1, "#3f9a58")}${pine(350, 146, 1.5, "#3f9a58")}${rock(250, 176, 70, 20)}
+    <g transform="translate(200 146)"><g ${INKED}><path d="M-66 -6 Q-76 10 -64 12 Q-56 -4 0 -8 Q56 -4 64 12 Q76 10 66 -6 Q50 -24 0 -24 Q-50 -24 -66 -6 Z" fill="#ecd3a3"/><path d="M-62 -4 Q0 -12 62 -4" fill="none" stroke="#8a5a2b" stroke-width="3"/></g>
+      ${[-30, 30].map(dx => `<g transform="translate(${dx} 0)" ${THIN}><rect x="-6" y="44" width="5" height="24" rx="2" fill="#7a5a2e"/><rect x="2" y="44" width="5" height="24" rx="2" fill="#7a5a2e"/><path d="M-9 44 Q-10 20 0 16 Q10 20 9 44 Z" fill="#c98f58"/><path d="M-7 22 L-12 -4 M7 22 L12 -4" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M-7 22 L-12 -4 M7 22 L12 -4" fill="none" stroke="#c98f58" stroke-width="2.6"/><circle cx="0" cy="8" r="8" fill="#b9794a"/><path d="M-8 7 Q-8 -2 0 -2 Q8 -2 8 7 Q3 2 0 2 Q-4 2 -8 7 Z" fill="#2b1a10"/></g>`).join("")}</g>`),
+  ricewindow: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(170)}${shore}${windowAt(236, 112, 92, riceLongAgo)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, NOAH)}`),
+  laketoday: () => frame(`${sky("#ffd9a0", "#fdebd0", [330, 60, 26], [[100, 40, .8], [220, 60, .6]])}${rock(-10, 146, 150, 40)}${pine(34, 114, 1.2)}${pine(76, 122, 1, "#3f9a58")}${water(140, "#6cc0ea")}
+    ${[250, 282, 316, 350, 384].map((x, i) => riceStalk(x, 176 + (i % 2) * 8, 1.1)).join("")}${canoe(150, 196, 1.5, { who: 2, today: true })}${[270, 304, 338, 372].map((x, i) => riceStalk(x, 232 + (i % 2) * 6, 1.3)).join("")}`)
+});
+
+Object.assign(ART, {
+  north: () => frame(`${sky("#bfe6ef", "#f4f1d8", [340, 44, 20], [[110, 40, .8], [240, 30, .6]])}<g ${INKED}><path d="M-10 150 Q200 136 410 150 V250 H-10 Z" fill="#b9cf8e"/></g>
+    ${[24, 58, 96, 300, 336, 372].map((x, i) => pine(x, 146 + (i % 2) * 6, .9 + (i % 3) * .15, i % 2 ? "#3f9a58" : undefined)).join("")}
+    <g ${INKED}><path d="M150 150 Q210 170 170 196 Q130 222 220 250 H330 Q250 220 280 196 Q310 170 240 150 Z" fill="#5db7e6"/></g>${balloonAt(196, 2, 110)}${owlAt(40, 124, 108)}${geese(120, 60, .6, 5)}`),
+  maya: () => frame(`${sky("#bfe6ef", "#f4f1d8", [340, 44, 20], [[80, 46, .8]])}${geese(200, 30, .9, 9)}<g ${INKED}><path d="M-10 160 Q200 146 410 160 V250 H-10 Z" fill="#b9cf8e"/></g>${pine(24, 156, 1.2)}${pine(372, 156, 1.2, "#3f9a58")}
+    ${house(272, 126, 80, 44, "#58b368")}${owlAt(96, 96, 124)}${kidAt(226, 128, 1.15, MAYA)}`),
+  springwindow: () => frame(`${sky("#bfe6ef", "#f4f1d8", null, [[60, 40, .7]])}<g ${INKED}><path d="M-10 190 Q200 176 410 190 V250 H-10 Z" fill="#b9cf8e"/></g>${windowAt(236, 112, 92, springLongAgo)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, MAYA)}`),
+  wheel: () => frame(seasonWheel()),
+  winterwindow: () => frame(`${sky("#bfe6ef", "#f4f1d8", null, [[60, 40, .7]])}<g ${INKED}><path d="M-10 190 Q200 176 410 190 V250 H-10 Z" fill="#b9cf8e"/></g>${windowAt(236, 112, 92, winterLongAgo)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, MAYA)}`),
+  summerwindow: () => frame(`${sky("#bfe6ef", "#f4f1d8", null, [[60, 40, .7]])}<g ${INKED}><path d="M-10 190 Q200 176 410 190 V250 H-10 Z" fill="#b9cf8e"/></g>${windowAt(236, 112, 92, summerLongAgo)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, MAYA)}`),
+  goosebreak: () => frame(`${sky("#bfe6ef", "#f4f1d8", [336, 46, 20], [[70, 50, .8]])}${geese(190, 30, .9, 9)}${geese(300, 84, .5, 5)}<g ${INKED}><path d="M-10 156 Q200 140 410 156 V250 H-10 Z" fill="#b9cf8e"/><path d="M-10 214 Q200 200 410 216 V250 H-10 Z" fill="#5db7e6"/></g>
+    ${pine(26, 150, 1.2)}${pine(64, 156, .9, "#3f9a58")}<g ${INKED}><path d="M250 176 V140 L296 120 L342 140 V176 Z" fill="#fbf6ea"/><path d="M244 142 L296 118 L348 142" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M244 142 L296 118 L348 142" fill="none" stroke="#3b82c4" stroke-width="2.6"/><path d="M288 176 V150 h16 v26 Z" fill="#d9c7a0"/></g>
+    ${owlAt(88, 106, 110)}${kidAt(208, 128, 1.05, MAYA)}`)
+});
+
+Object.assign(ART, {
+  arctic: () => frame(`${sky("#cfe6f5", "#f6fbff", [336, 46, 18], [[110, 40, .8], [240, 28, .6]])}${snow(150)}<g ${INKED}><path d="M250 150 L288 96 L318 132 L346 104 L400 150 Z" fill="#dfe9f5"/><path d="M276 114 L288 96 L302 114 Q289 108 276 114 Z" fill="#fff"/></g>
+    ${inuksuk(72, 148, 1)}${balloonAt(176, 2, 112)}${owlAt(148, 116, 112)}`),
+  nina: () => frame(`${sky("#cfe6f5", "#f6fbff", [336, 46, 18], [[90, 44, .8]])}${snow(156)}${house(34, 122, 62, 34, "#e63946")}${house(292, 118, 70, 38, "#f4b942")}<g ${INKED}>${[40, 86, 300, 352].map(x => `<rect x="${x}" y="${x < 200 ? 156 : 156}" width="5" height="10" fill="#8a5a2b"/>`).join("")}</g>
+    ${owlAt(112, 100, 122)}${kidAt(232, 130, 1.15, NINA)}`),
+  campwindow: () => frame(`${sky("#cfe6f5", "#f6fbff", null, [[60, 40, .7]])}${snow(186)}${windowAt(236, 112, 92, winterCamp)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, NINA)}`),
+  building: () => frame(`<rect width="400" height="240" fill="#cfe0f2"/>${snow(170)}
+    <g ${INKED}><path d="M96 190 Q96 60 200 60 Q304 60 304 190 Z" fill="#fff"/><path d="M168 190 Q168 150 200 150 Q232 150 232 190 Z" fill="#4a5a70"/></g>
+    <g fill="none" stroke="#9fb6d0" stroke-width="2.4" stroke-linecap="round"><path d="M100 160 Q200 142 300 160 M108 128 Q200 110 292 128 M126 98 Q200 82 274 98 M156 74 Q200 64 244 74"/><path d="M130 188 V158 M270 188 V158 M150 156 V126 M200 148 V120 M250 156 V126 M172 122 V96 M228 122 V96 M200 92 V70"/></g>
+    <g ${INKED}><rect x="322" y="170" width="34" height="20" rx="3" fill="#fff"/><rect x="330" y="150" width="34" height="20" rx="3" fill="#f6fbff"/><ellipse cx="200" cy="184" rx="13" ry="5" fill="#8a94a3"/><path d="M192 182 Q196 166 200 172 Q204 164 208 182 Z" fill="#ffb347"/></g>${person(58, 150, .9, "#d9c7a0")}`),
+  sledwindow: () => frame(`${sky("#cfe6f5", "#f6fbff", null, [[60, 40, .7]])}${snow(186)}${windowAt(236, 112, 92, sledTrip)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, NINA)}`),
+  night: () => frame(`<rect width="400" height="240" fill="#16224a"/>${starry([[30, 30], [70, 60, 2], [110, 24], [150, 50], [250, 30, 2], [290, 64], [330, 26], [370, 54, 2], [200, 76], [56, 96], [346, 96]])}
+    <g stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M200 22 v12 M194 28 h12"/></g><circle cx="200" cy="28" r="3.4" fill="#ffe58a"/>${aurora}${snow(166, "#dfe9f8", "#c6d6ee")}${inuksuk(300, 164, 1.2)}${owlAt(60, 112, 110)}${kidAt(176, 140, 1, NINA)}`),
+  town: () => frame(`${sky("#ffd9a0", "#fdebd0", [330, 70, 22], [[90, 40, .8], [220, 56, .6]])}${snow(152)}${house(24, 114, 64, 36, "#e63946")}${house(108, 110, 64, 38, "#3b82c4")}${house(292, 112, 72, 38, "#58b368")}
+    <g ${INKED}><path d="M190 204 H250 Q262 204 264 194" fill="none" stroke-width="5" stroke="#2b1a10"/><path d="M190 204 H250 Q262 204 264 194" fill="none" stroke="#3a3f4f" stroke-width="2.6"/><path d="M196 198 Q200 178 226 180 L246 186 Q256 190 254 198 Z" fill="#f4b942"/><path d="M226 180 L234 168 H242" fill="none" stroke-width="3"/></g>
+    ${qamutiik(310, 208, .8)}${owlAt(64, 126, 104)}${kidAt(166, 146, 1.05, NINA)}`)
+});
+
+Object.assign(ART, {
+  homeair: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[100, 36, .8], [230, 60, .6]])}${hills("#9ed08f", "#7dbb7a")}<g ${INKED}><path d="M150 170 Q210 186 176 208 Q150 226 210 250 H300 Q240 226 262 206 Q290 184 232 168 Z" fill="#5db7e6"/></g>
+    ${house(36, 136, 40, 26, "#e63946")}${house(84, 142, 36, 24, "#3b82c4")}${house(300, 134, 44, 28, "#f4b942")}${tree(354, 150, 1.2)}${tree(16, 160, 1.1, "#3f9a58")}${balloonAt(160, 0, 104)}${owlAt(18, 132, 100)}`),
+  brantford: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[110, 40, .8]])}${hills("#9ed08f", "#7dbb7a")}${house(20, 110, 54, 34, "#e63946")}${house(318, 106, 60, 38, "#3b82c4")}${tree(96, 142, 1.3)}${tree(296, 144, 1.1, "#3f9a58")}
+    ${bridge(120, 132, 170)}${water(166)}<g ${INKED}><path d="M-10 214 Q100 198 210 216 T410 214 V250 H-10 Z" fill="#9ed08f"/></g>${owlAt(70, 124, 108)}${kidAt(206, 150, 1, LILY)}`),
+  fordwindow: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176)}<g ${INKED}><path d="M-10 214 Q100 198 210 216 T410 214 V250 H-10 Z" fill="#9ed08f"/></g>${windowAt(236, 112, 92, ford1784)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, LILY)}`),
+  tract: () => frame(tractMap()),
+  chapelnow: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 44, 20], [[190, 40, .8], [320, 60, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 156, 1.6, "#3f9a58")}${tree(364, 156, 1.5)}${chapel(250, 176, 1.25)}${owlAt(60, 124, 106)}${kidAt(156, 150, 1, LILY)}`),
+  letters: () => frame(`${sky("#ffd9a0", "#fdebd0", [340, 48, 20], [[90, 36, .8]])}${hills("#9ed08f", "#7dbb7a")}${owlAt(14, 112, 112)}
+    ${kidAt(140, 150, .85, LILY)}${kidAt(206, 150, .85, NOAH)}${kidAt(272, 150, .85, MAYA)}${kidAt(338, 150, .85, NINA)}${letter(140, 104, "#e63946")}${letter(206, 96, "#3b82c4")}${letter(272, 104, "#8e5bd0")}${letter(338, 96, "#2aa7a0")}`)
+});
+
+// ---- the intro: "The Long Way Home" ----
+Object.assign(ART, {
+  intro1: () => frame(`${nightSky([[30, 30], [70, 64, 2], [120, 26], [170, 54], [250, 30, 2], [286, 76], [370, 96, 2], [48, 104], [214, 100]])}
+    <g ${INKED}><path d="M-10 196 Q200 180 410 196 V250 H-10 Z" fill="#3a3560"/><polygon points="20,150 66,126 112,150" fill="#514a82"/><rect x="26" y="150" width="80" height="46" fill="#5c5594"/>${[34, 52, 70, 88].map(x => `<rect x="${x}" y="156" width="8" height="40" fill="#6c64a8"/>`).join("")}
+    <path d="M250 196 V150 H410 V196 H388 V176 Q378 160 368 176 V196 H346 V176 Q336 160 326 176 V196 H304 V176 Q294 160 284 176 V196 Z" fill="#5c5594"/></g>${riding(150, 8, 150)}`),
+  intro2: () => frame(`<rect width="400" height="240" fill="#c48a4a"/><g stroke="#9c6830" stroke-width="3" fill="none">${[30, 70, 110, 150, 190, 230].map(y => `<path d="M0 ${y} Q100 ${y - 8} 200 ${y} T400 ${y}"/>`).join("")}${[40, 100, 160, 220, 280, 340].map(x => `<path d="M${x} 0 V240" opacity=".5"/>`).join("")}</g>
+    ${owlAt(26, 26, 214)}<g ${INKED}><rect x="232" y="132" width="132" height="70" rx="8" fill="#8a5a2b"/><rect x="226" y="122" width="144" height="18" rx="6" fill="#b07a45"/>
+    <path d="M254 112 Q300 92 346 112 Q352 122 346 126 H254 Q248 122 254 112 Z" fill="#e8c58a"/><path d="M250 124 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0" fill="#58b368"/><path d="M252 128 H348 Q352 136 346 138 H254 Q248 136 252 128 Z" fill="#e8c58a"/></g>
+    <g fill="none" stroke="#7fae62" stroke-width="3.4" stroke-linecap="round" opacity=".9"><path d="M276 92 q-8 -10 0 -20 q8 -10 0 -20"/><path d="M304 86 q-8 -10 0 -20 q8 -10 0 -20"/><path d="M332 92 q-8 -10 0 -20 q8 -10 0 -20"/></g><circle cx="356" cy="70" r="3" fill="#2b1a10"/><path d="M350 66 q6 -8 12 0" fill="none" stroke="#2b1a10" stroke-width="1.6"/>`),
+  intro3: () => frame(`${sky("#f7c59f", "#fdebd0", [60, 150, 30], [[110, 50, .8], [300, 40, .7], [220, 90, .5]])}${water(160, "#4a9fd4")}${riding(160, 6, 140)}`),
+  intro4: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[80, 44, .8], [230, 70, .6]])}${water(150, "#4a9fd4")}<g ${INKED}><path d="M140 250 Q150 180 210 160 Q280 138 410 150 V250 Z" fill="#9ed08f"/><path d="M250 190 Q300 176 340 192 Q310 208 250 190 Z" fill="#5db7e6"/></g>
+    ${pine(214, 170, .9)}${pine(250, 162, 1)}${pine(292, 160, 1.1, "#3f9a58")}${pine(346, 164, 1)}${pine(380, 176, .9, "#3f9a58")}${pine(196, 204, 1.1, "#3f9a58")}${pine(240, 228, 1.2)}${pine(372, 226, 1.2)}${riding(26, 0, 136)}`),
+  intro5: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[100, 36, .8]])}${hills("#9ed08f", "#7dbb7a")}<g ${INKED}><path d="M150 170 Q210 186 176 208 Q150 226 210 250 H300 Q240 226 262 206 Q290 184 232 168 Z" fill="#5db7e6"/></g>
+    ${house(30, 136, 44, 28, "#e63946")}${house(84, 142, 36, 24, "#3b82c4")}${house(300, 134, 46, 30, "#f4b942")}${tree(360, 152, 1.2)}${tree(14, 162, 1.1, "#3f9a58")}${riding(150, 0, 132)}${mapleLeaf(92, 66, 1.3, -18)}${mapleLeaf(304, 96, .9, 24)}${mapleLeaf(60, 196, .8, 40)}`),
+  intro6: () => frame(`${sky("#9fd8f2", "#f4f1d8", [340, 44, 22], [[90, 40, .8], [230, 58, .6]])}${hills("#9ed08f", "#7dbb7a")}${tree(40, 152, 1.5)}${balloonAt(276, 28, 150)}${owlAt(116, 46, 200)}${mapleLeaf(86, 196, 1, 20)}`)
+});
+// what he says in the intro (each line is recorded whole, in audio/g5/intro/)
+const INTRO = [
+  ["intro1", "New goggles. New scarf. Same owl. And for the first time in a very long while, I know exactly where I'm going."],
+  ["intro2", "My lunch! So that's which century I left it in. It has not aged well."],
+  ["intro3", "I have seen pyramids. I have walked the Great Wall. I have counted every arch in Rome. Twice."],
+  ["intro4", "But there is one place I have never properly explored. I flew right over it every time, on my way to somewhere else."],
+  ["intro5", "Home. Canada. It turns out the biggest adventure was waiting right where I started."],
+  ["intro6", "Well? Are you coming? Tick tock!"]
+];
+
+// ---------- Chapter 1: the People of the Longhouse ----------
+// Every line is Dr. Somebody talking. "art" names the picture; "say" is a list of captions, one for each tap of the arrow.
+const rect = (L, W) => `<div class="rect" style="width:${Math.min(42, 14 + L * .7)}vmin;height:${6 + W * 1.2}vmin"><span class="l">${L} m</span><span class="w">${W} m</span></div>`;
+const cards = (n, near) => numCards(n, 1, 100000, 4, near.filter(k => k > 0 && k !== n));
+const CHAPTERS = [
+  { title: "The People of the Longhouse", where: "Southern Ontario", beats: [
+    { art: "arrive", say: ["Where to begin? Right here, I think. Southern Ontario, where the balloon came down.",
+      "Somebody is waiting to show me around. I do hope they like owls."] },
+    { art: "guide", say: ["This is my new friend Lily. Her family is <em>Haudenosaunee</em>. You say it <em>ho-dee-no-SHOW-nee</em>.",
+      "Lily says it means <em>People of the Longhouse</em>. Her people have lived around these lakes for a very, very long time.",
+      "They still do! Lily goes to school, plays lacrosse, and helps in her grandmother's garden. I asked what a longhouse is. She said, <em>look for yourself</em>."] },
+    { art: "window", say: ["My balloon can't fly through time any more. But look what its clock can do now. A <em>window into the past</em>!",
+      "This is the very same spot, about 600 years ago. A whole village! Those long buildings are the longhouses. The people living here then were the <em>Attawandaron</em>, cousins of the Haudenosaunee.",
+      "Lily says her own people, the Haudenosaunee, lived in longhouse villages just like this one, around the lake to the south.",
+      "The longhouses are made of wooden poles covered in sheets of bark. Lily wants to know how big one is. Good question. Let's measure."] },
+    { ask: "longhouse", intro: "Help me measure the longhouses. Three right answers opens the door!" },
+    { art: "inside", say: ["We can look inside! One longhouse was home to many families, all related through their mothers and grandmothers.",
+      "Fires burn in a row down the middle. Each fire is shared by two families, one on each side.",
+      "Corn hangs from the roof to dry. Lily wonders how many people lived in here. Hmm. I'll need my multiplying goggles."] },
+    { ask: "families", intro: "How many people lived in a longhouse? Three right answers and we step back outside." },
+    { art: "garden", say: ["Outside the village are the gardens. Lily's grandmother still plants hers this way. It's called the <em>Three Sisters</em>.",
+      "Corn, beans and squash grow together on little hills of earth. The corn is a pole for the beans to climb.",
+      "The beans feed the soil. The big squash leaves shade the ground and keep the weeds away. Three plants helping each other!"] },
+    { ask: "sisters", intro: "Let's count the garden. Three right answers and the window closes." },
+    { art: "today", say: ["The window is closed, and here we are, today. And look. The same three plants, in Lily's grandmother's garden.",
+      "The longhouse is still here too. Not for sleeping in. It is where the community gathers for traditional ceremonies and big decisions.",
+      "One more thing before we go. I want to know how long ago that village was. Help me with the years."] },
+    { ask: "years", intro: "How long ago was it? Three right answers finishes the chapter." },
+    { art: "end", say: ["What a day. I thought I knew my own country. I had hardly looked!",
+      "Thank you, Lily. <em>Nia:wen</em>. You say it <em>nyah-WEN</em>. That means thank you in Mohawk, Lily's language. I practised.",
+      "Next, Lily says we should follow the water north, by canoe. But that is another chapter. Tick tock!"] }
+  ] },
+  { title: "The Canoe Routes", where: "The Great Lakes", beats: [
+    { art: "lake", say: ["We followed the water north, just as Lily said. And look at that. Lake Huron! It goes on forever.",
+      "This part is called Georgian Bay. Rock, pine trees, and islands everywhere. People call it the <em>Thirty Thousand Islands</em>.",
+      "I tried to count them. I got to forty and lost my place. Lily's friend lives near here. He has promised to show me the best way to travel. I hope it's a balloon."] },
+    { art: "dock", say: ["It is not a balloon. It's a canoe! This is Noah. His family is <em>Anishinaabe</em>. You say it <em>ah-nish-ih-NAH-bay</em>.",
+      "The Anishinaabe are many peoples, like the Ojibwe, the Odawa and the Potawatomi. They have lived around the Great Lakes for thousands of years.",
+      "Noah paddles every summer with his uncle. He says the lakes and rivers were the highways here, long before there were any roads. Clock, show us!"] },
+    { art: "lakewindow", say: ["The window into the past! The very same bay, hundreds of years ago. And it is busy.",
+      "Those are birchbark canoes. People are carrying food, tools and furs to trade with other nations, far across the lakes.",
+      "Noah says one trading trip could be hundreds of kilometres. Let's work out how far these paddlers are going."] },
+    { ask: "route", intro: "How far is the trip? Three right answers and we get a closer look at the canoe." },
+    { art: "bark", say: ["Look closely. No nails. No metal at all.",
+      "The frame is cedar wood. The skin is bark from birch trees, sewn together with spruce roots. Sticky spruce gum seals it to keep the water out.",
+      "It is strong enough to carry a family and everything they own, and light enough for two people to lift. Why would you lift a boat? You'll see. First, let's load it up."] },
+    { ask: "load", intro: "Help me load the canoe. Three right answers and we set off." },
+    { art: "portage", say: ["This is why! When the river gets too rough, or the lake ends, you carry your canoe over land to the next water. It's called a <em>portage</em>.",
+      "Noah has done this. He says the canoe is fine. It's the mosquitoes that are heavy.",
+      "With all this paddling and carrying, how long does a trip take? I'll need my thinking goggles."] },
+    { ask: "speed", intro: "How long will it take? Three right answers and the window shows us one more thing." },
+    { art: "ricewindow", say: ["Tall grass, growing right out of the water, in a shallow, sheltered bay! Noah says it is wild rice. In his language it's <em>manoomin</em>. You say it <em>mah-NOO-min</em>.",
+      "You paddle slowly through it, and gently knock the ripe grains into the canoe with two sticks.",
+      "Some grains always fall back into the water. That's on purpose. They grow into next year's rice."] },
+    { ask: "rice", intro: "Let's weigh the harvest. Three right answers finishes the chapter." },
+    { art: "laketoday", say: ["The window is closed. But Noah says his family still harvests manoomin, every year at the end of summer.",
+      "And people still paddle these routes. Some canoes are made of new materials now. Some are still made of birchbark, the old way.",
+      "Thank you, Noah. <em>Miigwech</em>. You say it <em>MEE-gwetch</em>. That's thank you in his language. My arms feel like jelly.",
+      "Noah says if I think this is far, I should try going north, where the seasons decide everything. That is another chapter. Tick tock!"] }
+  ] },
+  { title: "Following the Seasons", where: "Northern Ontario", beats: [
+    { art: "north", say: ["North again! The roads ran out a long time ago. Up here it is rivers, spruce trees and sky.",
+      "This is the land at the south end of James Bay, near Moose Factory, at the very top of Ontario. It is so flat and wet that the ground wobbled when I landed. People call it <em>muskeg</em>.",
+      "Noah said the seasons decide everything here. I packed for four seasons. I am told that is not enough."] },
+    { art: "maya", say: ["This is Maya. Her family is <em>Cree</em>. They have lived on this land for thousands of years.",
+      "I told Maya I had learned to say <em>miigwech</em>. She laughed. In her language, thank you is <em>meegwetch</em>, and you say it the same way, <em>MEE-gwetch</em>. Almost the same word! Their languages are cousins.",
+      "Maya says I have come at the best time of year. It is spring, and the geese are coming back. Clock, show us what that meant long ago!"] },
+    { art: "springwindow", say: ["The window into the past! It is spring there too, hundreds of years ago. Look at the sky!",
+      "Thousands and thousands of geese, flying north. After a long winter, this meant fresh food for everyone.",
+      "Families camped together by the water for the goose hunt. Maya's grandfather still counts the geese each spring. Let's count with him."] },
+    { ask: "geese", intro: "Count the geese with us. Three right answers and Maya has something to teach me." },
+    { art: "wheel", say: ["I said there are four seasons. Maya says, <em>count again</em>.",
+      "Many Cree families count six. Between winter and spring comes <em>break-up</em>, when the river ice cracks and floats away. Between fall and winter comes <em>freeze-up</em>.",
+      "In those two seasons you can't paddle the river, and you can't walk on it either. You wait. So you had better know your calendar!"] },
+    { ask: "calendar", intro: "Help me with the calendar. Three right answers and the window shows us winter." },
+    { art: "winterwindow", say: ["Winter. Deep snow, and the river frozen as hard as a road.",
+      "In winter, families spread out across the land, so there was enough food for everyone. They walked on <em>snowshoes</em>, which stop you sinking into the snow.",
+      "They pulled their things on a <em>toboggan</em>. Peoples of the north invented both, and we still use them today. Let's go for a walk. A long one."] },
+    { ask: "snow", intro: "A winter journey. Three right answers and we get to summer." },
+    { art: "summerwindow", say: ["Summer! The opposite of winter in every way. Families who were far apart all winter came back together by the river.",
+      "They fished, picked berries, told stories and visited. And the sun hardly went to bed at all.",
+      "This far north, summer days are very long and winter days are very short. I would like to know exactly how long."] },
+    { ask: "daylight", intro: "How long is the day? Three right answers finishes the chapter." },
+    { art: "goosebreak", say: ["The window is closed. It is spring again, today. And Maya's school is closed too!",
+      "It's called <em>goose break</em>. Every spring, schools here take a holiday so families can go out on the land together, just as they always have.",
+      "Meegwetch, Maya. I counted six seasons, one thousand geese and four mosquitoes. The mosquitoes found me first.",
+      "Maya says if I liked the snow, I should keep going north. All the way north. That is another chapter. Tick tock!"] }
+  ] },
+  { title: "The Land of Ice and Stars", where: "The Arctic", beats: [
+    { art: "arctic", say: ["All the way north! This is Iqaluit, in Nunavut. I am wearing every scarf I own, all at once.",
+      "There are no trees here at all. Just rock, snow, sea ice, and the biggest sky I have ever seen.",
+      "Maya said somebody here could teach me how to live in the cold. I hope so. My beak has frozen shut twice."] },
+    { art: "nina", say: ["This is Nina. She is an <em>Inuk</em>. You say it <em>ih-NOOK</em>. Her people are the <em>Inuit</em>, <em>IH-noo-it</em>, which means <em>the people</em>. They have lived in the Arctic for thousands of years.",
+      "Nina's word for thank you is <em>nakurmiik</em>. You say it <em>na-koor-MEEK</em>. That is four languages I can say thank you in now. Five, with hoot.",
+      "I asked Nina how anyone could live where it is this cold. She said, <em>very cleverly</em>. Clock, show us!"] },
+    { art: "campwindow", say: ["The window into the past! A winter camp, long ago. Those round houses are made of snow.",
+      "Nina's word for a house is <em>iglu</em>. You say it <em>IG-loo</em>. A snow iglu kept a family warm on winter journeys, even when the wind outside was fierce.",
+      "And look up. The northern lights! First things first, though. Just how cold is it out there?"] },
+    { ask: "cold", intro: "How cold is it? Three right answers and Nina shows us how to build a snow house." },
+    { art: "building", say: ["Here is how. You cut blocks of hard snow and stand them in a ring. Then you build round and round in a spiral, leaning in a little each time.",
+      "The last block fits in the top, like a lid. Inside, a stone lamp called a <em>qulliq</em> burns oil for light and heat. You say it <em>KOO-lik</em>.",
+      "Nina says it can be freezing outside and warm enough inside to take your coat off. Snow, keeping you warm! Let's count the blocks."] },
+    { ask: "blocks", intro: "Help build the iglu. Three right answers and we go travelling." },
+    { art: "sledwindow", say: ["To travel, families used a long sled called a <em>qamutiik</em>, pulled by a team of dogs. You say it <em>kah-MOO-teek</em>.",
+      "See the pile of stones on the hill? That is an <em>inuksuk</em>. You say it <em>ih-NOOK-sook</em>. People built them to mark the way, so that travellers would not get lost.",
+      "Nina's grandfather still drives a dog team. He says the dogs know the way home better than he does. Let's pack the sled."] },
+    { ask: "sled", intro: "Pack the sled. Three right answers and night falls." },
+    { art: "night", say: ["In the middle of winter here, the sun only comes up for a few hours. The rest is night. So how did people find their way?",
+      "They read the land and the sky. The shapes the wind carves in the snow. The inuksuk on the hill. And the stars.",
+      "One star hardly moves at all, and the others slowly turn around it, like the hands of my clock. I like that star."] },
+    { ask: "stars", intro: "Read the stars. Three right answers finishes the chapter." },
+    { art: "town", say: ["The window is closed. This is Nina's town, today. Bright houses, a school, and snowmobiles parked beside the sleds.",
+      "<em>Nunavut</em> means <em>our land</em>. It became Canada's newest territory in 1999. Nina's grandmother remembers the day.",
+      "Nakurmiik, Nina. I have learned that snow can be warm, that stones can give directions, and that I need a much bigger scarf.",
+      "I have been all the way to the top of my country. There is only one place left to go. Home. Tick tock!"] }
+  ] },
+  { title: "Home Again", where: "The Grand River", beats: [
+    { art: "homeair", say: ["Home at last. I started this trip right here in southern Ontario, and I have come all the way around.",
+      "That river below is the <em>Grand River</em>. It winds for about 280 kilometres, all the way down to Lake Erie.",
+      "And there is Lily, waving! She says there is one more story, and it belongs to this very spot."] },
+    { art: "brantford", say: ["This town is called <em>Brantford</em>. Lily asked if I knew where the name came from. I guessed a man named Ford. I was half right.",
+      "It is named for <em>Joseph Brant</em>. He was a Mohawk leader, and his Mohawk name was <em>Thayendanegea</em>. You say it <em>tie-en-da-NAY-gee-uh</em>.",
+      "The Mohawk are one of the Haudenosaunee nations, like Lily's family. Clock, one last window, please!"] },
+    { art: "fordwindow", say: ["The year is <em>1784</em>. Not so very long ago, this time. And look how many people!",
+      "After the <em>American Revolution</em>, a war just to the south, these families had lost their homes. Joseph Brant led them here, to the Grand River, to begin again.",
+      "They crossed the river at a shallow place. People called it <em>Brant's ford</em>. Say it quickly. Brant's ford. <em>Brantford!</em>"] },
+    { ask: "journey", intro: "A long journey to a new home. Three right answers and we look at the land." },
+    { art: "tract", say: ["The families were promised land of their own: along the Grand River, from its mouth to where it begins, and about 10 kilometres back from the water on each side.",
+      "Six nations settled here together. The Mohawk, Oneida, Onondaga, Cayuga, Seneca and Tuscarora.",
+      "That is why Lily's community is called <em>Six Nations of the Grand River</em>. Let's see how much land that promise was."] },
+    { ask: "river", intro: "Measure the land along the river. Three right answers and Lily shows us something very old." },
+    { art: "chapelnow", say: ["One of the first things they built was this little chapel, in 1785. It is still standing! It is the oldest church still standing in Ontario.",
+      "Lily says the story did not end there. Over the years, most of that promised land was taken or sold off without their agreement, and people are still working to put that right today.",
+      "History is not only long ago. Some of it is still happening. Now then. How old is that chapel?"] },
+    { ask: "dates", intro: "Work out the years. Three right answers and the mail arrives." },
+    { art: "letters", say: ["Before I go, some mail has arrived. Four letters! From Lily, Noah, Maya and Nina.",
+      "Each of them has sent me one last question, to see if I was paying attention.",
+      "I was. Mostly. You had better help me."] },
+    { ask: "home", need: 4, intro: "One question from each friend. Four right answers finishes the story!" },
+    { art: "end", say: ["I did it! With a great deal of help from you.",
+      "I went looking for my country, and I found the peoples who have always been here. Haudenosaunee, Anishinaabe, Cree and Inuit. Still here. Still teaching.",
+      "<em>Nia:wen. Miigwech. Meegwetch. Nakurmiik.</em> And thank you.",
+      "The clock is ticking again, and it is pointing east. There is a lot more of Canada to see. But that is another grade. Tick tock!"] }
+  ] }
+];
+
+// The questions. Each maker returns { html, text, choices, why }.  "why" is shown after two wrong tries, and after a right answer.
+const ASK = {
+  longhouse() {
+    const L = pick([20, 24, 25, 30, 32, 36, 40]), W = pick([5, 6, 7, 8]);
+    if (rand(2)) { const A = L * W; return { html: rect(L, W), text: `This longhouse is <b>${L} metres</b> long and <b>${W} metres</b> wide. What is the <b>area</b> of its floor, in square metres?`, choices: cards(A, [2 * (L + W), A + L, A - L, A + 10, L + W]), why: `Area is length times width. ${L} × ${W} = ${A} square metres.` }; }
+    const P = 2 * (L + W); return { html: rect(L, W), text: `This longhouse is <b>${L} metres</b> long and <b>${W} metres</b> wide. How far is it to walk all the way <b>around</b> it?`, choices: cards(P, [L + W, L * W, P + 10, P - 10, P + 2]), why: `Walking around is the perimeter: two lengths and two widths. ${L} + ${L} + ${W} + ${W} = ${P} metres.` };
+  },
+  families() {
+    const fires = 3 + rand(6), each = pick([5, 6, 7, 8]), fam = fires * 2, people = fam * each;
+    if (rand(3) === 0) return { html: "", text: `A longhouse has <b>${fires} fires</b>. Each fire is shared by <b>2 families</b>. How many families live there?`, choices: cards(fam, [fires + 2, fam + 2, fam - 2, fires]), why: `${fires} fires, 2 families at each. ${fires} × 2 = ${fam} families.` };
+    return { html: "", text: `A longhouse has <b>${fires} fires</b>, with <b>2 families</b> at each fire. Each family has about <b>${each} people</b>. About how many people live there?`, choices: cards(people, [fires * each, fam + each, people + each, people - each, people + 10]), why: `Two steps. ${fires} × 2 = ${fam} families. Then ${fam} × ${each} = ${people} people.` };
+  },
+  sisters() {
+    const kind = rand(3);
+    if (kind === 0) { const r = 11 + rand(9), c = 11 + rand(9), n = r * c, tens = r * 10, rest = r * (c - 10); return { html: "", text: `A garden has <b>${r} rows</b> with <b>${c} mounds</b> in each row. How many mounds is that?`, choices: cards(n, [n + r, n - r, n + 10, n - 10, r + c]), why: `Split ${c} into 10 and ${c - 10}. ${r} × 10 = ${tens}, and ${r} × ${c - 10} = ${rest}. ${tens} + ${rest} = ${n}.` }; }
+    if (kind === 1) { const m = 20 + 4 * rand(11), corn = m * 4; return { html: "", text: `Each mound gets <b>4 corn seeds</b>. How many corn seeds are needed for <b>${m} mounds</b>?`, choices: cards(corn, [m + 4, corn + 4, corn - 4, corn + 40, m * 2]), why: `${m} groups of 4. Double ${m} is ${m * 2}, and double again is ${corn}.` }; }
+    const m = 3 * (8 + rand(13)), third = m / 3; return { html: "", text: `A garden has <b>${m} mounds</b>. One third of them have squash ready to pick. How many mounds is that?`, choices: cards(third, [m - 3, third + 3, third - 3, m / 3 * 2, third + 1]), why: `One third means share into 3 equal groups. ${m} ÷ 3 = ${third}.` };
+  },
+  years() {
+    const now = new Date().getFullYear(), kind = rand(3);
+    if (kind === 0) { const then = pick([1400, 1425, 1450, 1475]), n = now - then; return { html: "", text: `The window showed the year <b>${then}</b>. This year is <b>${now}</b>. How many years ago was that?`, choices: cards(n, [n + 100, n - 100, n + 10, n - 10, n + 1]), why: `Count up from ${then} to ${now}. ${now} − ${then} = ${n} years.` }; }
+    if (kind === 1) { const ago = pick([550, 575, 600, 625]), then = now - ago; return { html: "", text: `A village stood here <b>${ago} years ago</b>. This year is <b>${now}</b>. What year was that?`, choices: cards(then, [then + 100, then - 100, then + 10, then - 10, now + ago]), why: `Go back ${ago} years from ${now}. ${now} − ${ago} = ${then}.` }; }
+    const each = pick([20, 25]), ago = each * (22 + rand(4)), n = ago / each; return { html: "", text: `Say a new generation is born about every <b>${each} years</b>. About how many generations fit into <b>${ago} years</b>?`, choices: cards(n, [n + 2, n - 2, n + 10, ago - each, n + 1]), why: `How many ${each}s are in ${ago}? ${ago} ÷ ${each} = ${n} generations of Lily's family.` };
+  }
+};
+
+// Answer cards for numbers that are not whole: decimals (kept as whole tenths, so 12.5 is 125) and fractions.
+const tenths = n => (n / 10).toFixed(1);
+const dcards = (n, near, unit) => { const wrong = [...new Set(near.concat([n + 10, n - 10, n + 1, n - 1, n + 5, n + 20]))].filter(k => k > 0 && k !== n).slice(0, 3);
+  return wrong.concat(n).sort((a, b) => a - b).map(k => ({ html: `${tenths(k)}${unit ? `<small>${unit}</small>` : ""}`, ok: k === n })); };
+const fr = (a, b) => `<span class="fr"><b>${a}</b><i>${b}</i></span>`;
+Object.assign(ASK, {
+  route() { // adding and taking away decimals: distances in kilometres
+    const a = 20 + rand(60), b = 3 + rand(9), c = 15 + rand(50), kind = rand(3);
+    if (kind === 0) { const n = a + b + c; return { html: "", text: `They paddle <b>${tenths(a)} km</b>, carry the canoe <b>${tenths(b)} km</b>, then paddle <b>${tenths(c)} km</b> more. How far is that altogether?`, choices: dcards(n, [a + c, n + 10, n - 10, n + 1], " km"), why: `Line up the decimal points and add. ${tenths(a)} + ${tenths(b)} + ${tenths(c)} = ${tenths(n)} km.` }; }
+    if (kind === 1) { const total = a + c + 30 + rand(40), done = a + c, n = total - done; return { html: "", text: `The whole trip is <b>${tenths(total)} km</b>. They have paddled <b>${tenths(done)} km</b> so far. How far is left?`, choices: dcards(n, [n + 10, n - 10, total + done, n + 1], " km"), why: `Take away what is done. ${tenths(total)} − ${tenths(done)} = ${tenths(n)} km.` }; }
+    const hi = Math.max(a, c) + 11, lo = Math.min(a, c), n = hi - lo; return { html: "", text: `On Monday they paddle <b>${tenths(hi)} km</b>. On Tuesday they paddle <b>${tenths(lo)} km</b>. How much farther did they go on Monday?`, choices: dcards(n, [hi + lo, n + 10, n - 10, n + 1], " km"), why: `Find the difference. ${tenths(hi)} − ${tenths(lo)} = ${tenths(n)} km.` };
+  },
+  load() { // mass, and changing units
+    const kind = rand(3), people = 2 + rand(2), each = pick([55, 60, 65, 70]), packs = 3 + rand(5), pk = pick([12, 15, 18, 20]), load = people * each + packs * pk;
+    if (kind === 0) return { html: "", text: `In the canoe are <b>${people} paddlers</b> of <b>${each} kg</b> each, and <b>${packs} packs</b> of <b>${pk} kg</b> each. What is the load altogether, in kilograms?`, choices: cards(load, [people * each, load + pk, load - pk, load + 10, each + pk]), why: `Paddlers: ${people} × ${each} = ${people * each}. Packs: ${packs} × ${pk} = ${packs * pk}. ${people * each} + ${packs * pk} = ${load} kg.` };
+    if (kind === 1) { const cap = 50 * Math.ceil((load + 40 + rand(120)) / 50), n = cap - load; return { html: "", text: `This canoe can carry <b>${cap} kg</b>. It already holds <b>${load} kg</b>. How many more kilograms can it take?`, choices: cards(n, [n + 10, n - 10, cap + load, n + 100, n + 1]), why: `Take the load away from what it can carry. ${cap} − ${load} = ${n} kg.` }; }
+    const m = 40 + rand(30), cm = m * 10; return { html: "", text: `A canoe is <b>${tenths(m)} metres</b> long. How long is that in <b>centimetres</b>?`, choices: cards(cm, [m, cm * 10, cm + 10, cm / 10, cm + 100].filter(k => Number.isInteger(k))), why: `There are 100 centimetres in a metre. ${tenths(m)} × 100 = ${cm} cm.` };
+  },
+  speed() { // distance, speed and time
+    const kind = rand(3), s = pick([4, 5, 6]);
+    if (kind === 0) { const h2 = 5 + rand(10), n = s * h2 * 5; return { html: "", text: `They paddle <b>${s} km</b> every hour. How far do they go in <b>${tenths(h2 * 5)} hours</b>?`, choices: dcards(n, [n + s * 10, n - s * 10, s * Math.floor(h2 / 2) * 10 + 10, n + 5], " km"), why: `${s} km for each hour. ${s} × ${tenths(h2 * 5)} = ${tenths(n)} km.` }; }
+    if (kind === 1) { const h = 6 + rand(9), d = s * h; return { html: "", text: `The next village is <b>${d} km</b> away. They paddle <b>${s} km</b> every hour. How many hours will it take?`, choices: cards(h, [h + 1, h - 1, h + 2, d - s]), why: `How many ${s}s are in ${d}? ${d} ÷ ${s} = ${h} hours.` }; }
+    const perDay = pick([18, 24, 25, 32]), days = 11 + rand(9), d = perDay * days; return { html: "", text: `A trading trip is <b>${d} km</b>. They travel <b>${perDay} km</b> each day. How many days does it take?`, choices: cards(days, [days + 1, days - 1, days + 10, days + 2]), why: `Share ${d} into days of ${perDay}. ${d} ÷ ${perDay} = ${days} days.` };
+  },
+  rice() { // decimals times a whole number, and fractions
+    const kind = rand(3);
+    if (kind === 0) { const each = 5 * (13 + 2 * rand(12)), trips = 3 + rand(5), n = each * trips; return { html: "", text: `Each trip through the rice brings back <b>${tenths(each)} kg</b>. How much rice is that after <b>${trips} trips</b>?`, choices: dcards(n, [n + each, n - each, n + 10, each + trips * 10], " kg"), why: `${trips} lots of ${tenths(each)}. ${tenths(each)} × ${trips} = ${tenths(n)} kg.` }; }
+    if (kind === 1) { const d = pick([6, 8, 10]), a = 1 + rand(d - 3), b = 1 + rand(d - a - 1), n = a + b, opts = [...new Set([n, n + 1, n - 1, a, d - n].filter(k => k > 0 && k < d))].slice(0, 4);
+      while (opts.length < 4) { const k = 1 + rand(d - 1); if (!opts.includes(k)) opts.push(k); }
+      return { html: "", text: `In the morning they fill ${fr(a, d)} of the basket. In the afternoon they fill another ${fr(b, d)}. How full is the basket now?`, choices: opts.sort((x, y) => x - y).map(k => ({ html: fr(k, d), ok: k === n })), why: `The parts are the same size, so add the top numbers. ${a} + ${b} = ${n}, so it is ${n} out of ${d} full.` }; }
+    const kg = 4 * (9 + rand(12)), q = kg / 4, n = kg - q; return { html: "", text: `They harvest <b>${kg} kg</b> of rice. One quarter is traded to another village. How many kilograms do they keep?`, choices: cards(n, [q, n + 4, n - 4, kg / 2, n + 1]), why: `One quarter of ${kg} is ${kg} ÷ 4 = ${q}. Keep the rest: ${kg} − ${q} = ${n} kg.` };
+  }
+});
+
+// a small bar graph for the bubble: one bar for each name
+const barGraph = (names, vals, step) => { const top = Math.ceil(Math.max(...vals) / step) * step, x0 = 30, y0 = 122, H = 104, bw = 34;
+  let s = ""; for (let v = 0; v <= top; v += step) { const y = y0 - v / top * H; s += `<line x1="${x0}" y1="${y}" x2="${x0 + names.length * 46 + 6}" y2="${y}" stroke="#d9cfb8" stroke-width="1"/><text x="${x0 - 5}" y="${y + 4}" font-size="11" font-weight="bold" text-anchor="end" fill="#2b1a10">${v}</text>`; }
+  names.forEach((n, i) => { const h = vals[i] / top * H, x = x0 + 10 + i * 46; s += `<rect x="${x}" y="${y0 - h}" width="${bw}" height="${h}" rx="3" fill="${["#e63946", "#3b82c4", "#58b368", "#f4b942", "#8e5bd0"][i % 5]}" ${THIN}/><text x="${x + bw / 2}" y="${y0 + 15}" font-size="12" font-weight="bold" text-anchor="middle" fill="#2b1a10">${n}</text>`; });
+  return `<div class="graph"><svg viewBox="0 0 ${x0 + names.length * 46 + 12} 144">${s}<path d="M${x0} 12 V${y0} H${x0 + names.length * 46 + 6}" fill="none" stroke="#2b1a10" stroke-width="2.4" stroke-linecap="round"/></svg></div>`; };
+const clockText = mins => `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, "0")}`;
+Object.assign(ASK, {
+  geese() { // reading a bar graph, and the mean
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"], step = pick([5, 10, 20]), vals = shuffle([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 5).map(k => k * step), kind = rand(3);
+    if (kind === 0) { const [i, j] = shuffle([0, 1, 2, 3, 4]), hi = Math.max(vals[i], vals[j]), lo = Math.min(vals[i], vals[j]), n = hi - lo, hd = vals[i] > vals[j] ? days[i] : days[j], ld = vals[i] > vals[j] ? days[j] : days[i];
+      return { html: barGraph(days, vals, step), text: `Geese counted each morning. How many <b>more</b> geese were counted on <b>${hd}</b> than on <b>${ld}</b>?`, choices: cards(n, [hi, lo, hi + lo, n + step, n - step]), why: `${hd} shows ${hi} and ${ld} shows ${lo}. ${hi} − ${lo} = ${n}.` }; }
+    if (kind === 1) { const n = vals.reduce((a, b) => a + b, 0); return { html: barGraph(days, vals, step), text: `Geese counted each morning. How many geese were counted in the <b>whole week</b>?`, choices: cards(n, [n + step, n - step, n + 10 * step, n - vals[0], Math.max(...vals)]), why: `Add all five bars. ${vals.join(" + ")} = ${n}.` }; }
+    const m = 20 + 4 * rand(10), offs = pick([[-8, 0, 8], [-12, 4, 8], [-4, -4, 8], [-16, 4, 12]]), three = shuffle(offs.map(o => m + o)), sum = three.reduce((a, b) => a + b, 0);
+    return { html: "", text: `On three mornings he counted <b>${three[0]}</b>, <b>${three[1]}</b> and <b>${three[2]}</b> geese. What is the <b>mean</b> (the average) for one morning?`, choices: cards(m, [sum, m + 4, m - 4, Math.max(...three), m + 1]), why: `Add them, then share by 3. ${three.join(" + ")} = ${sum}, and ${sum} ÷ 3 = ${m}.` };
+  },
+  calendar() { // days, weeks and dates
+    const kind = rand(3);
+    if (kind === 0) { const d1 = 12 + rand(14), d2 = 3 + rand(14), n = 30 - d1 + d2; return { html: "", text: `One year, break-up began on <b>April ${d1}</b> and the river was clear on <b>May ${d2}</b>. April has 30 days. How many days did break-up last?`, choices: cards(n, [n + 1, n - 1, d1 + d2, n + 10, Math.abs(d1 - d2)]), why: `From April ${d1} to April 30 is ${30 - d1} days. Then ${d2} more days in May. ${30 - d1} + ${d2} = ${n} days.` }; }
+    if (kind === 1) { const w = 19 + rand(8), n = w * 7; return { html: "", text: `The river stays frozen for about <b>${w} weeks</b>. How many <b>days</b> is that?`, choices: cards(n, [n + 7, n - 7, w + 7, n + 10, w * 10]), why: `There are 7 days in a week. ${w} × 7 = ${n} days.` }; }
+    const w = 3 + rand(4), d = 2 + rand(5), n = w * 7 + d; return { html: "", text: `Freeze-up lasted <b>${w} weeks and ${d} days</b>. How many days is that altogether?`, choices: cards(n, [w * 7, n + 7, n - 7, w + d, n + 1]), why: `${w} weeks is ${w} × 7 = ${w * 7} days. Add the ${d} extra days: ${n} days.` };
+  },
+  snow() { // how long, how far, how many
+    const kind = rand(3);
+    if (kind === 0) { const start = 60 * (7 + rand(3)) + 5 * rand(12), mins = 65 + 5 * rand(30), end = start + mins, hrs = Math.floor(mins / 60), rest = mins % 60;
+      return { html: "", text: `They leave camp at <b>${clockText(start)}</b> and reach the next camp at <b>${clockText(end)}</b>. How many <b>minutes</b> did the walk take?`, choices: cards(mins, [mins + 60, mins - 60, mins + 10, mins - 10, mins + 5]), why: `That is ${hrs} hour${hrs > 1 ? "s" : ""}${rest ? ` and ${rest} minutes` : ""}. ${hrs} × 60${rest ? ` + ${rest}` : ""} = ${mins} minutes.` }; }
+    if (kind === 1) { const s = pick([4, 6]), h2 = 3 + 2 * rand(4), n = s * h2 / 2; return { html: "", text: `On snowshoes they walk <b>${s} km</b> every hour. How far do they go in <b>${tenths(h2 * 5)} hours</b>?`, choices: cards(n, [n + s, n - s, s * Math.floor(h2 / 2), n + 1, n + 10]), why: `${s} × ${tenths(h2 * 5)}: that is ${s} × ${Math.floor(h2 / 2)} = ${s * Math.floor(h2 / 2)}, plus half of ${s}, which is ${s / 2}. ${n} km.` }; }
+    const each = pick([8, 12, 15]), n = 6 + rand(9), total = each * n; return { html: "", text: `A toboggan carries <b>${total} kg</b>, packed in bundles of <b>${each} kg</b>. How many bundles are on it?`, choices: cards(n, [n + 1, n - 1, n + 2, total - each, n + 10]), why: `How many ${each}s are in ${total}? ${total} ÷ ${each} = ${n} bundles.` };
+  },
+  daylight() { // fractions and percents of a 24-hour day
+    const kind = rand(3), FR = [[6, 1, 4], [8, 1, 3], [12, 1, 2], [16, 2, 3], [18, 3, 4]];
+    if (kind === 0) { const [h, a, b] = pick(FR), others = shuffle(FR.filter(f => f[0] !== h)).slice(0, 3); return { html: "", text: `One day the sun is up for <b>${h} hours</b>. A whole day is 24 hours. What <b>fraction</b> of the day is that?`,
+      choices: others.concat([[h, a, b]]).sort((x, y) => x[0] - y[0]).map(f => ({ html: fr(f[1], f[2]), ok: f[0] === h })), why: `${h} out of 24. ${b === 2 ? "12 is half of 24" : `24 ÷ ${b} = ${24 / b}, and ${a} of those is ${h}`}. So it is ${a} out of ${b}.` }; }
+    if (kind === 1) { const hi = 160 + 5 * rand(5), lo = 60 + 5 * rand(5), n = hi - lo; return { html: "", text: `In June the day is <b>${tenths(hi)} hours</b> long. In December it is only <b>${tenths(lo)} hours</b>. How much longer is the June day?`, choices: dcards(n, [hi + lo, n + 10, n - 10, n + 5], " h"), why: `Find the difference. ${tenths(hi)} − ${tenths(lo)} = ${tenths(n)} hours.` }; }
+    const [pc, h] = pick([[25, 6], [50, 12], [75, 18]]); return { html: "", text: `On this day the sun is up for <b>${pc}%</b> of the 24 hours. How many <b>hours</b> is that?`, choices: cards(h, [6, 12, 18, 8, pc, 24 - h + 2].filter(k => k !== h)), why: `${pc}% is ${pc === 25 ? "one quarter" : pc === 50 ? "one half" : "three quarters"}. ${pc === 25 ? "24 ÷ 4" : pc === 50 ? "24 ÷ 2" : "24 ÷ 4 = 6, and 3 × 6"} = ${h} hours.` };
+  }
+});
+
+// Answer cards for temperatures (they can be below zero) and for angles
+const deg = n => `${n < 0 ? "−" + -n : n}°`;
+const tcards = (n, near) => { const wrong = [...new Set(near.concat([n + 1, n - 1, n + 10, n - 10, n + 5]))].filter(k => k !== n).slice(0, 3); return wrong.concat(n).sort((a, b) => a - b).map(k => ({ html: deg(k), ok: k === n })); };
+Object.assign(ASK, {
+  cold() { // temperatures below zero, read from a thermometer
+    const kind = rand(3);
+    if (kind === 0) { const t = -(5 + rand(22)), drop = 3 + rand(9), n = t - drop; return { html: thermo(t), text: `At noon it is <b>${deg(t)}C</b>. By night it is <b>${drop} degrees colder</b>. What is the temperature at night?`, choices: tcards(n, [t + drop, -n, n + 10, n + 2]), why: `Colder means farther below zero. Start at ${deg(t)} and go down ${drop} more: ${deg(n)}C.` }; }
+    if (kind === 1) { const out = -(15 + rand(24)), inn = 2 + rand(9), n = inn - out; return { html: thermo(out), text: `Outside it is <b>${deg(out)}C</b>. Inside the iglu it is <b>${deg(inn)}C</b>. How many degrees warmer is it inside?`, choices: cards(n, [-out - inn, -out, n + 10, n - 10, n + 2]), why: `From ${deg(out)} up to zero is ${-out} degrees. Then ${inn} more up to ${deg(inn)}. ${-out} + ${inn} = ${n} degrees.` }; }
+    const t = -(8 + rand(25)), rise = 4 + rand(Math.min(12, -t - 3)), n = t + rise; return { html: thermo(t), text: `In the morning it is <b>${deg(t)}C</b>. By afternoon it has warmed up by <b>${rise} degrees</b>. What is the temperature now?`, choices: tcards(n, [t - rise, -n, n - 10, n + 2]), why: `Warmer means closer to zero. Start at ${deg(t)} and go up ${rise}: ${deg(n)}C.` };
+  },
+  blocks() { // building with snow blocks: patterns, multiplying, measuring
+    const kind = rand(3);
+    if (kind === 0) { const first = 16 + 2 * rand(5), rings = [0, 1, 2, 3, 4].map(i => first - 2 * i), n = rings.reduce((a, b) => a + b, 0); return { html: "", text: `Each ring of an iglu needs 2 fewer blocks than the ring below: <b>${rings.join(", ")}</b>. How many blocks is that for all five rings?`, choices: cards(n, [n + 2, n - 2, n + 10, first * 5, n - first]), why: `Add the five rings. ${rings.join(" + ")} = ${n} blocks.` }; }
+    if (kind === 1) { const w = 12 + rand(8), b = 21 + rand(18), n = w * b, tens = w * 10 * Math.floor(b / 10), ones = w * (b % 10); return { html: "", text: `One snow block weighs about <b>${w} kg</b>. An iglu uses <b>${b} blocks</b>. About how many kilograms of snow is that?`, choices: cards(n, [n + w, n - w, n + 100, n - 10, w + b]), why: `Split ${b} into ${b - b % 10} and ${b % 10}. ${w} × ${b - b % 10} = ${tens}, and ${w} × ${b % 10} = ${ones}. ${tens} + ${ones} = ${n} kg.` }; }
+    const len = 5 + rand(4), k = 12 + rand(9), n = len * k; return { html: "", text: `Each block is <b>${tenths(len)} metres</b> long. The bottom ring has <b>${k} blocks</b>. How far is it around the bottom of the iglu?`, choices: dcards(n, [n + len, n - len, n + 10, k * 10 + len], " m"), why: `${k} blocks, each ${tenths(len)} m. ${k} × ${tenths(len)} = ${tenths(n)} metres.` };
+  },
+  sled() { // food, distance and sharing a load
+    const kind = rand(3), dogs = 6 + rand(7);
+    if (kind === 0) { const n = dogs * 15; return { html: "", text: `A team has <b>${dogs} dogs</b>. Each dog eats <b>1.5 kg</b> of food a day. How much food does the team need for one day?`, choices: dcards(n, [dogs * 10, n + 15, n - 15, dogs * 10 + 5], " kg"), why: `${dogs} × 1 = ${dogs}, and ${dogs} halves make ${tenths(dogs * 5)}. ${dogs} + ${tenths(dogs * 5)} = ${tenths(n)} kg.` }; }
+    if (kind === 1) { const perDay = pick([35, 40, 45]), days = 11 + rand(8), n = perDay * days; return { html: "", text: `A dog team can travel <b>${perDay} km</b> in a day. How far can it go in <b>${days} days</b>?`, choices: cards(n, [n + perDay, n - perDay, n + 100, perDay + days, n - 10]), why: `${perDay} × 10 = ${perDay * 10}, and ${perDay} × ${days - 10} = ${perDay * (days - 10)}. ${perDay * 10} + ${perDay * (days - 10)} = ${n} km.` }; }
+    const each = 18 + 2 * rand(9), total = each * dogs; return { html: "", text: `The loaded sled weighs <b>${total} kg</b>. The <b>${dogs} dogs</b> share the pulling equally. How many kilograms is each dog pulling?`, choices: cards(each, [each + 2, each - 2, each + 10, total - dogs, each + 1]), why: `Share ${total} among ${dogs}. ${total} ÷ ${dogs} = ${each} kg each.` };
+  },
+  stars() { // angles: the sky turns 15 degrees every hour, and a full turn is 360 degrees
+    const kind = rand(3);
+    if (kind === 0) { const h = 2 + rand(9), n = 15 * h; return { html: "", text: `The stars turn <b>15°</b> around the still star every hour. How far do they turn in <b>${h} hours</b>?`, choices: cards(n, [n + 15, n - 15, h + 15, n + 10, 10 * h]).map(c => ({ ...c, html: c.html + "°" })), why: `15 for each hour. 15 × ${h} = ${n} degrees.` }; }
+    if (kind === 1) { const h = pick([2, 3, 4, 6, 8, 12]), a = 15 * h; return { html: "", text: `The stars turn <b>15°</b> every hour. They have turned <b>${a}°</b> since Nina's grandfather set out. How many <b>hours</b> ago was that?`, choices: cards(h, [h + 1, h - 1, h + 2, a - 15, h * 2]), why: `How many 15s are in ${a}? ${a} ÷ 15 = ${h} hours.` }; }
+    const turned = 15 * (5 + rand(15)), n = 360 - turned; return { html: "", text: `A full turn is <b>360°</b>. The stars have turned <b>${turned}°</b> so far. How many more degrees until they are back where they started?`, choices: cards(n, [n + 10, n - 10, n + 100, 180 - turned > 0 ? 180 - turned : n + 15, turned]).map(c => ({ ...c, html: c.html + "°" })), why: `Take away what they have turned. 360 − ${turned} = ${n} degrees.` };
+  }
+});
+
+// a strip of land along the river, for the bubble: the river down the middle, 10 km on each side
+const band = L => `<div class="band"><span class="l">${L} km</span><span class="w a">10 km</span><span class="w b">10 km</span><i></i></div>`;
+const FRIENDS = [["Lily asks", ["longhouse", "families", "sisters"]], ["Noah asks", ["route", "load", "speed", "rice"]], ["Maya asks", ["geese", "calendar", "snow", "daylight"]], ["Nina asks", ["cold", "blocks", "sled", "stars"]]];
+Object.assign(ASK, {
+  journey() { // big numbers: sharing into groups, distance over many days, decimals
+    const kind = rand(3);
+    if (kind === 0) { const g = pick([20, 25, 30, 36, 40, 45, 50, 60, 75]), n = 1800 / g; return { html: "", text: `About <b>1,800 people</b> made the journey. Suppose they travelled in groups of <b>${g}</b>. How many groups would that be?`, choices: cards(n, [n + 1, n - 1, n + 10, n * 2, n + 5]), why: `Share 1,800 into groups of ${g}. 1,800 ÷ ${g} = ${n} groups.` }; }
+    if (kind === 1) { const perDay = pick([16, 18, 22, 24]), days = 13 + rand(12), n = perDay * days; return { html: "", text: `Walking with children and everything they own, a group covers about <b>${perDay} km</b> a day. How far do they go in <b>${days} days</b>?`, choices: cards(n, [n + perDay, n - perDay, n + 100, perDay + days, n - 10]), why: `${perDay} × 10 = ${perDay * 10}, and ${perDay} × ${days - 10} = ${perDay * (days - 10)}. ${perDay * 10} + ${perDay * (days - 10)} = ${n} km.` }; }
+    const total = 3000 + 5 * rand(300), done = 800 + 5 * rand(300), n = total - done; return { html: "", text: `The whole journey is <b>${tenths(total)} km</b>. One group has travelled <b>${tenths(done)} km</b>. How far do they still have to go?`, choices: dcards(n, [total + done, n + 100, n - 100, n + 10], " km"), why: `Take away what is done. ${tenths(total)} − ${tenths(done)} = ${tenths(n)} km.` };
+  },
+  river() { // area and perimeter of a strip of land 20 km wide; distance left along the river
+    const kind = rand(3), L = 12 + rand(34);
+    if (kind === 0) { const A = L * 20; return { html: band(L), text: `This stretch of river is <b>${L} km</b> long, with <b>10 km</b> of land on each side. What is the <b>area</b> of the land, in square kilometres?`, choices: cards(A, [L * 10, A + 20, A - 20, 2 * (L + 20), A + 100]), why: `The strip is 10 + 10 = 20 km wide. Area is length times width: ${L} × 20 = ${A} square kilometres.` }; }
+    if (kind === 1) { const P = 2 * (L + 20); return { html: band(L), text: `This stretch of river is <b>${L} km</b> long, with <b>10 km</b> of land on each side. How far is it all the way <b>around</b> the edge of the land?`, choices: cards(P, [L + 20, L * 20, P + 10, P - 20, 2 * L + 20]), why: `The strip is ${L} km long and 20 km wide. ${L} + ${L} + 20 + 20 = ${P} km.` }; }
+    const done = 40 + 5 * rand(40), n = 280 - done; return { html: "", text: `The Grand River is about <b>280 km</b> long. A canoe has come <b>${done} km</b> from where the river begins. How far is it to Lake Erie?`, choices: cards(n, [n + 10, n - 10, 280 + done, n + 100, n + 5]), why: `Take away what is done. 280 − ${done} = ${n} km.` };
+  },
+  dates() { // working with years
+    const now = new Date().getFullYear(), kind = rand(4);
+    if (kind === 0) { const n = now - 1785; return { html: "", text: `The chapel was built in <b>1785</b>. This year is <b>${now}</b>. How many years old is it?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Count from 1785 to ${now}. ${now} − 1785 = ${n} years.` }; }
+    if (kind === 1) return { html: "", text: `Joseph Brant was born in about <b>1743</b>. He led the families to the Grand River in <b>1784</b>. About how old was he then?`, choices: cards(41, [31, 51, 43, 39, 40]), why: `1784 − 1743 = 41. He was about 41 years old.` };
+    if (kind === 2) return { html: "", text: `For a long time there were five Haudenosaunee nations. The Tuscarora joined in about <b>1722</b>, making six. How many years was that before <b>1784</b>?`, choices: cards(62, [52, 72, 60, 64, 162]), why: `1784 − 1722 = 62 years.` };
+    const add = pick([200, 250, 300]), n = 1784 + add; return { html: "", text: `The families arrived in <b>1784</b>. In what year is it exactly <b>${add} years</b> since they came?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Add ${add} to 1784. 1784 + ${add} = ${n}.` };
+  },
+  home(g) { // the finale: one question from each friend, in the order we met them
+    const [who, kinds] = FRIENDS[Math.min(g ? g.stars : 0, FRIENDS.length - 1)], q = ASK[pick(kinds)]();
+    return { ...q, text: `<span class="from">${who}:</span> ${q.text}` };
+  }
+});
+
+// ---------- start the game (the engine is shared/chapters.js) ----------
+// How some words are said aloud. The recordings are made from the words AFTER these swaps (the writing on screen is not changed),
+// so the voice says each name the way the community reviewer gave it. tools/story-voice-lines.py reads this same list.
+const SAY = [["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "ah-nish-ih-nah-bay"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "ih-nook-sook"], ["ih-NOOK", "ih-nook"], ["IH-noo-it", "ih-noo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kah-moo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-gee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Ah-nish-ih-nah-bay"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "ih-nook-sook"], ["Inuk", "Ih-nook"], ["Inuit", "Ih-noo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kah-moo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-gee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
+window.Chapters = ChapterGame({ title: "Dr. Somebody Comes Home", sub: "A Grade 5 story", saveKey: "grade5Canada.v1", medal: "g5",
+  chapters: CHAPTERS, ask: ASK, art: ART, intro: INTRO, introVoice: "audio/g5/intro/",
+  voice: "audio/g5/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t) });
+</script>
+</body>
+</html>

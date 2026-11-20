@@ -1,0 +1,102 @@
+/* The storyboard games (Grade 5 and up): chapter list or map, story scenes, choices, challenges, the word book.
+   Loaded after kit.css and inked.css. Each grade sets its own colours in its page. */
+h1 { font-size:7vmin; padding:0 14vmin; }
+/* the list of chapters */
+.chapters { display:flex; flex-direction:column; gap:1.8vmin; width:min(92vw, 96vmin); }
+.chap { display:flex; align-items:center; gap:2.4vmin; background:#fffdf5; border:var(--line) solid var(--ink); border-radius:4vmin; padding:1.6vmin 2.6vmin; box-shadow:0 1.1vmin 0 var(--ink); text-align:left; color:var(--ink); }
+.chap:active { box-shadow:0 .3vmin 0 var(--ink); transform:translateY(.8vmin); }
+.chap .num { flex:0 0 auto; width:9vmin; height:9vmin; border-radius:50%; background:#e63946; border:var(--line) solid var(--ink); color:#fff; font-size:4.6vmin; font-weight:bold; line-height:7.8vmin; text-align:center; }
+.chap .what { flex:1 1 auto; min-width:0; } .chap .what b { display:block; font-size:3.6vmin; } .chap .what small { font-size:2.5vmin; color:#5a5f78; }
+.chap .state { flex:0 0 auto; font-size:5vmin; }
+.chap .state svg { width:6vmin; height:6vmin; }
+.chap.locked { background:#e4dfd2; color:#8d877b; border-color:#8d877b; box-shadow:0 .5vmin 0 #8d877b; } .chap.locked .num { background:#b5ae9e; border-color:#8d877b; } .chap.locked .state { opacity:.6; }
+/* a story scene */
+#story { justify-content:flex-start; padding-top:15vmin; gap:2vmin; }
+.dots { position:absolute; top:4.6vmin; left:16vmin; right:16vmin; display:flex; gap:1vmin; justify-content:center; align-items:center; flex-wrap:wrap; }
+.dots i { width:3vmin; height:3vmin; border-radius:50%; background:#fffdf5; border:.5vmin solid var(--ink); font-style:normal; }
+.dots i.q { border-radius:.8vmin; transform:rotate(45deg); } .dots i.done { background:#58b368; } .dots i.now { background:#ffd84d; scale:1.3; }
+.panel { width:min(94vw, 118vmin, 90vh); aspect-ratio:5 / 3; border-radius:5vmin; border:.8vmin solid var(--ink); overflow:hidden; box-shadow:0 1.4vmin 0 var(--ink); background:#cfe9f5; }
+.panel svg { width:100%; height:100%; }
+.caption { width:min(94vw, 118vmin, 90vh); min-height:15vmin; background:#fff; border-radius:4vmin; padding:2.2vmin 3.4vmin; font-size:3.5vmin; line-height:1.35; font-weight:bold; text-align:center; border:var(--line) solid var(--ink); box-shadow:0 1.1vmin 0 var(--ink); color:var(--ink); display:flex; align-items:center; justify-content:center; }
+.caption em { font-style:normal; color:#d62839; }
+.nextrow { display:flex; gap:3vmin; align-items:center; }
+.bigbtn.small { width:15vmin; height:15vmin; animation:none; } .bigbtn.small .tri { border-left-width:6vmin; border-top-width:4vmin; border-bottom-width:4vmin; margin-left:1.4vmin; }
+#intro { justify-content:flex-start; padding-top:8vmin; gap:2vmin; }
+.again { margin-top:2.4vmin; background:#fffdf5; border:var(--line) solid var(--ink); border-radius:4vmin; padding:1vmin 3vmin; font-size:2.8vmin; font-weight:bold; color:var(--ink); box-shadow:0 .7vmin 0 var(--ink); }
+.again:active { transform:translateY(.5vmin); box-shadow:0 .2vmin 0 var(--ink); }
+.bigbtn.back .tri { border-left:none; border-right:6vmin solid #fff; margin-left:-1.4vmin; }
+/* a challenge: answer 3 to open the next scene */
+#game .bubble { height:auto; min-height:22vmin; max-width:66vmin; flex-direction:column; gap:1.2vmin; padding:2.4vmin 3.4vmin; }
+#game .host { width:24vmin; height:27vmin; }
+.qtext { font-size:3.6vmin; line-height:1.3; text-align:center; } .qtext b { color:#d35400; }
+.tip { min-height:6vmin; font-size:3vmin; font-weight:bold; text-align:center; color:var(--ink); max-width:90vmin; background:#fff3b0; border:var(--line) solid var(--ink); border-radius:3vmin; padding:1vmin 3vmin; display:flex; align-items:center; justify-content:center; }
+.tip:empty { visibility:hidden; }
+.tip.oops { background:#ffd9d2; }
+.choice { font-size:8vmin; }
+.choice small { font-size:.42em; margin-left:.25em; }
+.graph { width:54vmin; height:26vmin; } .graph svg { width:100%; height:100%; }
+.band { position:relative; width:46vmin; height:16vmin; background:#bfe1a0; border:.6vmin solid var(--ink); border-radius:1vmin; margin:4.4vmin 13vmin 1vmin 1vmin; }
+.band i { position:absolute; left:0; right:0; top:50%; height:1.6vmin; margin-top:-.8vmin; background:#5db7e6; border-top:.4vmin solid var(--ink); border-bottom:.4vmin solid var(--ink); }
+.band span { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .band .l { top:-4.4vmin; left:50%; transform:translateX(-50%); } .band .w { left:calc(100% + 1.2vmin); } .band .w.a { top:8%; } .band .w.b { bottom:8%; }
+.qtext .from { display:block; font-size:.8em; color:#d62839; }
+.thermo { width:25vmin; height:30vmin; } .thermo svg { width:100%; height:100%; }
+#game .bubble:has(.thermo) { flex-direction:row; gap:2vmin; } #game .bubble:has(.thermo) .qtext { max-width:40vmin; text-align:left; }
+.fr { display:inline-flex; flex-direction:column; align-items:center; line-height:1; font-weight:bold; vertical-align:middle; margin:0 .15em; } .fr b { border-bottom:.14em solid currentColor; padding:0 .25em .08em; } .fr i { font-style:normal; padding-top:.08em; }
+.rect { position:relative; background:#e8c58a; border:.6vmin solid var(--ink); border-radius:1vmin; margin:3.4vmin 7vmin 1vmin 1vmin; }
+.rect .l, .rect .w { position:absolute; font-size:3vmin; font-weight:bold; white-space:nowrap; } .rect .l { top:-4.2vmin; left:50%; transform:translateX(-50%); } .rect .w { left:calc(100% + 1.2vmin); top:50%; transform:translateY(-50%); }
+@media (max-aspect-ratio: 5/8) { #intro { padding-top:22vmin; } .again { font-size:3.8vmin; } #story { padding-top:22vmin; } .caption { font-size:4.4vmin; } .qtext { font-size:4.4vmin; } #game .bubble { max-width:92vmin; } .tip { font-size:3.8vmin; } .chap .what b { font-size:4.4vmin; } .chap .what small { font-size:3.2vmin; } }
+/* the chapters as places on a map */
+.mappanel { position:relative; }
+.mappanel > svg { position:absolute; inset:0; }
+.pin { position:absolute; width:9vmin; height:9vmin; margin:-4.5vmin 0 0 -4.5vmin; border-radius:50%; background:#e63946; color:#fff; border:var(--line) solid var(--ink); box-shadow:0 .7vmin 0 var(--ink); font-size:4.4vmin; font-weight:bold; display:flex; align-items:center; justify-content:center; z-index:2; }
+.pin svg { width:80%; height:80%; } .pin.done { background:#fffdf5; } .pin.locked { background:#b5ae9e; border-color:#8d877b; box-shadow:0 .4vmin 0 #8d877b; }
+.pin.on { outline:.8vmin solid #ffd23f; outline-offset:.4vmin; }
+.mapowl { position:absolute; width:11vmin; height:13vmin; margin:-17vmin 0 0 1vmin; z-index:3; pointer-events:none; transition:left .5s ease, top .5s ease; } .mapowl svg { width:100%; height:100%; }
+#map:has(.mappanel) { justify-content:flex-start; padding-top:8vmin; gap:2vmin; }
+.caption.mapcap { min-height:11vmin; } .mapcap b { display:block; font-size:1.15em; } .mapcap small { font-size:.8em; color:#6a5a4c; }
+/* a choice in the story */
+.options { display:flex; gap:3vmin; flex-wrap:wrap; justify-content:center; }
+.option { background:#fffdf5; border:var(--line) solid var(--ink); border-radius:4vmin; box-shadow:0 1.1vmin 0 var(--ink); padding:2.4vmin 4vmin; font-size:3.8vmin; font-weight:bold; color:var(--ink); min-width:30vmin; }
+.option:active { transform:translateY(.8vmin); box-shadow:0 .3vmin 0 var(--ink); }
+.dots i.p { border-radius:0; clip-path:polygon(50% 0, 100% 100%, 0 100%); border:none; background:#2b1a10; } .dots i.p.done { background:#58b368; } .dots i.p.now { background:#ffd84d; }
+/* collected words */
+.corner.words { font-weight:bold; font-size:4.4vmin; color:var(--ink); }
+.cheer.wordcheer { top:1.6vmin; } .cheer.wordcheer b { color:#d62839; }
+#wordbook { position:fixed; inset:0; background:rgba(43,26,16,.55); display:none; align-items:center; justify-content:center; z-index:20; }
+#wordbook.on { display:flex; }
+#wordbook .panel { width:min(94vw, 150vmin); aspect-ratio:auto; height:auto; max-height:90vh; overflow:auto; background:#fffaf0; padding:2.4vmin 3vmin 0; text-align:center; }
+#wordbook .again { position:sticky; bottom:0; margin:0 auto; display:block; } #wordbook .panel::after { content:""; display:block; height:2vmin; }
+#wordbook h2 { margin:0 0 1.6vmin; font-size:4.4vmin; } #wordbook h2 small { font-size:.6em; color:#6a5a4c; margin-left:1.4vmin; }
+.wordlist { display:grid; grid-template-columns:repeat(auto-fill, minmax(27vmin, 1fr)); gap:1vmin; margin-bottom:1.4vmin; }
+.word { background:#fff; border:.5vmin solid var(--ink); border-radius:2.4vmin; padding:.6vmin 1.2vmin; display:flex; flex-direction:column; font-size:2.5vmin; line-height:1.2; }
+.word b { color:#d62839; font-size:1.15em; } .word.unmet { background:#ece6da; border-color:#b5ab99; color:#b5ab99; } .word.unmet b { color:#b5ab99; }
+@media (max-aspect-ratio: 5/8) { .cheer.wordcheer { top:auto; bottom:3vmin; } #map:has(.mappanel) { padding-top:22vmin; } .option { font-size:4.6vmin; min-width:40vmin; } .word { font-size:3.6vmin; } .wordlist { grid-template-columns:1fr 1fr; } }
+/* a named speaker (two people telling one story) */
+.caption .who { display:inline-block; background:var(--ink); color:#fff; border-radius:2vmin; padding:.1em .7em; margin-right:.5em; font-size:.8em; vertical-align:.08em; }
+/* money and the trading post */
+.coinchip { position:fixed; top:3vmin; right:3vmin; z-index:5; background:#fffdf5; border:var(--line) solid var(--ink); border-radius:5vmin; box-shadow:0 .7vmin 0 var(--ink); padding:1vmin 2.4vmin 1vmin 1.4vmin; font-size:4vmin; font-weight:bold; color:var(--ink); display:flex; align-items:center; gap:1vmin; }
+.coinchip svg, .shopbtn svg, #shop h2 svg, .buy svg { display:inline-block; width:1.2em; height:1.2em; vertical-align:-.25em; flex:0 0 auto; }
+.again.shopbtn { display:inline-flex; align-items:center; gap:.4em; } .again.shopbtn span { margin-left:.3em; }
+#shop { position:fixed; inset:0; background:rgba(43,26,16,.55); display:none; align-items:center; justify-content:center; z-index:20; } #shop.on { display:flex; }
+#shop .panel { width:min(94vw, 150vmin); aspect-ratio:auto; height:auto; max-height:90vh; overflow:auto; background:#fffaf0; padding:2.4vmin 3vmin 0; text-align:center; }
+#shop .panel::after { content:""; display:block; height:2vmin; } #shop .again { position:sticky; bottom:0; margin:0 auto; display:block; }
+#shop h2 { margin:0 0 1.6vmin; font-size:4.4vmin; } #shop h2 small { display:block; font-size:.62em; color:#6a5a4c; white-space:nowrap; }
+.shoplist { display:grid; grid-template-columns:repeat(auto-fill, minmax(24vmin, 1fr)); gap:1.4vmin; margin-bottom:1.6vmin; }
+.item { background:#fff; border:.5vmin solid var(--ink); border-radius:2.4vmin; padding:1vmin; display:flex; flex-direction:column; align-items:center; gap:.6vmin; font-size:2.6vmin; }
+.item > svg { width:14vmin; height:11vmin; } .item.mine { background:#e9f6e4; } .item .yours { color:#2f7d57; font-weight:bold; }
+.buy { background:#ffd84d; border:.5vmin solid var(--ink); border-radius:3vmin; box-shadow:0 .5vmin 0 var(--ink); padding:.4vmin 2vmin; font-size:3vmin; font-weight:bold; color:var(--ink); display:inline-flex; align-items:center; gap:.4em; }
+.buy:disabled { background:#ece6da; color:#9a907f; border-color:#b5ab99; box-shadow:none; }
+@media (max-aspect-ratio: 5/8) { .shoplist { grid-template-columns:1fr 1fr; } .item { font-size:3.8vmin; } .item > svg { width:26vmin; height:20vmin; } .buy { font-size:4.4vmin; } .coinchip { font-size:5vmin; } }
+/* a question answered by tapping its picture (a point on a graph) */
+.bubble svg.graph { display:block; width:36vmin; height:auto; flex:0 0 auto; }
+/* on a wide screen the graph sits beside the question, so the bubble stays short and nothing is covered */
+@media (min-aspect-ratio: 5/8) { #game .bubble:has(svg.graph) { flex-direction:row; align-items:center; gap:2vmin; max-width:104vmin; } #game .bubble:has(svg.graph) .qtext { max-width:50vmin; text-align:left; } }
+.bubble [data-pick] { cursor:pointer; } .bubble [data-pick].right { fill:#58b368; } .bubble [data-pick].dim { opacity:.3; pointer-events:none; }
+@media (max-aspect-ratio: 5/8) { .bubble svg.graph { width:46vmin; } }
+/* the certificate */
+#cert { position:fixed; inset:0; background:rgba(43,26,16,.6); display:none; align-items:center; justify-content:center; z-index:30; } #cert.on { display:flex; }
+#cert .panel { width:min(92vw, 110vmin); aspect-ratio:auto; height:auto; max-height:92vh; overflow:auto; background:#fffaf0; padding:3vmin 4vmin 2vmin; text-align:center; outline:1vmin double var(--ink); outline-offset:-2.4vmin; }
+#cert h2 { margin:0; font-size:5vmin; } #cert p { margin:1vmin 0; font-size:3vmin; } #cert .certname { font-size:6.4vmin; font-weight:bold; color:#d62839; margin:.6vmin 0; }
+.certowl { width:16vmin; height:18.5vmin; margin:0 auto; } .certowl svg { width:100%; height:100%; }
+.certstamps { display:grid; grid-template-columns:repeat(auto-fill, minmax(24vmin, 1fr)); gap:1vmin; margin:1.6vmin 0; } .certstamps span { display:flex; align-items:center; gap:1vmin; font-size:2.4vmin; text-align:left; } .certstamps svg { width:4.4vmin; height:4.4vmin; flex:0 0 auto; }
+@media (max-aspect-ratio: 5/8) { #cert p { font-size:4.2vmin; } .certstamps { grid-template-columns:1fr 1fr; } .certstamps span { font-size:3.4vmin; } }

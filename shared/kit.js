@@ -48,7 +48,7 @@ const Kit = (() => {
   // ---------- medals (a child earns one the first time they finish a game's story) ----------
   const stampKey = () => { const p = currentPlayer(); return "storyShelf.stamps" + (p ? "." + p.id : ""); };
   const stamps = () => get(stampKey(), []);
-  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); } }
+  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); music("new-medal"); } } // a new medal gets its own little tune
 
   // ---------- progress, for the grown-ups' progress report (progress.html) ----------
   // Every answered question is noted for the child who is playing: the game, the station, the difficulty step,
@@ -162,7 +162,7 @@ const Kit = (() => {
   }
 
   // ---------- settings shared by the newer games ----------
-  const settings = Object.assign({ voice: true, sound: true, voiceName: "" }, get("storyShelf.settings", {}));
+  const settings = Object.assign({ voice: true, sound: true, music: true, voiceName: "" }, get("storyShelf.settings", {}));
   const saveSettings = () => put("storyShelf.settings", settings);
 
   // ---------- voice settings (the device's own voice is no longer used) ----------
@@ -197,7 +197,7 @@ const Kit = (() => {
     if (!(await say(text))) return wait(quietPause); // voice is off: just a short pause
     await longEnough; await wait(600);
   }
-  const hush = () => { stopClip(); };
+  const hush = () => { stopClip(); stopMusic(); };
 
   // ---------- recorded lines (a character's own voice, saved as sound files in the "audio" folder) ----------
   // playClip plays one recorded line. If the file is missing or cannot play, the game waits about as long as reading
@@ -222,16 +222,16 @@ const Kit = (() => {
   function playClip(url, fallback) {
     return new Promise(async resolve => {
       if (!settings.voice) { stopClip(); return resolve(false); }
-      hush(); const mine = turn; // if anything else starts talking while this line loads, "turn" moves on and this line stays quiet
+      stopClip(); stopMusic(1.4); const mine = turn; // if anything else starts talking while this line loads, "turn" moves on and this line stays quiet
       try {
         const ac = audio(), sound = await loadClip(url);
         if (ac.state === "suspended") await ac.resume();
         if (mine !== turn) return resolve(false);
         if (ac.state !== "running") throw new Error("sound is blocked");
         const src = ac.createBufferSource(); src.buffer = sound; src.connect(ac.destination);
-        src.onended = () => { if (playing === src) playing = null; resolve(true); };
+        src.onended = () => { if (playing === src) playing = null; resolve(true); if (musicNext) setTimeout(() => { const go = musicNext; if (go && !playing) { musicNext = null; go(); } }, 350); }; // music that was waiting for the voice to finish starts now
         src.cutOff = () => resolve(false); // another line interrupted this one
-        playing = src; src.start();
+        stopMusic(1.4); playing = src; src.start(); // a voice always takes over from the music, which fades away gently instead of stopping dead
       } catch (e) { if (mine === turn) say(fallback).then(resolve); else resolve(false); }
     });
   }
@@ -253,6 +253,29 @@ const Kit = (() => {
       const p = a.play(); if (p && p.catch) p.catch(() => { unmuted = false; }); } catch (e) { unmuted = false; }
   }
   ["touchend", "pointerup", "click"].forEach(ev => document.addEventListener(ev, unmute, true));
+  // ---------- music (a short theme and a few jingles, in audio/music/) ----------
+  // Music never plays over a voice: it stops the moment a recorded line starts, and a tune asked for while a line is
+  // being spoken waits until the line is over. "Music" in the grown-ups panel switches it all off.
+  // music(name) hands back true if music is switched on (so the game can skip its own beeps), false if not.
+  let musicNow = null, musicGain = null, musicNext = null;
+  function stopMusic(fade) {
+    musicNext = null; if (!musicNow) return; const src = musicNow, g = musicGain, ac = AC; musicNow = null; fade = fade === undefined ? 0.35 : fade;
+    try { g.gain.cancelScheduledValues(ac.currentTime); g.gain.setValueAtTime(g.gain.value, ac.currentTime); g.gain.linearRampToValueAtTime(0, ac.currentTime + fade); src.stop(ac.currentTime + fade + 0.05); } catch (e) { try { src.stop(); } catch (e2) {} }
+  }
+  function music(name, loud) {
+    if (!settings.music) return false;
+    if (playing) { musicNext = () => music(name, loud); return true; } // a voice is talking: the tune waits its turn
+    musicNext = null; const mine = turn;
+    (async () => { try {
+      const ac = audio(), sound = await loadClip("audio/music/" + name + ".mp3");
+      if (playing) { musicNext = () => music(name, loud); return; } // a voice started while the tune loaded: wait for it to finish
+      if (!settings.music || mine !== turn || !ac || ac.state !== "running") return; // the screen changed while it loaded
+      stopMusic(0.05); const src = ac.createBufferSource(), g = ac.createGain(); g.gain.value = loud || 0.55;
+      src.buffer = sound; src.connect(g); g.connect(ac.destination); src.onended = () => { if (musicNow === src) musicNow = null; };
+      musicNow = src; musicGain = g; src.start();
+    } catch (e) {} })();
+    return true;
+  }
   let AC = null;
   function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === "suspended") AC.resume(); return AC; }
   function tone(freq, start, len, type, vol) {
@@ -312,7 +335,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "35"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "37"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
-    englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
+    englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

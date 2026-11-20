@@ -1,0 +1,35 @@
+/* The Grades 5 to 8 look: everything outlined in bold dark ink, like the new Dr. Somebody.
+   Loaded after kit.css by the older-grade pages only, so Preschool to Grade 4 keep their soft look. */
+:root { --ink:#2b1a10; --line:.6vmin; }
+
+/* the backdrop is one drawn picture (see backdrop() in the page), not the soft sun and hills */
+.layer .backdrop { position:absolute; inset:0; width:100%; height:100%; }
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop .drift { animation:inkdrift 46s ease-in-out infinite alternate; } .backdrop .drift.b { animation-duration:64s; animation-direction:alternate-reverse; }
+  @keyframes inkdrift { from { transform:translateX(-14px); } to { transform:translateX(26px); } }
+}
+
+h1 { color:#fff; text-shadow:-.5vmin 0 0 var(--ink), .5vmin 0 0 var(--ink), 0 -.5vmin 0 var(--ink), 0 .5vmin 0 var(--ink), -.4vmin -.4vmin 0 var(--ink), .4vmin -.4vmin 0 var(--ink), -.4vmin .4vmin 0 var(--ink), .4vmin .4vmin 0 var(--ink), 0 1.3vmin 0 var(--ink); letter-spacing:.3vmin; }
+.sub { font-weight:bold; color:var(--ink); }
+
+/* buttons you press: a dark outline and a solid dark lip underneath */
+.bigbtn { border:var(--line) solid var(--ink); box-shadow:0 1.5vmin 0 var(--ink); }
+.bigbtn:active { box-shadow:0 .5vmin 0 var(--ink); transform:translateY(1vmin); }
+.bigbtn.back { background:#cfd8e3; box-shadow:0 1.2vmin 0 var(--ink); }
+.choice { border:var(--line) solid var(--ink); box-shadow:0 1.3vmin 0 var(--ink); background:#fffdf5; color:var(--ink); }
+.choice:active { box-shadow:0 .4vmin 0 var(--ink); transform:translateY(.9vmin); }
+.choice.right { background:#b9f0a5; border-color:var(--ink); }
+.choice.dim { opacity:1; background:#ddd8cb; color:#a39d90; border-color:#8d877b; box-shadow:0 .5vmin 0 #8d877b; } /* faded, but still solid: the scenery never shows through */
+.corner { background:#fffdf5; border:var(--line) solid var(--ink); box-shadow:0 .7vmin 0 var(--ink); opacity:1; display:flex; align-items:center; justify-content:center; padding:0; }
+.corner svg { width:66%; height:66%; }
+
+/* speech bubbles, captions and cards */
+.bubble { border:var(--line) solid var(--ink); box-shadow:0 1.1vmin 0 var(--ink); }
+.bubble::before { border-right-color:var(--ink); left:-4vmin; }
+.bubble::after { content:""; position:absolute; left:-2.7vmin; top:55%; border:2.2vmin solid transparent; border-right-color:#fff; border-left:none; }
+.cheer { border:var(--line) solid var(--ink); box-shadow:0 .8vmin 0 var(--ink); color:var(--ink); }
+.star { -webkit-text-stroke:.25vmin var(--ink); }
+@media (max-aspect-ratio: 5/8) { /* upright phones: the bubble's tail points up at the host */
+  .bubble::before { left:50%; top:-4vmin; margin-left:-2.2vmin; border:2.2vmin solid transparent; border-bottom-color:var(--ink); border-top:none; }
+  .bubble::after { left:50%; top:-2.7vmin; margin-left:-2.2vmin; border:2.2vmin solid transparent; border-bottom-color:#fff; border-top:none; }
+}
