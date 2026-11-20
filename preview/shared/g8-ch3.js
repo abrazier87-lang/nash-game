@@ -148,7 +148,7 @@
   // FACT CHECK: French words: le port (the harbour), le cèdre (the cedar), la loi (the law), le navire (the ship), le canot (the canoe). No Coast Salish words except the nation names (Musqueam, Squamish, Tsleil-Waututh), which should be checked.
   // FACT CHECK: Burrard Inlet is the inlet on which the Vancouver harbour lies.
   // FACT CHECK: The water numbers in the case file (litres each per day, size of the tanks) are made up to suit the maths. Only the 376 people is a real number.
-  // FACT CHECK: Added from Shane's review notes (November 2026): pronunciation guides (Musqueam = MUS-kwee-um, Tsleil-Waututh = SLAY-wah-tooth, sat sri akal = sut sree uh-KAAL); a closing sentence keeping the potlatch law (erased the ways of people who had always belonged here) distinct from the Komagata Maru rule (shut the door on newcomers); story dates now written month day, year.
+  // FACT CHECK: Added from Shane's review notes (November 2026): pronunciation guides (Musqueam = MUS-kwee-um, Tsleil-Waututh = SLAY-wah-tuth, sat sri akal = sut sree uh-KAAL); a closing sentence keeping the potlatch law (erased the ways of people who had always belonged here) distinct from the Komagata Maru rule (shut the door on newcomers); story dates now written month day, year.
   // READERS: South Asian Canadian (Sikh community) readers for the Komagata Maru; Musqueam, Squamish or Tsleil-Waututh readers for the cedar and potlatch scenes.
   CHAPTERS[2] = { title: "The Harbour and the Cedar", where: "Vancouver", beats: [
     { art: "hc_arrive", word: ["le port", "the harbour"], say: ["Goodbye, Jordan, and goodbye, salmon! The Fraser River has carried us down out of the mountains, and now the water is wide and salty and the air smells of the sea.",
@@ -157,7 +157,7 @@
     { art: "hc_simran", word: ["sat sri akal", "a Sikh greeting (say sut sree uh-KAAL)"], say: ["This is Simran. She lives in Vancouver, and she has come down to the water to meet us. Her family is Sikh, and her great-great-grandfather came here from Punjab, in India.",
       "She greets us with <em>sat sri akal</em>, a Sikh greeting, and I say it back as well as an owl can. You say it sut sree uh-KAAL.",
       "Simran tells us this city stands on the land of three Coast Salish nations, the <em>Musqueam</em>, the <em>Squamish</em> and the <em>Tsleil-Waututh</em>. They have lived here for thousands of years, and they live here today."] },
-    { art: "hc_simran", say: ["You say <em>Musqueam</em> like MUS-kwee-um, and <em>Tsleil-Waututh</em> like SLAY-wah-tooth.",
+    { art: "hc_simran", say: ["You say <em>Musqueam</em> like MUS-kwee-um, and <em>Tsleil-Waututh</em> like SLAY-wah-tuth.",
       "She adds that this land was never given up by treaty. Her best friend Kayla is from the Squamish Nation, and Kayla wants to show us the cedar. Clock, show us!"] },
     { art: "hc_window1", word: ["le cèdre", "the cedar"], say: ["The window into the past! Long before the city, this shore is thick with giant trees. Kayla points at the biggest. It is a <em>cedar</em>, <em>le cèdre</em> in French.",
       "The Coast Salish peoples build great houses of long cedar planks, with low sloped roofs. They carve canoes from single cedar logs. They weave cedar bark into clothing, rope and baskets, and they weave blankets too.",

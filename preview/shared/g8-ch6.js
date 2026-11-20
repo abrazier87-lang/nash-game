@@ -129,8 +129,8 @@
   // NOT DRAWN: the flag of Nunavut was left out on purpose, because it could not be drawn simply and correctly.
   CHAPTERS[5] = { title: "The Top of the World", where: "Nunavut", beats: [
     { art: "tw_arrive", word: ["le soleil de minuit", "the midnight sun"], say: ["The clock points north and the balloon climbs. We leave the Klondike and the gold rush behind. We cross the Northwest Territories, and then we pass the tree line, where it is too cold for trees to grow.",
-      "After that the land is wide, flat and open. This is <em>Nunavut</em>. By my pocket watch it is the middle of the night, and the sun is still up! In summer here the sun does not set for weeks.",
-      "In French it is <em>le soleil de minuit</em>, the midnight sun. It rolls along the edge of the sky and never quite goes down. My owl eyes cannot decide whether to sleep. And somebody on the shore is waving at us."] },
+      "After that the land is wide, flat and open. This is <em>Nunavut</em>. By my pocket watch it is nearly midnight, and the sky is still bright! In summer here the sun dips down for only a little while, and it never gets dark.",
+      "Farther north the sun does not set for weeks. In French that is <em>le soleil de minuit</em>, the midnight sun. Even here my owl eyes cannot decide whether to sleep. And somebody on the shore is waving at us."] },
     { art: "tw_meet", word: ["le nord", "the north"], say: ["It is Nina! Last time I saw her it was dark winter, and she showed me the iglu, the qulliq and the qamutiik. She is a few years older now and taller too. I am so delighted I jump up and down.",
       "I talk for a whole minute without stopping. Nina waits politely until I finish. Then she says, <em>You still talk too much, Dr. Somebody.</em> She is right. I am very pleased to see her anyway.",
       "This time it is summer, the opposite season. Flowers cover the tundra, and the ice in the bay is breaking up. Nina's home is far up in <em>le nord</em>, the north. Clock, show us what came before!"] },
@@ -149,13 +149,13 @@
       "Nunavut has a public government, one that serves everyone who lives there. Most of the people of Nunavut are Inuit, so Inuit lead it.",
       "Nina says that now the people who live in Nunavut make the big decisions about their own land. Everyone in the picture is dancing. I ask if there is cake. There is always cake."] },
     { ask: "tw_case", intro: "Nina's uncle has a puzzle about the sea ice. This is a case file with three steps, and each step uses the answer from the one before. Three right answers in a row solve the case." },
-    { art: "tw_choice", pick: "The sun is still up, and it is time to choose. Nina's uncle is going out on the sea ice to check how thick it is with a long measuring pole, and we are invited. Or we could help Nina's class with the weather station outside the school. Which shall it be?", options: [
+    { art: "tw_choice", pick: "The sky is still bright, and it is time to choose. Nina's uncle is going out on the sea ice to check how thick it is with a long measuring pole, and we are invited. Or we could help Nina's class with the weather station outside the school. Which shall it be?", options: [
       { label: "Go out on the ice with Nina's uncle", art: "tw_ice", word: ["la glace", "the ice"], say: ["Nina's uncle knows this ice well. He tests it carefully before every step, and we follow exactly in his footsteps. He pushes a long pole down through a small hole and reads the thickness in centimetres.",
         "The numbers tell him whether the ice can be trusted, and where it can be crossed. Ice in French is <em>la glace</em>. I keep my wings out for balance. Nina says I look like a very nervous airplane."] },
       { label: "Help Nina's class with the weather station", art: "tw_station", word: ["la météo", "the weather"], say: ["Nina's class keeps a small weather station outside the school. It is a white box with slats on four legs, and a wind vane on a pole. The slats let the air in and keep the sun off the thermometer.",
         "Every morning someone writes down the temperature, and now there is a long list of numbers to work with. The weather in French is <em>la météo</em>. I am in charge of the pencil. Nina is in charge of me."] }] },
     { ask: "tw_last", intro: "Nina has some last puzzles from our adventure. Three right answers and we say goodbye." },
-    { art: "tw_goodbye", word: ["nakurmiik", "thank you (Inuktitut)"], say: ["The sun is still up, and I realize that I have been here a whole day without noticing. This is the farthest north the balloon will go. At the top of the world, every direction points south.",
+    { art: "tw_goodbye", word: ["nakurmiik", "thank you (Inuktitut)"], say: ["The sky is still bright, and I realize that I have been here a whole day without noticing. This is the farthest north the balloon will go. At the top of the world, every direction points south.",
       "Nina says the next place I should go is home. The clock agrees. Its hand swings round to the south and east, all the way back to where the journey began, the Grand River. Nina says I can visit again, but I must talk less.",
       "Nakurmiik, Nina, for the iglu in winter, the ice in summer, and for telling it plainly. The balloon rises over the flowers and the floes. Next we go <em>Home</em>. Tick tock!"] }
   ] };

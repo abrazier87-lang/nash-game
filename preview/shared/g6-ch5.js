@@ -99,7 +99,7 @@
 
   // FACT CHECK: Halifax has one of the great natural harbours of the world, and the harbour stays free of ice all year.
   // FACT CHECK: Kjipuktuk is the Mi'kmaw name for the Halifax harbour, usually written this way, and it means "great harbour". Mi'kmaq lived here long before Europeans came and live in Nova Scotia today.
-  // FACT CHECK: Added from Shane's review notes (November 2026): Kjipuktuk was a Mi'kmaw gathering place long before there was a city; the British built Halifax there in 1749 without asking the Mi'kmaq. Pronunciation jih-BOOK-took. Also a line saying Canada has two official languages, English and French.
+  // FACT CHECK: Added from Shane's review notes (November 2026): Kjipuktuk was a Mi'kmaw gathering place long before there was a city; the British built Halifax there in 1749 without asking the Mi'kmaq. Pronunciation jee-BOOK-took. Also a line saying Canada has two official languages, English and French.
   // FACT CHECK: About 3,000 Black Loyalists came to Nova Scotia in 1783 and after the American Revolution. They were promised freedom and land, and many settled at Birchtown and were given less and poorer land than promised. Black Nova Scotians have lived here for over 200 years.
   // FACT CHECK: The Halifax Citadel is a star-shaped fort on Citadel Hill, built to guard the harbour. The noon gun is fired there every day at 12 o'clock.
   // FACT CHECK: The Town Clock is a white clock tower with a clock face on each of its sides (a teacher may wish to confirm). No date is given in the story.
@@ -113,7 +113,7 @@
       "A sign on the dock says <em>bienvenue</em>, which is French for welcome. I waved at the sign. It did not wave back, but it was very polite.",
       "Canada has two official languages, English and French. So I am practising my French all the way to the coast."] },
     { art: "hx_amara", word: ["le port", "the harbour"], say: ["This is Amara. Her grandparents came to Canada by ship, and they landed in this very harbour. Now she lives a short walk from the water.",
-      "The Mi'kmaq have known this harbour since long before any ship came, and they know it still. Their name for it is usually written <em>Kjipuktuk</em>, which means the great harbour. You say it jih-BOOK-took.",
+      "The Mi'kmaq have known this harbour since long before any ship came, and they know it still. Their name for it is usually written <em>Kjipuktuk</em>, which means the great harbour. You say it jee-BOOK-took.",
       "Kjipuktuk was a Mi'kmaw gathering place long before there was a city. The British built Halifax here in 1749 without asking the Mi'kmaq.",
       "In French, a harbour is <em>le port</em>. Amara says every family here has a story about arriving, and some of the oldest ones can be seen through the clock. Clock, show us!"] },
     { art: "hx_window1783", word: ["le bateau", "the boat"], say: ["The window into the past. The year is <em>1783</em>. The American Revolution is over, and ships are bringing thousands of people to Nova Scotia.",

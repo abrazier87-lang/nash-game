@@ -131,8 +131,8 @@
     { art: "mk_choice", pick: "Sadie has two ideas for the afternoon. Shall we paddle a canoe on the lake, or walk the shore trail to look for eagles?", options: [
       { label: "Paddle a canoe", art: "mk_paddle", word: ["wela'lin", "thank you (say weh-LAH-lin)"], say: ["Paddles up! A canoe is waiting by the water, and Sadie shows me how to paddle with my wings tucked in. Dip, pull, dip, pull. I only splashed myself twice.",
         "When we reach the shore again, Sadie says <em>wela'lin</em>. You say it weh-LAH-lin. It means thank you. I say it right back, for the paddling lesson."] },
-      { label: "Walk the shore trail", art: "mk_trail", word: ["nmu'ltes", "see you again (say nuh-MOOL-tess)"], say: ["Up the shore trail we go, under the spruce trees, with our eyes on the sky. A bald eagle glides right over us, as wide as a door.",
-        "When it flies off, Sadie waves and says <em>nmu'ltes</em>. You say it nuh-MOOL-tess. It means see you again. I said it too, in case the eagle was listening."] }] },
+      { label: "Walk the shore trail", art: "mk_trail", word: ["nmu'ltes", "see you again (say nem-OOL-tes)"], say: ["Up the shore trail we go, under the spruce trees, with our eyes on the sky. A bald eagle glides right over us, as wide as a door.",
+        "When it flies off, Sadie waves and says <em>nmu'ltes</em>. You say it nem-OOL-tes. It means see you again. I said it too, in case the eagle was listening."] }] },
     { ask: "mk_symmetry", intro: "One last set of puzzles for the day. Three right answers finishes the chapter." },
     { art: "mk_goodbye", say: ["The sun sinks low over the hills, and the whole lake glows. Sadie says the dawn will come early to her land again tomorrow, as it always does.",
       "Thank you, Sadie, for showing me your home today. It was a big treat to meet someone who lives in the place we have been looking at through the window.",

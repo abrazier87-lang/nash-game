@@ -143,7 +143,7 @@
       "Far below, two rivers meet. One is wide and slow, the <em>Yukon</em>. The other is smaller and joins it, the <em>Klondike</em>. At the meeting place there is a small town of wooden buildings.",
       "This is <em>Dawson City</em>, in the Yukon. In summer the sun hardly sets here, and in winter it is deep cold. We land softly beside the river."] },
     { art: "gs_meet", say: ["On a wooden boardwalk a girl is waiting for us. This is Dana. She lives in Dawson, and she is a citizen of the <em>Tr'ondëk Hwëch'in</em>, the First Nation whose land this is.",
-      "You say it tron-DEK hwuh-CHIN.",
+      "You say it TRON-dek HWITCH-in.",
       "Dana says her people have fished and hunted along these rivers for thousands of years. The tall wooden false-front buildings around us are more than a hundred years old.",
       "People come from all over the world to hear about the gold. We already know the French word for gold, l'or. I held a gold coin once, and I gave it back, because it was heavier than it looked."] },
     { art: "gs_window1", word: ["la ruée vers l'or", "the gold rush"], say: ["The window into the past! It is August <em>1896</em>, at Rabbit Creek, soon to be renamed Bonanza Creek. A small party is here: Keish, called Skookum Jim, and his sister Shaaw Tláa, called Kate Carmack.",

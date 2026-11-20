@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Goes East</title>
-<link rel="stylesheet" href="shared/kit.css?v=42">
-<link rel="stylesheet" href="shared/inked.css?v=42">
-<link rel="stylesheet" href="shared/chapters.css?v=42">
+<link rel="stylesheet" href="shared/kit.css?v=43">
+<link rel="stylesheet" href="shared/inked.css?v=43">
+<link rel="stylesheet" href="shared/chapters.css?v=43">
 <style>
   /* Grade 6's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2a6fa8; }
@@ -17,11 +17,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=42"></script>
-<script src="shared/story.js?v=42"></script>
-<script src="shared/newowl.js?v=42"></script>
-<script src="shared/inkart.js?v=42"></script>
-<script src="shared/chapters.js?v=42"></script>
+<script src="shared/kit.js?v=43"></script>
+<script src="shared/story.js?v=43"></script>
+<script src="shared/newowl.js?v=43"></script>
+<script src="shared/inkart.js?v=43"></script>
+<script src="shared/chapters.js?v=43"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -175,16 +175,16 @@ const ASK = {
 
 </script>
 <!-- Chapters 2 to 6 each live in their own file. Each one adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g6-ch2.js?v=42"></script>
-<script src="shared/g6-ch3.js?v=42"></script>
-<script src="shared/g6-ch4.js?v=42"></script>
-<script src="shared/g6-ch5.js?v=42"></script>
-<script src="shared/g6-ch6.js?v=42"></script>
+<script src="shared/g6-ch2.js?v=43"></script>
+<script src="shared/g6-ch3.js?v=43"></script>
+<script src="shared/g6-ch4.js?v=43"></script>
+<script src="shared/g6-ch5.js?v=43"></script>
+<script src="shared/g6-ch6.js?v=43"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How some words are said aloud (the writing on screen is not changed). tools/story-voice-lines.py reads this same list.
-const SAY = [["Mi'kma'ki", "Meeg-mah-gee"], ["Mi'kmaq", "Meeg-mah"], ["Mi'kmaw", "Meeg-maw"], ["Kjipuktuk", "Jih-book-took"], ["Unama'ki", "Oo-nah-mah-gee"], ["wela'lin", "weh-lah-lin"], ["Wela'lin", "Weh-lah-lin"], ["nmu'ltes", "nuh-mool-tess"], ["Nmu'ltes", "Nuh-mool-tess"], ["wikuom", "wee-goo-om"], ["kwe'", "gway"], ["Kwe'", "Gway"], ["Ktaqmkuk", "Uk-tah-kum-gook"], ["Beothuk", "Bee-oth-uk"]];
+const SAY = [["MEEG-mah-gee", "meeg-mah-gee"], ["MEEG-mah", "meeg-mah"], ["MEEG-maw", "meeg-maw"], ["WEE-goo-om", "wee-goo-om"], ["bee-OTH-uk", "bee-oth-uk"], ["jee-BOOK-took", "jee-book-took"], ["nem-OOL-tes", "nem-ool-tes"], ["oo-nah-MAH-gee", "oo-nah-mah-gee"], ["weh-LAH-lin", "weh-lah-lin"], ["Mi'kma'ki", "Meeg-mah-gee"], ["Mi'kmaq", "Meeg-mah"], ["Mi'kmaw", "Meeg-maw"], ["Kjipuktuk", "Jee-book-took"], ["Unama'ki", "Oo-nah-mah-gee"], ["wela'lin", "weh-lah-lin"], ["Wela'lin", "Weh-lah-lin"], ["nmu'ltes", "nem-ool-tes"], ["Nmu'ltes", "Nem-ool-tes"], ["wikuom", "wee-goo-om"], ["kwe'", "gway"], ["Kwe'", "Gway"], ["Ktaqmkuk", "Ook-dah-hum-gook"], ["Beothuk", "Bee-oth-uk"], ["Shanawdithit", "Shaw-nuh-dith-it"], ["Wendake", "Wen-dah-keh"], ["Stadacona", "Stad-uh-koh-nuh"], ["L'Anse aux Meadows", "Lance oh Meadows"], ["Minas", "My-nus"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Goes East", sub: "A Grade 6 story", saveKey: "grade6East.v1", medal: "g6",
   chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g6/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t),
   map: { art: eastMap, stops: [[15.5, 52.5], [29, 43.5], [61.5, 88], [90, 67.5], [76, 80], [88.5, 33]] } });
