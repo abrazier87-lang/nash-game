@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Goes East</title>
-<link rel="stylesheet" href="shared/kit.css?v=41">
-<link rel="stylesheet" href="shared/inked.css?v=41">
-<link rel="stylesheet" href="shared/chapters.css?v=41">
+<link rel="stylesheet" href="shared/kit.css?v=42">
+<link rel="stylesheet" href="shared/inked.css?v=42">
+<link rel="stylesheet" href="shared/chapters.css?v=42">
 <style>
   /* Grade 6's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2a6fa8; }
@@ -17,11 +17,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=41"></script>
-<script src="shared/story.js?v=41"></script>
-<script src="shared/newowl.js?v=41"></script>
-<script src="shared/inkart.js?v=41"></script>
-<script src="shared/chapters.js?v=41"></script>
+<script src="shared/kit.js?v=42"></script>
+<script src="shared/story.js?v=42"></script>
+<script src="shared/newowl.js?v=42"></script>
+<script src="shared/inkart.js?v=42"></script>
+<script src="shared/chapters.js?v=42"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -34,6 +34,7 @@
    Chapter 1 is in this page. Chapters 2 to 6 are in shared/g6-ch2.js to shared/g6-ch6.js.
    ===================================================================== */
 
+// FACT CHECK (Shane's review notes, November 2026): Quebec is an Algonquin word; the St. Lawrence Iroquoian village of Stadacona stood at Quebec; Wendake (Huron-Wendat) is beside Quebec City today; First Nations trappers and traders were skilled partners who drove the fur trade, and the later beaver rush brought over-trapping, fighting and new sicknesses that killed very many people.
 // ---------- pictures ----------
 const LEA = { hood: "#f4b942" }; // Chapter 1's guide: long hair and a yellow hoodie
 const cliff = (y, c) => `<g ${INKED}><path d="M-10 ${y} Q40 ${y - 8} 90 ${y - 2} L110 ${y + 40} Q130 ${y + 62} 120 ${y + 86} H-10 Z" fill="${c || "#b9a58c"}"/><path d="M410 ${y - 6} Q330 ${y - 14} 250 ${y - 4} L236 ${y + 40} Q222 ${y + 64} 232 ${y + 86} H410 Z" fill="${c || "#b9a58c"}"/></g>`;
@@ -60,8 +61,10 @@ const blanket = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${
 const trader = (x, y, s) => `${person(x, y, s, "#3b6ea5")}<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><path d="M-11 -14 H11 L7 -19 H-7 Z" fill="#2b1a10"/></g>`; // a French trader: blue coat and a brimmed hat
 const quebec1608 = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M130 40 Q200 30 342 44 V130 H130 Z" fill="#b9a58c"/><path d="M130 44 Q230 34 342 48" fill="none" stroke="#4aa862" stroke-width="8"/></g>${tree(160, 46, .6, "#3f9a58")}${tree(196, 42, .7)}${tree(300, 46, .6)}
   <g ${INKED}><path d="M130 130 Q236 122 342 132 V160 H130 Z" fill="#a9cf86"/></g>${habitation(214, 150, .7)}${water(160, "#6cc0ea")}${ship(290, 190, .75)}${canoe(182, 206, .5, { who: 2 })}`;
+// a First Nations trader on the bank: hide-brown leggings, a coloured tunic with a belt, a striped blanket wrap over one shoulder, hair tied back, a fur bundle on the back
+const fnTrader = (x, y, s, tunic, stripe) => `<g transform="translate(${x} ${y}) scale(${s})" ${THIN}><ellipse cx="9" cy="14" rx="9" ry="11" fill="#8a5a2b"/><path d="M3 6 l12 16 M15 6 l-12 16" stroke="#5a3a1c" stroke-width="1.2" fill="none"/><rect x="-6" y="26" width="5" height="20" rx="2" fill="#a8743f"/><rect x="2" y="26" width="5" height="20" rx="2" fill="#a8743f"/><path d="M-6 36 h5 M2 36 h5 M-6 42 h5 M2 42 h5" stroke="#5a3a1c" stroke-width="1" fill="none"/><path d="M-9 30 Q-10 4 0 0 Q10 4 9 30 Z" fill="${tunic}"/><path d="M-9 20 H9" stroke="#5a3a1c" stroke-width="2.6" fill="none"/><path d="M-9 2 Q0 -2 9 6 L9 20 Q0 14 -9 18 Z" fill="#d9c7a0"/><path d="M-9 8 Q0 4 9 12 M-9 13 Q0 9 9 17" stroke="${stripe}" stroke-width="2.2" fill="none"/><circle cx="0" cy="-8" r="8" fill="#b9794a"/><path d="M-8 -9 Q-8 -18 0 -18 Q8 -18 8 -9 Q3 -14 0 -14 Q-4 -14 -8 -9 Z" fill="#2b1a10"/><path d="M-8 -8 Q-12 -2 -9 6" stroke="#2b1a10" stroke-width="3" fill="none"/><path d="M-6 -12 H6" stroke="#e63946" stroke-width="1.8" fill="none"/></g>`;
 const tradeLongAgo = `<rect width="400" height="240" fill="#f6e3b4"/><g ${INKED}><path d="M130 60 Q236 50 342 62 V140 H130 Z" fill="#b9a58c"/><path d="M130 140 Q236 130 342 142 V250 H130 Z" fill="#d9c7a0"/></g>${habitation(292, 138, .5)}
-  ${water(196, "#6cc0ea")}${canoe(176, 212, .5, { who: 0 })}${person(186, 136, .5)}${person(214, 140, .5, "#b98b54")}${trader(274, 142, .5)}${furs(204, 180, .7)}${kettle(250, 178, .8)}${blanket(278, 182, .7)}`;
+  ${water(196, "#6cc0ea")}${canoe(176, 212, .5, { who: 0, packs: 2 })}${fnTrader(186, 136, .5, "#3f9a80", "#e63946")}${fnTrader(214, 140, .5, "#c9602e", "#3b6ea5")}${trader(274, 142, .5)}${furs(204, 180, .7)}${kettle(250, 178, .8)}${blanket(278, 182, .7)}`;
 const ART = {
   qc_arrive: () => frame(`${sky("#9fd8f2", "#f4f1d8", [344, 40, 20], [[90, 36, .8], [210, 26, .6]])}${cliff(96)}${chateau(318, 92, .8)}${house(22, 72, 30, 22, "#e63946")}${house(58, 76, 26, 20, "#3b82c4")}
     <g ${INKED}><path d="M-10 184 Q200 170 410 186 V250 H-10 Z" fill="#5db7e6"/></g>${house(256, 160, 28, 22, "#f4b942")}${house(290, 164, 26, 20, "#e63946")}${house(326, 160, 30, 22, "#58b368")}${riding(120, 0, 120)}`),
@@ -108,7 +111,8 @@ const CHAPTERS = [
       "She says the castle is really a hotel, called the <em>Château Frontenac</em>. But the river is the real star.",
       "That is the St. Lawrence. Léa calls it <em>le fleuve</em>, the river. It runs all the way to the ocean, and for a long time it was the only road there was. Clock, show us!"] },
     { art: "qc_window1608", say: ["The window into the past! The year is <em>1608</em>. A French explorer named Samuel de Champlain has just built a wooden fort right here, at the foot of the cliff.",
-      "First Nations peoples had lived along this river for thousands of years before he came. The name Quebec comes from one of their words. It means <em>where the river narrows</em>.",
+      "First Nations peoples had lived along this river for thousands of years before he came. The name Quebec comes from an Algonquin word. It means <em>where the river narrows</em>.",
+      "Long before the French city, a St. Lawrence Iroquoian village called <em>Stadacona</em> stood right here. Today the Huron-Wendat community of <em>Wendake</em> is right beside Quebec City.",
       "Champlain's ship took about two months to cross the ocean. Two months! I get restless in the bath. Let's work out that journey."] },
     { ask: "crossing", intro: "Sail the ocean with Champlain. Three right answers and we climb to the walls." },
     { art: "qc_walls", word: ["la porte", "the gate"], say: ["The little fort grew into a town, and the town became the heart of <em>New France</em>.",
@@ -117,6 +121,7 @@ const CHAPTERS = [
     { ask: "walls", intro: "Read Léa's map. Three right answers and the window opens again." },
     { art: "qc_windowtrade", word: ["merci", "thank you"], say: ["Back to the window. The riverbank is busy! People are trading.",
       "The French wanted beaver furs, to make hats back in France. First Nations hunters and traders brought the furs, and traded them for things like kettles, cloth and blankets.",
+      "First Nations trappers and traders were skilled partners. They knew the land, and they drove the trade. Later, the rush for beaver brought over-trapping, fighting, and new sicknesses that killed very many people.",
       "Every good trade ends with a thank you. In French, that is <em>merci</em>. Now then. How many furs for a kettle?"] },
     { ask: "trade", intro: "Make a fair trade. Three right answers and we head up the cliff." },
     { art: "qc_choice", pick: "The old town is at the top of the cliff, and we are at the bottom. Léa says there are two ways up. Which shall we take?", options: [
@@ -170,16 +175,16 @@ const ASK = {
 
 </script>
 <!-- Chapters 2 to 6 each live in their own file. Each one adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g6-ch2.js?v=41"></script>
-<script src="shared/g6-ch3.js?v=41"></script>
-<script src="shared/g6-ch4.js?v=41"></script>
-<script src="shared/g6-ch5.js?v=41"></script>
-<script src="shared/g6-ch6.js?v=41"></script>
+<script src="shared/g6-ch2.js?v=42"></script>
+<script src="shared/g6-ch3.js?v=42"></script>
+<script src="shared/g6-ch4.js?v=42"></script>
+<script src="shared/g6-ch5.js?v=42"></script>
+<script src="shared/g6-ch6.js?v=42"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How some words are said aloud (the writing on screen is not changed). tools/story-voice-lines.py reads this same list.
-const SAY = [["Mi'kma'ki", "Mig-mah-gee"], ["Mi'kmaq", "Mig-mah"], ["Mi'kmaw", "Mig-maw"]];
+const SAY = [["Mi'kma'ki", "Meeg-mah-gee"], ["Mi'kmaq", "Meeg-mah"], ["Mi'kmaw", "Meeg-maw"], ["Kjipuktuk", "Jih-book-took"], ["Unama'ki", "Oo-nah-mah-gee"], ["wela'lin", "weh-lah-lin"], ["Wela'lin", "Weh-lah-lin"], ["nmu'ltes", "nuh-mool-tess"], ["Nmu'ltes", "Nuh-mool-tess"], ["wikuom", "wee-goo-om"], ["kwe'", "gway"], ["Kwe'", "Gway"], ["Ktaqmkuk", "Uk-tah-kum-gook"], ["Beothuk", "Bee-oth-uk"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Goes East", sub: "A Grade 6 story", saveKey: "grade6East.v1", medal: "g6",
   chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g6/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t),
   map: { art: eastMap, stops: [[15.5, 52.5], [29, 43.5], [61.5, 88], [90, 67.5], [76, 80], [88.5, 33]] } });

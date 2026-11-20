@@ -102,6 +102,8 @@
   // FACT CHECK: the farming families were called habitants, and the river was the main road (in winter the frozen river was used as a road too)
   // FACT CHECK: the long lots can still be seen in the fields today, and farms with strawberries and apples are found on the Ile d'Orleans and the Cote-de-Beaupre east of Quebec City
   // FACT CHECK: First Nations peoples made maple sugar from sap before the French came, and taught the French settlers how
+  // FACT CHECK: added from Shane's review notes (November 2026): the Abenaki, Algonquin and Wendat, among other First Nations of this region, made maple sugar long before ships came and taught the French settlers (Innu deliberately not named here)
+  // FACT CHECK: added from Shane's review notes (November 2026): the seigneuries' long narrow farms were laid out along riverbanks that were already First Nations homelands, where people had lived, fished and travelled for thousands of years
   // FACT CHECK: it takes about 40 litres of maple sap to make 1 litre of maple syrup
   // FACT CHECK: Quebec makes most of the world's maple syrup (about 70 percent, in recent years)
   // FACT CHECK: maple taffy poured on clean snow is a real sugar shack treat, and many sugar shacks offer horse-drawn sleigh rides
@@ -116,6 +118,7 @@
       "Why so long and thin? Olivier says the river holds the secret. Clock, show us!"] },
     { art: "lf_window1", say: ["The window into the past! The year is about <em>1700</em>, in New France. See the land? It is cut into long, narrow lots, and every lot touches the river.",
       "Each lot was farmed by a family of <em>habitants</em>, which is what the French farmers were called. Every family got a piece of the riverbank, because the river was the road.",
+      "These long farms were laid out along riverbanks that were already the homelands of First Nations. They had lived, fished and travelled along this river for thousands of years.",
       "Boats carried people and goods, and in winter the frozen river was a road too. So the houses stood close together along the shore, and neighbours could wave. Let's measure these lots."] },
     { ask: "lf_ribbon", intro: "Measure the long thin lots. Three right answers and we fly over the fields of today." },
     { art: "lf_today", word: ["le champ", "the field"], say: ["Back to today! From up here the fields still look like <em>ribbons</em>. Some are strawberries, some are hay, and some are just having a nap.",
@@ -123,7 +126,8 @@
       "A field is <em>le champ</em>. Where the river bends, some fields get cut on a slant, which makes them tricky to measure. Shall we try?"] },
     { ask: "lf_slant", intro: "Measure the slanted fields. Three right answers and the window opens again." },
     { art: "lf_window2", word: ["l'érable", "the maple tree"], say: ["The window again, and it is late winter long ago. Look at the buckets hanging on the trees! These are <em>maple trees</em>, and the sap inside them is sweet.",
-      "First Nations peoples knew how to make maple sugar from the sap, and they taught the French settlers how. Olivier's family still makes it today.",
+      "First Nations of this region, among them the Abenaki, the Algonquin and the Wendat, made maple sugar long before any ships came. They taught the French settlers how.",
+      "Olivier's family still makes maple sugar today.",
       "A maple tree is <em>l'érable</em>. It takes about <em>40 litres of sap</em> to make just 1 litre of syrup. That is a lot of buckets and a lot of boiling."] },
     { ask: "lf_sap", intro: "Do the syrup sums. Three right answers and we visit the sugar shack." },
     { art: "lf_choice", pick: "We are at Olivier's sugar shack, which he calls la cabane à sucre. Steam is pouring out of the roof! What shall we do first?", options: [

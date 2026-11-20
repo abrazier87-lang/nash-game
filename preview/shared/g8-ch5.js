@@ -136,14 +136,16 @@
   // FACT CHECK: Gold was worth about 16 dollars an ounce in the 1890s. The story and the questions use simple, MADE-UP prices per gram (10 to 50 dollars) and say so, so the maths is easy. Interest rates, fees and the black sand in the pouch are made up too. The step heights in the stairs question are made up ("Imagine").
   // FACT CHECK: In summer the sun hardly sets in Dawson (it is a little south of the Arctic Circle), and winters are deep cold.
   // FACT CHECK: Dana, her cousin Cam and the creek claim where we pan are made up. Cam's work as a trail guide and Dana's panning are only story.
+  // FACT CHECK: Added from Shane's review notes (November 2026): the scene now says who pushed the Tr'ondëk Hwëch'in out of Tr'ochëk (gold seekers pouring in, the people building the new town, and government officials who let them take the land); pronunciation guides for Tr'ondëk Hwëch'in and Tr'ochëk; the l'or word card was removed (it is a word card in Chapter 2).
   // FACT CHECK: French words: l'or (the gold), la ruée vers l'or (the gold rush), le traîneau (the sled), le sentier (the trail), la balance (the scales). No Indigenous-language words are given as words to collect.
   CHAPTERS[4] = { title: "The Golden Stairs", where: "The Klondike, Yukon", beats: [
     { art: "gs_arrive", say: ["The clock is quiet this morning, and so am I. We drift north over mountains and then over a long, wide valley with low wooded hills. The air is clear and cool.",
       "Far below, two rivers meet. One is wide and slow, the <em>Yukon</em>. The other is smaller and joins it, the <em>Klondike</em>. At the meeting place there is a small town of wooden buildings.",
       "This is <em>Dawson City</em>, in the Yukon. In summer the sun hardly sets here, and in winter it is deep cold. We land softly beside the river."] },
-    { art: "gs_meet", word: ["l'or", "the gold"], say: ["On a wooden boardwalk a girl is waiting for us. This is Dana. She lives in Dawson, and she is a citizen of the <em>Tr'ondëk Hwëch'in</em>, the First Nation whose land this is.",
+    { art: "gs_meet", say: ["On a wooden boardwalk a girl is waiting for us. This is Dana. She lives in Dawson, and she is a citizen of the <em>Tr'ondëk Hwëch'in</em>, the First Nation whose land this is.",
+      "You say it tron-DEK hwuh-CHIN.",
       "Dana says her people have fished and hunted along these rivers for thousands of years. The tall wooden false-front buildings around us are more than a hundred years old.",
-      "People come from all over the world to hear about the gold. In French, gold is <em>l'or</em>. I held a gold coin once, and I gave it back, because it was heavier than it looked."] },
+      "People come from all over the world to hear about the gold. We already know the French word for gold, l'or. I held a gold coin once, and I gave it back, because it was heavier than it looked."] },
     { art: "gs_window1", word: ["la ruée vers l'or", "the gold rush"], say: ["The window into the past! It is August <em>1896</em>, at Rabbit Creek, soon to be renamed Bonanza Creek. A small party is here: Keish, called Skookum Jim, and his sister Shaaw Tláa, called Kate Carmack.",
       "With them are their nephew Káa Goox, called Dawson Charlie, and Kate's husband George Carmack. Keish, Shaaw Tláa and Káa Goox are Tagish and Tlingit. Together they find <em>gold</em> in the creek.",
       "The news reaches the outside world in 1897, and about <em>100,000</em> people set out for the Klondike. This is the gold rush, la ruée vers l'or. Only about 30,000 to 40,000 arrive, and only a few thousand find any gold.",
@@ -155,8 +157,9 @@
       "Some people dragged their goods on a sled, le traîneau, where the ground was gentler. Money was a worry too. Gold dust was weighed on scales to pay bills, and some people borrowed from outfitters and paid interest."] },
     { ask: "gs_dust", intro: "In the Klondike, gold dust was money, and money has to be weighed and counted. Three right answers and the window opens again, and this time it is a serious look." },
     { art: "gs_window2", say: ["The window opens again, and I go quiet. It is 1898. In two years a fish camp at the river mouth has become a city of about <em>30,000</em> people. For a moment it is one of the largest cities in western Canada.",
-      "The Tr'ondëk Hwëch'in had fished and hunted here for thousands of years. As thousands of newcomers arrive, they are pushed out of their camp at Tr'ochëk.",
-      "Their leader, <em>Chief Isaac</em>, moves his people a few kilometres downriver to Moosehide, to keep them together.",
+      "The Tr'ondëk Hwëch'in had fished and hunted here for thousands of years. Their camp was at Tr'ochëk. You say it TROH-chek.",
+      "Gold seekers pour in by the thousands, and people build a new town. Government officials let them take the land. The Tr'ondëk Hwëch'in are pushed out of their camp."] },
+    { art: "gs_window2", say: ["Their leader, <em>Chief Isaac</em>, moves his people a few kilometres downriver to Moosehide, to keep them together.",
       "Afraid that their songs and dances will be lost in all the upheaval, he sends them to relatives in Alaska for safekeeping. Generations later, they are brought home."] },
     { ask: "gs_case", intro: "This is a case file: one problem in three steps, and each answer feeds the next. Cam is packing a ton for a stampeder. Three right answers and we choose how to spend the afternoon." },
     { art: "gs_choice", pick: "Back in the present, Dana is quiet for a moment. She tells us the Tr'ondëk Hwëch'in are still here, and in 1998 they signed a modern land claim and self-government agreement. Then she smiles. Cam has driven up to meet us, with two ideas for the afternoon. Shall we climb a stretch of the Chilkoot Trail, or pan for gold at a creek claim?", options: [

@@ -54,7 +54,8 @@
 
   // READERS: residential school survivors or their families, and Secwépemc readers; the Orange Shirt Society (guidance on telling Phyllis Webstad's story, which is a real living person's story, told here only in the outline she has made public); the school board's Indigenous education lead.
   // FACT CHECK (this whole chapter should be read by those readers before any child sees it). It has no questions, no jokes and no collected words.
-  // FACT CHECK: Dates: the schools ran from the 1880s until the last one closed in 1996. "More than a hundred years" is used in the story.
+  // FACT CHECK: Added from Shane's review notes (November 2026): the earliest residential schools opened in the 1830s; the Mohawk Institute in Brantford, Ontario, beside Six Nations, took in its first boarding students in 1831; the 1880s is when the government built a national system. The earlier "began in the 1880s" wording was wrong. Pronunciation guides added: Secwépemc = suh-WEP-muhc; Tk'emlúps te Secwépemc = tuh-kem-LOOPS tuh suh-WEP-muhc.
+  // FACT CHECK: Dates: the schools ran as a national system from the 1880s until the last one closed in 1996. "More than a hundred years" is used in the story.
   // FACT CHECK: The government of Canada paid for the schools and churches ran them. The story says exactly this.
   // FACT CHECK: More than 150,000 First Nations, Inuit and Métis children were sent to the schools.
   // FACT CHECK: For much of that time the law said parents had to send their children. Many children were taken from their families.
@@ -65,19 +66,22 @@
   // FACT CHECK: The government of Canada apologized in Parliament in 2008.
   // FACT CHECK: The Truth and Reconciliation Commission worked from 2008 to 2015, heard from more than 6,000 witnesses (most of them survivors) and made 94 Calls to Action. "Many are still not done" is a general statement (the commission's own progress reports and later reviews show many unfinished).
   // FACT CHECK: In 2021 the Tk'emlúps te Secwépemc Nation announced that a search of the grounds of the former Kamloops Indian Residential School had found signs of about 200 possible unmarked graves (described as possible, found by ground-penetrating radar). Other nations have since searched the grounds of other schools.
-  // FACT CHECK: Spellings: Secwépemc (the people), Secwepemctsín (their language), Tk'emlúps te Secwépemc (the Nation at Kamloops). No pronunciation guide is given, and no Secwepemctsín word is collected (kyé7e, "grandmother", was left out because the spelling could not be confirmed).
+  // FACT CHECK: Spellings: Secwépemc (the people), Secwepemctsín (their language), Tk'emlúps te Secwépemc (the Nation at Kamloops). Pronunciation guides for Secwépemc and Tk'emlúps te Secwépemc were added in November 2026 (see above), and no Secwepemctsín word is collected (kyé7e, "grandmother", was left out because the spelling could not be confirmed).
   // FACT CHECK: The balloon turns north to the Klondike (Chapter 5, The Golden Stairs). Chapter 3 was Vancouver with Simran, the Komagata Maru and the Coast Salish nations.
   CHAPTERS[3] = { title: "Every Child Matters", where: "The interior of British Columbia", quiet: true, beats: [
     { art: "ec_arrive", say: ["We have left Simran and Vancouver behind. The balloon drifts inland, over the mountains, until the land turns dry and golden. There are tan hills, tall pines and a slow river.",
       "This is the interior of British Columbia, near the city of <em>Kamloops</em>. Before we land, I need to tell you that this chapter is different.",
-      "There are no puzzles today and no gold dust. There is only a story that every child in Canada should hear. I am going to listen more than I talk."] },
+      "There are no puzzles today and no prizes. There is only a story that every child in Canada should hear. I am going to listen more than I talk."] },
     { art: "ec_meet", say: ["A girl is waiting on a porch with her grandmother. This is Hannah. She is <em>Secwépemc</em>, and her people have lived in these hills and valleys for thousands of years.",
+      "You say it suh-WEP-muhc.",
       "Hannah is wearing an orange shirt, and so is her grandmother. Hannah tells me the shirts are for remembering.",
       "She says her grandmother will tell us why. I sit down beside them, and I listen."] },
     { art: "ec_window1", say: ["Hannah's grandmother asks me to open the window into the past. We see a large brick building on a hill, with rows of small windows. It is a <em>residential school</em>.",
-      "For more than a hundred years, until the last one closed in 1996, the government of Canada paid for these boarding schools for First Nations, Inuit and Métis children, and churches ran them. They began in the 1880s.",
+      "For more than a hundred years, until the last one closed in 1996, the government of Canada paid for these boarding schools for First Nations, Inuit and Métis children, and churches ran them.",
       "More than 150,000 children were sent to them. Many were taken from their families, and for much of that time the law said parents had to send them.",
       "The purpose was to make the children give up their own languages and ways and become like the settlers."] },
+    { art: "ec_window1", say: ["The earliest of these schools opened in the 1830s. One of the very first was the Mohawk Institute in Brantford, beside Six Nations, where Lily lives. Lily was our first guide.",
+      "In the 1880s the government of Canada built a system of these schools across the whole country."] },
     { art: "ec_telling", say: ["Now Hannah's grandmother tells me what it was like. I do not say anything. I only listen, and I will tell you what she said.",
       "Children were often sent far from home, and did not see their parents for months or years. Their hair was cut and their own clothes were taken away. They were punished for speaking their own languages.",
       "Many children were hungry. Many were hurt by the adults who were supposed to care for them, and many became sick.",
@@ -87,8 +91,10 @@
       "When she arrived, the shirt was taken from her and she never got it back. She has said it made her feel that she did not matter.",
       "Years later she told that story, and in 2013 <em>Orange Shirt Day</em> began. It is held every year on September 30, and since 2021 it is also the National Day for Truth and Reconciliation."] },
     { art: "ec_truth", say: ["In 2008 the government of Canada apologized in Parliament. From 2008 to 2015 the <em>Truth and Reconciliation Commission</em> listened to more than 6,000 people, most of them <em>survivors</em>.",
-      "Survivors are people who went to the schools and lived. The commission wrote down what happened so that it can never be denied or forgotten. It made 94 Calls to Action, things Canada must do to begin to put things right.",
+      "Survivors are people who went to the schools and lived. The commission wrote down what happened so that it can never be denied or forgotten. It made 94 Calls to Action, things Canada must do to begin to put things right."] },
+    { art: "ec_truth", say: [
       "Many of the Calls to Action are still not done. In 2021 the Tk'emlúps te Secwépemc Nation announced that a search of the grounds of the former Kamloops school had found signs of about 200 possible unmarked graves.",
+      "You say the Nation's name tuh-kem-LOOPS tuh suh-WEP-muhc.",
       "Other nations have searched the grounds of other schools since. Hannah's grandmother says the survivors always knew."] },
     { art: "ec_today", say: ["Hannah's grandmother says the languages the schools tried to end are being spoken and taught again. Hannah is learning <em>Secwepemctsín</em> from her grandmother.",
       "Survivors, their children and their grandchildren are still here. Hannah's grandmother says the first step is simple, and anyone can take it. Learn what happened, and tell the truth about it.",

@@ -139,7 +139,8 @@
   // FACT CHECK: Pemmican is dried bison meat pounded with melted fat (and sometimes berries). It was a main food of the fur trade, eaten by canoe crews and traders. The recipe ratios in the maths questions are made up for the puzzle.
   // FACT CHECK: Red River cart: built entirely of wood and rawhide (no iron, no nails), two wheels about 1.5 m across or more, ungreased wooden axles that squealed loudly, a load of about 400 kg (some sources say up to 450 kg), and the wheels could be taken off so the cart floated across a river. Pulled by an ox (horses were also used).
   // FACT CHECK: The ceinture fléchée (arrow sash) is a long finger-woven belt, the Métis flag is a white infinity sign on a blue field (a red field version also exists) and was flying by 1816, among the oldest flags to begin in Canada. The Red River Jig is a well known Métis fiddle tune and dance.
-  // FACT CHECK: After 1869 Canada took over the Red River lands (the Red River Resistance of 1869-70, led by Louis Riel, led to Manitoba joining Canada in 1870). In the years that followed many Métis families lost or left their river lots. The scene says only this, and says the rest comes in Grade 8.
+  // FACT CHECK: After 1869 Canada took over the Red River lands (the Red River Resistance of 1869-70, led by Louis Riel, led to Manitoba joining Canada in 1870). In the years that followed many Métis families lost or left their river lots. The scene now goes on to tell 1885 plainly (see next line).
+  // FACT CHECK: Added from Shane's review notes (November 2026): in 1885 at Batoche on the South Saskatchewan River the Métis again asked Canada to respect their land and were not heard; they took up arms with Louis Riel as leader and Gabriel Dumont leading the fighters; Canada sent soldiers west by the new railway; after four days at Batoche the Métis were defeated; Riel was tried for treason and hanged in Regina on November 16, 1885; Manitoba honours him as its founder with Louis Riel Day every February. Also added: the infinity sign on the flag means two cultures joined together and a people that will go on forever; pronunciations TAHN-shee, MEE-chif, may-TEE.
   // FACT CHECK: The Constitution Act, 1982 (section 35) names three Aboriginal peoples of Canada: Indian (First Nations), Inuit and Métis. The scene says "First Nations, Inuit and Métis".
   // FACT CHECK: French words: la charrette (the cart), la ceinture fléchée (the arrow sash), le violon (the fiddle), la roue (the wheel), le bison (the bison), le pemmican (pemmican).
   // FACT CHECK: Next chapter, The Sea of Grass, is in the grasslands of Saskatchewan (west of Manitoba).
@@ -147,10 +148,11 @@
     { art: "rr_arrive", say: ["Goodbye, Kai! My clock balloon has drifted just across the Red River from The Forks, to the part of Winnipeg called St. Boniface.",
       "Look at the long, narrow strips of land running back from the water. These are <em>river lots</em>, and you can still see their shapes along this river today.",
       "Somebody down there is playing a fiddle, and it sounds very cheerful. I tapped my foot so hard that I nearly fell out of the basket."] },
-    { art: "rr_jade", word: ["taanshi", "hello (in Michif)"], say: ["The fiddler is a girl named Jade. She is <em>Métis</em>, she lives right here by the river, and she jigs with a dance group.",
+    { art: "rr_jade", word: ["taanshi", "hello, in Michif (say TAHN-shee; Michif is said MEE-chif)"], say: ["The fiddler is a girl named Jade. She is <em>Métis</em>, she lives right here by the river, and she jigs with a dance group.",
+      "You say Métis like this: may-TEE.",
       "The Métis are a distinct Indigenous people, with their own history, culture and language. The Métis Nation grew up in the fur trade country, with its heart right here at the Red River.",
-      "It grew from the families of First Nations women (often Cree and Anishinaabe) and French and Scottish fur traders. Then, over generations, Métis families married one another and became a new people, a nation.",
-      "Jade says hello like this: <em>taanshi</em>! I said it back. She says I had a good try, and she is a very kind fiddler."] },
+      "It grew from the families of First Nations women (often Cree and Anishinaabe) and French and Scottish fur traders. Then, over generations, Métis families married one another and became a new people, a nation."] },
+    { art: "rr_jade", say: ["Jade says hello like this: <em>taanshi</em>! I said it back. She says I had a good try, and she is a very kind fiddler."] },
     { art: "rr_window1", word: ["le pemmican", "dried bison meat pounded with fat and berries"], say: ["The window into the past! It is about <em>1840</em>, and a train of carts is rolling out from the Red River. Each summer, hundreds of Métis families set out onto the plains for the great <em>bison hunt</em>.",
       "The hunt is very well organized. Before they start, the hunters elect a captain and agree on a set of rules, the <em>Laws of the Hunt</em>.",
       "The meat is dried, then pounded with fat and berries into <em>le pemmican</em>. It keeps for a very long time, and it was the food that fed the whole fur trade.",
@@ -163,8 +165,12 @@
     { ask: "rr_area", intro: "Work out some round shapes and a river lot. Three right answers and the window opens again." },
     { art: "rr_window2", word: ["la ceinture fléchée", "the arrow sash"], say: ["The window again, and now we see a people with their own ways. Here is the <em>ceinture fléchée</em>, a long finger-woven sash with many uses. Here are fiddles playing the Red River Jig.",
       "People speak <em>Michif</em>, a language that weaves Cree and French together. And the Métis flag flies, a white infinity sign on blue, flown by 1816. It is one of the oldest flags that began in Canada.",
-      "After 1869, as Canada took over this land, the Métis had to stand up for their homes and their rights, led by Louis Riel. In the years that followed, many families were pushed off their river lots.",
-      "There is more to that story, and we will come to it farther west. The Métis Nation is here today, one of the three Indigenous peoples named in Canada's Constitution, with First Nations and Inuit."] },
+      "The white infinity sign stands for two cultures joined together, and for a people that will go on forever.",
+      "After 1869, as Canada took over this land, the Métis had to stand up for their homes and their rights, led by Louis Riel. In the years that followed, many families were pushed off their river lots."] },
+    { art: "rr_window2", say: ["In 1885, farther west at Batoche on the South Saskatchewan River, the Métis again asked Canada to respect their land, and again were not heard.",
+      "They took up arms, with Louis Riel as their leader and Gabriel Dumont leading the fighters. Canada sent soldiers west by the new railway. After four days of fighting at Batoche, the Métis were defeated.",
+      "Riel was tried for treason and hanged in Regina on November 16, 1885. Today Manitoba honours him as its founder, with Louis Riel Day every February.",
+      "The Métis Nation is here today, one of the three Indigenous peoples named in Canada's Constitution, with First Nations and Inuit."] },
     { ask: "rr_pemmican", intro: "Help Jade scale up a pemmican recipe. Three right answers and then you choose how to spend the afternoon." },
     { art: "rr_choice", pick: "Jade has two ideas for the afternoon. Shall we learn a step of the Red River Jig, or ride in the Red River cart?", options: [
       { label: "Learn a jig step", art: "rr_jig", word: ["le violon", "the fiddle"], say: ["Jade tucks her fiddle under her chin and plays the Red River Jig, while her feet go tap, tap, tap. The jig is quick and bouncy, and the steps match the beat of the tune.",

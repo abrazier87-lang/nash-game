@@ -123,25 +123,26 @@
   // FACT CHECK: Chinese workers were given the most dangerous jobs, such as handling explosives to blast tunnels and ledges out of the rock
   // FACT CHECK: Chinese workers were paid about one dollar a day, roughly half of what white workers were paid, and had to buy their own food and gear out of it
   // FACT CHECK: at least 600 Chinese workers died building the railway in British Columbia (in rock slides, blasts, accidents and from illness): "at least 600" is the number most often given, and the true number is not known
-  // FACT CHECK: the last spike was driven on 7 November 1885 at Craigellachie, in Eagle Pass, by Donald Smith, a director of the Canadian Pacific Railway. The famous photograph shows company men and no Chinese workers
+  // FACT CHECK: the last spike was driven on November 7, 1885 at Craigellachie, in Eagle Pass, by Donald Smith, a director of the Canadian Pacific Railway. The famous photograph shows company men and no Chinese workers
   // FACT CHECK: the company did not pay the fare home for Chinese workers, as many had expected
   // FACT CHECK: in 1885 Canada passed a head tax of 50 dollars on every Chinese person entering the country. It was raised to 100 dollars in 1900 and to 500 dollars in 1903 (about two years of wages)
   // FACT CHECK: the 1923 Chinese Immigration Act shut out almost all Chinese immigration and was repealed in 1947; the government of Canada formally apologized in 2006 (a number and dates given in the task)
   // FACT CHECK: the Big Hill, the first track down from Kicking Horse Pass, had a grade of 4.5 percent, and the Spiral Tunnels (two loops inside the mountains) opened in 1909. Typical railway grades are gentle (about 2.2 m up for every 100 m along)
   // FACT CHECK: a long freight train can be at both ends of a Spiral Tunnel loop at the same time (the train passes over itself)
-  // FACT CHECK: the Secwépemc and Ktunaxa are among the nations whose homelands include these mountains, and they live here today (the line is deliberately plain and general)
+  // FACT CHECK: the Secwépemc, Ktunaxa and Sinixt are among the nations whose homelands include these mountains, and they live here today (the line is deliberately plain and general). Sinixt and the pronunciation guides (suh-WEP-muhc, k-too-NAH-ha, sin-AYKST) added from Shane's review notes (November 2026)
   // FACT CHECK: Mei, her family and the great-great-great-grandfather are made-up characters. The case-file numbers (6 days a week, 30 to 50 weeks, food and gear at 40 cents a day) are made up to suit the maths, not documented. The tunnel and trail numbers in the last questions are also made up
   // FACT CHECK: a stone cairn with a plaque marks the last-spike place at Craigellachie, and a walking route reaches it. The railway bridge on the trail is general scenery and should be checked against the real place
   // FACT CHECK: French words: la montagne (the mountain), le chemin de fer (the railway), le tunnel (the tunnel), le pont (the bridge)
-  // FACT CHECK: Mandarin Chinese for railway is tiělù (written 鐵路 in traditional characters and 铁路 in simplified). Most of the workers in BC spoke Cantonese or other southern dialects, so a Cantonese reader should confirm which word to use
-  // READERS: Chinese Canadian readers (ideally descendants of railway workers or a Chinese Canadian historical society); Secwépemc or Ktunaxa readers for the land line.
+  // FACT CHECK: Cantonese for railway is 鐵路, said teet-loh. The workers came from Guangdong and spoke Cantonese (or Taishanese). Changed from Mandarin tiělù per Shane's review notes (November 2026); a Cantonese reader should still confirm. Dates changed to month-day-year style
+  // READERS: Chinese Canadian readers (ideally descendants of railway workers or a Chinese Canadian historical society); Secwépemc, Ktunaxa or Sinixt readers for the land line.
   CHAPTERS[0] = { title: "The Last Spike", where: "The Rocky Mountains", beats: [
     { art: "ls_arrive", word: ["la montagne", "the mountain"], say: ["The prairie is behind us, and look at what the clock was pointing at! My balloon is climbing into the Rocky Mountains of British Columbia. My ears have popped three times already.",
-      "<em>La montagne</em> is the French word for a mountain, and these are very big ones. The peaks are sharp and white at the top, and the slopes below are dark with evergreen trees. This is the land of the Secwépemc, the Ktunaxa and other nations, who live here today.",
+      "<em>La montagne</em> is the French word for a mountain, and these are very big ones. The peaks are sharp and white at the top, and the slopes below are dark with evergreen trees. This is the land of the Secwépemc, the Ktunaxa, the Sinixt and other nations, who live here today.",
+      "You say them suh-WEP-muhc, k-too-NAH-ha and sin-AYKST.",
       "Down in the valley a long train is climbing the grade. Freight trains still haul goods through these passes every day. Why is there a railway in such steep mountains? Let us find out."] },
-    { art: "ls_mei", word: ["tiělù", "the railway, in Mandarin Chinese"], say: ["This is Mei. She lives in Revelstoke, a mountain town in British Columbia, and she can hear the freight trains from her bedroom window. She says she can tell which train is coming by the sound.",
-      "Mei's great-great-great-grandfather came from Guangdong, in southern China, to help build this railway. In Mandarin Chinese a railway is <em>tiělù</em>, and Mei says the word slowly and carefully.",
-      "Mei wants us to see one day in particular, 7 November 1885. But first we must see how the railway got here. Clock, show us!"] },
+    { art: "ls_mei", word: ["鐵路 (teet-loh)", "the railway, in Cantonese"], say: ["This is Mei. She lives in Revelstoke, a mountain town in British Columbia, and she can hear the freight trains from her bedroom window. She says she can tell which train is coming by the sound.",
+      "Mei's great-great-great-grandfather came from Guangdong, in southern China, to help build this railway. In Cantonese a railway is <em>teet-loh</em>, and Mei says the word slowly and carefully.",
+      "Mei wants us to see one day in particular, November 7, 1885. But first we must see how the railway got here. Clock, show us!"] },
     { art: "ls_window1", word: ["le chemin de fer", "the railway"], say: ["The window into the past! It is the early 1880s. British Columbia joined Canada in 1871 on the promise of a railway to the Pacific. A railway is <em>le chemin de fer</em> in French.",
       "The Canadian Pacific Railway is building it, and the hardest part is here, through these mountains and the Fraser Canyon. About <em>15,000 Chinese workers</em> came to build the British Columbia section.",
       "They were given the most dangerous jobs, like handling explosives to blast tunnels and ledges out of the rock. They were paid about one dollar a day, roughly half of what white workers were paid.",
@@ -151,7 +152,7 @@
       "The first track over this pass, the Big Hill, rose 4.5 percent, which was dangerously steep. In 1909 the <em>Spiral Tunnels</em> opened: two loops inside the mountains that let the track rise slowly.",
       "Look at the picture. The track goes into the mountain, circles inside it and comes out higher up. A long freight train can be at both ends of a loop at the same time."] },
     { ask: "ls_hill", intro: "The mountainside is full of right triangles. Three right answers and the window opens on one day in 1885." },
-    { who: "The railway director", art: "ls_director", say: ["It is 7 November 1885, at Craigellachie, in Eagle Pass. I am a company man, and I stand in the front row. Today the last spike goes in, and the railway runs from sea to sea.",
+    { who: "The railway director", art: "ls_director", say: ["It is November 7, 1885, at Craigellachie, in Eagle Pass. I am a company man, and I stand in the front row. Today the last spike goes in, and the railway runs from sea to sea.",
       "Donald Smith, one of our directors, lifts the hammer and drives the spike. The photographer asks us all to stand close and keep still. I am very proud. This is the picture the country will remember.",
       "I know that thousands of men built these miles through the mountains, and that most of them are not standing here. Today I think only of the country that is now joined together."] },
     { who: "Mei's great-great-great-grandfather", art: "ls_worker", say: ["I came from Guangdong, in southern China, to build this railway. The company gave men like me the most dangerous work, handling the explosives that blast tunnels and ledges out of the mountain.",

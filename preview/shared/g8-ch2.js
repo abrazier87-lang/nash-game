@@ -141,14 +141,16 @@
   // FACT CHECK: people still pan for gold in the Fraser Canyon for fun and find a few flakes; the modern prices and the exchange rate in the questions are pretend numbers chosen to suit the maths
   // FACT CHECK: the fish counts, run sizes and swimming speeds in the questions are made up to suit the maths
   // FACT CHECK: French words: le saumon (the salmon), la rivière (the river), l'or (the gold), le filet (the net), la pépite (the nugget), compter (to count)
+  // FACT CHECK: when smallpox reached Victoria in 1862, the colony's officials forced the First Nations people camped there to leave, and the sickness travelled north along the coast with them (added from Shane's review notes, November 2026); pronunciation guides for Stó:lō, Nlaka'pamux and Halq'eméylem also added from the same notes
   // READERS: Stó:lō and Nlaka'pamux readers.
   CHAPTERS[1] = { title: "The River of Gold", where: "The Fraser River", beats: [
     { art: "rg_arrive", word: ["la rivière", "the river"], say: ["Goodbye, Mei, and goodbye, railway! My clock balloon has floated down out of the Rocky Mountains, and now I am drifting between two steep walls of rock.",
       "Far below, a wide river is rushing through the gap. This is the <em>Fraser River</em>, in British Columbia. Look at the water! Something red keeps leaping out of it.",
       "A river is <em>la rivière</em> in French. I am looking for a boy who knows this river better than anyone. I think I will land on that gravel bank."] },
-    { art: "rg_jordan", word: ["Stó:lō", "people of the river"], say: ["This is Jordan. He is a Stó:lō boy, and he lives near Hope, where the river comes out of the canyon. His family has fished this river for as long as anyone can remember.",
-      "<em>Stó:lō</em> means people of the river, in Halq'eméylem, the language of his people. Jordan says the name tells you everything. The river is home and food, all in one.",
-      "Higher up in the canyon is the land of the Nlaka'pamux people. Every year the salmon swim past all of them. Jordan says to look through the clock and see how his family fished long ago."] },
+    { art: "rg_jordan", word: ["Stó:lō", "people of the river (say STOH-loh)"], say: ["This is Jordan. He is a Stó:lō boy, and he lives near Hope, where the river comes out of the canyon. His family has fished this river for as long as anyone can remember.",
+      "You say Stó:lō like this: STOH-loh.",
+      "<em>Stó:lō</em> means people of the river, in Halq'eméylem (say halk-uh-MAY-lem), the language of his people. Jordan says the name tells you everything. The river is home and food, all in one.",
+      "Higher up in the canyon is the land of the Nlaka'pamux people. You say it ing-kla-KAP-muh. Every year the salmon swim past all of them. Jordan says to look through the clock and see how his family fished long ago."] },
     { art: "rg_window1", word: ["le filet", "the net"], say: ["The window into the past! We are looking back long before 1858, long before any railway or town. The river runs deep and fast through the canyon, and the salmon are coming home.",
       "Families stand on rock ledges over the rushing water and lift salmon out with long dip nets. A net is <em>le filet</em> in French. Each fishing place is looked after by a family and handed down.",
       "The fish are split open and hung on racks in the warm, dry wind of the canyon. Dried salmon lasts all winter, with plenty left over to trade."] },
@@ -166,7 +168,8 @@
       "That summer there was fighting in the canyon. People on both sides were killed, and villages were burned. It is called the Fraser Canyon War. In the end our leaders made a peace. We are still here, and so is the river."] },
     { art: "rg_after", say: ["The clock is quiet, and so am I. Here is what came next, plainly. In 1858, Britain made the mainland a colony, <em>British Columbia</em>, to keep control of the gold fields.",
       "No treaties were made for almost all of this land. It was never sold or given up, and that is still being worked out today, in courts and in new agreements.",
-      "Then, in 1862, smallpox came up the coast and through the province. It killed tens of thousands of First Nations people, and some communities lost more than half of their people in a single year.",
+      "Then, in 1862, smallpox came up the coast and through the province. It killed tens of thousands of First Nations people, and some communities lost more than half of their people in a single year."] },
+    { art: "rg_after", say: ["When smallpox reached Victoria in 1862, the colony's officials forced the First Nations people camped there to leave, and the sickness travelled north along the coast with them.",
       "The Stó:lō and the Nlaka'pamux are still here, and so is the river. Jordan's family still fishes it."] },
     { ask: "rg_case", intro: "A case file in three steps: did a gold miner of 1858 end up ahead or behind? Three right answers, one step at a time, and then you choose how we spend the afternoon." },
     { art: "rg_choice", pick: "Jordan has two ideas for the afternoon. We could go out with the fish counters at the counting fence, or pan for gold at a sandbar with his uncle. People still do, for fun, and find a few flakes. Which one?", options: [

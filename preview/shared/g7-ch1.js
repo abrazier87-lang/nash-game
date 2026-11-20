@@ -67,7 +67,7 @@
       if (kind === 0) { const c = pick([3, 4, 5, 6]), t = pick([2, 3, 4, 5]), P = 2 * c * t; return { html: "", text: `A wharf holds <b>${P} pièces</b> to carry over a portage. Each voyageur carries <b>2</b> at a time. How many trips do <b>${c} voyageurs</b> need, if they share the work equally?`, choices: cards(t, [t + 1, t - 1, 2 * t, P / c, P / 2, t + 2]), why: `Each trip moves ${c} × 2 = ${2 * c} pièces. ${P} ÷ ${2 * c} = ${t} trips.` }; }
       if (kind === 1) { const m = pick([2, 3, 4, 5, 6]), N = 12 * m, bl = N / 3, rest = N - bl, ans = rest / 4; return { html: "", text: `A canoe holds <b>${N} pièces</b>. <b>1/3</b> are blankets. Then <b>1/4</b> of the rest are kettles. How many pièces are kettles?`, choices: cards(ans, [bl, N / 4, rest, ans + m, ans - m, N / 12]), why: `1/3 of ${N} = ${bl} blankets. The rest is ${rest}. 1/4 of ${rest} = ${ans} kettles.` }; }
       const n = pick([4, 6, 8, 10, 12]), w = pick([1.5, 2.5, 3.5]), t = n * w;
-      return { html: "", text: `Anishinaabe families sold maple sugar. One pack holds <b>${n} tins</b> of <b>${w} kg</b> each. How many kilograms of sugar is that?`, choices: textCards(`${t} kg`, [t + w, t - w, n + w, t * 10, t + 1].map(k => `${k} kg`)), why: `${n} × ${w} = ${t} kg.` };
+      return { html: "", text: `Anishinaabe families sold maple sugar. One pack holds <b>${n}</b> birchbark boxes called makaks, of <b>${w} kg</b> each. How many kilograms of sugar is that?`, choices: textCards(`${t} kg`, [t + w, t - w, n + w, t * 10, t + 1].map(k => `${k} kg`)), why: `${n} × ${w} = ${t} kg.` };
     },
     fw_swap() { // proportions and simple algebra with canoes and pièces
       const kind = rand(3);
@@ -107,6 +107,7 @@
       "See that flat-topped headland out on the lake? People call it the Sleeping Giant. And near the river is a wooden fort with a flag. Down we go!"] },
     { art: "fw_zoe", word: ["le voyageur", "the canoe man of the fur trade"], say: ["This is Zoe, and she lives right here in Thunder Bay. She says the lake is so cold in July that even the fish wear scarves.",
       "Zoe tells me the Anishinaabe, who are also called the Ojibwe, have lived around this lake since long before there was any fort. Fort William First Nation is right beside the city today.",
+      "You say Anishinaabe like this: ah-nish-ih-NAH-bay.",
       "That wooden fort is Fort William Historical Park. It was built again, just the way it was. Its canoe crews were called <em>les voyageurs</em>. Clock, show us!"] },
     { art: "fw_window1", word: ["le rendez-vous", "the meeting"], say: ["The window into the past! The year is about <em>1815</em>, and this is Fort William, the great inland headquarters of the North West Company, a fur trade company.",
       "Every summer came the <em>Rendezvous</em>, a huge meeting. Big canoes from Montreal paddled in with trade goods from the east. Smaller canoes came down from the far northwest, full of furs.",
@@ -117,6 +118,7 @@
       "They paddled 14 hours a day or more, and they sang to keep the stroke together. I would sing too, if it meant I did not have to carry anything."] },
     { ask: "fw_load", intro: "Count and share the load. Three right answers and the window opens again." },
     { art: "fw_window2", word: ["le canot", "the canoe"], say: ["The window again. Now let us look at whose trade it really was. It depended on <em>First Nations and Métis people</em>.",
+      "You say Métis like this: may-TEE.",
       "Anishinaabe families built the birchbark canoes, a canoe is <em>un canot</em>. They supplied food such as wild rice and maple sugar, and they guided the brigades. They also trapped furs and traded them.",
       "Métis people worked as guides, interpreters and canoe crews too. Without all of them the canoes went nowhere. That is just a plain fact."] },
     { ask: "fw_swap", intro: "Solve the canoe sums. Three right answers and then we pick a canoe to ride in." },
@@ -126,7 +128,8 @@
       { label: "A north canoe up the river", art: "fw_north", word: ["le portage", "carrying canoe and cargo over land"], say: ["We hop into a smaller <em>canot du nord</em>, with a crew of about 5 and roughly 25 pièces. It slips up the river, until we meet rapids that no one can paddle.",
         "So we do a <em>portage</em>. That means everyone lifts the canoe and the pièces and carries them over land. I carry the map. It weighs nothing, and it is still too heavy."] }] },
     { ask: "fw_last", intro: "Now the sums for our own canoe. Three right answers finishes the chapter." },
-    { art: "fw_goodbye", word: ["miigwech", "thank you in Anishinaabemowin"], say: ["Back on the wharf, the lake is turning gold. Zoe says <em>miigwech</em>, which is thank you in Anishinaabemowin, the Anishinaabe language. I say it back. Mine comes out like a sneeze.",
+    { art: "fw_goodbye", word: ["miigwech", "thank you in Anishinaabemowin (say MEE-gwetch)"], say: ["Back on the wharf, the lake is turning gold. Zoe says <em>miigwech</em>, which is thank you in Anishinaabemowin, the Anishinaabe language. I say it back. Mine comes out like a sneeze.",
+      "You say miigwech like this: MEE-gwetch. You say Anishinaabemowin like this: ah-nish-ih-nah-bay-MOH-win.",
       "The north canoes did not stop here. They went on west with the cargo from this wharf, up rivers and over portages, toward a place where two rivers meet.",
       "That place is called <em>The Forks</em>, and it is in Winnipeg. Back into the basket I go. Tick tock!"] }
   ] };

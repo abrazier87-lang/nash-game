@@ -1,5 +1,5 @@
 "use strict";
-// Grade 7, Chapter 4: The Sea of Grass. Dr. Somebody meets Tyson, a Nakota boy of today, in Grasslands National Park, Saskatchewan. The bison nation, the grass, and the loss of the bison told in two voices.
+// Grade 7, Chapter 4: The Sea of Grass. Dr. Somebody meets Tyson, a Nakoda boy of today, in Grasslands National Park, Saskatchewan. The bison nation, the grass, and the loss of the bison told in two voices.
 {
   const GUIDE = { hood: "#d9822b", short: true };      // Tyson: short hair and an orange hoodie
   const AUNTIE = { hood: "#7a4f9a" };                   // Tyson's auntie: long hair and a plum hoodie
@@ -131,38 +131,42 @@
   // FACT CHECK: Grasslands National Park is in southern Saskatchewan (two blocks, West and East). Plains bison were brought back to the park in 2005 (from Elk Island National Park, Alberta). The herd today is "several hundred" (the count changes year to year). Prairie dogs (black-tailed) and pronghorn live in the park.
   // FACT CHECK: Native prairie grass roots can reach a metre or more down. "Most of Canada's native prairie has been ploughed up" is true (only a small share of the original native grassland remains, with estimates varying by region). The story avoids a precise percent.
   // FACT CHECK: Stone circles, called tipi rings, are found across the plains and hold the stones that weighted the edge of a tipi cover. Some are hundreds to thousands of years old. They are still on the land today and should be left where they are.
-  // FACT CHECK: Names: Nêhiyawak (the Plains Cree and others who speak nêhiyawêwin), Nakota (also called Assiniboine), Niitsitapi (the Blackfoot Confederacy), Dakota, Lakota, Saulteaux (Plains Ojibwe, also written Nakawē). Check the spellings and the order.
+  // FACT CHECK: Names: Nêhiyawak (the Plains Cree and others who speak nêhiyawêwin), Nakoda (also called Assiniboine), Niitsitapi (the Blackfoot Confederacy), Dakota, Lakota, Saulteaux (Plains Ojibwe, also written Nakawē). Check the spellings and the order.
   // FACT CHECK: Plains nations today work to return bison to their own lands (for example, Blackfoot nations brought bison back to Blackfeet and Alberta lands in 2014 through the Buffalo Treaty). The goodbye says this in general words only.
-  // FACT CHECK: French words: le bison (the bison), la prairie (the grassland), l'herbe (the grass), le troupeau (the herd), le cercle (the circle). No Plains-language words are used. Tyson is Nakota, and a Nakota word for the bison was left out because the spelling is uncertain.
+  // FACT CHECK: Added from Shane's review notes (November 2026): the elder is a Nakoda grandmother of the 1870s (not Tyson's own); a plain line that the government held back food until nations signed treaties and moved onto reserves; Nakoda spelling; pronunciation guides for Nakoda, Nêhiyawak, Niitsitapi and Saulteaux. The challenges here give no coins on purpose (quiet).
+  // FACT CHECK: French words: le bison (the bison), la prairie (the grassland), l'herbe (the grass), le troupeau (the herd), le cercle (the circle). No Plains-language words are used. Tyson is Nakoda, and a Nakoda word for the bison was left out because the spelling is uncertain.
   CHAPTERS[3] = { title: "The Sea of Grass", where: "The grasslands of Saskatchewan", beats: [
     { art: "sg_arrive", word: ["la prairie", "the grassland"], say: ["Out of the east the clock follows the old cart trails, past the Red River and on and on, until the trees give up. Then there is only sky. Hold on to your hat, because the wind out here wants it.",
       "This is the <em>prairie</em> of southern Saskatchewan. The grass rolls away in every direction, gold and green, under a sky so big it seems to have no edge. In French it is la prairie, a word we borrowed.",
       "Below us is <em>Grasslands National Park</em>, one of the last big pieces of native prairie in Canada. And what is that dark speck, moving slowly through the grass? Down we go to find out."] },
-    { art: "sg_meet", word: ["le bison", "the bison"], say: ["A boy is waiting by a fence post. This is Tyson. He is <em>Nakota</em>, also called Assiniboine, and he lives in southern Saskatchewan. His people have lived on these plains for a very long time.",
-      "Tyson says many nations call the plains home. They are the <em>Nêhiyawak</em> (Plains Cree), the Nakota, the <em>Niitsitapi</em> (Blackfoot), the Dakota and Lakota, and the Saulteaux.",
+    { art: "sg_meet", say: ["A boy is waiting by a fence post. This is Tyson. He is <em>Nakoda</em>, also called Assiniboine, and he lives in southern Saskatchewan. His people have lived on these plains for a very long time.",
+      "You say Nakoda like this: nah-KOH-dah.",
+      "Tyson says many nations call the plains home. They are the <em>Nêhiyawak</em> (Plains Cree), the Nakoda, the <em>Niitsitapi</em> (Blackfoot), the Dakota and Lakota, and the Saulteaux."] },
+    { art: "sg_meet", say: ["You say Nêhiyawak like this: nay-HEE-yuh-wuk. Niitsitapi is nee-tsee-TAH-pee. Saulteaux is SOH-toh.",
       "And the dark speck? It is a <em>bison</em>. Many people say buffalo, but bison is the proper name. In French it is le bison. A big one just looked at me, so I looked back. Politely."] },
     { art: "sg_window1", say: ["The window into the past! It is about the year <em>1800</em>, and the plains are full of life. Around <em>30 million</em> bison live on the Great Plains of North America. Try counting that on your fingers.",
       "For the Plains nations the bison is much more than food. Tipi covers are made of its hide. So are clothes. Tools are made of bone and horn, and dried dung is fuel for the fire. Nothing is wasted.",
       "Hunters work together, and one way is to drive a herd over a cliff or into a strong pen called a pound. Everyone in the camp has a job to do. Tyson says it is time for some big numbers."] },
-    { ask: "sg_big", intro: "Thirty million is a very big number. Three right answers and we look at the ground under our feet. Each right answer also earns you a Made Beaver." },
+    { ask: "sg_big", intro: "Thirty million is a very big number. Three right answers and we look at the ground under our feet.", quiet: true },
     { art: "sg_grass", word: ["l'herbe", "the grass"], say: ["Back in the present, Tyson crouches and parts the grass with his fingers. It looks plain, but it is tougher than it looks. I tried to pull one blade out and fell over backwards.",
       "Prairie grass hides its best part underground. The <em>roots</em> go down a metre or more and hold the soil in place. That is why the grass survives drought, fire and hungry animals. In French it is l'herbe.",
       "Bison keep the grassland healthy by grazing and by rolling in the dust, which is called wallowing. But most of Canada's native prairie has been ploughed up for farms and towns. What is left is precious."] },
-    { ask: "sg_share", intro: "Tyson has a few sharing puzzles about the camp and the grassland. Three right answers and the window opens again, and this time it is a hard look." },
+    { ask: "sg_share", intro: "Tyson has a few sharing puzzles about the camp and the grassland. Three right answers and the window opens again, and this time it is a hard look.", quiet: true },
     { who: "The hide hunter", art: "sg_hunter", say: ["I came west in the 1870s because a man could earn good money here. They pay me by the hide. On a good day I shoot dozens of bison with my big rifle.",
       "I take the skins and I leave the rest on the ground. The hides go east by wagon and by rail, and the railway creeps further west every year. The land is being cleared for farms and ranches.",
       "The herds look endless to me. I think there are too many ever to be gone. I think about the money. Then one year I ride for days and cannot find a single herd."] },
-    { who: "A grandmother of the plains", art: "sg_grandma", say: ["I remember when the ground shook with the herds, and the whole camp was fed. In my own lifetime I have watched them vanish. First the herds were smaller. Then they were gone.",
+    { who: "A Nakoda grandmother", art: "sg_grandma", say: ["I am a Nakoda grandmother of the plains. I remember when the ground shook with the herds, and the whole camp was fed. In my own lifetime I have watched them vanish. First the herds were smaller. Then they were gone.",
       "Without the bison, hunger came. Many of our people starved. We had lost our food, our shelter and our clothing all at once.",
       "Then we were pressed to sign treaties and to move onto reserves, and we were promised food and help. Many of those promises were broken. Some people in power did not stop the killing.",
       "I tell my grandchildren all of this, so it is never forgotten. We are still here."] },
-    { ask: "sg_decline", intro: "About 30 million bison. Fewer than 1,000 by the late 1880s, in one lifetime. The numbers tell the story, so let us look at them carefully. Three right answers and we come back to today." },
+    { art: "sg_grandma", say: ["When the bison were gone, the Plains nations were starving. Canada's government used that hunger. It held back food until nations signed treaties and moved onto reserves."] },
+    { ask: "sg_decline", intro: "About 30 million bison. Fewer than 1,000 by the late 1880s, in one lifetime. The numbers tell the story, so let us look at them carefully. Three right answers and we come back to today.", quiet: true },
     { art: "sg_choice", pick: "Tyson is quiet too. Then he smiles a little and says the story is not over, because the bison are back. He has two ideas for the afternoon. Shall we go out with the park rangers to count the herd, or walk with his auntie to look at the plants and the old tipi rings?", options: [
       { label: "Count the herd with the rangers", art: "sg_count", word: ["le troupeau", "the herd"], say: ["In 2005 bison were brought back to Grasslands National Park, and now a herd of several hundred lives here. We bounce along in a ranger's truck and stop on a hill to look.",
         "The rangers count the herd to see how it is growing, and calves are born every spring. A herd in French is <em>le troupeau</em>. I counted with my wing tips and ran out of wing tips."] },
       { label: "Walk with Tyson's auntie", art: "sg_rings", word: ["le cercle", "the circle"], say: ["Tyson's auntie walks us over the hill, showing us the grasses and little flowers. Then she stops at a ring of stones lying in the grass. It is an old <em>tipi ring</em>, and the stones once held down the edges of a tipi.",
         "Some rings are hundreds of years old, or even older, and they are still on the land today. We leave every stone where it lies. A circle in French is <em>le cercle</em>."] }] },
-    { ask: "sg_last", intro: "Tyson has some last puzzles from the afternoon. Three right answers and we say goodbye." },
+    { ask: "sg_last", intro: "Tyson has some last puzzles from the afternoon. Three right answers and we say goodbye.", quiet: true },
     { art: "sg_goodbye", say: ["We walk back as the sun sinks and the whole prairie glows. The bison are back on this land. The herd is small next to 30 million, but it is growing, and Tyson says that matters.",
       "The Plains nations are still here too. They are raising their children on these grasslands, and working to bring the bison home to their own lands. The grass holds on, and so do the people.",
       "Thank you, Tyson, for telling it plainly. Next the clock tugs us west, to where the land breaks open into strange striped hills full of bones. That is <em>The Land of Giants</em>, the Alberta Badlands. Tick tock!"] }

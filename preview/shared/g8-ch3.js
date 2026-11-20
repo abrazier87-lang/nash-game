@@ -120,7 +120,7 @@
         return { html: "", text: `<b>${c}</b> canoes each carry the same number of paddlers, and a safety boat carries <b>1</b> more person. There are <b>${T}</b> people in all. How many paddlers are in each canoe?`, choices: cards(n, [c * n, T / c, n + 1, n - 1, T - c]), why: `${c}n + 1 = ${T}, so ${c}n = ${T - 1} and n = ${T - 1} ÷ ${c} = ${n}.` };
       }
       if (kind === 0) {
-        return { html: "", text: `The Komagata Maru waited in the harbour from 23 May to 23 July 1914. May has <b>31</b> days and June has <b>30</b>. How many days is that, from 23 May to 23 July?`, choices: cards(61, [60, 62, 59, 30, 31]), why: `23 May to 23 June is 31 days. 23 June to 23 July is 30 days. 31 + 30 = 61 days.` };
+        return { html: "", text: `The Komagata Maru waited in the harbour from May 23 to July 23, 1914. May has <b>31</b> days and June has <b>30</b>. How many days is that, from May 23 to July 23?`, choices: cards(61, [60, 62, 59, 30, 31]), why: `May 23 to June 23 is 31 days. June 23 to July 23 is 30 days. 31 + 30 = 61 days.` };
       }
       if (kind === 1) {
         return { html: "", text: `Of the <b>376</b> passengers on the Komagata Maru, only about <b>20</b> were allowed to land. About what percent is that? Round to the nearest whole percent.`, choices: textCards("5%", ["20%", "2%", "10%", "15%", "50%"]), why: `20 ÷ 376 is about 0.053, so about 5%. About 95% were not allowed to land.` };
@@ -148,14 +148,16 @@
   // FACT CHECK: French words: le port (the harbour), le cèdre (the cedar), la loi (the law), le navire (the ship), le canot (the canoe). No Coast Salish words except the nation names (Musqueam, Squamish, Tsleil-Waututh), which should be checked.
   // FACT CHECK: Burrard Inlet is the inlet on which the Vancouver harbour lies.
   // FACT CHECK: The water numbers in the case file (litres each per day, size of the tanks) are made up to suit the maths. Only the 376 people is a real number.
+  // FACT CHECK: Added from Shane's review notes (November 2026): pronunciation guides (Musqueam = MUS-kwee-um, Tsleil-Waututh = SLAY-wah-tooth, sat sri akal = sut sree uh-KAAL); a closing sentence keeping the potlatch law (erased the ways of people who had always belonged here) distinct from the Komagata Maru rule (shut the door on newcomers); story dates now written month day, year.
   // READERS: South Asian Canadian (Sikh community) readers for the Komagata Maru; Musqueam, Squamish or Tsleil-Waututh readers for the cedar and potlatch scenes.
   CHAPTERS[2] = { title: "The Harbour and the Cedar", where: "Vancouver", beats: [
     { art: "hc_arrive", word: ["le port", "the harbour"], say: ["Goodbye, Jordan, and goodbye, salmon! The Fraser River has carried us down out of the mountains, and now the water is wide and salty and the air smells of the sea.",
       "Below us is <em>Vancouver</em>, in British Columbia. Mountains with snowy tops stand behind the city, and a long blue inlet runs in front of it.",
       "Container ships wait on the water, and seaplanes buzz in and out like dragonflies. A place where ships come and go is <em>le port</em>, the harbour. This one is Burrard Inlet."] },
-    { art: "hc_simran", word: ["sat sri akal", "a Sikh greeting"], say: ["This is Simran. She lives in Vancouver, and she has come down to the water to meet us. Her family is Sikh, and her great-great-grandfather came here from Punjab, in India.",
-      "She greets us with <em>sat sri akal</em>, a Sikh greeting, and I say it back as well as an owl can.",
-      "Simran tells us this city stands on the land of three Coast Salish nations, the <em>Musqueam</em>, the <em>Squamish</em> and the <em>Tsleil-Waututh</em>. They have lived here for thousands of years, and they live here today.",
+    { art: "hc_simran", word: ["sat sri akal", "a Sikh greeting (say sut sree uh-KAAL)"], say: ["This is Simran. She lives in Vancouver, and she has come down to the water to meet us. Her family is Sikh, and her great-great-grandfather came here from Punjab, in India.",
+      "She greets us with <em>sat sri akal</em>, a Sikh greeting, and I say it back as well as an owl can. You say it sut sree uh-KAAL.",
+      "Simran tells us this city stands on the land of three Coast Salish nations, the <em>Musqueam</em>, the <em>Squamish</em> and the <em>Tsleil-Waututh</em>. They have lived here for thousands of years, and they live here today."] },
+    { art: "hc_simran", say: ["You say <em>Musqueam</em> like MUS-kwee-um, and <em>Tsleil-Waututh</em> like SLAY-wah-tooth.",
       "She adds that this land was never given up by treaty. Her best friend Kayla is from the Squamish Nation, and Kayla wants to show us the cedar. Clock, show us!"] },
     { art: "hc_window1", word: ["le cèdre", "the cedar"], say: ["The window into the past! Long before the city, this shore is thick with giant trees. Kayla points at the biggest. It is a <em>cedar</em>, <em>le cèdre</em> in French.",
       "The Coast Salish peoples build great houses of long cedar planks, with low sloped roofs. They carve canoes from single cedar logs. They weave cedar bark into clothing, rope and baskets, and they weave blankets too.",
@@ -167,12 +169,12 @@
       "Families kept their gatherings going in secret. Since 1951 they have been held openly again, and some of the things that were taken have been returned.",
       "Simran listens too, and says nothing for a while. Then she says there is another story on this same harbour, about another law, and she wants us to hear it."] },
     { ask: "hc_ratio", intro: "Some plain numbers now. Three right answers and the window opens on the summer of 1914." },
-    { who: "The immigration officer", art: "hc_officer", say: ["I am an immigration officer at the port of Vancouver. On 23 May 1914 a ship called the <em>Komagata Maru</em> comes into the harbour with <em>376</em> passengers from Punjab. I have my orders.",
+    { who: "The immigration officer", art: "hc_officer", say: ["I am an immigration officer at the port of Vancouver. On May 23, 1914 a ship called the <em>Komagata Maru</em> comes into the harbour with <em>376</em> passengers from Punjab. I have my orders.",
       "Canada has a rule: immigrants must come by one continuous journey from their home country. No ship sails straight from India, so these passengers cannot meet it. The rule names no one. I am only applying it as written, and I will not let them land.",
       "I am told they are British subjects too. But many people in this city want them turned away, and want Canada kept for people like themselves. They tell me so loudly. I do not make the law."] },
     { who: "A passenger on the ship", art: "hc_passenger", say: ["I sailed on the <em>Komagata Maru</em> from Punjab. Most of us are Sikhs, with Muslims and Hindus too. We are British subjects, like people in Canada, and many of us served in the British army.",
       "For two months they hold us on board, within sight of the city. Our food and water run short. People here, our own South Asian community, raise money for us and take our case to court.",
-      "On 23 July 1914 they force us to sail away, with a navy ship's guns pointed at us. Only about 20 of us, who had lived in Canada before, are ever allowed ashore."] },
+      "On July 23, 1914 they force us to sail away, with a navy ship's guns pointed at us. Only about 20 of us, who had lived in Canada before, are ever allowed ashore."] },
     { art: "hc_simran", say: ["The window closes, and I am quiet for a while. Then Simran tells me the rest. When the ship reached India, police tried to arrest the passengers at a place called <em>Budge Budge</em>. About 20 of them were shot and killed.",
       "In 2016 the Prime Minister of Canada stood in Parliament and apologized for what was done to the people on that ship.",
       "Simran's family is here today, and a memorial to the Komagata Maru stands on the harbour. Simran says the ship waited two months with its water running out. That is a problem we can look at plainly."] },
@@ -185,7 +187,8 @@
     { ask: "hc_last", intro: "A last set of problems from our time on the harbour. Three right answers and we say goodbye." },
     { art: "hc_goodbye", say: ["The sun is going down behind the mountains, and the lights of the ships are coming on. Simran and Kayla stand side by side.",
       "There are two stories on one harbour, the cedar and the ship. Both are about laws that told people they did not belong, and both are told today by the people who carry them. Thank you, Simran and Kayla.",
-      "Next the clock turns inland, to the dry hills of the interior. There is a story there that every child in Canada should hear. I will listen more than I talk.",
+      "The potlatch law tried to erase the ways of people who had always belonged here. The rule against the Komagata Maru shut the door on newcomers before they could step ashore."] },
+    { art: "hc_goodbye", say: ["Next the clock turns inland, to the dry hills of the interior. There is a story there that every child in Canada should hear. I will listen more than I talk.",
       "It is called <em>Every Child Matters</em>. Tick tock!"] }
   ] };
 }

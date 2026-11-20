@@ -86,6 +86,7 @@
   // FACT CHECK: An aboiteau is a wooden sluice or box drain set in a dyke, with a hinged flap that lets fresh water drain out at low tide and shuts when the tide rises. Rain then washes the salt out of the soil.
   // FACT CHECK: The Bay of Fundy has the highest tides in the world. In the Minas Basin the water can change by about 16 metres (the record is about 16 m at Burntcoat Head). Roughly 6 hours 13 minutes pass between high and low tide (the story says about six hours). 16 metres is about the height of a five-storey building.
   // FACT CHECK: The Mi'kmaq have lived in this land for thousands of years, and the Acadians lived as neighbours of the Mi'kmaq. Their homeland is called Mi'kma'ki, and it includes Cape Breton Island.
+  // FACT CHECK (added from Shane's review notes, November 2026): The Acadians and the Mi'kmaq lived side by side for more than a hundred years, traded, shared knowledge, and some families married into each other. The Acadians farmed the salt marshes, which left Mi'kmaw hunting grounds alone. During the 1755 Deportation some Acadian families escaped into the woods and Mi'kmaw families sheltered them and helped them survive.
   // FACT CHECK: The Deportation (le Grand Dérangement) began in 1755, carried out by British soldiers. About 10,000 Acadians were sent away over the following years (estimates vary, and some historians give higher numbers). Families were separated. Some Acadians later returned to the region, and some made new homes elsewhere, including Louisiana, where their descendants are called Cajuns.
   // FACT CHECK: The Acadian flag has blue, white and red vertical bands (the French tricolour) with a gold star in the blue band. Acadians still live in Nova Scotia, New Brunswick, Prince Edward Island and elsewhere, and speak French.
   // FACT CHECK: A tidal bore is a wave made by the incoming tide moving up a river against the current, and it can make the river flow the other way for a while. Bores happen on rivers that drain into the Minas Basin, such as the Salmon River at Truro and the Shubenacadie River.
@@ -96,10 +97,12 @@
       "See that long green bank beside the water? It is a <em>dyke</em>, a wall of earth that keeps the sea out of the farms. In French it is la digue. Let's find a guide!"] },
     { art: "ac_elodie", word: ["la famille", "the family"], say: ["This is Élodie. She is an Acadian girl, and she speaks French at home. Her family has lived beside this bay for a very long time.",
       "Family in French is <em>la famille</em>, and hers is a big one. Her grandmother, her cousins and a dog named Moustache all come for Sunday supper.",
-      "Élodie says Acadian farmers first built walls like this one more than 300 years ago. Her neighbours still look after them. Clock, show us how it began!"] },
+      "Élodie says Acadian farmers first built walls like this one more than 300 years ago. People around here still look after them. Clock, show us how it began!"] },
     { art: "ac_window1", word: ["l'aboiteau", "the dyke gate"], say: ["The window into the past! It is the late <em>1600s</em>. Acadians, French-speaking settlers, are farming here. But this land is salt marsh, and the sea floods it twice a day.",
       "So they build a wall of earth to hold the sea back. Through the wall is a wooden gate called an <em>aboiteau</em>. Rain water flows out at low tide, and the rising tide pushes the gate shut.",
-      "Once rain washes the salt away, the soil grows rich crops. The Acadians live as neighbours of the <em>Mi'kmaq</em>, who have lived here for thousands of years. How long does a dyke take?"] },
+      "Once rain washes the salt away, the soil grows rich crops. The Acadians live as neighbours of the <em>Mi'kmaq</em>. You say it MEEG-mah. They have lived here for thousands of years."] },
+    { art: "ac_window1", say: ["The Acadians and the Mi'kmaq lived side by side for more than a hundred years. They traded, shared what they knew, and some families married into each other.",
+      "The Acadians farmed the salt marshes, which left the Mi'kmaw hunting grounds alone. How long does a dyke take?"] },
     { ask: "ac_dyke", intro: "Help build the dyke. Three right answers and we meet the tides." },
     { art: "ac_tides", word: ["la marée", "the tide"], say: ["Back to today. Look at the boats! They are sitting on the mud, and the sea has gone far away. Did somebody pull the plug?",
       "No, it is the <em>tide</em>. Twice a day the sea rises and falls. In the Minas Basin it can change by as much as about 16 metres, as tall as a five-storey building.",
@@ -107,8 +110,9 @@
     { ask: "ac_gauge", intro: "Read Élodie's tide gauge. Three right answers and the window opens again." },
     { art: "ac_window2", word: ["le drapeau", "the flag"], say: ["The window shows a sadder time. The year is <em>1755</em>. Britain and France are rivals for this land, and British soldiers have come to the Acadian villages.",
       "The soldiers order the Acadians to leave their homes. Families are put on ships, and many are split up. This is called the <em>Deportation</em>, or le Grand Dérangement.",
-      "The window fades. About <em>10,000</em> people were sent away over the next years. Some found their way back, years later. Others made new homes far away, as far as Louisiana.",
-      "But look at Élodie's flag! Acadians are still here, still speaking French, with a flag of blue, white and red and a gold star. A flag is <em>le drapeau</em>."] },
+      "Some Acadian families escaped into the woods. Mi'kmaw families sheltered them and helped them survive.",
+      "The window fades. About <em>10,000</em> people were sent away over the next years. Some found their way back, years later. Others made new homes far away, as far as Louisiana."] },
+    { art: "ac_elodie", say: ["But look at Élodie's flag! Acadians are still here, still speaking French, with a flag of blue, white and red and a gold star. A flag is <em>le drapeau</em>."] },
     { ask: "ac_harvest", intro: "Élodie has some numbers to share. Three right answers and you choose what we do next." },
     { art: "ac_choice", pick: "The tide is on the move! Élodie says there are two ways to see it. Which shall we choose?", options: [
       { label: "Walk on the sea floor", art: "ac_floor", word: ["la boue", "the mud"], say: ["Boots on! At low tide the sea floor is red-brown mud, and every step goes squish. Élodie says we must stay close to shore, because the tide comes back fast.",

@@ -123,6 +123,7 @@
   // FACT CHECK: Word dyakuyu is the usual English spelling of the Ukrainian дякую (thank you), said roughly DYAH-koo-yoo.
   // FACT CHECK: French words: le blé (the wheat), le silo (the grain bin), la ferme (the farm), la moisson (the harvest), le train (the train).
   // FACT CHECK: From wheat country near Calgary the Rocky Mountains can be seen as a white line on the western horizon on a clear day.
+  // FACT CHECK: Added from Shane's review notes (November 2026): "pushed onto reserves" replaces "moved"; a new scene tells Treaty 6 (1876) and Treaty 7 (1877) between the Crown and the Cree, Nakoda, Blackfoot and other nations; the First Nations understood they were agreeing to share the land; Canada promised reserve land, yearly payments, schools, farm tools and farming help (Treaty 6 also medicine and help in times of hunger); many promises were broken or half kept; people on reserves needed a written pass from an agent to leave; the treaties are still in force. Also added the DYAH-koo-yoo pronunciation guide.
   CHAPTERS[5] = { title: "Wheat and Sky", where: "Wheat country, Alberta", beats: [
     { art: "ws_arrive", word: ["le blé", "the wheat"], say: ["Last stop! This morning I left the Badlands on Dot's little train. She is the driver, her cars are full of grain, and I am sitting on top of one of them holding my hat.",
       "Out here the land is as flat as a pancake and as gold as a pancake too. It is a whole sea of <em>wheat</em>, which the French call <em>le blé</em>, all the way to the sky.",
@@ -133,7 +134,10 @@
     { art: "ws_window1", say: ["The window into the past! It is about 1900, and the government of Canada is offering settlers 160 acres, a <em>quarter section</em>, for a ten dollar fee. The rules were to live on it, build a house and break the land.",
       "People came from Ukraine, Germany, Scandinavia, Britain, the United States, Iceland and many other places. There were few trees, so the first home was often a <em>sod house</em>, made of blocks of prairie turf.",
       "Winters were brutal, and the nearest neighbour could be kilometres away. Lukas's great-great-grandparents began like this.",
-      "This is Treaty 6 and Treaty 7 land. Plains First Nations have lived here for thousands of years, and still do. After the 1870s treaties it was opened to settlers, and First Nations families were moved onto reserves."] },
+      "This is Treaty 6 and Treaty 7 land. Plains First Nations have lived here for thousands of years, and still do. After the 1870s treaties it was opened to settlers, and First Nations families were pushed onto reserves."] },
+    { art: "ws_window1", say: ["Treaty 6 was made in 1876 and Treaty 7 in 1877, between the Crown and the Cree, Nakoda, Blackfoot and other nations. The First Nations understood they were agreeing to share the land.",
+      "In return, Canada promised reserve land, yearly payments, schools, farm tools and help with farming. In Treaty 6 it also promised medicine, and help in times of hunger.",
+      "Many of those promises were broken or only half kept. For many years people on reserves needed a written pass from a government agent just to leave. The treaties are still in force today, and the nations are still here."] },
     { ask: "ws_homestead", intro: "Let's measure a homestead the way Lukas's family does, in hectares. Three right answers and we go to see the train." },
     { art: "ws_elevator", word: ["le silo", "the grain bin"], say: ["Dot's train rolls up beside a tall wooden building. This is a <em>grain elevator</em>. Farmers hauled their wheat here, where it was weighed, lifted to the top and stored in tall bins.",
       "When a train came, the grain poured down a chute into the rail cars. The railway carried it to ports on the Pacific and the Great Lakes, and ships took it around the world.",
@@ -151,9 +155,9 @@
       { label: "Ride in the grain train", art: "ws_cab", word: ["le train", "the train"], say: ["Dot waves me into the engine, and the whole <em>train</em> rumbles out of town with its long line of grain cars behind us. I looked back and could not see the end of it.",
         "Dot lets me pull the whistle cord. Toot toot! The cows in the next field did not even look up. They have heard it all before."] }] },
     { ask: "ws_last", intro: "One last set of puzzles from our ride. Three right answers finishes the chapter, and the whole grade." },
-    { art: "ws_goodbye", word: ["dyakuyu", "thank you in Ukrainian (дякую)"], say: ["We rolled west until a jagged white line rose along the edge of the sky. Those are the <em>Rocky Mountains</em>, still far away, but tall enough to see from here.",
+    { art: "ws_goodbye", word: ["dyakuyu", "thank you in Ukrainian (дякую), say DYAH-koo-yoo"], say: ["We rolled west until a jagged white line rose along the edge of the sky. Those are the <em>Rocky Mountains</em>, still far away, but tall enough to see from here.",
       "This is where I say thank you. Thank you, Zoe, Kai, Jade, Tyson, Priya and Lukas. You each showed me your home, and I will remember every one.",
-      "Lukas taught me how to say it in Ukrainian: <em>dyakuyu</em>. Then Dot pulled her whistle, and her little train turned back east with its grain, on the way to the ports.",
+      "Lukas taught me how to say it in Ukrainian: <em>dyakuyu</em>. You say it DYAH-koo-yoo. Then Dot pulled her whistle, and her little train turned back east with its grain, on the way to the ports.",
       "The clock is pointing up and over the mountains, to the Pacific and the far North. But that is another story. Tick tock!"] }
   ] };
 }

@@ -103,7 +103,7 @@
   });
 
   // FACT CHECK: The Forks, where the Assiniboine River meets the Red River in downtown Winnipeg, has been a meeting place for about 6,000 years (archaeologists have found campfire sites, tools and fish bones there)
-  // FACT CHECK: First Nations who met, traded and fished at The Forks include the ancestors of the Cree, Anishinaabe (Ojibwe), Nakota (Assiniboine) and Dakota peoples
+  // FACT CHECK: First Nations who met, traded and fished at The Forks include the ancestors of the Cree, Anishinaabe (Ojibwe), Nakoda (Assiniboine) and Dakota peoples
   // FACT CHECK: the Red River flows north into Lake Winnipeg, and Lake Winnipeg drains north by the Nelson River into Hudson Bay
   // FACT CHECK: the Assiniboine joins the Red from the west, and the Red continues north as one river
   // FACT CHECK: The Forks today has a market (The Forks Market, with a tower), a river walk, a modern footbridge (the Esplanade Riel is nearby) and a skating trail on the frozen rivers in winter
@@ -123,7 +123,7 @@
       "Kai says people have been meeting at this very spot for thousands of years. That is a long time to wait for a snack. Clock, show us!"] },
     { art: "fk_window1", say: ["The window into the past! We are looking back about <em>6,000 years</em>, long before any fort or any city. No market, no bridge. Just grass, trees and two rivers.",
       "Archaeologists, who dig up the past very carefully, have found old campfires, tools and fish bones right here. People camped here, fished here and came back year after year.",
-      "First Nations peoples met here to trade, fish and make agreements, among them the ancestors of the Cree, the Anishinaabe, the Nakota and the Dakota. Goods travelled huge distances on the rivers."] },
+      "First Nations peoples met here to trade, fish and make agreements, among them the ancestors of the Cree, the Anishinaabe, the Nakoda and the Dakota. Goods travelled huge distances on the rivers."] },
     { ask: "fk_river", intro: "Rivers were the highways. Three right answers and we look at the rivers today." },
     { art: "fk_today", word: ["la rivière", "the river"], say: ["Back to today! The arrows show which way the water goes. The Red River flows <em>north</em>, away from the United States, toward Lake Winnipeg. A river is <em>la rivière</em>.",
       "From Lake Winnipeg the water keeps going north through more rivers, all the way to Hudson Bay. That is why trading companies wanted this spot. Boats could reach the bay from here.",

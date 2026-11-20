@@ -137,6 +137,7 @@
   // FACT CHECK: the badlands near Drumheller lie along the Red Deer River in Alberta, and the Royal Tyrrell Museum of Palaeontology is in Drumheller (it opened in 1985)
   // FACT CHECK: Dinosaur Provincial Park, downstream on the Red Deer River, is a UNESCO World Heritage Site (named in 1979) and one of the richest dinosaur fossil beds in the world (the scene says "one of the richest")
   // FACT CHECK: "the traditional territory of the Blackfoot (Niitsitapi) people": Niitsitapi is the Blackfoot word for the Blackfoot Confederacy, often translated "the real people". This area is also home to other nations (it falls under Treaty 7 and nearby Treaty 6 and 4 land). The scene uses one plain line and does not give a meaning for the word.
+  // FACT CHECK (Shane's review notes, November 2026): the land acknowledgement now names the Blackfoot (Niitsitapi) and the neighbouring Treaty 7 nations, the Tsuut'ina and the Stoney Nakoda, and says the area is also a Métis homeland; pronunciation guide nee-tsee-TAH-pee added. "Archaeologists" changed to "Palaeontologists" (they study fossils).
   // FACT CHECK: hoodoos are pillars of soft rock (sandstone and mudstone) capped by a harder, wider stone that shields the pillar below from rain
   // FACT CHECK: about 75 million years ago (Late Cretaceous) southern Alberta was a warm, wet coastal plain beside the Western Interior Sea, with rivers, swamps and forests. Dinosaur Provincial Park rocks are about 76 to 75 million years old and the Drumheller rocks somewhat younger (about 70 million). The scene uses "about 75 million" for both.
   // FACT CHECK: Albertosaurus was a meat-eating tyrannosaur, smaller than T. rex, about 9 metres long (some sources say up to 10). Joseph Tyrrell found the skull in 1884 in the Red Deer River valley near today's Drumheller. The animal was named Albertosaurus in 1905 by Henry Fairfield Osborn.
@@ -150,7 +151,8 @@
   // FACT CHECK: "hoodoo" is an English word for a pillar of rock with a cap stone
   CHAPTERS[4] = { title: "The Land of Giants", where: "The Alberta Badlands", beats: [
     { art: "bl_arrive", word: ["hoodoo", "a pillar of soft rock with a hard cap"], say: ["Westward ho! We left the sea of grass behind, and now the ground below is <em>striped</em>. Grey, brown and rust red, like a giant cake that someone sliced.",
-      "This is the Alberta badlands, beside the Red Deer River near the town of Drumheller. It is the traditional territory of the Blackfoot (Niitsitapi) people, who live in Alberta today.",
+      "This is the Alberta badlands, beside the Red Deer River near the town of Drumheller. It is the traditional territory of the Blackfoot, the Niitsitapi. You say it nee-tsee-TAH-pee.",
+      "It is also the territory of the neighbouring Treaty 7 nations, the Tsuut'ina and the Stoney Nakoda. It is a homeland of the Métis too. They live in Alberta today.",
       "See those tall pillars with flat stones balanced on top like hats? Those are <em>hoodoos</em>. And one of the rocks down there just moved. I think. Down we go!"] },
     { art: "bl_priya", word: ["le dinosaure", "the dinosaur"], say: ["A girl in a teal hoodie is waving. This is Priya. She lives in Drumheller, and she volunteers at the Royal Tyrrell Museum, which is packed with dinosaur bones.",
       "Then a green head pops up from behind the rock. It is Pip! Pip is a small green dinosaur, and an old friend of mine. Pip has been searching for lost eggs for ages.",
@@ -172,7 +174,7 @@
     { ask: "bl_grid", intro: "The dig crew is marking out squares. Three right answers and Priya lets us pick our job." },
     { art: "bl_choice", pick: "Priya has two jobs for the afternoon. Shall we join the dig crew and brush a bone out of the ground, or go into the museum lab and measure a skeleton?", options: [
       { label: "Join the dig crew", art: "bl_dig", word: ["la roche", "the rock"], say: ["The crew pulls a string grid over the dig site, so every bone is marked by its square. We brush the dust away gently, until a rib shows. Pip spots it first.",
-        "Rock is <em>la roche</em>. I brushed so carefully that a beetle thanked me. Then it sat on my beak. Archaeologists say that is a good sign."] },
+        "Rock is <em>la roche</em>. I brushed so carefully that a beetle thanked me. Then it sat on my beak. Palaeontologists say that is a good sign."] },
       { label: "Measure a skeleton in the lab", art: "bl_lab", word: ["l'os", "the bone"], say: ["Inside the museum lab stands a whole skeleton on a stand, with scale models of its bones on the table. Priya hands me a tape measure, and I stretch it along the floor with great importance.",
         "A bone is <em>l'os</em>. I measured the jaw, and Pip measured my tape measure. Both of us got a number, and neither of us got eaten."] }] },
     { ask: "bl_last", intro: "One last set of puzzles for the crew. Three right answers finishes the chapter." },

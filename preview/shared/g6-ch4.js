@@ -91,45 +91,50 @@
   });
 
   // FACT CHECK: The Mi'kmaq have lived in Mi'kma'ki for more than 10,000 years (often given as 13,000 years). The scene says "more than 10,000 years".
-  // FACT CHECK: Spelling and meaning of the Mi'kmaw words (Francis-Smith orthography): kwe' (hello), wela'lin (thank you), Unama'ki (Cape Breton Island), Mi'kma'ki (the Mi'kmaw homeland), wikuom (a birchbark home), nemultes (see you again).
+  // FACT CHECK: Spelling and meaning of the Mi'kmaw words (Francis-Smith orthography): kwe' (hello), wela'lin (thank you), Unama'ki (Cape Breton Island), Mi'kma'ki (the Mi'kmaw homeland), wikuom (a birchbark home), nmu'ltes (see you again).
   // FACT CHECK: "Mi'kmaq" is the plural, the people. "Mi'kmaw" describes things (the Mi'kmaw language) and is also used for one person.
   // FACT CHECK: Mi'kma'ki covers the Maritime provinces (Nova Scotia, New Brunswick, Prince Edward Island) and part of Quebec's Gaspé peninsula (also parts of Newfoundland and Maine in some descriptions, left out here).
-  // FACT CHECK: The Mi'kmaq are one of the Wabanaki nations. Wabanaki is often translated as People of the Dawn, because the sun reaches their land first.
+  // FACT CHECK: The Mi'kmaq are one of the Wabanaki nations. Wabanaki is often translated as People of the Dawn, because their homelands are in the east, where the dawn comes early. (Changed from "the sun reaches their land first" to avoid clashing with Chapter 6, where Cape Spear is where the sun rises first; per Shane's review notes, November 2026.)
   // FACT CHECK: The Bras d'Or Lake is a large salt-water (tidal) lake in the middle of Cape Breton Island.
   // FACT CHECK: Wikuoms were homes made of poles covered with birchbark (a cone shape). Families fished and gathered by the sea in the warm months and moved inland for winter.
   // FACT CHECK: Mi'kmaw birchbark canoes are known for sides that rise in the middle, so they can ride ocean waves.
   // FACT CHECK: The eight-pointed star has been used by the Mi'kmaq for a very long time and appears today in quillwork, beadwork, and on jackets and buildings. The scene gives no meaning for it.
   // FACT CHECK: The Peace and Friendship Treaties were made between the Mi'kmaq (and other Wabanaki peoples) and the British Crown in the 1700s (the first in 1725, the last in 1779). In them the Mi'kmaq did not surrender their land.
   // FACT CHECK: The treaties are still in force today (the Supreme Court of Canada affirmed treaty rights, for example in the 1999 Marshall decision). October 1 is Treaty Day in Nova Scotia.
+  // FACT CHECK: Added from Shane's review notes (November 2026): the eight-pointed star is a very old Mi'kmaw design, seen in quillwork and beadwork, and many people connect it with the sun (no meaning is given for the eight points). Many Mi'kmaw families still fish and gather along these waters today. The treaty scene names Mi'kmaw leaders and British officials, and says the Peace and Friendship Treaties still protect Mi'kmaw rights today, such as fishing and gathering. Pronunciation guides added; goodbye word respelled nmu'ltes.
   // FACT CHECK: Bald eagles live and nest around the Bras d'Or Lake.
   // FACT CHECK: Halifax is the next stop, along the coast.
   CHAPTERS[3] = { title: "The People of the Dawn", where: "Mi'kmaw country, Cape Breton", beats: [
-    { art: "mk_arrive", word: ["Unama'ki", "Cape Breton Island"], say: ["East we go again! The clock followed the coast, and now we float over an island with a great blue lake right in the middle. Hold on to your hat. I landed on a goose last time.",
-      "The Mi'kmaq call this island <em>Unama'ki</em>. You may know it as Cape Breton Island. The Mi'kmaq have lived here for more than 10,000 years, and they live here today.",
+    { art: "mk_arrive", word: ["Unama'ki", "Cape Breton Island (say oo-nah-MAH-gee)"], say: ["East we go again! The clock followed the coast, and now we float over an island with a great blue lake right in the middle. Hold on to your hat. I landed on a goose last time.",
+      "The Mi'kmaq call this island <em>Unama'ki</em>. You say Mi'kmaq like MEEG-mah, and Unama'ki like oo-nah-MAH-gee.",
+      "You may know it as Cape Breton Island. The Mi'kmaq have lived here for more than 10,000 years, and they live here today.",
       "That blue lake is the <em>Bras d'Or Lake</em>. It is salty like the sea, even though it sits in the middle of the island. Down we go!"] },
-    { art: "mk_sadie", word: ["kwe'", "hello"], say: ["A girl is waving from the shore. This is Sadie. She is a <em>Mi'kmaw</em> girl, and she lives in a community right beside the lake.",
+    { art: "mk_sadie", word: ["kwe'", "hello, in Mi'kmaw (say gway)"], say: ["A girl is waving from the shore. This is Sadie. She is a <em>Mi'kmaw</em> girl (you say it MEEG-maw), and she lives in a community right beside the lake.",
       "Mi'kmaw is the word for one person, and for the language too. All the people together are the <em>Mi'kmaq</em>.",
-      "Sadie goes to school, and she is learning the Mi'kmaw language from her grandmother. This is how she says hello. <em>Kwe'</em>! I said it back, and I think I got it right. Mostly."] },
-    { art: "mk_window1", word: ["wikuom", "a birchbark home"], say: ["The window into the past! This is a summer camp by the shore, long before any ships came. The Mi'kmaq have lived on this land for more than <em>10,000 years</em>.",
-      "See the cone-shaped homes? Each one is a <em>wikuom</em>, made of poles covered with birchbark. And look at the canoes. Their sides rise in the middle, to keep out ocean waves.",
-      "Families fished and gathered by the sea in the warm months, and moved inland for winter. Back on the shore, Sadie has drawn a star in the sand. Time to talk about turns!"] },
+      "Sadie goes to school, and she is learning the Mi'kmaw language from her grandmother. This is how she says hello. <em>Kwe'</em>! You say it gway. I said it back, and I think I got it right. Mostly."] },
+    { art: "mk_window1", word: ["wikuom", "a birchbark home (say WEE-goo-om)"], say: ["The window into the past! This is a summer camp by the shore, long before any ships came. The Mi'kmaq have lived on this land for more than <em>10,000 years</em>.",
+      "See the cone-shaped homes? Each one is a <em>wikuom</em>. You say it WEE-goo-om. It is made of poles covered with birchbark. And look at the canoes. Their sides rise in the middle, to keep out ocean waves.",
+      "Families fished and gathered by the sea in the warm months, and moved inland for winter. Many Mi'kmaw families still fish and gather along these waters today.",
+      "Back on the shore, Sadie has drawn a star in the sand. Time to talk about turns!"] },
     { ask: "mk_turns", intro: "Help Sadie with her star in the sand. Three right answers and we go to see the star in her community." },
-    { art: "mk_star", word: ["Mi'kma'ki", "the Mi'kmaw homeland"], say: ["Sadie walks us along the shore. A bald eagle circles over the lake, and little boats bob on the water. I waved. The eagle ignored me.",
+    { art: "mk_star", word: ["Mi'kma'ki", "the Mi'kmaw homeland (say MEEG-mah-gee)"], say: ["Sadie walks us along the shore. A bald eagle circles over the lake, and little boats bob on the water. I waved. The eagle ignored me.",
       "On the community building is a big <em>eight-pointed star</em>, in red, yellow, white and black. Sadie has a little one on her jacket too. The Mi'kmaq have used this star for a very long time.",
-      "You can see it today in quillwork and beadwork, and on jackets and buildings. And all this land is <em>Mi'kma'ki</em>, the Mi'kmaw homeland. It covers the Maritime provinces and more.",
-      "The Mi'kmaq are one of the Wabanaki nations. That name is often translated as <em>People of the Dawn</em>, because the sun reaches this land first. Early birds, just like me."] },
+      "It is a very old Mi'kmaw design. You can see it today in quillwork and beadwork, and on jackets and buildings. Many people connect it with the sun.",
+      "And all this land is <em>Mi'kma'ki</em>, the Mi'kmaw homeland. You say it MEEG-mah-gee. It covers the Maritime provinces and more."] },
+    { art: "mk_star", say: ["The Mi'kmaq are one of the Wabanaki nations. That name is often translated as <em>People of the Dawn</em>, because their homelands are in the east, where the dawn comes early. Early birds, just like me."] },
     { ask: "mk_triangles", intro: "Check the poles and the star corners with Sadie. Three right answers and the window opens again." },
-    { art: "mk_window2", say: ["Back to the window, and now it is the 1700s. Two people stand at a table with a paper between them. This is a <em>treaty</em>, a promise made between two peoples.",
+    { art: "mk_window2", say: ["Back to the window, and now it is the 1700s. Mi'kmaw leaders and British officials stand at a table with a paper between them. This is a <em>treaty</em>, a promise made between two peoples.",
       "These are the <em>Peace and Friendship Treaties</em>, made between the Mi'kmaq and the British Crown in the 1700s. The Mi'kmaq did not give up their land in them.",
-      "And here is the best part. Those treaties are still in force today, and every October 1 is <em>Treaty Day</em> in Nova Scotia. Sadie likes things neat, so she brought her beads."] },
+      "And here is the best part. Those treaties are still in force today, and every October 1 is <em>Treaty Day</em> in Nova Scotia. They still protect Mi'kmaw rights today, such as fishing and gathering.",
+      "Sadie says a treaty is a promise you keep looking after. So is beadwork. She likes things neat, so she brought her beads."] },
     { ask: "mk_beads", intro: "Count the beads and quills with Sadie. Three right answers and we pick our afternoon." },
     { art: "mk_choice", pick: "Sadie has two ideas for the afternoon. Shall we paddle a canoe on the lake, or walk the shore trail to look for eagles?", options: [
-      { label: "Paddle a canoe", art: "mk_paddle", word: ["wela'lin", "thank you"], say: ["Paddles up! A canoe is waiting by the water, and Sadie shows me how to paddle with my wings tucked in. Dip, pull, dip, pull. I only splashed myself twice.",
-        "When we reach the shore again, Sadie says <em>wela'lin</em>. It means thank you. I say it right back, for the paddling lesson."] },
-      { label: "Walk the shore trail", art: "mk_trail", word: ["nemultes", "see you again"], say: ["Up the shore trail we go, under the spruce trees, with our eyes on the sky. A bald eagle glides right over us, as wide as a door.",
-        "When it flies off, Sadie waves and says <em>nemultes</em>. It means see you again. I said it too, in case the eagle was listening."] }] },
+      { label: "Paddle a canoe", art: "mk_paddle", word: ["wela'lin", "thank you (say weh-LAH-lin)"], say: ["Paddles up! A canoe is waiting by the water, and Sadie shows me how to paddle with my wings tucked in. Dip, pull, dip, pull. I only splashed myself twice.",
+        "When we reach the shore again, Sadie says <em>wela'lin</em>. You say it weh-LAH-lin. It means thank you. I say it right back, for the paddling lesson."] },
+      { label: "Walk the shore trail", art: "mk_trail", word: ["nmu'ltes", "see you again (say nuh-MOOL-tess)"], say: ["Up the shore trail we go, under the spruce trees, with our eyes on the sky. A bald eagle glides right over us, as wide as a door.",
+        "When it flies off, Sadie waves and says <em>nmu'ltes</em>. You say it nuh-MOOL-tess. It means see you again. I said it too, in case the eagle was listening."] }] },
     { ask: "mk_symmetry", intro: "One last set of puzzles for the day. Three right answers finishes the chapter." },
-    { art: "mk_goodbye", say: ["The sun sinks low over the hills, and the whole lake glows. Sadie says the sun will reach her land first again tomorrow, as it always does.",
+    { art: "mk_goodbye", say: ["The sun sinks low over the hills, and the whole lake glows. Sadie says the dawn will come early to her land again tomorrow, as it always does.",
       "Thank you, Sadie, for showing me your home today. It was a big treat to meet someone who lives in the place we have been looking at through the window.",
       "Next the balloon follows the coast to <em>Halifax</em>, a busy harbour on the sea. Back into the basket I go. Tick tock!"] }
   ] };

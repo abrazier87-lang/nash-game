@@ -1,5 +1,5 @@
 "use strict";
-// Grade 8, Chapter 7: Home. The last chapter of the whole series. Dr. Somebody flies home to the Grand River, tells Lily what he learned, meets all twenty-one guides, and the clock starts to spin again.
+// Grade 8, Chapter 7: Home. The last chapter of the whole series. Dr. Somebody flies home to the Grand River, tells Lily what he learned, meets all twenty-two guides, and the clock starts to spin again.
 {
   const lily = (x, y, s) => kidAt(x, y, s, WHO.lily);
   const fx = n => String(+n.toFixed(3));
@@ -14,10 +14,11 @@
     <g ${INKED}><path d="M250 160 Q290 146 330 158 Q372 150 410 164 V250 H262 Q246 220 262 196 Q244 180 250 160 Z" fill="#6cc0ea"/><ellipse cx="334" cy="206" rx="28" ry="10" fill="#a9cf86"/></g>`;
   // a rolled certificate with a red seal
   const scroll = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" ${INKED}><rect x="-30" y="-20" width="60" height="40" rx="4" fill="#fffdf5"/><path d="M-30 -20 Q-38 0 -30 20 M30 -20 Q38 0 30 20" fill="none"/><path d="M-18 -8 H18 M-18 0 H18 M-12 8 H8" stroke-width="2" fill="none" stroke="#c9b78a"/><circle cx="18" cy="14" r="7" fill="#e63946"/></g>`;
-  // the twenty-one guides, in order: Grade 5, Grade 6, Grade 7, Grade 8
-  const NAMES = ["lily", "noah", "maya", "nina", "lea", "olivier", "elodie", "sadie", "amara", "declan", "zoe", "kai", "jade", "tyson", "priya", "lukas", "mei", "jordan", "simran", "hannah", "dana"];
-  const backRow = NAMES.slice(0, 11).map((n, i) => kidAt(30 + i * 34, 68, .5, WHO[n])).join("");
-  const frontRow = NAMES.slice(11).map((n, i) => kidAt(i < 5 ? 26 + i * 28 : 262 + (i - 5) * 28, 150, .5, WHO[n])).join("");
+  // the twenty-two guides, in order: Grade 5, Grade 6, Grade 7, Grade 8 (Kayla is not in the page's WHO list, so she is drawn here to match Grade 8 Chapter 3)
+  const NAMES = ["lily", "noah", "maya", "nina", "lea", "olivier", "elodie", "sadie", "amara", "declan", "zoe", "kai", "jade", "tyson", "priya", "lukas", "mei", "jordan", "simran", "kayla", "hannah", "dana"];
+  const look = n => WHO[n] || { hood: "#2a9d8f" }; // Kayla: long hair and a teal hoodie, as in Grade 8 Chapter 3
+  const backRow = NAMES.slice(0, 12).map((n, i) => kidAt(24 + i * 31, 68, .5, look(n))).join("");
+  const frontRow = NAMES.slice(12).map((n, i) => kidAt(i < 5 ? 26 + i * 28 : 262 + (i - 5) * 28, 150, .5, look(n))).join("");
   // lines of light spinning out of the clock
   const spinRays = (cx, cy) => Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 2 * Math.PI, l = 66 + (i % 3) * 14, p = (r, d) => `${(cx + r * Math.cos(a + d)).toFixed(1)} ${(cy + r * Math.sin(a + d)).toFixed(1)}`;
     return `<path d="M${p(30, 0)} Q${p(l * .65, .45)} ${p(l, .9)}" fill="none" stroke="${i % 2 ? "#ffe08a" : "#fff6c9"}" stroke-width="3.2" stroke-linecap="round"/>`; }).join("");
@@ -64,7 +65,7 @@
   // FACT CHECK: Lily is Haudenosaunee, from Six Nations of the Grand River, and the Grand River runs past Brantford, Ontario, as in Grade 5. Check the wording of "Six Nations of the Grand River".
   // FACT CHECK: The distances (4 000 to 8 000 km a grade, 20 000 or 22 000 km in all) are invented round numbers for the maths, and the story calls them rough. They are not real flight distances. The balloon speeds (20, 25, 50 km/h) are also invented.
   // FACT CHECK: Maths uses pi = 3.14, 180 degrees in a triangle, whole-number Pythagorean triples (3-4-5, 6-8-10, 5-12-13, 9-12-15, 8-15-17, 12-16-20), and Nunavut temperatures from about -30 to -14 degrees C in the questions only.
-  // FACT CHECK: The twenty-one guides by grade: Grade 5 Lily, Noah, Maya, Nina. Grade 6 Lea, Olivier, Elodie, Sadie, Amara, Declan. Grade 7 Zoe, Kai, Jade, Tyson, Priya, Lukas. Grade 8 Mei, Jordan, Simran, Hannah, Dana. Check this list against the earlier chapters (Nina is counted in Grade 5, where she first appeared).
+  // FACT CHECK: The twenty-two guides by grade: Grade 5 Lily, Noah, Maya, Nina. Grade 6 Lea, Olivier, Elodie, Sadie, Amara, Declan. Grade 7 Zoe, Kai, Jade, Tyson, Priya, Lukas. Grade 8 Mei, Jordan, Simran, Kayla, Hannah, Dana. Check this list against the earlier chapters (Nina is counted in Grade 5, where she first appeared).
   // FACT CHECK: Dr. Somebody's goodbye line is written exactly as the brief gave it: "Out with the old, in with the new! It's been a hoooot!" The Grade 4 recording reads "Out with the old, in with the new! It's been a hoooot!" (different punctuation and a long hoot).
   // READERS: Six Nations of the Grand River readers (for Lily's scenes), and a final read by the family.
   CHAPTERS[6] = { title: "Home", where: "The Grand River, Ontario", beats: [
@@ -82,13 +83,13 @@
     { art: "hm_gather", say: ["Then the clock on the balloon begins to chime, soft and clear, one note after another. Along the riverbank the friends appear one by one, as if the notes had called them. First the Grade 5 friends: <em>Lily, Noah, Maya and Nina</em>.",
       "Then the friends from the east, Grade 6: <em>Léa, Olivier, Élodie, Sadie, Amara and Declan</em>. Léa waves with both arms, and the notes keep coming.",
       "Then the friends from the west, Grade 7: <em>Zoe, Kai, Jade, Tyson, Priya and Lukas</em>. They walk across the grass as if they had only been over the next hill.",
-      "And last the friends from the mountains and the North, Grade 8: <em>Mei, Jordan, Simran, Hannah and Dana</em>. That is twenty-one friends on one riverbank, and one very proud owl in the middle."] },
+      "And last the friends from the mountains and the North, Grade 8: <em>Mei, Jordan, Simran, Kayla, Hannah and Dana</em>. That is twenty-two friends on one riverbank, and one very proud owl in the middle."] },
     { ask: "hm_last", intro: "The last puzzle of all is a case file in three steps, about the whole journey. The numbers are rough and round. Three right answers and I have something to tell you." },
     { art: "hm_thanks", say: ["There is one more thank you, and it is for you. Yes, you, the one reading this. You are the child who has been travelling with me all this time.",
       "It was your answers that opened every door. Every chime, every window, every gate on this long trip, you found the key. I only drove the balloon, and not always in a straight line.",
       "A <em>certificate</em> is waiting for you. Hang it on the wall, or on the fridge, or both. And thank you. I mean it with every feather."] },
     { art: "hm_spin", say: ["The others have said goodnight and gone home along the river. It is very quiet. I hang my goggles on the basket, and I say it out loud to the stars. I am home for good. I find that I mean it.",
-      "Then the clock begins to spin, which it has not done since Grade 4. Faster and faster, its hands a blur, lines of light spinning out into the dark. It points at nowhere on any map. I look at it. I look at you.",
+      "Then the clock begins to spin, faster than it has ever spun before. Its hands become a blur, lines of light spinning out into the dark. It points at nowhere on any map. I look at it. I look at you.",
       "Out with the old, in with the new! It's been a hoooot!",
       "Tick tock."] }
   ] };
