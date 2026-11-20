@@ -31,7 +31,7 @@ function ChapterGame(C) {
   // ---------- recorded lines ----------
   const spoken = t => { const s = String(t).replace(/<[^>]+>/g, ""); return C.speak ? C.speak(s) : s; };
   const clipOf = t => C.voice + Kit.clipName(spoken(t)) + ".mp3";
-  function speakLine(t, next) { if (!C.voice || !t) return; Kit.playClip(clipOf(t), ""); if (next) Kit.loadClip(clipOf(next)).catch(() => {}); } // "next" is fetched ahead so it starts without a pause
+  function speakLine(t, next, folder) { const f = folder || C.voice; if (!f || !t) return; const clip = x => f + Kit.clipName(spoken(x)) + ".mp3"; Kit.playClip(clip(t), ""); if (next) Kit.loadClip(clip(next)).catch(() => {}); } // "next" is fetched ahead so it starts without a pause
 
   // ---------- saved progress ----------
   let S = Kit.load(C.saveKey, () => ({ beat: CHAPTERS.map(() => 0), done: [], words: [] })); // beat[c]: how far chapter c has been opened
@@ -165,7 +165,9 @@ function ChapterGame(C) {
     drawScene();
   }
   function drawScene() { const sc = sceneAt(); $("options").innerHTML = ""; $("nextRow").style.display = ""; $("panel").innerHTML = ART[sc.art](); animate($("panel"), "pop"); drawLine(); learn(sc.word); }
-  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${sc.who}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1]); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
+  // Somebody else's words (a scene with who: "...") are read aloud by the balloon's clock, when the page gives clockVoice (a folder of recordings). who: "The clock" is the clock speaking for itself.
+  const whoLabel = w => w === "The clock" || !C.clockVoice ? w : `${w}, read by the clock`;
+  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${whoLabel(sc.who)}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1]); else if (C.clockVoice) speakLine(sc.say[at.line], sc.say[at.line + 1], C.clockVoice); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
   function fitCaption() { // a long line gets slightly smaller writing, so it never spills out of its box
     const cap = $("caption"); cap.style.fontSize = ""; const base = parseFloat(getComputedStyle(cap).fontSize);
     for (let i = 1; i <= 6 && cap.scrollHeight > cap.clientHeight + 1; i++) cap.style.fontSize = (base * (1 - .06 * i)).toFixed(2) + "px";

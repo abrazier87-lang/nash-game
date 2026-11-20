@@ -1,6 +1,6 @@
 {
   "about": "Every recorded line in the games. The name on the left is the sound file; the words on the right are what the voice says. To change a line: edit the words, delete its sound file, and run tools/make-voice.py again. Only missing files are recorded, so nothing is paid for twice. A character whose voice id below is empty has not been given a voice yet, and their lines wait.",
-  "voices": {"dr-somebody": "auq43ws1oslv0tO4BDa7", "pip": "KoVIHoyLDrQyd4pGalbs", "dot": "vChnJZ1Cu89g2XXumPfT"},
+  "voices": {"dr-somebody": "auq43ws1oslv0tO4BDa7", "pip": "KoVIHoyLDrQyd4pGalbs", "dot": "vChnJZ1Cu89g2XXumPfT", "clock": ""},
   "lines": {
     "audio/replay.mp3": ["dr-somebody", "Great job! You did it again!"],
 
@@ -15025,6 +15025,43 @@
     "audio/g8/s/you-say-it-tron-dek-hwitch-in-c8b1c3df.mp3": ["dr-somebody", "You say it tron-dek hwitch-in."],
     "audio/g8/s/you-say-mus-kwee-um-like-mus-kwe-e50ae9f6.mp3": ["dr-somebody", "You say Mus-kwee-um like mus-kwee-um, and Slay-wah-tuth like slay-wah-tuth."],
     "audio/g8/s/you-say-staw-low-like-this-staw-e56e932c.mp3": ["dr-somebody", "You say Staw-low like this: staw-low."],
-    "audio/g8/s/you-say-them-suh-wep-muhc-k-too-535d375e.mp3": ["dr-somebody", "You say them suh-wep-muhc, k-too-nah-ha and sin-aykst."]
+    "audio/g8/s/you-say-them-suh-wep-muhc-k-too-535d375e.mp3": ["dr-somebody", "You say them suh-wep-muhc, k-too-nah-ha and sin-aykst."],
+
+    "audio/g5/clock/tick-tock-tick-tock-i-have-somet-665c8deb.mp3": ["clock", "Tick, tock. Tick, tock. I have something to show you."],
+    "audio/g5/clock/tick-tock-time-to-look-back-my-w-7cc4b2f5.mp3": ["clock", "Tick, tock. Time to look back. My window is open."],
+    "audio/g6/clock/tick-tock-the-window-opens-again-872de369.mp3": ["clock", "Tick, tock. The window opens again."],
+    "audio/g6/clock/tick-tock-time-to-look-back-my-w-7cc4b2f5.mp3": ["clock", "Tick, tock. Time to look back. My window is open."],
+    "audio/g7/clock/but-i-worry-the-beaver-are-fewer-0a53c8a3.mp3": ["clock", "But I worry. The beaver are fewer every year. When too many are trapped, the lodges go quiet. What will the trade be when the beaver are gone?"],
+    "audio/g7/clock/every-kettle-and-every-blanket-o-f64b0f19.mp3": ["clock", "Every kettle and every blanket on these shelves crossed the ocean by ship, then went inland by canoe and boat for weeks. That costs a great deal, so I think my prices are fair. I weigh each pelt honestly."],
+    "audio/g7/clock/i-am-a-cree-hunter-and-trader-ea-1580f351.mp3": ["clock", "I am a Cree hunter and trader. Each bundle of furs is a whole winter of skilled work. I trap in deep snow, I skin and stretch every pelt, and then I carry them many days to reach the post."],
+    "audio/g7/clock/i-am-a-nakoda-grandmother-of-the-dc015a45.mp3": ["clock", "I am a Nakoda grandmother of the plains. I remember when the ground shook with the herds, and the whole camp was fed. In my own lifetime I have watched them vanish. First the herds were smaller. Then they were gone."],
+    "audio/g7/clock/i-came-west-in-the-1870s-because-4e7b6add.mp3": ["clock", "I came west in the 1870s because a man could earn good money here. They pay me by the hide. On a good day I shoot dozens of bison with my big rifle."],
+    "audio/g7/clock/i-keep-the-books-at-this-post-fo-32ec0466.mp3": ["clock", "I keep the books at this post for the Hudson's Bay Company. Here we price everything in Made Beaver. One prime beaver pelt is 1 Made Beaver, and a gun, a kettle or a blanket each cost a set number of pelts."],
+    "audio/g7/clock/i-take-the-skins-and-i-leave-the-dc919bb9.mp3": ["clock", "I take the skins and I leave the rest on the ground. The hides go east by wagon and by rail, and the railway creeps further west every year. The land is being cleared for farms and ranches."],
+    "audio/g7/clock/i-tell-my-grandchildren-all-of-t-f9b5fee5.mp3": ["clock", "I tell my grandchildren all of this, so it is never forgotten. We are still here."],
+    "audio/g7/clock/nobody-forces-me-to-trade-at-one-f9b6d551.mp3": ["clock", "Nobody forces me to trade at one post. Two companies want my furs, so I can choose the one with the better deal. The kettles and blankets really are useful, and a good kettle saves my family hours of work."],
+    "audio/g7/clock/the-herds-look-endless-to-me-i-t-3477e1dc.mp3": ["clock", "The herds look endless to me. I think there are too many ever to be gone. I think about the money. Then one year I ride for days and cannot find a single herd."],
+    "audio/g7/clock/the-list-is-the-same-for-every-h-c3a7fd30.mp3": ["clock", "The list is the same for every hunter who walks in. Both sides want the same thing, which is good goods in return for good fur."],
+    "audio/g7/clock/then-we-were-pressed-to-sign-tre-f4edcb0c.mp3": ["clock", "Then we were pressed to sign treaties and to move onto reserves, and we were promised food and help. Many of those promises were broken. Some people in power did not stop the killing."],
+    "audio/g7/clock/without-the-bison-hunger-came-ma-bc465452.mp3": ["clock", "Without the bison, hunger came. Many of our people starved. We had lost our food, our shelter and our clothing all at once."],
+    "audio/g8/clock/canada-has-a-rule-immigrants-mus-881ee310.mp3": ["clock", "Canada has a rule: immigrants must come by one continuous journey from their home country. No ship sails straight from India, so these passengers cannot meet it. The rule names no one. I am only applying it as written, and I will not let them land."],
+    "audio/g8/clock/donald-smith-one-of-our-director-7b4f29aa.mp3": ["clock", "Donald Smith, one of our directors, lifts the hammer and drives the spike. The photographer asks us all to stand close and keep still. I am very proud. This is the picture the country will remember."],
+    "audio/g8/clock/for-two-months-they-hold-us-on-b-2d3515ab.mp3": ["clock", "For two months they hold us on board, within sight of the city. Our food and water run short. People here, our own South Asian community, raise money for us and take our case to court."],
+    "audio/g8/clock/i-am-an-immigration-officer-at-t-5c94f189.mp3": ["clock", "I am an immigration officer at the port of Vancouver. On May 23, 1914 a ship called the Komagata Maru comes into the harbour with 376 passengers from Punjab. I have my orders."],
+    "audio/g8/clock/i-am-told-they-are-british-subje-f6fddfde.mp3": ["clock", "I am told they are British subjects too. But many people in this city want them turned away, and want Canada kept for people like themselves. They tell me so loudly. I do not make the law."],
+    "audio/g8/clock/i-came-from-guangdong-in-souther-08354329.mp3": ["clock", "I came from Guangdong, in southern China, to build this railway. The company gave men like me the most dangerous work, handling the explosives that blast tunnels and ledges out of the mountain."],
+    "audio/g8/clock/i-came-north-from-california-thi-6dc39ed1.mp3": ["clock", "I came north from California this spring with a pan and a shovel. All winter I heard the same news: there is gold in the sandbars of the Fraser River! Thousands of us rushed here within months, about 30,000 men."],
+    "audio/g8/clock/i-know-that-thousands-of-men-bui-0b5f34a6.mp3": ["clock", "I know that thousands of men built these miles through the mountains, and that most of them are not standing here. Today I think only of the country that is now joined together."],
+    "audio/g8/clock/i-rode-a-steamboat-up-the-river-d69122a5.mp3": ["clock", "I rode a steamboat up the river, then walked. I scoop gravel into my pan, swirl the water, and the heavy yellow flakes settle at the bottom. That is l'or, gold. One good strike and I could buy a farm."],
+    "audio/g8/clock/i-sailed-on-the-komagata-maru-fr-02fd1427.mp3": ["clock", "I sailed on the Komagata Maru from Punjab. Most of us are Sikhs, with Muslims and Hindus too. We are British subjects, like people in Canada, and many of us served in the British army."],
+    "audio/g8/clock/i-was-paid-about-one-dollar-a-da-adb70bbd.mp3": ["clock", "I was paid about one dollar a day, half of what white workers were paid, and I bought my own food and gear out of it. Many men died in rock slides, in blasts, in accidents and from sickness."],
+    "audio/g8/clock/it-is-november-7-1885-at-kray-ge-dc035df7.mp3": ["clock", "It is November 7, 1885, at Kray-gell-uh-kee, in Eagle Pass. I am a company man, and I stand in the front row. Today the last spike goes in, and the railway runs from sea to sea."],
+    "audio/g8/clock/my-family-has-fished-from-these-c9ce7e64.mp3": ["clock", "My family has fished from these rocks since long before my grandmother's grandmother. Each fishing rock belongs to a family, and we look after it. Then the miners came, thousands of them, in only a few months."],
+    "audio/g8/clock/on-july-23-1914-they-force-us-to-845f5df4.mp3": ["clock", "On July 23, 1914 they force us to sail away, with a navy ship's guns pointed at us. Only about 20 of us, who had lived in Canada before, are ever allowed ashore."],
+    "audio/g8/clock/that-summer-there-was-fighting-i-47e781e7.mp3": ["clock", "That summer there was fighting in the canyon. People on both sides were killed, and villages were burned. It is called the Fraser Canyon War. In the end our leaders made a peace. We are still here, and so is the river."],
+    "audio/g8/clock/the-company-did-not-pay-our-fare-40853968.mp3": ["clock", "The company did not pay our fare home, as many of us had hoped. And this same year, 1885, Canada made a head tax of 50 dollars on every Chinese person coming in. Now I cannot bring my wife and children."],
+    "audio/g8/clock/they-dug-up-the-gravel-bars-wher-0ae69986.mp3": ["clock", "They dug up the gravel bars where we fish and dry salmon. They took over village sites and fishing rocks. They did not ask us, and we had never agreed to share the river this way."],
+    "audio/g8/clock/to-me-the-bank-looked-empty-and-654c63a6.mp3": ["clock", "To me the bank looked empty and free for the taking. I did not stop to ask whose it was."],
+    "audio/g8/clock/today-they-drive-the-last-spike-c69f46ef.mp3": ["clock", "Today they drive the last spike. I am not in the photograph. No Chinese worker is."]
   }
 }

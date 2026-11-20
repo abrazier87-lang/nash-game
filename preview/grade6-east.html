@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Goes East</title>
-<link rel="stylesheet" href="shared/kit.css?v=43">
-<link rel="stylesheet" href="shared/inked.css?v=43">
-<link rel="stylesheet" href="shared/chapters.css?v=43">
+<link rel="stylesheet" href="shared/kit.css?v=44">
+<link rel="stylesheet" href="shared/inked.css?v=44">
+<link rel="stylesheet" href="shared/chapters.css?v=44">
 <style>
   /* Grade 6's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2a6fa8; }
@@ -17,11 +17,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=43"></script>
-<script src="shared/story.js?v=43"></script>
-<script src="shared/newowl.js?v=43"></script>
-<script src="shared/inkart.js?v=43"></script>
-<script src="shared/chapters.js?v=43"></script>
+<script src="shared/kit.js?v=44"></script>
+<script src="shared/story.js?v=44"></script>
+<script src="shared/newowl.js?v=44"></script>
+<script src="shared/inkart.js?v=44"></script>
+<script src="shared/chapters.js?v=44"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -110,6 +110,7 @@ const CHAPTERS = [
     { art: "qc_lea", word: ["le fleuve", "the river"], say: ["This is Léa. She has lived here all her life, and she speaks French at home and at school.",
       "She says the castle is really a hotel, called the <em>Château Frontenac</em>. But the river is the real star.",
       "That is the St. Lawrence. Léa calls it <em>le fleuve</em>, the river. It runs all the way to the ocean, and for a long time it was the only road there was. Clock, show us!"] },
+    { art: "qc_window1608", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "qc_window1608", say: ["The window into the past! The year is <em>1608</em>. A French explorer named Samuel de Champlain has just built a wooden fort right here, at the foot of the cliff.",
       "First Nations peoples had lived along this river for thousands of years before he came. The name Quebec comes from an Algonquin word. It means <em>where the river narrows</em>.",
       "Long before the French city, a St. Lawrence Iroquoian village called <em>Stadacona</em> stood right here. Today the Huron-Wendat community of <em>Wendake</em> is right beside Quebec City.",
@@ -119,6 +120,7 @@ const CHAPTERS = [
       "To protect it, people built stone walls all the way around. They are still here! Quebec is the only city north of Mexico that has kept its old walls.",
       "You walk in through a great stone gate. Léa says a gate is <em>la porte</em>. The walls are 4.6 kilometres around. Léa has a map. Shall we measure?"] },
     { ask: "walls", intro: "Read Léa's map. Three right answers and the window opens again." },
+    { art: "qc_windowtrade", who: "The clock", say: ["Tick, tock. The window opens again."] },
     { art: "qc_windowtrade", word: ["merci", "thank you"], say: ["Back to the window. The riverbank is busy! People are trading.",
       "The French wanted beaver furs, to make hats back in France. First Nations hunters and traders brought the furs, and traded them for things like kettles, cloth and blankets.",
       "First Nations trappers and traders were skilled partners. They knew the land, and they drove the trade. Later, the rush for beaver brought over-trapping, fighting, and new sicknesses that killed very many people.",
@@ -175,18 +177,18 @@ const ASK = {
 
 </script>
 <!-- Chapters 2 to 6 each live in their own file. Each one adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g6-ch2.js?v=43"></script>
-<script src="shared/g6-ch3.js?v=43"></script>
-<script src="shared/g6-ch4.js?v=43"></script>
-<script src="shared/g6-ch5.js?v=43"></script>
-<script src="shared/g6-ch6.js?v=43"></script>
+<script src="shared/g6-ch2.js?v=44"></script>
+<script src="shared/g6-ch3.js?v=44"></script>
+<script src="shared/g6-ch4.js?v=44"></script>
+<script src="shared/g6-ch5.js?v=44"></script>
+<script src="shared/g6-ch6.js?v=44"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How some words are said aloud (the writing on screen is not changed). tools/story-voice-lines.py reads this same list.
 const SAY = [["MEEG-mah-gee", "meeg-mah-gee"], ["MEEG-mah", "meeg-mah"], ["MEEG-maw", "meeg-maw"], ["WEE-goo-om", "wee-goo-om"], ["bee-OTH-uk", "bee-oth-uk"], ["jee-BOOK-took", "jee-book-took"], ["nem-OOL-tes", "nem-ool-tes"], ["oo-nah-MAH-gee", "oo-nah-mah-gee"], ["weh-LAH-lin", "weh-lah-lin"], ["Mi'kma'ki", "Meeg-mah-gee"], ["Mi'kmaq", "Meeg-mah"], ["Mi'kmaw", "Meeg-maw"], ["Kjipuktuk", "Jee-book-took"], ["Unama'ki", "Oo-nah-mah-gee"], ["wela'lin", "weh-lah-lin"], ["Wela'lin", "Weh-lah-lin"], ["nmu'ltes", "nem-ool-tes"], ["Nmu'ltes", "Nem-ool-tes"], ["wikuom", "wee-goo-om"], ["kwe'", "gway"], ["Kwe'", "Gway"], ["Ktaqmkuk", "Ook-dah-hum-gook"], ["Beothuk", "Bee-oth-uk"], ["Shanawdithit", "Shaw-nuh-dith-it"], ["Wendake", "Wen-dah-keh"], ["Stadacona", "Stad-uh-koh-nuh"], ["L'Anse aux Meadows", "Lance oh Meadows"], ["Minas", "My-nus"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Goes East", sub: "A Grade 6 story", saveKey: "grade6East.v1", medal: "g6",
-  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g6/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t),
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g6/s/", clockVoice: "../audio/g6/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t),
   map: { art: eastMap, stops: [[15.5, 52.5], [29, 43.5], [61.5, 88], [90, 67.5], [76, 80], [88.5, 33]] } });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>

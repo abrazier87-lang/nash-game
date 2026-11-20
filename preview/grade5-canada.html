@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Comes Home</title>
-<link rel="stylesheet" href="shared/kit.css?v=43">
-<link rel="stylesheet" href="shared/inked.css?v=43">
-<link rel="stylesheet" href="shared/chapters.css?v=43">
+<link rel="stylesheet" href="shared/kit.css?v=44">
+<link rel="stylesheet" href="shared/inked.css?v=44">
+<link rel="stylesheet" href="shared/chapters.css?v=44">
 <style>
   /* Grade 5's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
@@ -16,11 +16,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=43"></script>
-<script src="shared/story.js?v=43"></script>
-<script src="shared/newowl.js?v=43"></script>
-<script src="shared/inkart.js?v=43"></script>
-<script src="shared/chapters.js?v=43"></script>
+<script src="shared/kit.js?v=44"></script>
+<script src="shared/story.js?v=44"></script>
+<script src="shared/newowl.js?v=44"></script>
+<script src="shared/inkart.js?v=44"></script>
+<script src="shared/chapters.js?v=44"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -160,6 +160,7 @@ const CHAPTERS = [
     { art: "guide", say: ["This is my new friend Lily. Her family is <em>Haudenosaunee</em>. You say it <em>ho-dee-no-SHOW-nee</em>.",
       "Lily says it means <em>People of the Longhouse</em>. Her people have lived around these lakes for a very, very long time.",
       "They still do! Lily goes to school, plays lacrosse, and helps in her grandmother's garden. I asked what a longhouse is. She said, <em>look for yourself</em>."] },
+    { art: "window", who: "The clock", say: ["Tick, tock. Tick, tock. I have something to show you."] },
     { art: "window", say: ["My balloon can't fly through time any more. But look what its clock can do now. A <em>window into the past</em>!",
       "This is the very same spot, about 600 years ago. A whole village! Those long buildings are the longhouses. The people living here then were the <em>Attawandaron</em>, cousins of the Haudenosaunee.",
       "Lily says her own people, the Haudenosaunee, lived in longhouse villages just like this one, around the lake to the south.",
@@ -188,6 +189,7 @@ const CHAPTERS = [
     { art: "dock", say: ["It is not a balloon. It's a canoe! This is Noah. His family is <em>Anishinaabe</em>. You say it <em>ah-nish-ih-NAH-bay</em>.",
       "The Anishinaabe are many peoples, like the Ojibwe, the Odawa and the Potawatomi. They have lived around the Great Lakes for thousands of years.",
       "Noah paddles every summer with his uncle. He says the lakes and rivers were the highways here, long before there were any roads. Clock, show us!"] },
+    { art: "lakewindow", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "lakewindow", say: ["The window into the past! The very same bay, hundreds of years ago. And it is busy.",
       "Those are birchbark canoes. People are carrying food, tools and furs to trade with other nations, far across the lakes.",
       "Noah says one trading trip could be hundreds of kilometres. Let's work out how far these paddlers are going."] },
@@ -216,6 +218,7 @@ const CHAPTERS = [
     { art: "maya", say: ["This is Maya. Her family is <em>Cree</em>. They have lived on this land for thousands of years.",
       "I told Maya I had learned to say <em>miigwech</em>. She laughed. In her language, thank you is <em>meegwetch</em>, and you say it the same way, <em>MEE-gwetch</em>. Almost the same word! Their languages are cousins.",
       "Maya says I have come at the best time of year. It is spring, and the geese are coming back. Clock, show us what that meant long ago!"] },
+    { art: "springwindow", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "springwindow", say: ["The window into the past! It is spring there too, hundreds of years ago. Look at the sky!",
       "Thousands and thousands of geese, flying north. After a long winter, this meant fresh food for everyone.",
       "Families camped together by the water for the goose hunt. Maya's grandfather still counts the geese each spring. Let's count with him."] },
@@ -244,6 +247,7 @@ const CHAPTERS = [
     { art: "nina", say: ["This is Nina. She is an <em>Inuk</em>. You say it <em>ih-NOOK</em>. Her people are the <em>Inuit</em>, <em>IH-noo-it</em>, which means <em>the people</em>. They have lived in the Arctic for thousands of years.",
       "Nina's word for thank you is <em>nakurmiik</em>. You say it <em>na-koor-MEEK</em>. That is four languages I can say thank you in now. Five, with hoot.",
       "I asked Nina how anyone could live where it is this cold. She said, <em>very cleverly</em>. Clock, show us!"] },
+    { art: "campwindow", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "campwindow", say: ["The window into the past! A winter camp, long ago. Those round houses are made of snow.",
       "Nina's word for a house is <em>iglu</em>. You say it <em>IG-loo</em>. A snow iglu kept a family warm on winter journeys, even when the wind outside was fierce.",
       "And look up. The northern lights! First things first, though. Just how cold is it out there?"] },
@@ -457,7 +461,7 @@ Object.assign(ASK, {
 const SAY = [["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "ah-nish-ih-nah-bay"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "ih-nook-sook"], ["ih-NOOK", "ih-nook"], ["IH-noo-it", "ih-noo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kah-moo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-gee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Ah-nish-ih-nah-bay"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "ih-nook-sook"], ["Inuk", "Ih-nook"], ["Inuit", "Ih-noo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kah-moo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-gee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Comes Home", sub: "A Grade 5 story", saveKey: "grade5Canada.v1", medal: "g5",
   chapters: CHAPTERS, ask: ASK, art: ART, intro: INTRO, introVoice: "../audio/g5/intro/",
-  voice: "../audio/g5/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t) });
+  voice: "../audio/g5/s/", clockVoice: "../audio/g5/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t) });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
 </body>
