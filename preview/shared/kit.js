@@ -98,6 +98,9 @@ const Kit = (() => {
   // A lesson is [id, name, strand] for a place or station, and [id, name, the story's strand, { challenge: its strand }] for a chapter
   // (a chapter's story is social studies, history, geography or science; its challenges are mathematics).
   const chapters = list => list.map(([name, strand, asks], i) => ["ch" + (i + 1), name, strand, asks]);
+  // Books marked soon: true are on the preview copy only, for now: the real shelf does not have them, so there they are left out
+  // of every count (and of "finished everything"). WHEN A BOOK JOINS THE REAL SHELF, TAKE ITS soon: true AWAY.
+  const onPreview = /\/preview\//.test(location.pathname) || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   const LESSONS = [
     { id: "pre", grade: "Preschool", title: "Pip's Lost Eggs", save: "pipsLostEggs.v1", lessons: [["colors", "Berry Bush", "LB"], ["shapes", "Shape Rocks", "ME"], ["count", "Egg Count", "MB"], ["patterns", "Pattern Path", "MC"], ["shadows", "Shadow Cave", "ME"], ["sizes", "Big and Small", "ME"], ["body", "Pip's Body", "TB"], ["sounds", "Animal Sounds", "TB"]] },
     { id: "k", grade: "Kindergarten", title: "Dot's Busy Train", save: "dotsBusyTrain.v1", lessons: [["letters", "Letter Station", "LB"], ["sounds", "Sound Station", "LB"], ["rhymes", "Rhyme Station", "LB"], ["words", "Word Station", "LB"], ["count", "Counting Station", "MB"], ["moreless", "More or Less", "MB"], ["order", "What's Next?", "MB"], ["adding", "Adding Station", "MB"]] },
@@ -109,20 +112,20 @@ const Kit = (() => {
       ["The People of the Longhouse", "SA", { longhouse: "ME", families: "MB", sisters: "MB", years: "MB" }], ["The Canoe Routes", "SA", { route: "MB", load: "MB", speed: "MB", rice: "MB" }],
       ["Following the Seasons", "SA", { geese: "MD", calendar: "ME", snow: "ME", daylight: "MB" }], ["The Land of Ice and Stars", "SA", { cold: "MB", blocks: "MC", sled: "MB", stars: "ME" }],
       ["Home Again", "SA", { journey: "MB", river: "ME", dates: "MB", home: "MB" }]]) },
-    { id: "g6", grade: "Grade 6", title: "Dr. Somebody Goes East", save: "grade6East.v1", lessons: chapters([
+    { id: "g6", soon: true, grade: "Grade 6", title: "Dr. Somebody Goes East", save: "grade6East.v1", lessons: chapters([
       ["The City on the Cliff", "SA", { crossing: "MB", walls: "MB", trade: "MB", climb: "MB" }], ["The Long Farms", "SA", { lf_ribbon: "ME", lf_slant: "ME", lf_sap: "MB", lf_share: "MB" }],
       ["Holding Back the Sea", "SA", { ac_dyke: "MB", ac_gauge: "MB", ac_harvest: "MD", ac_depth: "MB" }], ["The People of the Dawn", "SA", { mk_turns: "ME", mk_triangles: "ME", mk_beads: "MC", mk_symmetry: "ME" }],
       ["The Harbour of Arrivals", "SA", { hx_numbers: "MB", hx_clock: "ME", hx_tally: "MD", hx_fares: "MF" }], ["The Edge of the Map", "SA", { nl_zones: "ME", nl_berg: "MB", nl_crates: "ME", nl_review: "MB" }]]) },
-    { id: "g7", grade: "Grade 7", title: "Dr. Somebody Heads West", save: "grade7West.v1", lessons: chapters([
+    { id: "g7", soon: true, grade: "Grade 7", title: "Dr. Somebody Heads West", save: "grade7West.v1", lessons: chapters([
       ["Where the Canoes Met", "H7B", { fw_pace: "MB", fw_load: "MB", fw_swap: "MC", fw_last: "MB" }], ["The Forks", "H7B", { fk_river: "MB", fk_pelts: "MF", fk_puzzle: "MC", fk_last: "MF" }],
       ["The People of the Red River", "H7B", { rr_wheel: "ME", rr_area: "ME", rr_pemmican: "MB", rr_last: "ME" }], ["The Sea of Grass", "H7B", { sg_big: "MB", sg_share: "MB", sg_decline: "MB", sg_last: "MB" }],
       ["The Land of Giants", "TE", { bl_big: "MB", bl_scale: "MB", bl_grid: "ME", bl_last: "MC" }], ["Wheat and Sky", "G7B", { ws_homestead: "ME", ws_bins: "ME", ws_weather: "MD", ws_last: "MB" }]]) },
-    { id: "g8", grade: "Grade 8", title: "Dr. Somebody and the Long Way Round", save: "grade8North.v1", lessons: chapters([
+    { id: "g8", soon: true, grade: "Grade 8", title: "Dr. Somebody and the Long Way Round", save: "grade8North.v1", lessons: chapters([
       ["The Last Spike", "H8A", { ls_climb: "MC", ls_hill: "ME", ls_pay: "MF", ls_last: "MB" }], ["The River of Gold", "H8A", { rg_graph: "MC", rg_big: "MB", rg_case: "MF", rg_last: "MB" }],
       ["The Harbour and the Cedar", "H8B", { hc_solid: "ME", hc_ratio: "MB", hc_water: "MB", hc_last: "MB" }], ["Every Child Matters", "H8B", {}],
       ["The Golden Stairs", "H8B", { gs_trips: "MC", gs_dust: "MF", gs_case: "MB", gs_last: "MB" }], ["The Top of the World", "TE", { tw_temps: "MB", tw_trend: "MD", tw_case: "MC", tw_last: "MC" }],
       ["Home", "H8B", { hm_friends: "MB", hm_last: "MB" }]]) }
-  ];
+  ].filter(L => onPreview || !L.soon);
   // Which strand an answer belongs to. station is a station's id ("times"), or a chapter's id with its challenge's strand ("ch2.ME").
   // (An answer saved for a whole chapter, as version 38 did, counts as Mathematics: Number, the commonest kind of challenge.)
   function strandOf(game, station) {
@@ -427,7 +430,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "39"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "40"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();
