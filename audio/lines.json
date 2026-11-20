@@ -1,6 +1,6 @@
 {
   "about": "Every recorded line in the games. The name on the left is the sound file; the words on the right are what the voice says. To change a line: edit the words, delete its sound file, and run tools/make-voice.py again. Only missing files are recorded, so nothing is paid for twice. A character whose voice id below is empty has not been given a voice yet, and their lines wait.",
-  "voices": {"dr-somebody": "auq43ws1oslv0tO4BDa7", "pip": "KoVIHoyLDrQyd4pGalbs", "dot": "vChnJZ1Cu89g2XXumPfT", "clock": ""},
+  "voices": {"dr-somebody": "auq43ws1oslv0tO4BDa7", "pip": "KoVIHoyLDrQyd4pGalbs", "dot": "vChnJZ1Cu89g2XXumPfT", "clock": "Xb7hH8MSUJpSbSDYk0k2"},
   "lines": {
     "audio/replay.mp3": ["dr-somebody", "Great job! You did it again!"],
 
