@@ -222,7 +222,8 @@ function ChapterGame(C) {
     if (ch.ok) {
       G.busy = true; sfx.yes(); el.classList.add("right"); (G.cards || [...$("choices").children]).forEach(b => { if (b !== el) b.classList.add("dim"); });
       G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1);
-      Kit.track(C.medal, C.title, "ch" + (at.c + 1), CHAPTERS[at.c].title, 0, { say: q.text, choices: q.choices }, G.wrongs === 0, false); // for the progress report (a chapter has no difficulty steps, so the step is 0)
+      const strand = Kit.askStrand(C.medal, "ch" + (at.c + 1), G.beat.ask); // which part of mathematics this challenge practises
+      Kit.track(C.medal, C.title, "ch" + (at.c + 1) + "." + strand, CHAPTERS[at.c].title + " · " + Kit.STRANDS[strand][1], 0, { say: q.text, choices: q.choices }, G.wrongs === 0, false); // for the progress report (a chapter has no difficulty steps, so the step is 0)
       $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
       await wait(2600); if (G !== g) return;
       if (G.stars < G.need) return nextAsk();

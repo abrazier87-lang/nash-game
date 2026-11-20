@@ -292,6 +292,8 @@ function track(station, stationName, step, q, firstTry, hinted) { // hinted: a h
     s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift();
     const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     s.last = day; P.days[day] = (P.days[day] || 0) + 1;
+    const strand = { colors: "LB", shapes: "ME", count: "MB", patterns: "MC", shadows: "ME", sizes: "ME", body: "TB", sounds: "TB" }[station]; // the subject and strand (the same codes as STRANDS in shared/kit.js), counted month by month
+    if (strand) { const M = P.months || (P.months = {}), m = M[day.slice(0, 7)] || (M[day.slice(0, 7)] = {}), c = m[strand] || (m[strand] = [0, 0]); c[0]++; if (firstTry) c[1]++; }
     if (!firstTry) {
       const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
       const label = plain(q.say) + (answer ? " → " + answer : "") + (hinted ? " · used a hint" : "");
