@@ -165,7 +165,7 @@ const Kit = (() => {
   const settings = Object.assign({ voice: true, sound: true, voiceName: "" }, get("storyShelf.settings", {}));
   const saveSettings = () => put("storyShelf.settings", settings);
 
-  // ---------- voice (the device's built-in talking voice) ----------
+  // ---------- voice settings (the device's own voice is no longer used) ----------
   let voice = null;
   function voiceScore(v) {
     const n = v.name + " " + (v.voiceURI || "");
@@ -177,31 +177,17 @@ const Kit = (() => {
     if (/compact|eloquence|Eddy|Flo\b|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Albert|Bad News|Good News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Kathy|Ralph|Fred/i.test(n)) s -= 40;
     return s;
   }
-  function englishVoices() {
-    if (!("speechSynthesis" in window)) return [];
-    return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
-  }
-  function chooseVoice() { const vs = englishVoices(); voice = vs.find(v => v.name === settings.voiceName) || vs[0] || null; }
-  if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
-  // Says the words out loud. It hands back a promise that finishes when the voice has finished talking
-  // (true), or straight away if the voice is switched off (false), so a game can wait for the end of a line.
-  let talking = null;
+  function englishVoices() { return []; } // the device voices are no longer used
+  function chooseVoice() {} // kept so older pages do not break: there is no device voice to choose any more
+  // The games used to fall back on the device's own ("robot") voice when a line had no recording. They no longer do:
+  // every line is a recording in a chosen voice, and a line without one is simply shown in writing.
+  // say() now only waits about as long as reading the words takes, so a game keeps its pace. It hands back true when
+  // that time is up, or false straight away if the voice is switched off (or if something else starts in the meantime).
   function say(text, force) {
     return new Promise(resolve => {
-      stopClip(); const mine = turn; // a new line always cuts off a recorded line that is still playing; "mine" lets this line notice if it is cut off in turn
-      if ((!settings.voice && !force) || !("speechSynthesis" in window)) return resolve(false);
-      try {
-        speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        if (voice) u.voice = voice;
-        u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05;
-        let finished = false;
-        const done = () => { if (!finished) { finished = true; resolve(mine === turn); } }; // true only if nothing else started talking in the meantime
-        u.onend = done; u.onerror = done;
-        setTimeout(done, Math.max(8000, text.length * 260)); // safety net: some devices never report that they finished
-        talking = u; // keeps the browser from forgetting the line half way through
-        setTimeout(() => { if (mine === turn) speechSynthesis.speak(u); else done(); }, 60); // a line that was already cut off is not spoken late
-      } catch (e) { resolve(false); }
+      stopClip(); const mine = turn; // a new line always cuts off a recorded line that is still playing
+      if (!text || (!settings.voice && !force)) return resolve(false);
+      setTimeout(() => resolve(mine === turn), 900 + String(text).length * 55);
     });
   }
   // Says a line and waits until it is really over. Two safeguards, because some tablets report "finished" too early:
@@ -211,11 +197,11 @@ const Kit = (() => {
     if (!(await say(text))) return wait(quietPause); // voice is off: just a short pause
     await longEnough; await wait(600);
   }
-  const hush = () => { stopClip(); if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+  const hush = () => { stopClip(); };
 
   // ---------- recorded lines (a character's own voice, saved as sound files in the "audio" folder) ----------
-  // playClip plays one recorded line. If the file is missing or cannot play, it says "fallback" in the device voice instead,
-  // so a game never goes silent. Like say(), it hands back a promise that finishes when the line is over.
+  // playClip plays one recorded line. If the file is missing or cannot play, the game waits about as long as reading
+  // "fallback" takes (the words are on the screen), and never uses the device voice. Like say(), it hands back a promise that finishes when the line is over.
   const clips = {}; let playing = null, turn = 0;
   // The file name for a recorded line, made from its words: the same words always give the same name
   // (tools/make-voice.py records the files listed in audio/lines.json under these names).
@@ -326,7 +312,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "34"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "35"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, audio, sfx, animate, confetti, hold, esc };
 })();
