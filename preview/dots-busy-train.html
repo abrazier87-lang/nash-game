@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=34">
+<link rel="stylesheet" href="shared/kit.css?v=35">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=34"></script>
+<script src="shared/kit.js?v=35"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -875,11 +875,9 @@ $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "ind
 // ---------- grown-ups corner (press and hold the gear) ----------
 function openGrown() {
   Kit.hush();
-  const voices = Kit.englishVoices(), v = Kit.currentVoice();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p><b>Kindergarten (ages 5-6).</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
-    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <p>Passengers picked up so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Trains sent to the fair: <b>${S.trips}</b> &nbsp;|&nbsp; Souvenirs: <b>${(S.souvenirs || []).length}</b></p>
     <p class="soon">Rides grow as a child plays: the first ride takes 1 passenger and 3 right answers, the second takes 2 passengers, then a full train of 4.</p>
     ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${STEP_NAMES[id][S.skill[id] - 1]}</small></div>
@@ -894,7 +892,6 @@ Kit.hold($("grownBtn"), openGrown);
 $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act, id = t.dataset.id;
-  if (act === "test") { say(`Hi${NAME ? " " + NAME : ""}! I'm Dot. All aboard!`, true); return; }
   if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
   if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
   if (act === "auto") S.auto = !S.auto;
@@ -907,7 +904,6 @@ $("grownPanel").addEventListener("click", e => {
   openGrown();
 });
 $("grownPanel").addEventListener("change", e => {
-  if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
 });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>

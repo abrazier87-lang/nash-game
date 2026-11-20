@@ -404,11 +404,9 @@ function StoryGame(C) {
   // ---------- grown-ups corner (press and hold the gear) ----------
   function openGrown() {
     Kit.hush();
-    const voices = Kit.englishVoices(), v = Kit.currentVoice();
     $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
       <p><b>${C.gradeLabel}.</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
       <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
-    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
       <p>Places won so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Times the story was finished: <b>${S.trips}</b></p>
       ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${C.stepNames[id][S.skill[id] - 1]}</small></div>
         <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
@@ -448,7 +446,6 @@ function StoryGame(C) {
   $("grownPanel").addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
     const act = t.dataset.act, id = t.dataset.id;
-    if (act === "test") { Kit.say(C.lines.test(NAME), true); return; } // tests the device voice picked above
     if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
     if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
     if (act === "auto") S.auto = !S.auto;
@@ -461,7 +458,6 @@ function StoryGame(C) {
     openGrown();
   });
   $("grownPanel").addEventListener("change", e => {
-    if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
   });
 
   // Handy for testing from outside.

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=34">
+<link rel="stylesheet" href="shared/kit.css?v=35">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -61,7 +61,7 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=34"></script>
+<script src="shared/kit.js?v=35"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -92,7 +92,7 @@ $("who").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   Kit.audio(); Kit.sfx.tap();
   if (t.dataset.add) { askName(); return; }
-  Kit.setCurrent(t.dataset.id); Kit.say("Hi " + t.textContent + "! Pick a book.");
+  Kit.setCurrent(t.dataset.id); Kit.playClip(HELLO, "");
   drawWho();
 });
 
@@ -105,7 +105,7 @@ function askName() {
     <input id="popName" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="The child's name">
     <div class="row"><button id="popNo">Cancel</button><button class="main" id="popYes">Save</button></div>`;
   $("pop").classList.add("on");
-  const box = $("popName"), save = () => { const name = box.value.trim(); closePop(); if (name) { const p = Kit.addPlayer(name); if (p) Kit.say("Hi " + p.name + "!"); } drawWho(); };
+  const box = $("popName"), save = () => { const name = box.value.trim(); closePop(); if (name) { const p = Kit.addPlayer(name); if (p) Kit.playClip(HELLO, ""); } drawWho(); };
   $("popYes").addEventListener("click", () => { Kit.sfx.tap(); save(); }); $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
   box.addEventListener("keydown", e => { if (e.key === "Enter") save(); else if (e.key === "Escape") closePop(); });
   box.focus();
@@ -129,14 +129,14 @@ function drawShelf() {
 drawShelf();
 
 // ---------- grown-ups (press and hold the gear) ----------
+const HELLO = "../audio/shelf/" + Kit.clipName("Hi! Pick a book.") + ".mp3"; // the greeting, in Dr. Somebody's recorded voice (names are shown, not spoken)
 function openGrown() {
   Kit.hush();
-  const voices = Kit.englishVoices(), v = Kit.currentVoice(), list = Kit.players();
+  const list = Kit.players();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p>Each child gets their own saved progress. It is kept only on this device, so make a backup now and then (below).</p>
     ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
-    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(x => `<option value="${Kit.esc(x.name)}"${v && x.name === v.name ? " selected" : ""}>${Kit.esc(x.name)}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
     <h3 style="margin:16px 0 2px">💾 Back up progress</h3>
@@ -157,7 +157,6 @@ Kit.hold($("grownBtn"), openGrown);
 $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act;
-  if (act === "test") { Kit.say("Hello! Pick a book to play.", true); return; }
   if (act && (act === "backup" || act === "copy" || act.startsWith("restore"))) { backupAction(act); return; }
   if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
@@ -167,7 +166,6 @@ $("grownPanel").addEventListener("click", e => {
   openGrown();
 });
 $("grownPanel").addEventListener("change", e => {
-  if (e.target.id === "voicePick") { Kit.settings.voiceName = e.target.value; Kit.chooseVoice(); Kit.saveSettings(); }
   if (e.target.id === "backupFile" && e.target.files[0]) { // a backup file was picked: read it, then restore
     const reader = new FileReader();
     reader.onload = () => restoreFrom(reader.result);

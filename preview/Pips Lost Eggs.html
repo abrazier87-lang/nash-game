@@ -246,7 +246,7 @@ try {
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 if (S.clutches > 0) stamp("pre"); // children who finished Pip's adventure before medals existed still get theirs
 
-// ---------- voice (the device's built-in talking voice) ----------
+// ---------- voice settings (the device's own voice is no longer used) ----------
 // The game looks through the voices this device has and picks the most natural-sounding female one.
 // Grown-ups can choose a different one in the grown-ups panel.
 let voice = null;
@@ -260,15 +260,8 @@ function voiceScore(v) {
   if (/compact|eloquence|Eddy|Flo\b|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Albert|Bad News|Good News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Kathy|Ralph|Fred/i.test(n)) s -= 40;
   return s;
 }
-function englishVoices() {
-  if (!("speechSynthesis" in window)) return [];
-  return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
-}
-function chooseVoice() {
-  const vs = englishVoices();
-  const wanted = sharedSettings().voiceName || S.voiceName; // the voice picked on the book shelf, else Pip's own older choice
-  voice = vs.find(v => v.name === wanted) || vs[0] || null;
-}
+function englishVoices() { return []; } // the device voices are no longer used
+function chooseVoice() {}
 // Settings shared by every game on the shelf (the same place the other games keep them).
 function sharedSettings() { try { return JSON.parse(localStorage.getItem("storyShelf.settings") || "{}") || {}; } catch (e) { return {}; } }
 function shareVoice(name) { try { const s = sharedSettings(); s.voiceName = name; localStorage.setItem("storyShelf.settings", JSON.stringify(s)); } catch (e) {} }
@@ -297,7 +290,6 @@ function track(station, stationName, step, q, firstTry, hinted) { // hinted: a h
     localStorage.setItem(key, JSON.stringify(P));
   } catch (e) {}
 }
-if ("speechSynthesis" in window) { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; }
 // ---------- recorded lines (Pip's own voice, saved as sound files in audio/pip/) ----------
 // playClip plays one recorded line. If the file is missing or cannot play, "fallback" is said in the device voice instead,
 // so the game never goes silent. It hands back a promise that is true if the line played all the way to its end,
@@ -313,7 +305,7 @@ function loadClip(url) { // fetch a line ahead of time so it starts without a pa
   return clips[url];
 }
 function stopClip() { turn++; if (playing) { const src = playing; playing = null; try { src.onended = null; src.stop(); } catch (e) {} if (src.cutOff) src.cutOff(); } }
-const hush = () => { stopClip(); if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+const hush = () => { stopClip(); };
 function playClip(url, fallback) {
   return new Promise(async resolve => {
     if (!S.voice) { stopClip(); return resolve(false); }
@@ -350,22 +342,11 @@ async function talkAndWait(parts, quietPause) { // says it and waits until it is
 }
 
 let lastSaid = "";
-function say(text) {
+function say(text) { // the device voice is no longer used: this only waits about as long as the words take to read
   lastSaid = text; stopClip(); const mine = turn; // a new line always cuts off a recorded line that is still playing
   return new Promise(resolve => {
-    if (!S.voice || !("speechSynthesis" in window)) return resolve(false);
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      if (voice) u.voice = voice;
-      u.lang = voice ? voice.lang : "en-US"; u.rate = 0.9; u.pitch = 1.05; // gentle and unhurried, close to the voice's natural sound
-      let finished = false;
-      const done = () => { if (!finished) { finished = true; resolve(mine === turn); } };
-      u.onend = done; u.onerror = done;
-      setTimeout(done, Math.max(8000, text.length * 260)); // safety net: some devices never report that they finished
-      talking = u; // keeps the browser from forgetting the line half way through
-      setTimeout(() => { if (mine === turn) speechSynthesis.speak(u); else done(); }, 60);
-    } catch (e) { resolve(false); }
+    if (!text || !S.voice) return resolve(false);
+    setTimeout(() => resolve(mine === turn), 900 + String(text).length * 55);
   });
 }
 // Says a line and waits until it is really over. Two safeguards, because some tablets report "finished" too early:
@@ -1046,11 +1027,9 @@ function openGrown() {
     shapes: ["circle, square, triangle", "adds star and heart", "8 shapes", "8 shapes, by name only"], patterns: ["2 colors taking turns", "2 things taking turns", "3 choices", "two-then-one pattern"],
     body: ["head, tummy, tail", "adds feet and eye", "adds arm and nose", "adds mouth"], sounds: ["4 animals, 2 choices", "6 animals, 3 choices", "10 animals, 3 choices", "10 animals, 4 choices"]
   };
-  const voices = englishVoices();
   $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
     <p><b>Preschool (ages 2-4).</b> ${NAME ? "Playing as <b>" + NAME.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
-    <div class="line"><div>Voice for the questions (the same in every game)<br><select id="voicePick">${voices.length ? voices.map(v => `<option value="${v.name.replace(/"/g, "&quot;")}"${voice && v.name === voice.name ? " selected" : ""}>${v.name}</option>`).join("") : "<option>(this device has no voices)</option>"}</select></div><button data-act="test">Test</button></div>
     <p>Eggs hatched so far: <b>${S.friends.length}</b> &nbsp;|&nbsp; Full adventures finished: <b>${S.clutches}</b></p>
     ${GAME_IDS.map(id => `<div class="line"><div><b>${GAMES[id].name}</b><br><small>Step ${S.skill[id]} of 4: ${stepNames[id][S.skill[id] - 1]}</small></div>
       <div class="pm"><button data-act="down" data-id="${id}">-</button><button data-act="up" data-id="${id}">+</button></div></div>`).join("")}
@@ -1063,7 +1042,6 @@ function openGrown() {
 $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act, id = t.dataset.id;
-  if (act === "test") { const was = S.voice; S.voice = true; say(`Hi${NAME ? " " + NAME : ""}! I'm Pip. Let's find the eggs!`); S.voice = was; return; }
   if (act === "up") S.skill[id] = Math.min(4, S.skill[id] + 1);
   if (act === "down") S.skill[id] = Math.max(1, S.skill[id] - 1);
   if (act === "auto") S.auto = !S.auto;
@@ -1077,7 +1055,6 @@ $("grownPanel").addEventListener("click", e => {
 });
 
 $("grownPanel").addEventListener("change", e => {
-  if (e.target.id === "voicePick") { S.voiceName = e.target.value; shareVoice(e.target.value); chooseVoice(); save(); } // one choice for every game
 });
 
 // Stop pinch-zoom and double-tap zoom so little fingers can't shrink the game.
