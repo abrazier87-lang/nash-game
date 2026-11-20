@@ -222,7 +222,7 @@ const Kit = (() => {
   function playClip(url, fallback) {
     return new Promise(async resolve => {
       if (!settings.voice) { stopClip(); return resolve(false); }
-      hush(); const mine = turn; // if anything else starts talking while this line loads, "turn" moves on and this line stays quiet
+      stopClip(); stopMusic(1.4); const mine = turn; // if anything else starts talking while this line loads, "turn" moves on and this line stays quiet
       try {
         const ac = audio(), sound = await loadClip(url);
         if (ac.state === "suspended") await ac.resume();
@@ -231,7 +231,7 @@ const Kit = (() => {
         const src = ac.createBufferSource(); src.buffer = sound; src.connect(ac.destination);
         src.onended = () => { if (playing === src) playing = null; resolve(true); if (musicNext) setTimeout(() => { const go = musicNext; if (go && !playing) { musicNext = null; go(); } }, 350); }; // music that was waiting for the voice to finish starts now
         src.cutOff = () => resolve(false); // another line interrupted this one
-        stopMusic(); playing = src; src.start(); // a voice always takes over from the music
+        stopMusic(1.4); playing = src; src.start(); // a voice always takes over from the music, which fades away gently instead of stopping dead
       } catch (e) { if (mine === turn) say(fallback).then(resolve); else resolve(false); }
     });
   }
@@ -335,7 +335,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "36"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "37"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

@@ -224,7 +224,7 @@ function ChapterGame(C) {
       G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
       await wait(2600); if (G !== g) return;
       if (G.stars < G.need) return nextAsk();
-      if (!G.quiet) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } const tune = Kit.music("well-done"); if (!tune) sfx.party(); confetti(40); await wait(tune ? 1900 : 0); } // with music on, the jingle gets a little longer before the story moves on
+      if (!G.quiet) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } const tune = Kit.music("well-done"); if (!tune) sfx.party(); confetti(40); await wait(tune ? 2100 : 0); } // with music on, the three-second jingle plays right to its end before the story moves on
       await wait(1300); if (G !== g) return;
       G = null; openBeat(at.c, at.b + 1);
     } else {
