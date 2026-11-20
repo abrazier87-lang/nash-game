@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=37">
+<link rel="stylesheet" href="shared/kit.css?v=38">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=37"></script>
+<script src="shared/kit.js?v=38"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -671,7 +671,7 @@ function adjust(firstTry) {
   save();
 }
 function finishGame() {
-  const id = G.id; G = null;
+  const id = G.id; G = null; Kit.finish("k", id); // a round was won here: the lesson is finished (for the progress report)
   if (S.aboard[id]) { // this station's passenger is already on the train: just celebrate
     sfx.party(); confetti(30);
     Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the stations once Dot has finished

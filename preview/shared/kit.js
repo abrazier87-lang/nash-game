@@ -48,7 +48,7 @@ const Kit = (() => {
   // ---------- medals (a child earns one the first time they finish a game's story) ----------
   const stampKey = () => { const p = currentPlayer(); return "storyShelf.stamps" + (p ? "." + p.id : ""); };
   const stamps = () => get(stampKey(), []);
-  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); music("new-medal"); } } // a new medal gets its own little tune
+  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); storyDone(id); music("new-medal"); } } // a new medal gets its own little tune (and the day goes in the progress report)
 
   // ---------- progress, for the grown-ups' progress report (progress.html) ----------
   // Every answered question is noted for the child who is playing: the game, the station, the difficulty step,
@@ -75,6 +75,60 @@ const Kit = (() => {
       put(progressKey(), P);
     } catch (e) {}
   }
+
+  // ---------- finished lessons (for the progress report, and one day for a hidden graduation scene) ----------
+  // LESSONS lists every lesson on the shelf, in shelf order. A "lesson" is one place or station (Preschool to Grade 4)
+  // or one chapter (Grades 5 to 8). WHEN YOU ADD A STATION OR A CHAPTER TO A GAME, ADD IT HERE TOO: this list is how the
+  // report knows what is still left to do in a book the child has not even opened yet.
+  // "save" is the name the game saves under (used to recognise lessons finished before this record existed).
+  const chapters = names => names.map((n, i) => ["ch" + (i + 1), n]);
+  const LESSONS = [
+    { id: "pre", grade: "Preschool", title: "Pip's Lost Eggs", save: "pipsLostEggs.v1", lessons: [["colors", "Berry Bush"], ["shapes", "Shape Rocks"], ["count", "Egg Count"], ["patterns", "Pattern Path"], ["shadows", "Shadow Cave"], ["sizes", "Big and Small"], ["body", "Pip's Body"], ["sounds", "Animal Sounds"]] },
+    { id: "k", grade: "Kindergarten", title: "Dot's Busy Train", save: "dotsBusyTrain.v1", lessons: [["letters", "Letter Station"], ["sounds", "Sound Station"], ["rhymes", "Rhyme Station"], ["words", "Word Station"], ["count", "Counting Station"], ["moreless", "More or Less"], ["order", "What's Next?"], ["adding", "Adding Station"]] },
+    { id: "g1", grade: "Grade 1", title: "Dr. Somebody's Space Balloon", save: "grade1Space.v1", lessons: [["read", "Word World"], ["spell", "Spelling Star"], ["sentence", "Sentence Station"], ["plus", "Plus Planet"], ["minus", "Minus Moon"], ["tens", "Tens Tower"], ["clock", "Calendar Comet"], ["skip", "Skip-Count Rings"]] },
+    { id: "g2", grade: "Grade 2", title: "Dr. Somebody in Ancient Egypt", save: "grade2Egypt.v1", lessons: [["add", "Pyramid Sums"], ["sub", "Nile Take-Away"], ["tokens", "Market Coins"], ["time", "Sundial Time"], ["words", "Hieroglyph Words"], ["scribe", "Scribe School"], ["scroll", "Explorer's Scroll"], ["rows", "Stone Rows"]] },
+    { id: "g3", grade: "Grade 3", title: "Dr. Somebody in Ancient China", save: "grade3China.v1", lessons: [["times", "Great Wall Times"], ["share", "Silk Road Sharing"], ["fractions", "Dumpling Fractions"], ["abacus", "Abacus Numbers"], ["money", "Coin Counting"], ["graphs", "Market Graphs"], ["patterns", "Silk Patterns"], ["garden", "Palace Gardens"], ["problems", "Problem Bridge"], ["words", "Lantern Words"], ["grammar", "Scholar's Grammar"], ["scroll", "Explorer's Scroll"]] },
+    { id: "g4", grade: "Grade 4", title: "Dr. Somebody in Ancient Rome", save: "grade4Rome.v1", lessons: [["numerals", "Roman Numerals"], ["multiply", "Legion Lines"], ["divide", "Aqueduct Sharing"], ["fractions", "Mosaic Fractions"], ["decimals", "Market Decimals"], ["shapes", "Architect's Angles"], ["measure", "Roman Roads"], ["camp", "Legion Camp"], ["formations", "Legion Formations"], ["data", "Senate Numbers"], ["problems", "Forum Problems"], ["market", "Roman Market"], ["roots", "Latin Words"], ["grammar", "Orator's Grammar"], ["scroll", "Explorer's Scroll"]] },
+    { id: "g5", grade: "Grade 5", title: "Dr. Somebody Comes Home", save: "grade5Canada.v1", lessons: chapters(["The People of the Longhouse", "The Canoe Routes", "Following the Seasons", "The Land of Ice and Stars", "Home Again"]) },
+    { id: "g6", grade: "Grade 6", title: "Dr. Somebody Goes East", save: "grade6East.v1", lessons: chapters(["The City on the Cliff", "The Long Farms", "Holding Back the Sea", "The People of the Dawn", "The Harbour of Arrivals", "The Edge of the Map"]) },
+    { id: "g7", grade: "Grade 7", title: "Dr. Somebody Heads West", save: "grade7West.v1", lessons: chapters(["Where the Canoes Met", "The Forks", "The People of the Red River", "The Sea of Grass", "The Land of Giants", "Wheat and Sky"]) },
+    { id: "g8", grade: "Grade 8", title: "Dr. Somebody and the Long Way Round", save: "grade8North.v1", lessons: chapters(["The Last Spike", "The River of Gold", "The Harbour and the Cedar", "Every Child Matters", "The Golden Stairs", "The Top of the World", "Home"]) }
+  ];
+  const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  function gameRecord(P, game) { const L = LESSONS.find(x => x.id === game); return P.games[game] || (P.games[game] = { title: L ? L.title : game, stations: {} }); }
+  // A game calls finish(game, lesson) each time a child finishes a lesson: the first time, the day is written down
+  // (in the same record as the answers, so it is kept per child and travels with a backup).
+  function finish(game, lesson) {
+    try {
+      const P = get(progressKey(), null) || { v: 1, games: {}, days: {} }, g = gameRecord(P, game), f = g.finished || (g.finished = {});
+      if (!f[lesson]) { f[lesson] = today(); put(progressKey(), P); }
+    } catch (e) {}
+  }
+  function storyDone(game) { // the whole story was finished (the medal): the first time, the day is written down
+    try { const P = get(progressKey(), null) || { v: 1, games: {}, days: {} }, g = gameRecord(P, game); if (!g.story) { g.story = today(); put(progressKey(), P); } } catch (e) {}
+  }
+  // What a child has finished and what is left. childId: a child's id (null for "no name picked"); leave it out for whoever is playing.
+  // Lessons finished before this record existed have no day; they are recognised from the game's own save where it shows them.
+  // Hands back { games: [{ id, grade, title, lessons: [{ id, name, done, date }], done, total, story, storyDate }],
+  //              done, total (lessons), stories, everything (true or false), missing: [{ game, grade, title, lesson, name }] }
+  function finished(childId) {
+    if (childId === undefined) { const p = currentPlayer(); childId = p ? p.id : null; }
+    const end = childId ? "." + childId : "", P = get("storyShelf.progress" + end, null) || {}, medals = get("storyShelf.stamps" + end, []), missing = [];
+    const games = LESSONS.map(L => {
+      const rec = (P.games || {})[L.id] || {}, dated = rec.finished || {};
+      const S = get(L.save + (L.id === "pre" && childId === "p1" ? "" : end), null) || {}; // (Pip's game keeps the first child's save under the plain name)
+      const old = [S.found, S.aboard, S.medals].flatMap(o => Object.keys(o || {})).concat((Array.isArray(S.done) ? S.done : []).map(i => "ch" + (i + 1)));
+      const lessons = L.lessons.map(([id, name]) => ({ id, name, done: !!dated[id] || old.includes(id), date: dated[id] || null }));
+      const story = !!rec.story || (Array.isArray(medals) && medals.includes(L.id));
+      lessons.forEach(l => { if (!l.done) missing.push({ game: L.id, grade: L.grade, title: L.title, lesson: l.id, name: l.name }); });
+      if (!story) missing.push({ game: L.id, grade: L.grade, title: L.title, lesson: null, name: "Finish the story" });
+      return { id: L.id, grade: L.grade, title: L.title, lessons, done: lessons.filter(l => l.done).length, total: lessons.length, story, storyDate: rec.story || null };
+    });
+    return { games, done: games.reduce((a, g) => a + g.done, 0), total: games.reduce((a, g) => a + g.total, 0), stories: games.filter(g => g.story).length, everything: !missing.length, missing };
+  }
+  // THE ONE QUESTION for a graduation scene: has this child finished every lesson and every story, from Preschool up?
+  // Kit.finishedEverything() answers for whoever is playing (or give a child's id): { yes: true or false, missing: [what is still to do] }.
+  function finishedEverything(childId) { const f = finished(childId); return { yes: f.everything, missing: f.missing, done: f.done, total: f.total }; }
 
   // ---------- backup: everything the Story Shelf keeps on this device, as one code ----------
   // Progress lives only on the device (and an iPad keeps a separate store for each home-screen icon), so a grown-up can
@@ -335,7 +389,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "37"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "38"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

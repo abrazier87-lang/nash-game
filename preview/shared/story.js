@@ -251,7 +251,7 @@ function StoryGame(C) {
     save();
   }
   function finishGame() {
-    const id = G.id; G = null;
+    const id = G.id; G = null; Kit.finish(C.medal, id); // a round was won here: the lesson is finished (for the progress report)
     const step = S.skill[id], level = step >= 4 ? 3 : step >= 3 ? 2 : 1, medals = S.medals || (S.medals = {});
     if (level > (medals[id] || 0)) { medals[id] = level; newMedal = id; save(); }
     if (S.aboard[id]) { sfx.party(); confetti(30); Promise.all([speak("replay", C.lines.replay), wait(2600)]).then(() => { if (current === "game") showMap(); }); } // back to the map once the host has finished // already won here this trip

@@ -179,7 +179,7 @@ function ChapterGame(C) {
   $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats;
     if (at.line < sceneAt().say.length - 1) { at.line++; drawLine(); return; }
     if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
-    const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } const quietOne = CHAPTERS[at.c].quiet; Kit.hush(); if (!quietOne) confetti(80); // the chapter is finished
+    const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } Kit.finish(C.medal, "ch" + (at.c + 1)); /* the chapter is a finished lesson (for the progress report) */ const quietOne = CHAPTERS[at.c].quiet; Kit.hush(); if (!quietOne) confetti(80); // the chapter is finished
     if (CHAPTERS.every((c, i) => !c.beats || S.done.includes(i)) && CHAPTERS.every(c => c.beats)) { const had = Kit.stamps().includes(C.medal); Kit.stamp(C.medal); confetti(120); if (had && !quietOne && !Kit.music("chapter-complete")) sfx.party(); } // every chapter done: the medal goes on the book shelf (a new medal plays its own tune)
     else if (!quietOne && !Kit.music("chapter-complete")) sfx.party();
     showMap(); if (C.certificate && first && allDone()) showCert(); });
@@ -221,7 +221,9 @@ function ChapterGame(C) {
     const q = G.q, g = G;
     if (ch.ok) {
       G.busy = true; sfx.yes(); el.classList.add("right"); (G.cards || [...$("choices").children]).forEach(b => { if (b !== el) b.classList.add("dim"); });
-      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
+      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1);
+      Kit.track(C.medal, C.title, "ch" + (at.c + 1), CHAPTERS[at.c].title, 0, { say: q.text, choices: q.choices }, G.wrongs === 0, false); // for the progress report (a chapter has no difficulty steps, so the step is 0)
+      $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
       await wait(2600); if (G !== g) return;
       if (G.stars < G.need) return nextAsk();
       if (!G.quiet) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } const tune = Kit.music("well-done"); if (!tune) sfx.party(); confetti(40); await wait(tune ? 2100 : 0); } // with music on, the three-second jingle plays right to its end before the story moves on

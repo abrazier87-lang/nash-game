@@ -39,21 +39,49 @@
   details ul { margin:6px 0 0; padding-left:20px; font-size:14px; }
   .empty { background:var(--card); border-radius:14px; padding:20px; }
   .foot { color:var(--soft); font-size:13px; margin-top:22px; }
-  @media (max-width:600px) { .row { grid-template-columns:1fr; gap:4px; } }
+  .chip.big { display:inline-block; font-size:17px; padding:12px 22px; background:#ffe9a8; border-color:#e0a400; margin:0 0 16px; }
+  .fin p { margin:6px 0 0; font-size:15px; } .fin small { color:var(--soft); }
+  .game .fin { margin:6px 0 10px; }
+  .notstarted { margin-top:16px; } .notstarted ul { margin:0; padding-left:20px; } .notstarted li { margin:3px 0; }
+  /* The "sheet view": the same report, laid out to print or save as a PDF for a teacher. */
+  #sheetBar, #sheetHead, #sheetEnd { display:none; }
+  body.sheet #sheetBar { display:block; background:var(--card); border-radius:14px; padding:12px 16px; margin-bottom:14px; }
+  body.sheet #sheetBar small { display:block; color:var(--soft); margin-top:8px; }
+  body.sheet #sheetHead { display:block; margin-bottom:14px; }
+  body.sheet #sheetHead h1 { margin:0 0 6px; } body.sheet #sheetHead p { margin:4px 0; }
+  body.sheet #sheetEnd { display:block; color:var(--soft); font-size:12px; margin-top:18px; }
+  body.sheet .back, body.sheet .who, body.sheet #sheetBtn, body.sheet .foot, body.sheet header h1 { display:none; }
+  @media screen and (max-width:600px) { .row { grid-template-columns:1fr; gap:4px; } }
+  @page { margin:14mm; }
+  @media print {
+    html, body { background:#fff; }
+    .tile, .list, section.game, .empty { box-shadow:none; }
+    #sheetBar, .back, .who, #sheetBtn, .foot { display:none !important; }
+    .bar, .bar i, .tag { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+    section.game, .row, .tile, .list { break-inside:avoid; }
+    .wrap { max-width:none; padding:0; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div id="sheetBar">
+    <button class="chip" id="sheetPrint">Print, or save as PDF</button>
+    <button class="chip" id="sheetBack">← Back to the report</button>
+    <small>In the print window, choose 'Save as PDF' to keep a copy. On an iPad, tap Share, then Print or Save to Files.</small>
+  </div>
+  <div id="sheetHead"></div>
   <header>
     <h1>Progress Report</h1>
     <a class="back" href="index.html">← Book shelf</a>
   </header>
   <div class="who" id="who"></div>
+  <div id="sheetBtnBox"></div>
   <div id="report"></div>
   <p class="foot" id="foot"></p>
 </div>
 
-<script src="shared/kit.js?v=37"></script>
+<script src="shared/kit.js?v=38"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -61,14 +89,17 @@
    Reads what the games note as each child plays (see "track" in shared/kit.js):
    for every station, how many questions, how many were right first time,
    the difficulty step, and the questions that needed another try.
-   Nothing here leaves the device.
+   Nothing here leaves the device, unless a grown-up presses the
+   "Save or print a report for a teacher" button (then it is only printed or saved by them).
    ===================================================================== */
-const ORDER = ["pre", "k", "g1", "g2", "g3", "g4"]; // shelf order
+const ORDER = Kit.LESSONS.map(L => L.id); // shelf order
 const keyFor = id => "storyShelf.progress" + (id ? "." + id : "");
 const read = id => { try { return JSON.parse(localStorage.getItem(keyFor(id)) || "null"); } catch (e) { return null; } };
 const esc = Kit.esc, pct = x => Math.round(x * 100) + "%";
 const dayName = d => new Date(d + "T12:00:00").toLocaleDateString("en-CA", { month: "short", day: "numeric" });
-const dayKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const dayYear = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); // e.g. 12 Nov 2026
+const longToday = () => new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }); // e.g. 20 November 2026
+const dayKey =d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 
 const kids = Kit.players().map(p => ({ id: p.id, name: p.name }));
 if (read(null)) kids.push({ id: null, name: "No name picked" });
@@ -78,12 +109,18 @@ let chosen = (Kit.currentPlayer() || kids[0] || { id: null }).id;
 function judge(s) {
   const rec = s.recent || [], n = rec.length, right = rec.filter(r => r[1]).length, rate = n ? right / n : 0;
   const step = n ? rec[n - 1][0] : 1, firstStep = n ? rec[0][0] : 1;
-  const trend = step > firstStep ? " · stepped up ↑" : step < firstStep ? " · stepped down ↓" : "";
-  if (s.asked < 6) return { rate, step, trend, n, tag: "Just started", color: "var(--grey)", rank: 2, advice: "Not enough answers yet to tell. Keep playing." };
-  if (step === 4 && rate >= 0.8) return { rate, step, trend, n, tag: "Mastered", color: "var(--gold)", rank: 5, advice: "Mastered at the hardest step. Ready for the next book on the shelf." };
-  if (rate >= 0.8) return { rate, step, trend, n, tag: "Doing well", color: "var(--green)", rank: 4, advice: "Going well. The game makes it harder on its own." };
-  if (rate >= 0.6) return { rate, step, trend, n, tag: "Practising", color: "var(--blue)", rank: 3, advice: "Getting there. Short, regular play helps most." };
-  return { rate, step, trend, n, tag: "Needs help", color: "var(--orange)", rank: 1, advice: "Finding this hard. Try playing it together, or lower the step in that game's grown-ups panel." };
+  const stepless = n > 0 && step === 0; // Grades 5 to 8 have no difficulty steps (recorded as step 0)
+  const trend = stepless || firstStep === 0 ? "" : step > firstStep ? " · stepped up ↑" : step < firstStep ? " · stepped down ↓" : "";
+  if (s.asked < 6) return { rate, step, stepless, trend, n, tag: "Just started", color: "var(--grey)", rank: 2, advice: "Not enough answers yet to tell. Keep playing." };
+  if (stepless) {
+    if (rate >= 0.8) return { rate, step, stepless, trend, n, tag: "Doing well", color: "var(--green)", rank: 4, advice: "Going well." };
+    if (rate >= 0.6) return { rate, step, stepless, trend, n, tag: "Practising", color: "var(--blue)", rank: 3, advice: "Getting there. Short, regular play helps most." };
+    return { rate, step, stepless, trend, n, tag: "Needs help", color: "var(--orange)", rank: 1, advice: "Finding this hard. Try reading the chapter together." };
+  }
+  if (step === 4 && rate >= 0.8) return { rate, step, stepless, trend, n, tag: "Mastered", color: "var(--gold)", rank: 5, advice: "Mastered at the hardest step. Ready for the next book on the shelf." };
+  if (rate >= 0.8) return { rate, step, stepless, trend, n, tag: "Doing well", color: "var(--green)", rank: 4, advice: "Going well. The game makes it harder on its own." };
+  if (rate >= 0.6) return { rate, step, stepless, trend, n, tag: "Practising", color: "var(--blue)", rank: 3, advice: "Getting there. Short, regular play helps most." };
+  return { rate, step, stepless, trend, n, tag: "Needs help", color: "var(--orange)", rank: 1, advice: "Finding this hard. Try playing it together, or lower the step in that game's grown-ups panel." };
 }
 
 function render() {
@@ -91,19 +128,29 @@ function render() {
     ? `<b>Child:</b>` + kids.map(k => `<button class="chip${k.id === chosen ? " on" : ""}" data-id="${k.id || ""}">${esc(k.name)}</button>`).join("")
     : "";
   const P = read(chosen), who = (kids.find(k => k.id === chosen) || { name: "this child" }).name;
-  if (!P || !Object.keys(P.games || {}).length) {
+  const F = Kit.finished(chosen);
+  const hasStations = g => !!g && Object.keys(g.stations || {}).length > 0;
+  const anyAnswers = !!P && Object.values(P.games || {}).some(hasStations);
+  if (!anyAnswers && F.done === 0 && F.stories === 0) {
+    document.body.classList.remove("sheet");
+    $("sheetBtnBox").innerHTML = "";
     $("report").innerHTML = `<div class="empty"><h2>Nothing recorded yet for ${esc(who)}</h2><p>Answers are recorded from now on, as ${esc(who)} plays. Come back after a few games.</p>
       ${kids.length ? "" : "<p>Tip: add each child's name on the book shelf, so each one gets their own report.</p>"}</div>`;
-    $("foot").textContent = "Everything in this report stays on this device.";
+    $("foot").textContent = "Everything in this report stays on this device, unless you choose to save or print a copy.";
     return;
   }
+  const sheet = document.body.classList.contains("sheet"), openAttr = sheet ? " open" : "";
+  $("sheetBtnBox").innerHTML = `<button class="chip big" id="sheetBtn">Save or print a report for a teacher</button>`;
+  $("sheetHead").innerHTML = `<h1>Story Shelf progress report</h1><p><b>Child:</b> ${esc(who)}</p><p><b>Date:</b> ${longToday()}</p>
+    <p>This report comes from learning games played at home. It shows practice at home, not a formal assessment. 'Right first time' means the first answer chosen was correct. Steps run from 1 (easiest) to 4 (hardest), and the games move a child up or down on their own.</p>`;
+  const PG = (P && P.games) || {};
   // the last 7 days
   const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return dayKey(d); });
-  const days = P.days || {}, playedDays = week.filter(d => days[d] > 0).length, weekQs = week.reduce((a, d) => a + (days[d] || 0), 0);
+  const days = (P && P.days) || {}, playedDays = week.filter(d => days[d] > 0).length, weekQs = week.reduce((a, d) => a + (days[d] || 0), 0);
   const all = [];
-  ORDER.concat(Object.keys(P.games).filter(g => !ORDER.includes(g))).forEach(g => {
-    const game = P.games[g]; if (!game) return;
-    Object.entries(game.stations).forEach(([id, s]) => all.push({ game: game.title, s, j: judge(s) }));
+  ORDER.concat(Object.keys(PG).filter(g => !ORDER.includes(g))).forEach(g => {
+    const game = PG[g]; if (!game) return;
+    Object.entries(game.stations || {}).forEach(([id, s]) => all.push({ game: game.title, s, j: judge(s) }));
   });
   const recentAll = all.reduce((a, x) => a + x.j.n, 0), rightAll = all.reduce((a, x) => a + Math.round(x.j.rate * x.j.n), 0);
   const ready = all.filter(x => x.s.asked >= 6);
@@ -112,6 +159,8 @@ function render() {
   const item = x => `<li><b>${esc(x.s.name)}</b> <small>(${esc(x.game)})</small>: ${pct(x.j.rate)} right first time</li>`;
 
   let html = `<div class="summary">
+      <div class="tile"><b>${F.done} of ${F.total}</b><span>lessons finished</span></div>
+      <div class="tile"><b>${F.stories} of ${F.games.length}</b><span>stories finished</span></div>
       <div class="tile"><b>${playedDays} of 7</b><span>days played this week</span></div>
       <div class="tile"><b>${weekQs}</b><span>questions answered this week</span></div>
       <div class="tile"><b>${recentAll ? pct(rightAll / recentAll) : "–"}</b><span>right first time (recent answers)</span></div>
@@ -120,26 +169,57 @@ function render() {
       <div class="list"><h3>Strengths</h3>${strong.length ? `<ul>${strong.map(item).join("")}</ul>` : `<p class="none">Not enough answers yet.</p>`}</div>
       <div class="list"><h3>Practise next</h3>${weak.length ? `<ul>${weak.map(item).join("")}</ul>` : `<p class="none">Nothing stands out as hard right now.</p>`}</div>
     </div>`;
-  ORDER.concat(Object.keys(P.games).filter(g => !ORDER.includes(g))).forEach(g => {
-    const game = P.games[g]; if (!game) return;
-    html += `<section class="game"><h2>${esc(game.title)}</h2><p class="note">Based on each station's last 20 answers.</p>`;
-    Object.values(game.stations).forEach(s => {
+  // the station rows for one game (nothing if it has no answers)
+  const rowsFor = game => {
+    const stations = Object.values((game && game.stations) || {});
+    if (!stations.length) return "";
+    let out = `<p class="note">Based on each station's last 20 answers.</p>`;
+    stations.forEach(s => {
       const j = judge(s), tricky = Object.entries(s.missed || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      html += `<div class="row">
-          <div><div class="name">${esc(s.name)}</div><small>Step ${j.step} of 4${j.trend} · ${s.asked} answered${s.hints ? ` · 💡 ${s.hints} hint${s.hints === 1 ? "" : "s"} used` : ""} · last played ${s.last ? dayName(s.last) : "–"}</small></div>
+      out += `<div class="row">
+          <div><div class="name">${esc(s.name)}</div><small>${j.stepless ? "" : `Step ${j.step} of 4${j.trend} · `}${s.asked} answered${s.hints ? ` · 💡 ${s.hints} hint${s.hints === 1 ? "" : "s"} used` : ""} · last played ${s.last ? dayName(s.last) : "–"}</small></div>
           <div><div class="bar"><i style="width:${pct(j.rate)};background:${j.color}"></i></div><small>${pct(j.rate)} right first time</small></div>
           <div><span class="tag" style="background:${j.color}">${j.tag}</span><small>${j.advice}</small></div>
-          ${tricky.length ? `<details><summary>Tricky ones (${tricky.length})</summary><ul>${tricky.map(([t, n]) => `<li>${esc(t)} <small>needed another try ${n === 1 ? "once" : n + " times"}</small></li>`).join("")}</ul></details>` : ""}
+          ${tricky.length ? `<details${openAttr}><summary>Tricky ones (${tricky.length})</summary><ul>${tricky.map(([t, n]) => `<li>${esc(t)} <small>needed another try ${n === 1 ? "once" : n + " times"}</small></li>`).join("")}</ul></details>` : ""}
         </div>`;
     });
-    html += `</section>`;
+    return out;
+  };
+  // what is finished and what is left in one game
+  const finishedBlock = f => {
+    const done = f.lessons.filter(l => l.done), left = f.lessons.filter(l => !l.done);
+    const storyLine = f.story ? (/^\d{4}-/.test(f.storyDate || "") ? `Story finished ${dayYear(f.storyDate)}` : "Story finished") : "Story not finished yet";
+    return `<div class="fin"><b>${f.done} of ${f.total} lessons finished</b>
+        <div class="bar"><i style="width:${f.total ? pct(f.done / f.total) : "0%"};background:var(--green)"></i></div>
+        <p>${storyLine}</p>
+        ${done.length ? `<p><b>Finished:</b> ${done.map(l => esc(l.name) + (l.date ? ` <small>${dayYear(l.date)}</small>` : "")).join(", ")}</p>` : ""}
+        ${left.length ? `<p><b>Still to do:</b> ${left.map(l => esc(l.name)).join(", ")}</p>` : "<p>Every lesson finished.</p>"}
+      </div>`;
+  };
+  const notStarted = [];
+  F.games.forEach(f => {
+    if (!(hasStations(PG[f.id]) || f.done > 0 || f.story)) { notStarted.push(f); return; }
+    html += `<section class="game"><h2>${esc(f.grade)} · ${esc(f.title)}</h2>${finishedBlock(f)}${rowsFor(PG[f.id])}</section>`;
   });
+  // games found in the answers that are not on the shelf list
+  Object.keys(PG).filter(g => !ORDER.includes(g)).forEach(g => {
+    if (PG[g]) html += `<section class="game"><h2>${esc(PG[g].title || g)}</h2>${rowsFor(PG[g])}</section>`;
+  });
+  if (notStarted.length) html += `<div class="list notstarted"><h3>Not started yet</h3><ul>${notStarted.map(f => `<li>${esc(f.grade)} · ${esc(f.title)} (${f.total} lessons)</li>`).join("")}</ul></div>`;
+  if (sheet) html += `<p id="sheetEnd">Made on this device on ${longToday()}. Nothing was sent anywhere: this copy exists only because a grown-up chose to print or save it.</p>`;
   $("report").innerHTML = html;
   const first = Object.keys(days).sort()[0];
   const lb = Kit.lastBackup();
-  $("foot").textContent = `Recording started ${first ? dayName(first) : "today"}. Everything in this report stays on this device. Last backup: ${lb ? Kit.niceDate(lb) : "never"} (back up from the grown-ups panel on the book shelf).`;
+  $("foot").textContent = `Recording started ${first ? dayName(first) : "today"}. Everything in this report stays on this device, unless you choose to save or print a copy. Last backup: ${lb ? Kit.niceDate(lb) : "never"} (back up from the grown-ups panel on the book shelf).`;
 }
 $("who").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; chosen = b.dataset.id || null; render(); });
+// The save-or-print sheet: the same page, laid out for paper (nothing is sent anywhere)
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "sheetBtn") { document.body.classList.add("sheet"); render(); window.scrollTo(0, 0); }
+  else if (b.id === "sheetBack") { document.body.classList.remove("sheet"); render(); }
+  else if (b.id === "sheetPrint") window.print();
+});
 render();
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
