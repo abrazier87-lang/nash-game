@@ -25,13 +25,21 @@ const Kit = (() => {
     return players().find(p => p.id === id) || null;
   }
   function setCurrent(id) { try { localStorage.setItem("storyShelf.current", id); } catch (e) {} }
-  function addPlayer(name) {
+  // age (optional): how old the child is. What is kept is the YEAR THEY WERE BORN (worked out from the age), so the
+  // suggested book moves up by itself each year. It stays on this device with the names, and travels with a backup.
+  function addPlayer(name, age) {
     name = String(name || "").trim().slice(0, 20);
     if (!name) return null;
-    const list = players(), n = get("storyShelf.nextId", 1), p = { id: "p" + n, name };
+    const list = players(), n = get("storyShelf.nextId", 1), p = { id: "p" + n, name }; if (age > 0) p.born = new Date().getFullYear() - Math.round(age);
     list.push(p); put("storyShelf.players", list); put("storyShelf.nextId", n + 1); setCurrent(p.id);
     return p;
   }
+  function setAge(id, age) { // a grown-up adds or changes a child's age later (no age: the suggestion goes away)
+    const list = players(), p = list.find(x => x.id === id); if (!p) return;
+    if (age > 0) p.born = new Date().getFullYear() - Math.round(age); else delete p.born;
+    put("storyShelf.players", list);
+  }
+  const ageOf = p => p && p.born ? new Date().getFullYear() - p.born : null; // about how old (the birthday itself is not known)
   function removePlayer(id) {
     const list = players().filter(p => p.id !== id); put("storyShelf.players", list);
     if (!list.find(p => p.id === (currentPlayer() || {}).id)) setCurrent(list[0] ? list[0].id : "");
@@ -166,6 +174,22 @@ const Kit = (() => {
       return { id: L.id, grade: L.grade, title: L.title, lessons, done: lessons.filter(l => l.done).length, total: lessons.length, story, storyDate: rec.story || null };
     });
     return { games, done: games.reduce((a, g) => a + g.done, 0), total: games.reduce((a, g) => a + g.total, 0), stories: games.filter(g => g.story).length, everything: !missing.length, missing };
+  }
+  // ---------- where to start (a suggestion from the child's age, never a lock) ----------
+  // Ontario's usual ages: Kindergarten is for 4- and 5-year-olds, and Grade 1 starts in the September of the year a child
+  // turns 6 (ontario.ca/page/kindergarten); each grade after that is one year on. A school year runs from September.
+  // Younger children get the Preschool book; children past Grade 8 get the last book on the shelf.
+  // startBook(childId) hands back null when no age was given, or { id, grade, title, age, earlier }:
+  //   the suggested book, about how old the child is, and "earlier": the books before it that are not finished yet
+  //   (to gently suggest going back), each as { id, grade, title, done, total, story }.
+  function startBook(childId) {
+    const p = childId === undefined ? currentPlayer() : players().find(x => x.id === childId);
+    if (!p || !p.born) return null;
+    const d = new Date(), turns = (d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1) - p.born; // the age they reach in the year this school year began
+    const want = turns <= 3 ? "pre" : turns <= 5 ? "k" : "g" + Math.min(turns - 5, 8);
+    let at = LESSONS.findIndex(L => L.id === want); if (at < 0) at = LESSONS.length - 1; // that book is not on this shelf yet: the last one that is
+    const L = LESSONS[at], F = finished(p.id);
+    return { id: L.id, grade: L.grade, title: L.title, age: ageOf(p), earlier: F.games.slice(0, at).filter(g => !g.story || g.done < g.total) };
   }
   // THE ONE QUESTION for a graduation scene: has this child finished every lesson and every story, from Preschool up?
   // Kit.finishedEverything() answers for whoever is playing (or give a child's id): { yes: true or false, missing: [what is still to do] }.
@@ -430,7 +454,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "40"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "41"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, setAge, ageOf, startBook, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=40">
+<link rel="stylesheet" href="shared/kit.css?v=41">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -46,6 +46,17 @@
   #pop .row button.main { background:#58b368; color:#fff; }
   #pop .row button:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
   .book.soon { cursor:pointer; }
+  /* the age buttons (adding a name, and changing an age later) */
+  #pop .ageLabel { margin:16px 0 8px; font-size:18px; font-weight:bold; color:#8a4f1d; }
+  #pop .ages { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  #pop .ages button { min-width:46px; padding:9px 8px; font-size:20px; font-weight:bold; border-radius:14px; background:#fff; border:3px solid #fff; box-shadow:0 3px 0 rgba(0,0,0,.15); color:inherit; }
+  #pop .ages button.on { background:#ffd84d; border-color:#ff8a3d; }
+  #pop .tiny { margin:12px 0 0; font-size:14px; color:#7a5520; }
+  #pop .row.three { gap:8px; } #pop .row.three button { font-size:18px; padding:12px 6px; }
+  /* "Start here": a suggestion only, nothing is locked */
+  #startLine { text-align:center; color:#8a4f1d; font-size:18px; line-height:1.4; margin:-8px auto 20px; max-width:640px; }
+  .book.start { outline:5px solid #ffd84d; outline-offset:3px; box-shadow:0 0 22px 6px rgba(255,216,77,.8), 0 8px 0 rgba(0,0,0,.2), 0 20px 0 -6px #c48a4a, 0 26px 0 -6px #9c6830; }
+  .book .ribbon { position:absolute; top:-14px; left:-8px; background:#ffd84d; color:#7a4a00; font-size:16px; font-weight:bold; padding:5px 14px; border-radius:999px; box-shadow:0 3px 0 #e0a800; z-index:1; }
   .gear.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
 </style>
 </head>
@@ -53,6 +64,7 @@
 <div class="wrap">
   <h1 class="shelfTitle">Story Shelf</h1>
   <div class="who" id="who"></div>
+  <p id="startLine"></p>
   <div class="shelf" id="shelf"></div>
   <p id="backupNudge" style="text-align:center;margin:36px 0 0;font-size:15px;color:#7a5520"></p>
   <p id="version" style="text-align:center;margin:12px 0 0;font-size:13px;color:#a08a6c"></p>
@@ -61,7 +73,7 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=40"></script>
+<script src="shared/kit.js?v=41"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -100,15 +112,46 @@ $("who").addEventListener("click", e => {
 const closePop = () => { $("pop").classList.remove("on"); $("popCard").innerHTML = ""; };
 $("pop").addEventListener("click", e => { if (e.target === $("pop")) closePop(); }); // a tap outside the card closes it
 // "+ Add a name": a card with a box to type in (instead of the browser's plain grey pop-up)
+// A row of age buttons (2 to 14+). Tap one to pick it, tap it again to unpick. Returns a function that says which age is picked (or undefined).
+const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+function ageButtons(box, picked) {
+  box.innerHTML = AGES.map(a => `<button type="button" data-age="${a}" class="${a === picked ? "on" : ""}">${a === 14 ? "14+" : a}</button>`).join("");
+  box.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    Kit.sfx.tap();
+    const was = t.classList.contains("on");
+    box.querySelectorAll("button").forEach(b => b.classList.remove("on"));
+    if (!was) t.classList.add("on");
+  });
+  return () => { const on = box.querySelector("button.on"); return on ? +on.dataset.age : undefined; };
+}
 function askName() {
   $("popCard").innerHTML = `<div class="big">👋</div><h2>Who is playing?</h2><p>Type the child's first name.</p>
     <input id="popName" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="The child's name">
+    <div class="ageLabel">How old are they? (optional)</div><div class="ages" id="popAges"></div>
+    <p class="tiny">Used only to suggest a book to start with. It stays on this device.</p>
     <div class="row"><button id="popNo">Cancel</button><button class="main" id="popYes">Save</button></div>`;
   $("pop").classList.add("on");
-  const box = $("popName"), save = () => { const name = box.value.trim(); closePop(); if (name) { const p = Kit.addPlayer(name); if (p) Kit.playClip(HELLO, ""); } drawWho(); };
+  const getAge = ageButtons($("popAges"));
+  const box = $("popName"), save = () => { const name = box.value.trim(), age = getAge(); closePop(); if (name) { const p = Kit.addPlayer(name, age); if (p) Kit.playClip(HELLO, ""); } drawWho(); };
   $("popYes").addEventListener("click", () => { Kit.sfx.tap(); save(); }); $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
   box.addEventListener("keydown", e => { if (e.key === "Enter") save(); else if (e.key === "Escape") closePop(); });
   box.focus();
+}
+// A grown-up changes a child's age: a card above the grown-ups panel
+function askAge(id) {
+  const p = Kit.players().find(x => x.id === id); if (!p) return;
+  const now = Kit.ageOf(p);
+  $("popCard").innerHTML = `<h2>How old is ${Kit.esc(p.name)}?</h2>
+    <div class="ages" id="popAges"></div>
+    <p class="tiny">Used only to suggest a book to start with. It stays on this device.</p>
+    <div class="row three"><button id="popNo">Cancel</button><button id="popNone">No age</button><button class="main" id="popYes">Save</button></div>`;
+  $("pop").classList.add("on");
+  const getAge = ageButtons($("popAges"), now === null ? undefined : Math.min(now, 14));
+  const done = age => { Kit.sfx.tap(); Kit.setAge(id, age); closePop(); drawWho(); openGrown(); };
+  $("popYes").addEventListener("click", () => done(getAge()));
+  $("popNone").addEventListener("click", () => done(0));
+  $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
 }
 // A book that is not written yet: a friendly "coming soon" (no hints about the story!)
 function comingSoon(grade) {
@@ -120,10 +163,22 @@ function comingSoon(grade) {
 $("shelf").addEventListener("click", e => { const b = e.target.closest(".book.soon"); if (b) { Kit.audio(); Kit.sfx.tap(); comingSoon(b.dataset.grade); } });
 
 // A medal shows on a book once the child who is playing has finished that story.
+// A "Start here" ribbon marks the suggested book for the child's age. It is only a suggestion: every book stays open.
 function drawShelf() {
-  const medals = Kit.stamps();
+  const medals = Kit.stamps(), start = Kit.startBook();
+  let at = start ? BOOKS.findIndex(b => b.medal === start.id) : -1;
+  while (at > 0 && !BOOKS[at].file) at--; // a book that is "coming soon" cannot be opened, so use the last real one before it
+  if (at >= 0 && !BOOKS[at].file) at = -1;
+  const sb = at >= 0 ? BOOKS[at] : null;
+  let line = "";
+  if (sb) {
+    const gr = start.earlier.map(e => e.grade), n = gr.length;
+    line = `Start here: ${Kit.esc(sb.grade)}. Every book is open, so look around!`;
+    if (n) line += ` It is a great idea to go back and finish ${n > 3 ? "the earlier books" : n === 1 ? Kit.esc(gr[0]) : Kit.esc(gr.slice(0, -1).join(", ")) + " and " + Kit.esc(gr[n - 1])} too.`;
+  }
+  $("startLine").innerHTML = line;
   $("shelf").innerHTML = BOOKS.map(b => b.file
-    ? `<a class="book" href="${b.file}" style="--c:${b.color}">${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
+    ? `<a class="book${b === sb ? " start" : ""}" href="${b.file}" style="--c:${b.color}">${b === sb ? `<span class="ribbon">Start here</span>` : ""}${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
     : `<div class="book soon" data-grade="${b.grade}"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
 }
 drawShelf();
@@ -137,7 +192,7 @@ function openGrown() {
   const list = Kit.players();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p>Each child gets their own saved progress. It is kept only on this device, so make a backup now and then (below).</p>
-    ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
+    ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b>${Kit.ageOf(p) ? ` · about ${Kit.ageOf(p)}` : ""}</div><button data-act="age" data-id="${p.id}">${Kit.ageOf(p) ? "Age" : "Add age"}</button><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
@@ -161,6 +216,7 @@ $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act;
   if (act && (act === "backup" || act === "copy" || act.startsWith("restore"))) { backupAction(act); return; }
+  if (act === "age") { askAge(t.dataset.id); return; }
   if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
   if (act === "sound") Kit.settings.sound = !Kit.settings.sound;

@@ -28,6 +28,7 @@
   .lists { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top:12px; }
   .list ul { margin:0; padding-left:20px; } .list li { margin:4px 0; }
   .list .none { color:var(--soft); margin:0; }
+  .list.start { margin-top:12px; } .list.start p { margin:4px 0; } .list.start .small { color:var(--soft); font-size:14px; }
   section.game { margin-top:16px; }
   .game .note { color:var(--soft); font-size:14px; margin:0 0 6px; }
   .row { display:grid; grid-template-columns:1.5fr 1.1fr 1.6fr; gap:12px; align-items:start; padding:12px 0; border-top:1px solid var(--line); }
@@ -90,7 +91,7 @@
   <p class="foot" id="foot"></p>
 </div>
 
-<script src="shared/kit.js?v=40"></script>
+<script src="shared/kit.js?v=41"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -223,6 +224,7 @@ function render() {
     ? `<b>Child:</b>` + kids.map(k => `<button class="chip${k.id === chosen ? " on" : ""}" data-id="${k.id || ""}">${esc(k.name)}</button>`).join("")
     : "";
   const P = read(chosen), who = (kids.find(k => k.id === chosen) || { name: "this child" }).name;
+  const start = chosen ? Kit.startBook(chosen) : null; // the book suggested from the age entered on the shelf (null when there is no age)
   const F = Kit.finished(chosen);
   const hasStations = g => !!g && Object.keys(g.stations || {}).length > 0;
   const anyAnswers = !!P && Object.values(P.games || {}).some(hasStations);
@@ -230,6 +232,7 @@ function render() {
     document.body.classList.remove("sheet");
     $("sheetBtnBox").innerHTML = "";
     $("report").innerHTML = `<div class="empty"><h2>Nothing recorded yet for ${esc(who)}</h2><p>Answers are recorded from now on, as ${esc(who)} plays. Come back after a few games.</p>
+      ${start ? `<p>Suggested starting point: ${esc(start.grade)} · ${esc(start.title)}.</p>` : ""}
       ${kids.length ? "" : "<p>Tip: add each child's name on the book shelf, so each one gets their own report.</p>"}</div>`;
     $("foot").textContent = "Everything in this report stays on this device, unless you choose to save or print a copy.";
     return;
@@ -253,6 +256,19 @@ function render() {
   const weak = ready.filter(x => x.j.rate < 0.8).sort((a, b) => a.j.rate - b.j.rate).slice(0, 3);
   const item = x => `<li><b>${esc(x.s.name)}</b> <small>(${esc(x.game)})</small>: ${pct(x.j.rate)} right first time</li>`;
 
+  // the "Suggested starting point" card (only when an age was entered; it is a suggestion, never a grade or mark)
+  let startCard = "";
+  if (start) {
+    const isFirst = start.id === Kit.LESSONS[0].id, earlier = start.earlier || [];
+    const earlierLine = isFirst ? "" : earlier.length
+      ? `<p>Earlier books not finished yet: ${earlier.map(g => `${esc(g.grade)} (${g.done} of ${g.total} lessons)`).join(", ")}.</p>`
+      : `<p>Every earlier book is finished.</p>`;
+    startCard = `<div class="list start"><h3>Suggested starting point</h3>
+      <p><b>${esc(start.grade)} · ${esc(start.title)}</b>, for a child of about ${esc(start.age)}.</p>
+      <p class="small">This comes from the age entered on the book shelf and Ontario's usual school ages. It is only a suggestion: every book is open.</p>
+      ${earlierLine}</div>`;
+  }
+
   let html = `<div class="summary">
       <div class="tile"><b>${F.done} of ${F.total}</b><span>lessons finished</span></div>
       <div class="tile"><b>${F.stories} of ${F.games.length}</b><span>stories finished</span></div>
@@ -260,6 +276,7 @@ function render() {
       <div class="tile"><b>${weekQs}</b><span>questions answered this week</span></div>
       <div class="tile"><b>${recentAll ? pct(rightAll / recentAll) : "–"}</b><span>right first time (recent answers)</span></div>
     </div>
+    ${startCard}
     <div class="lists">
       <div class="list"><h3>Strengths</h3>${strong.length ? `<ul>${strong.map(item).join("")}</ul>` : `<p class="none">Not enough answers yet.</p>`}</div>
       <div class="list"><h3>Practise next</h3>${weak.length ? `<ul>${weak.map(item).join("")}</ul>` : `<p class="none">Nothing stands out as hard right now.</p>`}</div>
