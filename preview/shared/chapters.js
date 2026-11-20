@@ -18,6 +18,9 @@
      G.case is an empty object that lasts for one challenge, so a maker can carry numbers from one question to the next (a case file; G.stars says which step).
      A challenge with quiet: true, and a chapter with quiet: true, give no money, no cheering and no confetti.
      certificate: { title, line } shows a certificate with the child's name once every chapter is done.
+     voice: "../audio/.../" is the folder of this story's recorded lines. Each scene line, choice question and challenge intro is
+       played from a file named after its words (Kit.clipName). speak(text) may change the words for speaking (how to say a name).
+       A line with no recording is simply shown in writing: the device voice is never used.
      The question makers get G.choice: which option (0 or 1) was picked at this chapter's choice, so the maths can follow it.
    Every line is shown in writing. A missing recording is never replaced by the device voice.
    Needs shared/kit.js, shared/story.js (for its helpers), shared/newowl.js and shared/inkart.js.
@@ -25,6 +28,10 @@
 function ChapterGame(C) {
   const CHAPTERS = C.chapters, ASK = C.ask, ART = C.art, INTRO = C.intro || [], NEED = 3; // right answers to open the next scene
   const para = t => `<div class="qtext">${t}</div>`;
+  // ---------- recorded lines ----------
+  const spoken = t => { const s = String(t).replace(/<[^>]+>/g, ""); return C.speak ? C.speak(s) : s; };
+  const clipOf = t => C.voice + Kit.clipName(spoken(t)) + ".mp3";
+  function speakLine(t, next) { if (!C.voice || !t) return; Kit.playClip(clipOf(t), ""); if (next) Kit.loadClip(clipOf(next)).catch(() => {}); } // "next" is fetched ahead so it starts without a pause
 
   // ---------- saved progress ----------
   let S = Kit.load(C.saveKey, () => ({ beat: CHAPTERS.map(() => 0), done: [], words: [] })); // beat[c]: how far chapter c has been opened
@@ -99,7 +106,7 @@ function ChapterGame(C) {
   $("introNext").addEventListener("click", () => { sfx.tap(); Kit.hush(); introSkip(); });
   $("introAgain").addEventListener("click", () => { sfx.tap(); playIntro(); });
   $("shelfBtn").addEventListener("click", () => { introRun++; Kit.hush(); location.href = "index.html"; });
-  $("homeBtn").addEventListener("click", () => { sfx.tap(); G = null; showMap(); });
+  $("homeBtn").addEventListener("click", () => { sfx.tap(); Kit.hush(); G = null; showMap(); });
 
   // ---------- the certificate: every chapter finished ----------
   const allDone = () => CHAPTERS.every((c, i) => c.beats && S.done.includes(i));
@@ -158,7 +165,7 @@ function ChapterGame(C) {
     drawScene();
   }
   function drawScene() { const sc = sceneAt(); $("options").innerHTML = ""; $("nextRow").style.display = ""; $("panel").innerHTML = ART[sc.art](); animate($("panel"), "pop"); drawLine(); learn(sc.word); }
-  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${sc.who}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
+  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${sc.who}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1]); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
   function fitCaption() { // a long line gets slightly smaller writing, so it never spills out of its box
     const cap = $("caption"); cap.style.fontSize = ""; const base = parseFloat(getComputedStyle(cap).fontSize);
     for (let i = 1; i <= 6 && cap.scrollHeight > cap.clientHeight + 1; i++) cap.style.fontSize = (base * (1 - .06 * i)).toFixed(2) + "px";
@@ -166,7 +173,7 @@ function ChapterGame(C) {
   function drawPick() { // a choice: the question, and a big button for each way to go
     const beat = beatAt(); at.opt = null;
     $("panel").innerHTML = ART[beat.art](); animate($("panel"), "pop"); $("caption").innerHTML = `<div>${beat.pick}</div>`; $("nextRow").style.display = "none";
-    $("options").innerHTML = beat.options.map((o, i) => `<button class="option" data-o="${i}">${o.label}</button>`).join(""); fitCaption();
+    $("options").innerHTML = beat.options.map((o, i) => `<button class="option" data-o="${i}">${o.label}</button>`).join(""); fitCaption(); speakLine(beat.pick);
   }
   $("options").addEventListener("click", e => { const b = e.target.closest(".option"); if (!b || !at) return; sfx.tap(); at.opt = +b.dataset.o; at.line = 0; S.picks[at.c] = at.opt; save(); drawScene(); });
   $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats;
@@ -195,7 +202,7 @@ function ChapterGame(C) {
   function startAsk(beat) {
     G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true, choice: S.picks[at.c] || 0, case: {}, quiet: !!beat.quiet };
     $("stars").innerHTML = Array(G.need).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
-    show("game"); nextAsk(beat.intro);
+    show("game"); nextAsk(beat.intro); if (beat.intro) speakLine(beat.intro); else Kit.hush();
   }
   function nextAsk(lead) {
     let q, tries = 0; do { q = ASK[G.beat.ask](G); tries++; } while (tries < 10 && q.text === G.last);

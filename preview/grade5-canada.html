@@ -452,8 +452,12 @@ Object.assign(ASK, {
 });
 
 // ---------- start the game (the engine is shared/chapters.js) ----------
+// How some words are said aloud. The recordings are made from the words AFTER these swaps (the writing on screen is not changed),
+// so the voice says each name the way the community reviewer gave it. tools/story-voice-lines.py reads this same list.
+const SAY = [["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "ah-nish-ih-nah-bay"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "ih-nook-sook"], ["ih-NOOK", "ih-nook"], ["IH-noo-it", "ih-noo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kah-moo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-gee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Ah-nish-ih-nah-bay"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "ih-nook-sook"], ["Inuk", "Ih-nook"], ["Inuit", "Ih-noo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kah-moo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-gee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Comes Home", sub: "A Grade 5 story", saveKey: "grade5Canada.v1", medal: "g5",
-  chapters: CHAPTERS, ask: ASK, art: ART, intro: INTRO, introVoice: "../audio/g5/intro/" });
+  chapters: CHAPTERS, ask: ASK, art: ART, intro: INTRO, introVoice: "../audio/g5/intro/",
+  voice: "../audio/g5/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t) });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
 </body>

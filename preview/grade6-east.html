@@ -178,8 +178,10 @@ const ASK = {
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
+// How some words are said aloud (the writing on screen is not changed). tools/story-voice-lines.py reads this same list.
+const SAY = [["Mi'kma'ki", "Mig-mah-gee"], ["Mi'kmaq", "Mig-mah"], ["Mi'kmaw", "Mig-maw"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Goes East", sub: "A Grade 6 story", saveKey: "grade6East.v1", medal: "g6",
-  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words",
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g6/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t),
   map: { art: eastMap, stops: [[15.5, 52.5], [29, 43.5], [61.5, 88], [90, 67.5], [76, 80], [88.5, 33]] } });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>

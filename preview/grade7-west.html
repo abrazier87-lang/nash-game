@@ -93,8 +93,10 @@ const SHOP = { title: "The trading post", items: [
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
+// How some words are said aloud (the writing on screen is not changed). tools/story-voice-lines.py reads this same list.
+const SAY = [["miigwech", "mee-gwetch"], ["Miigwech", "Mee-gwetch"], ["dyakuyu", "dyah-koo-yoo"], ["Dyakuyu", "Dyah-koo-yoo"], ["Métis", "May-tee"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Heads West", sub: "A Grade 7 story", saveKey: "grade7West.v1", medal: "g7",
-  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", coin: { name: "Made Beaver", icon: MB }, shop: SHOP,
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g7/s/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t), coin: { name: "Made Beaver", icon: MB }, shop: SHOP,
   map: { art: westMap, stops: [[83, 62], [66, 54], [63, 76], [41, 72], [22, 58], [17, 34]] } });
 </script>
 <div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
