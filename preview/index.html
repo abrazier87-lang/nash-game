@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=48">
+<link rel="stylesheet" href="shared/kit.css?v=49">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -19,15 +19,18 @@
   .chip { background:#fff; border-radius:999px; padding:10px 20px; font-weight:bold; font-size:20px; box-shadow:0 4px 0 rgba(0,0,0,.15); border:3px solid #fff; }
   .chip.on { background:#ffd84d; border-color:#ff8a3d; }
   .chip.add { background:#eaffd9; }
-  .shelf { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:26px 18px; }
-  .book { position:relative; height:250px; border-radius:8px 16px 16px 8px; background:var(--c,#58b368); color:#fff; text-align:center; padding:14px 12px 12px 26px;
-    display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-shadow:0 8px 0 rgba(0,0,0,.2), 0 20px 0 -6px #c48a4a, 0 26px 0 -6px #9c6830; text-decoration:none; }
+  /* --bh is how tall a book is and --rg the space between rows: the plank is painted just under every row of books, whatever the number of books in a row */
+  .shelf { --bh:250px; --rg:32px; display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:var(--rg) 18px; padding:0 14px var(--rg); margin:0 -14px; border-radius:6px;
+    background:repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--bh) + 8px), #c48a4a calc(var(--bh) + 8px), #c48a4a calc(var(--bh) + 17px), #9c6830 calc(var(--bh) + 17px), #9c6830 calc(var(--bh) + 22px), transparent calc(var(--bh) + 22px), transparent calc(var(--bh) + var(--rg))); }
+  .book { position:relative; height:var(--bh); border-radius:8px 16px 16px 8px; background:var(--c,#58b368); color:#fff; text-align:center; padding:14px 12px 12px 26px;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-shadow:0 5px 0 #f7efdc, 0 8px 0 rgba(0,0,0,.28); text-decoration:none; }
   .book::before { content:""; position:absolute; left:0; top:0; bottom:0; width:16px; background:rgba(0,0,0,.18); border-radius:8px 0 0 8px; }
   .book { transition:transform .15s ease; }
   @media (hover:hover) { .book:hover { transform:translateY(-3px); } }
   .book:active { transform:translateY(4px); }
   .book .grade { font-size:19px; font-weight:bold; background:rgba(255,255,255,.25); border-radius:999px; padding:4px 14px; }
   .book .pic { font-size:74px; line-height:1.1; }
+  .book.little .pic { font-size:104px; line-height:1.05; } /* Preschool and Kindergarten: a child who cannot read finds the book by its picture */
   .book .name { font-size:21px; font-weight:bold; line-height:1.15; }
   .book .name small { display:block; font-size:.66em; font-weight:normal; opacity:.92; margin-bottom:2px; }
   .book .ages { font-size:14px; opacity:.9; }
@@ -35,11 +38,12 @@
   .book.soon { background:#cbbfae; cursor:default; }
   @media (max-width:480px) {
     .wrap { padding:14px 12px 50px; }
-    .shelf { grid-template-columns:1fr 1fr; gap:26px 12px; }
-    .book { height:206px; padding:10px 8px 10px 20px; }
+    .shelf { --bh:206px; --rg:30px; grid-template-columns:1fr 1fr; gap:var(--rg) 12px; padding:0 8px var(--rg); margin:0 -8px; }
+    .book { padding:10px 8px 10px 20px; }
     .book::before { width:12px; }
     .book .grade { font-size:15px; padding:3px 10px; }
     .book .pic { font-size:56px; }
+    .book.little .pic { font-size:80px; }
     .book .name { font-size:16px; }
     .book .name small { font-size:11.5px; }
     .book .ages { font-size:12px; }
@@ -70,7 +74,7 @@
   #pop .row.three { gap:8px; } #pop .row.three button { font-size:18px; padding:12px 6px; }
   /* "Start here": a suggestion only, nothing is locked */
   #startLine { text-align:center; color:#8a4f1d; font-size:18px; line-height:1.4; margin:-8px auto 20px; max-width:640px; }
-  .book.start { outline:5px solid #ffd84d; outline-offset:3px; box-shadow:0 0 22px 6px rgba(255,216,77,.8), 0 8px 0 rgba(0,0,0,.2), 0 20px 0 -6px #c48a4a, 0 26px 0 -6px #9c6830; }
+  .book.start { outline:5px solid #ffd84d; outline-offset:3px; box-shadow:0 0 22px 6px rgba(255,216,77,.8), 0 5px 0 #f7efdc, 0 8px 0 rgba(0,0,0,.28); }
   .book .ribbon { position:absolute; top:-14px; left:-8px; background:#ffd84d; color:#7a4a00; font-size:16px; font-weight:bold; padding:5px 14px; border-radius:999px; box-shadow:0 3px 0 #e0a800; z-index:1; }
   .gear.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
 </style>
@@ -88,7 +92,7 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=48"></script>
+<script src="shared/kit.js?v=49"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -98,8 +102,8 @@
 // "Dr. Somebody in Ancient Egypt" is shown as a small "Dr. Somebody in" above a big "Ancient Egypt", so the part that tells the books apart is the part you see first.
 const twoPart = n => { const m = /^(Dr\. Somebody(?:'s| in| and the)?) (.+)$/.exec(n); return m ? `<small>${m[1]}</small>${m[2]}` : n; };
 const BOOKS = [
-  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", color: "#58b368", file: "Pips%20Lost%20Eggs.html", medal: "pre" },
-  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", color: "#ff5a5f", file: "dots-busy-train.html", medal: "k" },
+  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", little: true, color: "#58b368", file: "Pips%20Lost%20Eggs.html", medal: "pre" },
+  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", little: true, color: "#ff5a5f", file: "dots-busy-train.html", medal: "k" },
   { grade: "Grade 1",      ages: "Ages 6-7",   name: "Dr. Somebody's Space Balloon", pic: "🦉", color: "#4b3aa8", file: "grade1-space.html", medal: "g1" },
   { grade: "Grade 2",      ages: "Ages 7-8",   name: "Dr. Somebody in Ancient Egypt", pic: "🏺", color: "#c98a2b", file: "grade2-egypt.html", medal: "g2" },
   { grade: "Grade 3",      ages: "Ages 8-9",   name: "Dr. Somebody in Ancient China", pic: "🐉", color: "#c0392b", file: "grade3-china.html", medal: "g3" },
@@ -195,7 +199,7 @@ function drawShelf() {
   }
   $("startLine").innerHTML = line;
   $("shelf").innerHTML = BOOKS.map(b => b.file
-    ? `<a class="book${b === sb ? " start" : ""}" href="${b.file}" style="--c:${b.color}">${b === sb ? `<span class="ribbon">Start here</span>` : ""}${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${twoPart(b.name)}</span><span class="ages">${b.ages}</span></a>`
+    ? `<a class="book${b === sb ? " start" : ""}${b.little ? " little" : ""}" href="${b.file}" style="--c:${b.color}">${b === sb ? `<span class="ribbon">Start here</span>` : ""}${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${twoPart(b.name)}</span><span class="ages">${b.ages}</span></a>`
     : `<div class="book soon" data-grade="${b.grade}"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
 }
 drawShelf();
