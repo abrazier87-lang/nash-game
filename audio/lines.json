@@ -1,6 +1,6 @@
 {
   "about": "Every recorded line in the games. The name on the left is the sound file; the words on the right are what the voice says. To change a line: edit the words, delete its sound file, and run tools/make-voice.py again. Only missing files are recorded, so nothing is paid for twice. A character whose voice id below is empty has not been given a voice yet, and their lines wait.",
-  "voices": {"dr-somebody": "auq43ws1oslv0tO4BDa7", "pip": "KoVIHoyLDrQyd4pGalbs", "dot": "vChnJZ1Cu89g2XXumPfT", "clock": "Xb7hH8MSUJpSbSDYk0k2"},
+  "voices": {"dr-somebody": "auq43ws1oslv0tO4BDa7", "pip": "KoVIHoyLDrQyd4pGalbs", "dot": "vChnJZ1Cu89g2XXumPfT", "clock": "Xb7hH8MSUJpSbSDYk0k2", "g8-ch4-reader": "hUMkGvARhUZthlEhYrMj"},
   "lines": {
     "audio/replay.mp3": ["dr-somebody", "Great job! You did it again!"],
 
@@ -15186,6 +15186,38 @@
     "audio/g4/lesson/at-the-market-let-s-measure-in-t-56854006.mp3": ["dr-somebody", "At the market, let's measure in tenths. The number after the point counts tenths."],
     "audio/g4/lesson/watch-me-check-the-punctuation-t-86f286d7.mp3": ["dr-somebody", "Watch me check the punctuation. The words someone says go inside quotation marks."],
     "audio/g4/scene/here-is-the-colosseum-where-huge-b5f8fce8.mp3": ["dr-somebody", "Here is the Colosseum, where huge crowds watched gladiators fight. Many gladiators were enslaved people who had no choice."],
-    "audio/g4/scene/in-the-year-79-the-volcano-vesuv-2099cc3a.mp3": ["dr-somebody", "In the year 79, the volcano Vesuvius buried the town of Pompeii in ash. Many people died. The ash kept the town just as it was, so we can learn how they lived."]
+    "audio/g4/scene/in-the-year-79-the-volcano-vesuv-2099cc3a.mp3": ["dr-somebody", "In the year 79, the volcano Vesuvius buried the town of Pompeii in ash. Many people died. The ash kept the town just as it was, so we can learn how they lived."],
+
+    "audio/g8/ch4/a-girl-is-waiting-on-a-porch-wit-14648db5.mp3": ["g8-ch4-reader", "A girl is waiting on a porch with her grandmother. This is Hannah. She is Suh-wep-muhc, and her people have lived in these hills and valleys for thousands of years."],
+    "audio/g8/ch4/children-were-often-sent-far-fro-8e40d2fa.mp3": ["g8-ch4-reader", "Children were often sent far from home, and did not see their parents for months or years. Their hair was cut and their own clothes were taken away. They were punished for speaking their own languages."],
+    "audio/g8/ch4/for-more-than-a-hundred-years-un-9612e4cb.mp3": ["g8-ch4-reader", "For more than a hundred years, until the last one closed in 1996, the government of Canada paid for these boarding schools for First Nations, Innoo-it and May-tee children, and churches ran them."],
+    "audio/g8/ch4/hannah-is-wearing-an-orange-shir-134aee18.mp3": ["g8-ch4-reader", "Hannah is wearing an orange shirt, and so is her grandmother. Hannah tells me the shirts are for remembering."],
+    "audio/g8/ch4/hannah-s-grandmother-asks-me-to-7d6a6a86.mp3": ["g8-ch4-reader", "Hannah's grandmother asks me to open the window into the past. We see a large brick building on a hill, with rows of small windows. It is a residential school."],
+    "audio/g8/ch4/hannah-s-grandmother-says-the-la-a71915c8.mp3": ["g8-ch4-reader", "Hannah's grandmother says the languages the schools tried to end are being spoken and taught again. Hannah is learning Suh-wep-muhc-tseen from her grandmother."],
+    "audio/g8/ch4/hannah-s-grandmother-says-the-or-ac7a2d79.mp3": ["g8-ch4-reader", "Hannah's grandmother says the orange shirt has a story. The words on the shirts are Every Child Matters, and this is where they come from."],
+    "audio/g8/ch4/i-thank-them-both-quietly-i-will-87d93fbb.mp3": ["dr-somebody", "I thank them both, quietly. I will carry this story with me."],
+    "audio/g8/ch4/in-1973-a-six-year-old-suh-wep-m-517e8a8f.mp3": ["g8-ch4-reader", "In 1973 a six-year-old Suh-wep-muhc girl named Phyllis Webstad was sent to a residential school near Williams Lake. Her grandmother had bought her a brand new orange shirt for her first day."],
+    "audio/g8/ch4/in-2008-the-government-of-canada-47983cdc.mp3": ["g8-ch4-reader", "In 2008 the government of Canada apologized in Parliament. From 2008 to 2015 the Truth and Reconciliation Commission listened to more than 6,000 people, most of them survivors."],
+    "audio/g8/ch4/in-the-1880s-the-government-of-c-b679bcae.mp3": ["g8-ch4-reader", "In the 1880s the government of Canada built a system of these schools across the whole country."],
+    "audio/g8/ch4/many-children-were-hungry-many-w-6f5d148b.mp3": ["g8-ch4-reader", "Many children were hungry. Many were hurt by the adults who were supposed to care for them, and many became sick."],
+    "audio/g8/ch4/many-of-the-calls-to-action-are-830986db.mp3": ["g8-ch4-reader", "Many of the Calls to Action are still not done. In 2021 the Tuh-kem-loops tuh Suh-wep-muhc Nation announced that a search of the grounds of the former Kamloops school had found signs of about 200 possible unmarked graves."],
+    "audio/g8/ch4/more-than-150-000-children-were-2347c11a.mp3": ["g8-ch4-reader", "More than 150,000 children were sent to them. Many were taken from their families, and for much of that time the law said parents had to send them."],
+    "audio/g8/ch4/now-hannah-s-grandmother-tells-m-6a3ca2ca.mp3": ["g8-ch4-reader", "Now Hannah's grandmother tells me what it was like. I do not say anything. I only listen, and I will tell you what she said."],
+    "audio/g8/ch4/now-the-balloon-turns-north-to-t-ce2023b2.mp3": ["dr-somebody", "Now the balloon turns north, to the Klondike and The Golden Stairs."],
+    "audio/g8/ch4/other-nations-have-searched-the-ae9a0a54.mp3": ["g8-ch4-reader", "Other nations have searched the grounds of other schools since. Hannah's grandmother says the survivors always knew."],
+    "audio/g8/ch4/she-says-her-grandmother-will-te-8c1457e8.mp3": ["g8-ch4-reader", "She says her grandmother will tell us why. I sit down beside them, and I listen."],
+    "audio/g8/ch4/so-a-friend-will-read-the-rest-o-2386ed22.mp3": ["dr-somebody", "So a friend will read the rest of this chapter for me. I am listening."],
+    "audio/g8/ch4/survivors-are-people-who-went-to-4be23853.mp3": ["g8-ch4-reader", "Survivors are people who went to the schools and lived. The commission wrote down what happened so that it can never be denied or forgotten. It made 94 Calls to Action, things Canada must do to begin to put things right."],
+    "audio/g8/ch4/survivors-their-children-and-the-d6a0d9c5.mp3": ["g8-ch4-reader", "Survivors, their children and their grandchildren are still here. Hannah's grandmother says the first step is simple, and anyone can take it. Learn what happened, and tell the truth about it."],
+    "audio/g8/ch4/the-earliest-of-these-schools-op-f6336a1c.mp3": ["g8-ch4-reader", "The earliest of these schools opened in the 1830s. One of the very first was the Mohawk Institute in Brantford, beside Six Nations, where Lily lives. Lily was our first guide."],
+    "audio/g8/ch4/the-purpose-was-to-make-the-chil-3a3fe850.mp3": ["g8-ch4-reader", "The purpose was to make the children give up their own languages and ways and become like the settlers."],
+    "audio/g8/ch4/there-are-no-puzzles-today-and-n-4c0f8fd9.mp3": ["dr-somebody", "There are no puzzles today and no prizes. There is only a story that every child in Canada should hear. I am going to listen more than I talk."],
+    "audio/g8/ch4/this-is-the-interior-of-british-8ec5969e.mp3": ["dr-somebody", "This is the interior of British Columbia, near the city of Kamloops. Before we land, I need to tell you that this chapter is different."],
+    "audio/g8/ch4/thousands-of-children-died-at-th-b841df13.mp3": ["g8-ch4-reader", "Thousands of children died at the schools and never came home. Some families were never told what happened to their child."],
+    "audio/g8/ch4/we-have-left-simran-and-vancouve-06f11546.mp3": ["dr-somebody", "We have left Simran and Vancouver behind. The balloon drifts inland, over the mountains, until the land turns dry and golden. There are tan hills, tall pines and a slow river."],
+    "audio/g8/ch4/when-she-arrived-the-shirt-was-t-f1e5d29b.mp3": ["g8-ch4-reader", "When she arrived, the shirt was taken from her and she never got it back. She has said it made her feel that she did not matter."],
+    "audio/g8/ch4/years-later-she-told-that-story-b3f8cc2d.mp3": ["g8-ch4-reader", "Years later she told that story, and in 2013 Orange Shirt Day began. It is held every year on September 30, and since 2021 it is also the National Day for Truth and Reconciliation."],
+    "audio/g8/ch4/you-say-it-suh-wep-muhc-60a56763.mp3": ["g8-ch4-reader", "You say it suh-wep-muhc."],
+    "audio/g8/ch4/you-say-the-nation-s-name-tuh-ke-c6d253f7.mp3": ["g8-ch4-reader", "You say the Nation's name tuh-kem-loops tuh suh-wep-muhc."]
   }
 }

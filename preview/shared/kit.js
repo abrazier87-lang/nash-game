@@ -454,7 +454,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "53"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "54"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, setAge, ageOf, startBook, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

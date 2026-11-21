@@ -31,6 +31,7 @@ function ChapterGame(C) {
   // ---------- recorded lines ----------
   const spoken = t => { const s = String(t).replace(/<[^>]+>/g, ""); return C.speak ? C.speak(s) : s; };
   const clipOf = t => C.voice + Kit.clipName(spoken(t)) + ".mp3";
+  // A chapter may give voice: "a folder" to keep its recordings apart from the rest of the book, so that it can have its own reader (Grade 8 chapter 4 does).
   function speakLine(t, next, folder) { const f = folder || C.voice; if (!f || !t) return; const clip = x => f + Kit.clipName(spoken(x)) + ".mp3"; Kit.playClip(clip(t), ""); if (next) Kit.loadClip(clip(next)).catch(() => {}); } // "next" is fetched ahead so it starts without a pause
 
   // ---------- saved progress ----------
@@ -167,7 +168,7 @@ function ChapterGame(C) {
   function drawScene() { const sc = sceneAt(); $("options").innerHTML = ""; $("nextRow").style.display = ""; $("panel").innerHTML = ART[sc.art](); animate($("panel"), "pop"); drawLine(); learn(sc.word); }
   // Somebody else's words (a scene with who: "...") are read aloud by the balloon's clock, when the page gives clockVoice (a folder of recordings). who: "The clock" is the clock speaking for itself.
   const whoLabel = w => w === "The clock" || !C.clockVoice ? w : `${w}, read by the clock`;
-  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${whoLabel(sc.who)}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1]); else if (C.clockVoice) speakLine(sc.say[at.line], sc.say[at.line + 1], C.clockVoice); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
+  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${whoLabel(sc.who)}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1], CHAPTERS[at.c].voice); else if (C.clockVoice) speakLine(sc.say[at.line], sc.say[at.line + 1], C.clockVoice); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
   function fitCaption() { // a long line gets slightly smaller writing, so it never spills out of its box
     const cap = $("caption"); cap.style.fontSize = ""; const base = parseFloat(getComputedStyle(cap).fontSize);
     for (let i = 1; i <= 6 && cap.scrollHeight > cap.clientHeight + 1; i++) cap.style.fontSize = (base * (1 - .06 * i)).toFixed(2) + "px";
@@ -175,7 +176,7 @@ function ChapterGame(C) {
   function drawPick() { // a choice: the question, and a big button for each way to go
     const beat = beatAt(); at.opt = null;
     $("panel").innerHTML = ART[beat.art](); animate($("panel"), "pop"); $("caption").innerHTML = `<div>${beat.pick}</div>`; $("nextRow").style.display = "none";
-    $("options").innerHTML = beat.options.map((o, i) => `<button class="option" data-o="${i}">${o.label}</button>`).join(""); fitCaption(); speakLine(beat.pick);
+    $("options").innerHTML = beat.options.map((o, i) => `<button class="option" data-o="${i}">${o.label}</button>`).join(""); fitCaption(); speakLine(beat.pick, null, CHAPTERS[at.c].voice);
   }
   $("options").addEventListener("click", e => { const b = e.target.closest(".option"); if (!b || !at) return; sfx.tap(); at.opt = +b.dataset.o; at.line = 0; S.picks[at.c] = at.opt; save(); drawScene(); });
   $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats;
@@ -205,7 +206,7 @@ function ChapterGame(C) {
   function startAsk(beat) {
     G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true, choice: S.picks[at.c] || 0, case: {}, quiet: !!beat.quiet };
     $("stars").innerHTML = Array(G.need).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
-    show("game"); nextAsk(beat.intro); if (beat.intro) speakLine(beat.intro); else Kit.hush();
+    show("game"); nextAsk(beat.intro); if (beat.intro) speakLine(beat.intro, null, CHAPTERS[at.c].voice); else Kit.hush();
   }
   function nextAsk(lead) {
     let q, tries = 0; do { q = ASK[G.beat.ask](G); tries++; } while (tries < 10 && q.text === G.last);
