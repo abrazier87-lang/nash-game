@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=54">
+<link rel="stylesheet" href="shared/kit.css?v=55">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -76,6 +76,13 @@
   #startLine { text-align:center; color:#8a4f1d; font-size:18px; line-height:1.4; margin:-8px auto 20px; max-width:640px; }
   .book.start { outline:5px solid #ffd84d; outline-offset:3px; box-shadow:0 0 22px 6px rgba(255,216,77,.8), 0 5px 0 #f7efdc, 0 8px 0 rgba(0,0,0,.28); }
   .book .ribbon { position:absolute; top:-14px; left:-8px; background:#ffd84d; color:#7a4a00; font-size:16px; font-weight:bold; padding:5px 14px; border-radius:999px; box-shadow:0 3px 0 #e0a800; z-index:1; }
+  /* "For older kids": a small tag on a book that tells hard, true history, shown only to a child well below its age. A grown-up can still open it. */
+  .book .older { position:absolute; top:-12px; right:-8px; background:#fff; color:#5b4a36; font-size:13px; font-weight:bold; padding:4px 10px; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.18); z-index:1; }
+  #pop .hold { position:relative; overflow:hidden; }
+  #pop .hold::before { content:""; position:absolute; left:0; top:0; bottom:0; width:0; background:rgba(88,179,104,.55); }
+  #pop .hold.holding::before { width:100%; transition:width 1.5s linear; }
+  #pop .hold span { position:relative; }
+  #pop .small { font-size:15px; color:#7a6a58; margin-top:10px; }
   .gear.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
 </style>
 </head>
@@ -92,7 +99,7 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=54"></script>
+<script src="shared/kit.js?v=55"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -109,9 +116,9 @@ const BOOKS = [
   { grade: "Grade 3",      ages: "Ages 8-9",   name: "Dr. Somebody in Ancient China", pic: "🐉", color: "#c0392b", file: "grade3-china.html", medal: "g3" },
   { grade: "Grade 4",      ages: "Ages 9-10",  name: "Dr. Somebody in Ancient Rome", pic: "🏛️", color: "#6d2e5b", file: "grade4-rome.html", medal: "g4" },
   { grade: "Grade 5",      ages: "Ages 10-11", name: "Dr. Somebody Comes Home", pic: "🍁", color: "#2f6b3f", file: "grade5-canada.html", medal: "g5" },
-  { grade: "Grade 6",      ages: "Ages 11-12", name: "Dr. Somebody Goes East", pic: "⛵", color: "#1f5f8b", file: "grade6-east.html", medal: "g6" },
-  { grade: "Grade 7",      ages: "Ages 12-13", name: "Dr. Somebody Heads West", pic: "🦬", color: "#c2571a", file: "grade7-west.html", medal: "g7" },
-  { grade: "Grade 8",      ages: "Ages 13-14", name: "Dr. Somebody and the Long Way Round", pic: "🏔️", color: "#1d6f73", file: "grade8-north.html", medal: "g8" }
+  { grade: "Grade 6",      ages: "Ages 11-12", name: "Dr. Somebody Goes East", pic: "⛵", color: "#1f5f8b", file: "grade6-east.html", from: 11, medal: "g6" },
+  { grade: "Grade 7",      ages: "Ages 12-13", name: "Dr. Somebody Heads West", pic: "🦬", color: "#c2571a", file: "grade7-west.html", from: 12, medal: "g7" },
+  { grade: "Grade 8",      ages: "Ages 13-14", name: "Dr. Somebody and the Long Way Round", pic: "🏔️", color: "#1d6f73", file: "grade8-north.html", from: 13, medal: "g8" }
 ];
 
 function drawWho() {
@@ -183,6 +190,36 @@ function comingSoon(grade) {
 }
 $("shelf").addEventListener("click", e => { const b = e.target.closest(".book.soon"); if (b) { Kit.audio(); Kit.sfx.tap(); comingSoon(b.dataset.grade); } });
 
+// "For older kids". Grades 6, 7 and 8 tell hard, true history (the Deportation, the bison, residential schools). The books are not locked, but a child whose
+// age is more than a year below a book's range gets a gentle card first, and a grown-up opens it by pressing and holding. One year of leeway, because the age
+// is only "about" (we know the year, not the birthday) and plenty of children read ahead. A child with no age given is never stopped. Once a grown-up has
+// opened a book for a child, it stays open for that child on this device.
+const OLDER_KEY = "storyShelf.olderOk";
+const olderOk = () => { try { return JSON.parse(localStorage.getItem(OLDER_KEY) || "{}"); } catch (e) { return {}; } };
+function tooYoungFor(b) {
+  const p = Kit.currentPlayer(), age = p && Kit.ageOf(p);
+  if (!b.from || !age || age >= b.from - 1) return false;
+  return !((olderOk()[p.id] || []).includes(b.medal));
+}
+function olderCard(b) {
+  $("popCard").innerHTML = `<div class="big">🦉</div><h2>${b.grade} is for older kids</h2>
+    <p>Dr. Somebody tells some hard, true stories in this book. Ask a grown-up to open it with you.</p>
+    <div class="row"><button class="main" id="popYes">OK</button><button class="hold" id="popHold"><span>Grown-up: hold</span></button></div>
+    <p class="small">Grown-ups: press and hold the button to open this book for ${Kit.esc(Kit.currentPlayer().name)}.</p>`;
+  $("pop").classList.add("on");
+  $("popYes").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
+  const h = $("popHold"); let timer = 0;
+  const stop = () => { clearTimeout(timer); timer = 0; h.classList.remove("holding"); };
+  const go = () => { const ok = olderOk(), id = Kit.currentPlayer().id; ok[id] = [...new Set([...(ok[id] || []), b.medal])];
+    try { localStorage.setItem(OLDER_KEY, JSON.stringify(ok)); } catch (e) {} location.href = b.file; };
+  h.addEventListener("pointerdown", e => { e.preventDefault(); stop(); h.classList.add("holding"); timer = setTimeout(go, 1500); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => h.addEventListener(ev, stop));
+  h.addEventListener("contextmenu", e => e.preventDefault());
+}
+$("shelf").addEventListener("click", e => { const a = e.target.closest("a.book[data-older]"); if (!a) return;
+  const b = BOOKS.find(x => x.medal === a.dataset.older); if (!b || !tooYoungFor(b)) return;
+  e.preventDefault(); Kit.audio(); Kit.sfx.tap(); olderCard(b); });
+
 // A medal shows on a book once the child who is playing has finished that story.
 // A "Start here" ribbon marks the suggested book for the child's age. It is only a suggestion: every book stays open.
 function drawShelf() {
@@ -199,7 +236,7 @@ function drawShelf() {
   }
   $("startLine").innerHTML = line;
   $("shelf").innerHTML = BOOKS.map(b => b.file
-    ? `<a class="book${b === sb ? " start" : ""}${b.little ? " little" : ""}" href="${b.file}" style="--c:${b.color}">${b === sb ? `<span class="ribbon">Start here</span>` : ""}${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${twoPart(b.name)}</span><span class="ages">${b.ages}</span></a>`
+    ? `<a class="book${b === sb ? " start" : ""}${b.little ? " little" : ""}" href="${b.file}" style="--c:${b.color}"${b.from ? ` data-older="${b.medal}"` : ""}>${b === sb ? `<span class="ribbon">Start here</span>` : ""}${tooYoungFor(b) ? `<span class="older">Older kids</span>` : ""}${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${twoPart(b.name)}</span><span class="ages">${b.ages}</span></a>`
     : `<div class="book soon" data-grade="${b.grade}"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
 }
 drawShelf();
