@@ -101,6 +101,7 @@ function StoryGame(C) {
     if (q.tap) H.cards = () => [...$("bubble").querySelectorAll("[data-pick]")].filter(el => el._ch && !el.classList.contains("dim")).map(el => ({ el, ch: el._ch }));
     return H;
   };
+  Kit.guard(); // no name or no age yet: back to the shelf, which asks
   const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
   const GAMES = C.games, GAME_IDS = C.gameIds, NEED = C.need || 4, STARS = C.starsToWin || 5;
 
