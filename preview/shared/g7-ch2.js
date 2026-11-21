@@ -121,6 +121,7 @@
     { art: "fk_kai", word: ["la fourche", "the fork"], say: ["This is Kai. He lives in Winnipeg, and he comes to The Forks almost every week to eat at the market, walk along the river and watch the boats go by.",
       "A fork in a river is <em>la fourche</em> in French. In winter the rivers freeze solid, and Kai skates on a trail that runs along the ice, right through the middle of the city!",
       "Kai says people have been meeting at this very spot for thousands of years. That is a long time to wait for a snack. Clock, show us!"] },
+    { art: "fk_window1", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "fk_window1", say: ["The window into the past! We are looking back about <em>6,000 years</em>, long before any fort or any city. No market, no bridge. Just grass, trees and two rivers.",
       "Archaeologists, who dig up the past very carefully, have found old campfires, tools and fish bones right here. People camped here, fished here and came back year after year.",
       "First Nations peoples met here to trade, fish and make agreements, among them the ancestors of the Cree, the Anishinaabe, the Nakoda and the Dakota. Goods travelled huge distances on the rivers."] },
@@ -136,10 +137,10 @@
       "Nobody forces me to trade at one post. Two companies want my furs, so I can choose the one with the better deal. The kettles and blankets really are useful, and a good kettle saves my family hours of work.",
       "But I worry. The beaver are fewer every year. When too many are trapped, the lodges go quiet. What will the trade be when the beaver are gone?"] },
     { ask: "fk_puzzle", intro: "Both of them have a point. Now for some price puzzles. Three right answers and you pick the post where we trade." },
-    { art: "fk_choice", pick: "The window shows two trading posts, one on each bank of the river. They are rivals, and each has its own price list. Where shall we trade?", options: [
+    { art: "fk_choice", pick: "The window shows two trading posts, a short walk apart along the river. They are rivals, and each has its own price list. Where shall we trade?", options: [
       { label: "The Hudson's Bay Company post", art: "fk_hbc", word: ["échanger", "to trade"], say: ["We step into the Hudson's Bay Company post. Wool blankets are stacked on the shelves and a clerk shows us the price list in Made Beaver. A gun is 20, a blanket is 8 and a kettle is 4.",
         "To trade is <em>échanger</em> in French. I tried to trade a feather for a kettle. The clerk said it was a very nice feather, but no."] },
-      { label: "The North West Company post", art: "fk_nwc", word: ["le castor", "the beaver"], say: ["We cross to the North West Company post, whose traders came from Montreal. The price list in Made Beaver says a gun is 16, a blanket is 10 and a kettle is 5.",
+      { label: "The North West Company post", art: "fk_nwc", word: ["le castor", "the beaver"], say: ["We walk along to the North West Company post, whose traders came from Montreal. The price list in Made Beaver says a gun is 16, a blanket is 10 and a kettle is 5.",
         "Everyone here talks about <em>le castor</em>, the beaver, because beaver fur is what everyone wants. The beaver would much rather keep its coat."] }] },
     { ask: "fk_last", intro: "Time to pay at the post you chose. Three right answers finishes our visit to The Forks." },
     { art: "fk_goodbye", say: ["Back in today! Kai walks us to the footbridge. The sun is going down, and the two rivers shine like copper kettles.",

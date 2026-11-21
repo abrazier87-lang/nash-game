@@ -151,6 +151,7 @@
       "You say Stó:lō like this: STAW-low.",
       "<em>Stó:lō</em> means people of the river, in Halq'eméylem (say halk-uh-MAY-lem), the language of his people. Jordan says the name tells you everything. The river is home and food, all in one.",
       "Higher up in the canyon is the land of the Nlaka'pamux people. You say it ing-kla-KAP-muh. Every year the salmon swim past all of them. Jordan says to look through the clock and see how his family fished long ago."] },
+    { art: "rg_window1", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "rg_window1", word: ["le filet", "the net"], say: ["The window into the past! We are looking back long before 1858, long before any railway or town. The river runs deep and fast through the canyon, and the salmon are coming home.",
       "Families stand on rock ledges over the rushing water and lift salmon out with long dip nets. A net is <em>le filet</em> in French. Each fishing place is looked after by a family and handed down.",
       "The fish are split open and hung on racks in the warm, dry wind of the canyon. Dried salmon lasts all winter, with plenty left over to trade."] },

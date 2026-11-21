@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Comes Home</title>
-<link rel="stylesheet" href="shared/kit.css?v=56">
-<link rel="stylesheet" href="shared/inked.css?v=56">
-<link rel="stylesheet" href="shared/chapters.css?v=56">
+<link rel="stylesheet" href="shared/kit.css?v=57">
+<link rel="stylesheet" href="shared/inked.css?v=57">
+<link rel="stylesheet" href="shared/chapters.css?v=57">
 <style>
   /* Grade 5's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
@@ -16,11 +16,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=56"></script>
-<script src="shared/story.js?v=56"></script>
-<script src="shared/newowl.js?v=56"></script>
-<script src="shared/inkart.js?v=56"></script>
-<script src="shared/chapters.js?v=56"></script>
+<script src="shared/kit.js?v=57"></script>
+<script src="shared/story.js?v=57"></script>
+<script src="shared/newowl.js?v=57"></script>
+<script src="shared/inkart.js?v=57"></script>
+<script src="shared/chapters.js?v=57"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -262,7 +262,8 @@ const CHAPTERS = [
     { ask: "sled", intro: "Pack the sled. Three right answers and night falls." },
     { art: "night", say: ["In the middle of winter here, the sun only comes up for a few hours. The rest is night. So how did people find their way?",
       "They read the land and the sky. The shapes the wind carves in the snow. The inuksuk on the hill. And the stars.",
-      "One star hardly moves at all, and the others slowly turn around it, like the hands of my clock. I like that star."] },
+      "One star hardly moves at all, and the others slowly turn around it, like the hands of my clock. I like that star.",
+      "Inuit call it <em>Nuutuittuq</em>. That means the one that never moves. You say it like this: noo-TOO-it-took."] },
     { ask: "stars", intro: "Read the stars. Three right answers finishes the chapter." },
     { art: "town", say: ["The window is closed. This is Nina's town, today. Bright houses, a school, and snowmobiles parked beside the sleds.",
       "<em>Nunavut</em> means <em>our land</em>. It became Canada's newest territory in 1999. Nina's grandmother remembers the day.",
@@ -458,7 +459,7 @@ Object.assign(ASK, {
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How some words are said aloud. The recordings are made from the words AFTER these swaps (the writing on screen is not changed),
 // so the voice says each name the way the community reviewer gave it. tools/story-voice-lines.py reads this same list.
-const SAY = [["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "anishi-nah-beh"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "innooksook"], ["ih-NOOK", "innook"], ["IH-noo-it", "innoo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kamoo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-ghee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Anishi-nah-beh"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "innooksook"], ["Inuk", "Innook"], ["Inuit", "Innoo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kamoo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-ghee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
+const SAY = [["Nuutuittuq", "noo-too-it-took"], ["noo-TOO-it-took", "noo-too-it-took"], ["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "anishi-nah-beh"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "innooksook"], ["ih-NOOK", "innook"], ["IH-noo-it", "innoo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kamoo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-ghee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Anishi-nah-beh"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "innooksook"], ["Inuk", "Innook"], ["Inuit", "Innoo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kamoo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-ghee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Comes Home", sub: "A Grade 5 story", saveKey: "grade5Canada.v1", medal: "g5",
   chapters: CHAPTERS, ask: ASK, art: ART, intro: INTRO, introVoice: "../audio/g5/intro/",
   voice: "../audio/g5/s/", clockVoice: "../audio/g5/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t) });

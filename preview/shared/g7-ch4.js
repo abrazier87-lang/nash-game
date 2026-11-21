@@ -144,6 +144,7 @@
       "Tyson says many nations call the plains home. They are the <em>Nêhiyawak</em> (Plains Cree), the Nakoda, the <em>Niitsitapi</em> (Blackfoot), the Dakota and Lakota, and the Saulteaux."] },
     { art: "sg_meet", say: ["You say Nêhiyawak like this: nay-HEE-yuh-wuk. Niitsitapi is nee-tsee-TAH-pee. Saulteaux is SOH-toh.",
       "And the dark speck? It is a <em>bison</em>. Many people say buffalo, but bison is the proper name. In French it is le bison. A big one just looked at me, so I looked back. Politely."] },
+    { art: "sg_window1", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "sg_window1", say: ["The window into the past! It is about the year <em>1800</em>, and the plains are full of life. Around <em>30 million</em> bison live on the Great Plains of North America. Try counting that on your fingers.",
       "For the Plains nations the bison is much more than food. Tipi covers are made of its hide. So are clothes. Tools are made of bone and horn, and dried dung is fuel for the fire. Nothing is wasted.",
       "Hunters work together, and one way is to drive a herd over a cliff or into a strong pen called a pound. Everyone in the camp has a job to do. Tyson says it is time for some big numbers."] },

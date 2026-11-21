@@ -159,6 +159,7 @@
       "Simran tells us this city stands on the land of three Coast Salish nations, the <em>Musqueam</em>, the <em>Squamish</em> and the <em>Tsleil-Waututh</em>. They have lived here for thousands of years, and they live here today."] },
     { art: "hc_simran", say: ["You say <em>Musqueam</em> like MUS-kwee-um, and <em>Tsleil-Waututh</em> like SLAY-wah-tuth.",
       "She adds that this land was never given up by treaty. Her best friend Kayla is from the Squamish Nation, and Kayla wants to show us the cedar. Clock, show us!"] },
+    { art: "hc_window1", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "hc_window1", word: ["le cèdre", "the cedar"], say: ["The window into the past! Long before the city, this shore is thick with giant trees. Kayla points at the biggest. It is a <em>cedar</em>, <em>le cèdre</em> in French.",
       "The Coast Salish peoples build great houses of long cedar planks, with low sloped roofs. They carve canoes from single cedar logs. They weave cedar bark into clothing, rope and baskets, and they weave blankets too.",
       "Families also hold great gatherings, which outsiders later called the <em>potlatch</em>. A host feeds the guests for days and gives away wealth. Giving, not keeping, shows a family's standing.",

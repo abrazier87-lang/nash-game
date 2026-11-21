@@ -143,6 +143,7 @@
     { art: "ls_mei", word: ["鐵路 (teet-loh)", "the railway, in Cantonese"], say: ["This is Mei. She lives in Revelstoke, a mountain town in British Columbia, and she can hear the freight trains from her bedroom window. She says she can tell which train is coming by the sound.",
       "Mei's great-great-great-grandfather came from Guangdong, in southern China, to help build this railway. In Cantonese a railway is <em>teet-loh</em>, and Mei says the word slowly and carefully.",
       "Mei wants us to see one day in particular, November 7, 1885. But first we must see how the railway got here. Clock, show us!"] },
+    { art: "ls_window1", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "ls_window1", word: ["le chemin de fer", "the railway"], say: ["The window into the past! It is the early 1880s. British Columbia joined Canada in 1871 on the promise of a railway to the Pacific. A railway is <em>le chemin de fer</em> in French.",
       "The Canadian Pacific Railway is building it, and the hardest part is here, through these mountains and the Fraser Canyon. About <em>15,000 Chinese workers</em> came to build the British Columbia section.",
       "They were given the most dangerous jobs, like handling explosives to blast tunnels and ledges out of the rock. They were paid about one dollar a day, roughly half of what white workers were paid.",
