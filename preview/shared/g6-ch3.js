@@ -40,6 +40,7 @@
     ac_elodie: () => frame(`${sky("#9fd8f2", "#f4f1d8", [344, 40, 20], [[70, 44, .8]])}${acHills(100)}${water(130, "#5db7e6")}${acMud(168)}${acBoat(330, 184, .75, "#e63946")}${acGrass(212)}${owlAt(50, 122, 106)}${kidAt(214, 142, 1.05, GUIDE)}`),
     ac_window1: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176, "#5db7e6")}${acGrass(214)}${windowAt(236, 112, 92, acLong1)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, GUIDE)}`),
     ac_tides: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 40, 20], [[230, 30, .8]])}${acHills(88)}${water(122, "#5db7e6")}${acMud(142)}${acWharf(262, 100, 110, 80)}${acBoat(160, 178, .85, "#3b82c4")}${acGrass(214)}${owlAt(18, 122, 106)}${kidAt(216, 146, 1, GUIDE)}`),
+    ac_flag: () => frame(`${sky("#9fd8f2", "#f4f1d8", [344, 40, 20], [[70, 44, .8]])}${acHills(100)}${water(130, "#5db7e6")}${acMud(168)}${acBoat(330, 184, .75, "#e63946")}${acGrass(212)}${owlAt(50, 122, 106)}${kidAt(214, 142, 1.05, GUIDE)}${acFlag(300, 108, 40, 26, 78)}`),
     ac_window2: () => frame(`${sky("#cfdbe6", "#e4e4e0", null, [[60, 40, .8], [330, 50, .7]])}${water(176, "#8fb7cf")}${acGrass(214)}${windowAt(236, 112, 92, acLong2)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, GUIDE)}${acFlag(346, 128, 30, 20, 78)}`),
     ac_choice: () => frame(`${sky("#9fd8f2", "#f4f1d8", [56, 40, 20], [[250, 30, .8]])}${acHills(88)}${water(112, "#9fb7c9")}
       <g ${INKED}><path d="M-10 108 H196 Q186 170 164 250 H-10 Z" fill="#b5694a"/></g>${acBoat(70, 170, .7, "#e63946")}
@@ -57,7 +58,7 @@
   Object.assign(ASK, {
     ac_dyke() { // rates: the tide against the dyke, elapsed time between tides, and the speed of building
       const kind = rand(3);
-      if (kind === 0) { const h = pick([1, 2, 3]), t = pick([2, 3, 4]), T = h * t; return { html: "", text: `The tide pushes in against the new dyke. The water climbs <b>${T} metres</b> in <b>${t} hours</b>. How many metres does it rise each hour?`, choices: cards(h, [h + 1, h - 1, T, t, h + 2]), why: `Share the rise over the hours. ${T} ÷ ${t} = ${h} metres an hour.` }; }
+      if (kind === 0) { const h = pick([1, 2, 3]), t = pick([2, 3, 4]), T = h * t; return { html: "", text: `The tide pushes in against the new dyke. The water climbs <b>${T} metres</b> in <b>${t} hours</b>. How many metres does it rise each hour?`, choices: cards(h, [h + 1, h - 1, T, t, h + 2]), why: `Share the rise over the hours. ${T} ÷ ${t} = ${h} metre${h > 1 ? "s" : ""} an hour.` }; }
       if (kind === 1) { const hh = 1 + rand(5); return { html: "", text: `High tide is at <b>${hh}:00 a.m.</b> Low tide comes about <b>6 hours</b> later, and the next high tide <b>6 hours</b> after that. When is that high tide?`, choices: textCards(`${hh} p.m.`, [`${hh} a.m.`, `${hh + 6} a.m.`, `${hh + 6} p.m.`, `${hh + 3} p.m.`, `${hh + 1} p.m.`]), why: `6 + 6 = 12 hours later. ${hh}:00 a.m. plus 12 hours is ${hh}:00 p.m.` }; }
       const r = pick([4, 5, 6, 8]), d = 6 + rand(7), L = r * d; return { html: "", text: `A crew of Acadian farmers builds <b>${r} metres</b> of dyke each day. The wall must be <b>${L} metres</b> long. How many days will it take?`, choices: cards(d, [d + 1, d - 1, d + 2, d - 2, r]), why: `Length divided by the daily rate. ${L} ÷ ${r} = ${d} days.` };
     },
@@ -111,11 +112,11 @@
       "Élodie calls the tide <em>la marée</em>. The water takes about six hours to go from high to low, and then it turns and comes back. She has a tide gauge. Shall we read it?"] },
     { ask: "ac_gauge", intro: "Read Élodie's tide gauge. Three right answers and the window opens again." },
     { art: "ac_window2", who: "The clock", say: ["Tick, tock. The window opens again."] },
-    { art: "ac_window2", word: ["le drapeau", "the flag"], say: ["The window shows a sadder time. The year is <em>1755</em>. Britain and France are rivals for this land, and British soldiers have come to the Acadian villages.",
+    { art: "ac_window2", say: ["The window shows a sadder time. The year is <em>1755</em>. Britain and France are rivals for this land, and British soldiers have come to the Acadian villages.",
       "The soldiers order the Acadians to leave their homes. Families are put on ships, and many are split up. The soldiers burn the houses and barns so that nobody can come back.", "This is called the <em>Deportation</em>, or le Grand Dérangement. Thousands of Acadians died of sickness and shipwreck on the way.",
       "Some Acadian families escaped into the woods. Mi'kmaw families sheltered them and helped them survive.",
       "The window fades. About <em>10,000</em> people were sent away over the next years. Some found their way back, years later. Others made new homes far away, as far as Louisiana."] },
-    { art: "ac_elodie", say: ["But look at Élodie's flag! Acadians are still here, still speaking French, with a flag of blue, white and red and a gold star. A flag is <em>le drapeau</em>."] },
+    { art: "ac_flag", word: ["le drapeau", "the flag"], say: ["But look at Élodie's flag! Acadians are still here, still speaking French, with a flag of blue, white and red and a gold star. A flag is <em>le drapeau</em>."] },
     { ask: "ac_harvest", intro: "Élodie has some numbers to share. Three right answers and you choose what we do next." },
     { art: "ac_choice", pick: "The tide is on the move! Élodie says there are two ways to see it. Which shall we choose?", options: [
       { label: "Walk on the sea floor", art: "ac_floor", word: ["la boue", "the mud"], say: ["Boots on! At low tide the sea floor is red-brown mud, and every step goes squish. Élodie says we must stay close to shore, because the tide comes back fast.",

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody and the Long Way Round</title>
-<link rel="stylesheet" href="shared/kit.css?v=57">
-<link rel="stylesheet" href="shared/inked.css?v=57">
-<link rel="stylesheet" href="shared/chapters.css?v=57">
+<link rel="stylesheet" href="shared/kit.css?v=58">
+<link rel="stylesheet" href="shared/inked.css?v=58">
+<link rel="stylesheet" href="shared/chapters.css?v=58">
 <style>
   /* Grade 8's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9cc9e8; --sky2:#e8f0f4; --grass:#7fae8a; --grass2:#4f8a6a; --title-shadow:#2f5d7a; }
@@ -18,11 +18,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=57"></script>
-<script src="shared/story.js?v=57"></script>
-<script src="shared/newowl.js?v=57"></script>
-<script src="shared/inkart.js?v=57"></script>
-<script src="shared/chapters.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
+<script src="shared/story.js?v=58"></script>
+<script src="shared/newowl.js?v=58"></script>
+<script src="shared/inkart.js?v=58"></script>
+<script src="shared/chapters.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -46,7 +46,7 @@ const fmt = n => n.toLocaleString("en-CA");
 // A graph to read, or to answer on by tapping. o = { xmax, ymax, xstep, ystep, xl, yl, line: [slope, start], dots: [[x, y]], spots: [[x, y]] }
 // "line" draws y = slope × x + start across the graph. "dots" are plain black points. "spots" are the points the child can tap:
 // spot number i gets data-pick="i", so the question is { tap: true, html: graph(o), choices: o.spots.map((s, i) => ({ pick: String(i), ok: i === right })) }.
-const graph = o => { const W = 230, H = 176, L = 34, B = 30, T = 10, R = 12, xs = o.xstep || 1, ys = o.ystep || 1;
+const graph = o => { const W = 230, H = 176, L = 38, B = 30, T = 10, R = 12, xs = o.xstep || 1, ys = o.ystep || 1;
   const px = x => +(L + x / o.xmax * (W - L - R)).toFixed(1), py = y => +(H - B - y / o.ymax * (H - B - T)).toFixed(1); let s = "";
   for (let x = 0; x <= o.xmax; x += xs) s += `<line x1="${px(x)}" y1="${py(0)}" x2="${px(x)}" y2="${py(o.ymax)}" stroke="#d9d0c0" stroke-width="1"/><text x="${px(x)}" y="${H - B + 11}" text-anchor="middle">${x}</text>`;
   for (let y = 0; y <= o.ymax; y += ys) s += `<line x1="${px(0)}" y1="${py(y)}" x2="${px(o.xmax)}" y2="${py(y)}" stroke="#d9d0c0" stroke-width="1"/>${y ? `<text x="${L - 4}" y="${py(y) + 3}" text-anchor="end">${y}</text>` : ""}`;
@@ -91,13 +91,13 @@ const SHOP = { title: "The outfitter", items: [
   { id: "sled", name: "A sled", cost: 30, art: () => thing(`<path d="M8 24 H52 L58 34 H10 Z" fill="#c89a5e"/><path d="M6 44 H54 Q64 44 64 34" fill="none" stroke-width="4"/><path d="M16 34 V44 M44 34 V44" fill="none"/>`) }] };
 </script>
 <!-- The seven chapters. Each file adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g8-ch1.js?v=57"></script>
-<script src="shared/g8-ch2.js?v=57"></script>
-<script src="shared/g8-ch3.js?v=57"></script>
-<script src="shared/g8-ch4.js?v=57"></script>
-<script src="shared/g8-ch5.js?v=57"></script>
-<script src="shared/g8-ch6.js?v=57"></script>
-<script src="shared/g8-ch7.js?v=57"></script>
+<script src="shared/g8-ch1.js?v=58"></script>
+<script src="shared/g8-ch2.js?v=58"></script>
+<script src="shared/g8-ch3.js?v=58"></script>
+<script src="shared/g8-ch4.js?v=58"></script>
+<script src="shared/g8-ch5.js?v=58"></script>
+<script src="shared/g8-ch6.js?v=58"></script>
+<script src="shared/g8-ch7.js?v=58"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------

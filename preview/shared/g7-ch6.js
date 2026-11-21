@@ -127,7 +127,7 @@
   CHAPTERS[5] = { title: "Wheat and Sky", where: "Wheat country, Alberta", beats: [
     { art: "ws_arrive", word: ["le blé", "the wheat"], say: ["Last stop! This morning I left the Badlands on Dot's little train. She is the driver, her cars are full of grain, and I am sitting on top of one of them holding my hat.",
       "Out here the land is as flat as a pancake and as gold as a pancake too. It is a whole sea of <em>wheat</em>, which the French call <em>le blé</em>, all the way to the sky.",
-      "In between are stripes of bright yellow. That is canola, and it is in flower in July. We are on the Alberta prairie, east of the Rocky Mountains, in farm country."] },
+      "In between are stripes of bright yellow. That is canola, which flowers in the summer. We are on the Alberta prairie, east of the Rocky Mountains, in farm country."] },
     { art: "ws_lukas", word: ["la ferme", "the farm"], say: ["Dot brakes beside a little town, and a boy waves from the gravel by the track. This is Lukas. His family grows wheat and canola on a farm just outside town.",
       "Lukas's great-great-grandparents came here from Ukraine more than 120 years ago to start that farm. Today his mom drives the combine, and Lukas helps in the busy weeks.",
       "In French, a farm is <em>la ferme</em>. Lukas learned it at school. He says it is easier to spell than combine."] },

@@ -103,7 +103,7 @@
       }
       const DEV = pick([[-3, -1, 0, 1, 3], [-4, -2, 1, 2, 3], [-5, -1, 0, 2, 4], [-2, -2, 0, 1, 3]]), m = pick([-4, -2, 1, 3, 5]), rd = DEV.map(d => m + d), list = shuffle(rd.slice()).map(v => `${tf(v)}°C`).join(", ");
       if (kind === 0) {
-        return { html: "", text: `The class weather station read <b>${list}</b> on five summer mornings. What is the mean temperature?`, choices: textCards(`${tf(m)}°C`, [m + 1, m - 1, m + 2, m - 2, -m].map(v => `${tf(v)}°C`)), why: `The deviations add to 0, so the five readings add to ${tf(5 * m)}. ${tf(5 * m)} ÷ 5 = ${tf(m)}°C.` };
+        return { html: "", text: `The class weather station read <b>${list}</b> on five summer mornings. What is the mean temperature?`, choices: textCards(`${tf(m)}°C`, [m + 1, m - 1, m + 2, m - 2, -m].map(v => `${tf(v)}°C`)), why: `Add the five readings to get ${tf(5 * m)}, then divide by 5. ${tf(5 * m)} ÷ 5 = ${tf(m)}°C.` };
       }
       if (kind === 1) { const hi = Math.max(...rd), lo = Math.min(...rd), range = hi - lo;
         return { html: "", text: `The class weather station read <b>${list}</b> on five summer mornings. What is the range (highest minus lowest)?`, choices: cards(range, [range + 1, range - 1, range + 2, range * 2, Math.abs(hi)]), why: `Highest ${tf(hi)}, lowest ${tf(lo)}. ${tf(hi)} − (${tf(lo)}) = ${range} degrees.` }; }
@@ -150,7 +150,7 @@
       "On <em>April 1, 1999</em>, Nunavut became Canada's newest territory. <em>Nunavut</em> means <em>our land</em> in Inuktitut. Inuktitut is one of its official languages.",
       "Nunavut has a public government, one that serves everyone who lives there. Most of the people of Nunavut are Inuit, so Inuit lead it.",
       "Nina says that now the people who live in Nunavut make the big decisions about their own land. Everyone in the picture is dancing. I ask if there is cake. There is always cake."] },
-    { ask: "tw_case", intro: "Nina's uncle has a puzzle about the sea ice. This is a case file with three steps, and each step uses the answer from the one before. Three right answers in a row solve the case." },
+    { ask: "tw_case", intro: "Nina's uncle has a puzzle about the sea ice. This is a case file with three steps, and each step uses the answer from the one before. Three right answers solve the case." },
     { art: "tw_choice", pick: "The sky is still bright, and it is time to choose. Nina's uncle is going out on the sea ice to check how thick it is with a long measuring pole, and we are invited. Or we could help Nina's class with the weather station outside the school. Which shall it be?", options: [
       { label: "Go out on the ice with Nina's uncle", art: "tw_ice", word: ["la glace", "the ice"], say: ["Nina's uncle knows this ice well. He tests it carefully before every step, and we follow exactly in his footsteps. He pushes a long pole down through a small hole and reads the thickness in centimetres.",
         "The numbers tell him whether the ice can be trusted, and where it can be crossed. Ice in French is <em>la glace</em>. I keep my wings out for balance. Nina says I look like a very nervous airplane."] },

@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody's Space Balloon</title>
-<link rel="stylesheet" href="shared/kit.css?v=57">
+<link rel="stylesheet" href="shared/kit.css?v=58">
 <style>
   /* Space look: dark sky, stars, standing on a moon. */
   :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
@@ -32,8 +32,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=57"></script>
-<script src="shared/story.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
+<script src="shared/story.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -120,11 +120,12 @@ const GAMES = {
       [`🐶 ${tiles(["d", "o", "?"])}`, "I say the word slowly, and listen to the very end. Dog."],
       [`🐶 ${tiles(["d", "o", "g"])}`, "Dog ends with G. D, O, G. That spells dog!"]]),
     makeQuestion(step) {
-      const t = pick(step === 4 ? W2 : W1), w = t[0], isV = c => VOWELS.includes(c);
+      const isV = c => VOWELS.includes(c), cpos = x => [...x].map((c, i) => isV(c) || ["sh", "ck", "ng", "ow"].some(g => { const j = x.indexOf(g); return j >= 0 && (i === j || i === j + 1); }) ? -1 : i).filter(i => i >= 0); // letters inside a team (sh, ck, ng, ow) are never asked
+      const t = pick(step === 4 ? W2.filter(x => cpos(x[0]).length) : W1), w = t[0];
       let at;
       if (step === 1) at = 0; else if (step === 2) at = w.length - 1;
       else if (step === 3) { const cvc = W1.filter(x => isV(x[0][1]) && !isV(x[0][0]) && !isV(x[0][2])); return this.build(pick(cvc), 1, 3); }
-      else at = pick([...w].map((c, i) => isV(c) ? -1 : i).filter(i => i >= 0)); // step 4: a missing consonant in a longer word
+      else at = pick(cpos(w)); // step 4: a missing consonant in a longer word
       return this.build(t, at, step === 4 ? 4 : 3);
     },
     build(t, at, count) {
@@ -180,7 +181,7 @@ const GAMES = {
         const total = 6 + rand(15), a = Math.max(1, total - 10) + rand(Math.min(10, total - 1) - Math.max(1, total - 10) + 1), b = total - a;
         return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what, makes ${total}?`, yay: `Yes! It's ${b}!`, pause: 3000, choices: numCards(b, 0, 20, 4),
           hint: H => { H.show(`${a} → ${total}`); return H.say(`Start at ${a}, and count up to ${total}. How many numbers did you count?`); },
-          explain: async H => (await talkThrough(H, [[`${a} → ${range(a + 1, total).join(", ")}`, `Count up from ${a}. ${range(a + 1, total).join(", ")}.`]])) && pointTo(H, `That's ${b} numbers. So the answer is ${b}.`) };
+          explain: async H => (await talkThrough(H, [[`${a} → ${range(a + 1, total).join(", ")}`, `Count up from ${a}. ${range(a + 1, total).join(", ")}.`]])) && pointTo(H, `That's ${b} number${b === 1 ? "" : "s"}. So the answer is ${b}.`) };
       }
       let a, b;
       if (step === 1) { const sum = 2 + rand(9); a = 1 + rand(sum - 1); b = sum - a; }
@@ -200,14 +201,14 @@ const GAMES = {
       if (step === 4) { // taking away tens (Grade 1 works with numbers up to 50)
         const b = 10 * (1 + rand(3)), a = b + 1 + rand(50 - b), ans = a - b, at = Math.floor(a / 10), bt = b / 10, o = a % 10;
         return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a}, minus ${b}?`, yay: `Yes! It's ${ans}!`, pause: 3000, choices: numCards(ans, 0, 50, 4, [ans + 10, ans - 10, ans + 1]),
-          hint: H => { H.show(`${at} tens − ${bt} ten${bt === 1 ? "" : "s"}`); return H.say(`Take away the tens: ${at} ten${at === 1 ? "" : "s"} take away ${bt}. The ones stay the same.`); },
-          explain: async H => (await talkThrough(H, [[`${at} ten${at === 1 ? "" : "s"} − ${bt} = <b>${at - bt} ten${at - bt === 1 ? "" : "s"}</b>`, `${at} ten${at === 1 ? "" : "s"} take away ${bt} ten${bt === 1 ? "" : "s"} leaves ${at - bt} ten${at - bt === 1 ? "" : "s"}. That's ${(at - bt) * 10}.`], [`${(at - bt) * 10} + ${o} = <b>${ans}</b>`, `The ${o} ones stay the same. ${(at - bt) * 10} and ${o} make ${ans}.`]])) && pointTo(H, `So the answer is ${ans}.`) };
+          hint: H => { H.show(`${at} ten${at === 1 ? "" : "s"} − ${bt} ten${bt === 1 ? "" : "s"}`); return H.say(`Take away the tens: ${at} ten${at === 1 ? "" : "s"} take away ${bt}.${o ? " The ones stay the same." : ""}`); },
+          explain: async H => (await talkThrough(H, [[`${at} ten${at === 1 ? "" : "s"} − ${bt} = <b>${at - bt} ten${at - bt === 1 ? "" : "s"}</b>`, `${at} ten${at === 1 ? "" : "s"} take away ${bt} ten${bt === 1 ? "" : "s"} leaves ${at - bt} ten${at - bt === 1 ? "" : "s"}. That's ${(at - bt) * 10}.`]].concat(o ? [[`${(at - bt) * 10} + ${o} = <b>${ans}</b>`, `The ${o} one${o === 1 ? " stays" : "s stay"} the same. ${(at - bt) * 10} and ${o} make ${ans}.`]] : []))) &&pointTo(H, `So the answer is ${ans}.`) };
       }
       if (step === 3) { // the missing number
         const a = 6 + rand(15), b = 1 + rand(Math.min(10, a - 1)), c = a - b;
         return { bubble: `<span class="sum">${a} − <b>?</b> = ${c}</span>`, say: `${a} minus what, leaves ${c}?`, yay: `Yes! It's ${b}!`, pause: 3000, choices: numCards(b, 0, 20, 4),
           hint: H => { H.show(`${c} → ${a}`); return H.say(`Count up from ${c}, to ${a}. How many numbers did you count?`); },
-          explain: async H => (await talkThrough(H, [[`${c} → ${range(c + 1, a).join(", ")}`, `Count up from ${c}. ${range(c + 1, a).join(", ")}.`]])) && pointTo(H, `That's ${b} numbers. So the answer is ${b}.`) };
+          explain: async H => (await talkThrough(H, [[`${c} → ${range(c + 1, a).join(", ")}`, `Count up from ${c}. ${range(c + 1, a).join(", ")}.`]])) && pointTo(H, `That's ${b} number${b === 1 ? "" : "s"}. So the answer is ${b}.`) };
       }
       const a = step === 1 ? 2 + rand(9) : 11 + rand(10), b = 1 + rand(step === 1 ? a : 10);
       return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a}, minus ${b}?`, yay: `Yes! It's ${a - b}!`, pause: 2800, choices: numCards(a - b, 0, 20),
@@ -232,10 +233,15 @@ const GAMES = {
           : async H => { // count the long sticks by tens with the child, then leave the little ones to them
               const rods = [...H.bubble.querySelectorAll(".rod")];
               if (!(await H.say("Count the long sticks by tens."))) return;
+              if (!o) { // no little ones: count all but the last stick, the child says the answer
+                for (let i = 0; i < rods.length - 1; i++) { H.glow(rods[i], true); if (!(await H.say(String((i + 1) * 10)))) return; }
+                H.glow(rods[rods.length - 1], true);
+                return H.say("Now say the number for the last long stick.");
+              }
               for (let i = 0; i < rods.length; i++) { H.glow(rods[i], true); if (!(await H.say(String((i + 1) * 10)))) return; }
               return H.say(`That's ${t * 10}. Now keep counting on with the little ones.`);
             },
-        explain: H => pointTo(H, o ? `${t} ten${t === 1 ? "" : "s"} make ${t * 10}. ${cap(NUM[o] || String(o))} more ones make ${n}.` : `${t} tens make ${n}.`),
+        explain: H => pointTo(H, o ? `${t} ten${t === 1 ? " makes" : "s make"} ${t * 10}. ${cap(NUM[o] || String(o))} more one${o === 1 ? " makes" : "s make"} ${n}.` : `${t} tens make ${n}.`),
         choices: numCards(n, 10, 50, step === 1 ? 3 : 4, near) };
     }
   },
@@ -286,11 +292,11 @@ const GAMES = {
       [tiles([5, 10, 15, "?"]), "5, 10, 15."], [tiles([5, 10, 15, 20]), "Five more than 15 is 20. So 20 comes next!"]]),
     makeQuestion(step) { // Grade 1 counts up to 50
       const back = step === 4, by = step === 1 ? 10 : step === 2 ? 5 : step === 3 ? 2 : pick([10, 5]), word = { 10: "tens", 5: "fives", 2: "twos" }[by];
-      const top = Math.floor(50 / by) - 3, start = back ? by * (4 + rand(top)) : by * (1 + rand(top)); // the answer stays at 50 or less
-      const d = back ? -by : by, seq = [start, start + d, start + 2 * d], ans = start + 3 * d;
+      const len = step === 1 ? 2 + rand(2) : 3, top = Math.floor(50 / by) - len, start = back ? by * (4 + rand(top)) : step === 1 ? by * rand(top + 1) : by * (1 + rand(top)); // the answer stays at 50 or less
+      const d = back ? -by : by, seq = Array.from({ length: len }, (_, i) => start + i * d), ans = start + len * d;
       return { bubble: tiles(seq.concat("?")), key: seq.join(), say: `Count ${back ? "backwards " : ""}by ${word}. ${seq.join(", ")}. What comes next?`, yay: `Yes! ${seq.concat(ans).join(", ")}!`, pause: 3400,
         hint: H => { H.show(`${back ? "−" : "+"}${by} each time`); return H.say(back ? `Each number is ${by} less than the one before. Take away ${by} again.` : `Each number is ${by} more than the one before. Add ${by} again.`); },
-        explain: async H => (await H.say(`${seq.join(", ")}. Each jump is ${by} ${back ? "less" : "more"}.`)) && pointTo(H, `${by} ${back ? "less" : "more"} than ${seq[2]} is ${ans}.`),
+        explain: async H => (await H.say(`${seq.join(", ")}. Each jump is ${by} ${back ? "less" : "more"}.`)) && pointTo(H, `${by} ${back ? "less" : "more"} than ${seq[len - 1]} is ${ans}.`),
         choices: numCards(ans, 0, 50, 3, [ans + by, ans - by, ans + 1, ans - 1].filter(k => !seq.includes(k))) };
     }
   }

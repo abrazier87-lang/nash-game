@@ -81,7 +81,7 @@
   Object.assign(ASK, {
     nl_zones() { // time zones and elapsed time with half hours
       const kind = rand(3);
-      if (kind === 0) { const h = 2 + rand(7), right = `${h + 1}:30`; return { html: "", text: `It is <b>${h}:00</b> p.m. in Ontario. Newfoundland is <b>1 hour 30 minutes</b> ahead. What time is it in St. John's?`, choices: textCards(right, [`${h + 1}:00`, `${h}:30`, `${h + 2}:00`, `${h + 2}:30`, `${h - 1}:30`]), why: `Add 1 hour 30 minutes. ${h}:00 + 1 hour = ${h + 1}:00, and 30 more minutes is ${h + 1}:30.` }; }
+      if (kind === 0) { const h = 2 + rand(7), right = `${h + 1}:30`; return { html: "", text: `It is <b>${h}:00</b> p.m. in Toronto. Newfoundland is <b>1 hour 30 minutes</b> ahead. What time is it in St. John's?`, choices: textCards(right, [`${h + 1}:00`, `${h}:30`, `${h + 2}:00`, `${h + 2}:30`, `${h - 1}:30`]), why: `Add 1 hour 30 minutes. ${h}:00 + 1 hour = ${h + 1}:00, and 30 more minutes is ${h + 1}:30.` }; }
       if (kind === 1) { const h = 1 + rand(6), k = 1 + rand(2), right = `${h + k + 1}:15`; return { html: "", text: `A plane leaves Halifax at <b>${h}:15</b> p.m. Halifax time and flies for <b>${k} h 30 min</b>. St. John's is 30 minutes ahead. What time does it land there?`, choices: textCards(right, [`${h + k}:45`, `${h + k + 1}:45`, `${h + k}:15`, `${h + k + 2}:15`, `${h + k + 1}:00`]), why: `${h}:15 plus ${k} h 30 min is ${h + k}:45 in Halifax. Add 30 minutes for St. John's: ${h + k + 1}:15.` }; }
       const h = 5 + rand(3), d = 1 + rand(3), m = pick([15, 45]), n = 60 * d - 30 + m;
       return { html: "", text: `The sun rises at Cape Spear at <b>${h}:30</b> a.m. Declan gets there at <b>${h + d}:${m}</b> a.m. How many minutes after sunrise is that?`, choices: cards(n, [60 * d + 15, 60 * d + 30, n + 30, n - 30, 60 * d]), why: `${h}:30 to ${h + d}:00 is ${60 * d - 30} minutes. Then ${m} more. ${60 * d - 30} + ${m} = ${n} minutes.` };
@@ -107,16 +107,16 @@
       const kind = rand(3);
       if (kind === 0) {
         const a = 4 + rand(6), b = 2 + rand(5), c = 2 + rand(4);
-        if (rand(2)) { const n = a + b * c; return { html: "", text: `Declan counts <b>${a}</b> gulls, then <b>${b}</b> ledges with <b>${c}</b> puffins on each. His sum is <b>${a} + ${b} × ${c}</b>. What does it equal?`, choices: cards(n, [(a + b) * c, a + b + c, a * b + c, a * b * c, n + 1]), why: `Multiply first. ${b} × ${c} = ${b * c}, then add. ${a} + ${b * c} = ${n}.` }; }
-        const n = (a + b) * c; return { html: "", text: `Declan counts <b>${a}</b> puffins and <b>${b}</b> gulls on each of <b>${c}</b> cliffs. His sum is <b>(${a} + ${b}) × ${c}</b>. What does it equal?`, choices: cards(n, [a + b * c, a + b + c, a * b * c, a * b + c, n + 1]), why: `Brackets first. ${a} + ${b} = ${a + b}, then ${a + b} × ${c} = ${n}.` };
+        if (rand(2)) { const n = a + b * c; return { html: "", text: `Declan counts <b>${a}</b> gulls, then <b>${b}</b> ledges with <b>${c}</b> puffins on each. He writes <b>${a} + ${b} × ${c}</b>. What does it equal?`, choices: cards(n, [(a + b) * c, a + b + c, a * b + c, a * b * c, n + 1]), why: `Multiply first. ${b} × ${c} = ${b * c}, then add. ${a} + ${b * c} = ${n}.` }; }
+        const n = (a + b) * c; return { html: "", text: `Declan counts <b>${a}</b> puffins and <b>${b}</b> gulls on each of <b>${c}</b> cliffs. He writes <b>(${a} + ${b}) × ${c}</b>. What does it equal?`, choices: cards(n, [a + b * c, a + b + c, a * b * c, a * b + c, n + 1]), why: `Brackets first. ${a} + ${b} = ${a + b}, then ${a + b} × ${c} = ${n}.` };
       }
       if (kind === 1) { const [a, b] = pick([[3, 2], [5, 2], [4, 3], [3, 1], [5, 3], [7, 2]]), m = 3 + rand(4), right = `${a} : ${b}`; return { html: "", text: `A cliff has <b>${a * m} puffins</b> and <b>${b * m} gulls</b>. What is the ratio of puffins to gulls, in its simplest form?`, choices: textCards(right, [`${b} : ${a}`, `${a * m} : ${b}`, `${a + 1} : ${b}`, `${a} : ${b + 1}`, `${a * 2} : ${b}`], x => `<span class="ratio">${x}</span>`), why: `Divide both numbers by ${m}. ${a * m} ÷ ${m} = ${a}, and ${b * m} ÷ ${m} = ${b}. The ratio is ${a} to ${b}.` }; }
       const N = pick([20, 40, 60, 80]), pc = pick([10, 20, 25, 30, 50, 75]), n = N * pc / 100;
-      return { html: "", text: `Declan's class has <b>${N} students</b>. <b>${pc}%</b> of them take the boat tour. How many students is that?`, choices: cards(n, [N - n, pc, n + 5, n - 5, n * 2]), why: `${pc}% means ${pc} out of 100. ${N} × ${pc} ÷ 100 = ${n} students.` };
+      return { html: "", text: `Declan's school has <b>${N} students</b>. <b>${pc}%</b> of them take the boat tour. How many students is that?`, choices: cards(n, [N - n, pc, n + 5, n - 5, n * 2]), why: `${pc}% means ${pc} out of 100. ${N} × ${pc} ÷ 100 = ${n} students.` };
     }
   });
 
-  // FACT CHECK: Terre-Neuve is the French name of the island and province of Newfoundland (literally "new land"). The beat says it means new found land, as the English name does.
+  // FACT CHECK: Terre-Neuve is the French name of the island and province of Newfoundland (literally "new land"). The beat says it means new land.
   // FACT CHECK: la morue is the French word for cod. le macareux is the French word for the (Atlantic) puffin (le macareux moine). l'iceberg is the same word in French.
   // FACT CHECK: "Whaddaya at?" is a well-known Newfoundland English greeting that means roughly how are you doing / what are you up to. "b'y" (spoken like "boy") is a common Newfoundland term of address for a friend or buddy, used for men and boys and often for anyone. Check spelling and meaning with a Newfoundlander if possible.
   // FACT CHECK: The Norse (Vikings) sailed from Greenland and built a small settlement of sod-walled buildings at L'Anse aux Meadows, at the northern tip of Newfoundland, about 1,000 years ago (about the year 1000). It is a UNESCO World Heritage Site. They are the first Europeans known to have reached North America, about 500 years before Columbus (1492).
@@ -132,9 +132,9 @@
   // FACT CHECK: In the goodbye the guides are named as Léa, Olivier, Élodie, Sadie, Amara and Declan, and the picture draws their hoodie colours as guesses: match them to Chapters 1 to 5 if they differ.
   // FACT CHECK: Reworded after an outside review (Gemini, November 2026), checked against The Canadian Encyclopedia: settlers killed Beothuk people (not checked against a source this time: a reader should confirm the wording); Cape Spear is the most easterly point in Canada (Greenland is farther east in North America).
   CHAPTERS[5] = { title: "The Edge of the Map", where: "Newfoundland", beats: [
-    { art: "nl_arrive", word: ["Terre-Neuve", "Newfoundland, meaning new found land"], say: ["Off we hop, over the water from Halifax. The clock keeps pointing east, and east, and east. Until there is almost nothing left to point at.",
+    { art: "nl_arrive", word: ["Terre-Neuve", "Newfoundland (new land)"], say: ["Off we hop, over the water from Halifax. The clock keeps pointing east, and east, and east. Until there is almost nothing left to point at.",
       "This is <em>Newfoundland</em>, an island on the edge of the sea. The city below is St. John's. Look at the houses! Red, yellow, blue and green, stacked up the steep hill like a box of crayons.",
-      "In French the island is called <em>Terre-Neuve</em>. That means new found land. It was new only to the visitors, which is a bit cheeky when you think about it."] },
+      "In French the island is called <em>Terre-Neuve</em>. That means new land. It was new only to the visitors, which is a bit cheeky when you think about it."] },
     { art: "nl_declan", word: ["Whaddaya at?", "how are you doing?"], say: ["This is Declan. He lives right here in St. John's, in a bright orange house on one of those very steep streets. His legs are very strong.",
       "He greets me with <em>Whaddaya at?</em> That is a Newfoundland way to ask how you are doing. I said I was at being an owl. Declan laughed anyway.",
       "Declan says Newfoundland has its own <em>time zone</em>. The clocks here are half an hour ahead of the rest of Atlantic Canada. My balloon clock is very confused."] },

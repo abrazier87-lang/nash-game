@@ -110,7 +110,7 @@
       return { html: "", text: `Now <b>${fmt(left)} litres</b> are left, and the ship uses <b>${fmt(daily)} litres</b> a day. For how many more days will the water last?`, choices: cards(more, [more + 1, more - 1, D, u, more + 2]), why: `${fmt(left)} ÷ ${fmt(daily)} = ${more} more days.` };
     },
     hc_last(g) { // follows the choice: the canoe journey (0) or the memorial (1)
-      const way = g && g.choice ? 1 : 0, kind = rand(3);
+      const way = g && g.choice ? 1 : 0, kind = way && g ? Math.min(2, g.stars || 0) : rand(3);
       if (way === 0) {
         if (kind === 0) { const v = pick([4, 5, 6]), t = pick([2, 3, 4]), d = v * t;
           return { html: "", text: `Kayla's family paddles at <b>${v} km/h</b> for <b>${t} hours</b>. How many kilometres do they travel?`, choices: cards(d, [v + t, d + v, d - v, d + t, d * 2]), why: `Distance = speed × time = ${v} × ${t} = ${d} km.` }; }
@@ -173,7 +173,7 @@
     { who: "The immigration officer", art: "hc_officer", say: ["I am an immigration officer at the port of Vancouver. On May 23, 1914 a ship called the <em>Komagata Maru</em> comes into the harbour with <em>376</em> passengers from Punjab. I have my orders.",
       "Canada has a rule: immigrants must come by one continuous journey from their home country. No ship sails straight from India, so these passengers cannot meet it. The rule names no one. I am only applying it as written, and I will not let them land.",
       "I am told they are British subjects too. But many people in this city want them turned away, and want Canada kept for people like themselves. They tell me so loudly. I do not make the law."] },
-    { who: "A passenger on the ship", art: "hc_passenger", say: ["I sailed on the <em>Komagata Maru</em> from Punjab. Most of us are Sikhs, with Muslims and Hindus too. We are British subjects, like people in Canada, and many of us served in the British army.",
+    { who: "A passenger on the ship", art: "hc_passenger", say: ["I am from Punjab, and I sailed on the <em>Komagata Maru</em> from Hong Kong. Most of us are Sikhs, with Muslims and Hindus too. We are British subjects, like people in Canada, and many of us served in the British army.",
       "For two months they hold us on board, within sight of the city. Our food and water run short. People here, our own South Asian community, raise money for us and take our case to court.",
       "On July 23, 1914 they force us to sail away, with a navy ship's guns pointed at us. Only about 20 of us, who had lived in Canada before, are ever allowed ashore."] },
     { art: "hc_simran", say: ["The window closes, and I am quiet for a while. Then Simran tells me the rest. When the ship reached India, police tried to arrest the passengers at a place called <em>Budge Budge</em>. About 20 of them were shot and killed.",

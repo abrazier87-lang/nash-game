@@ -76,7 +76,7 @@
   Object.assign(ASK, {
     sg_big() { // big numbers and powers of ten: writing them, comparing them, estimating
       const kind = rand(3);
-      if (kind === 0) { const [what, e] = pick([["about <b>30 million</b> bison lived on the Great Plains", 7], ["one big herd held <b>300 000</b> bison", 5], ["a small herd held <b>3 000</b> bison", 3]]);
+      if (kind === 0) { const [what, e] = pick([["about <b>30 million</b> bison lived on the Great Plains", 7], ["one big herd held <b>300,000</b> bison", 5], ["a small herd held <b>3,000</b> bison", 3]]);
         return { html: "", text: `Long ago ${what}. Which of these writes that number as a power of ten?`, choices: textCards(e, [e + 1, e - 1, e + 2, e - 2, e + 3], k => `3 × 10<sup>${k}</sup>`), why: `The 3 is followed by ${e} zeros, so it is 3 × 10<sup>${e}</sup>.` }; }
       if (kind === 1) { const herd = pick([300, 3000, 30000]), r = 30000000 / herd;
         return { html: "", text: `Long ago about <b>${fmt(30000000)}</b> bison lived on the plains. Imagine a small herd of <b>${fmt(herd)}</b>. The old number was how many times as big?`, choices: cards(r, [r * 10, r / 10, r / 100, herd, r + herd]), why: `${fmt(30000000)} ÷ ${fmt(herd)} = ${fmt(r)}. Each zero less in the herd makes the answer one power of ten bigger.` }; }
@@ -91,12 +91,12 @@
       if (kind === 1) { const N = pick([200, 300, 400, 500]), p = pick([10, 15, 20, 25]), a = N * p / 100;
         return { html: "", text: `Imagine a map of the old prairie cut into <b>${N}</b> squares. Only <b>${p}%</b> of the squares are still native grass today. How many squares is that?`, choices: cards(a, [N - a, a * 2, a + 10, p, a - 10]), why: `${p}% of ${N} = ${p} ÷ 100 × ${N} = ${a} squares.` }; }
       const W = pick([20, 25, 50]), x = pick([3, 5, 7, 9, 11, 13]), p = x * 100 / W;
-      return { html: "", text: `Tyson counts <b>${W}</b> animals on a ridge. <b>${x}</b> are bison and the rest are pronghorn. What percent of the animals are bison?`, choices: textCards(p, [100 - p, p * 2, p + 10, p + 20, x], k => `${k}%`), why: `${x} out of ${W} is ${x * 100 / W} out of 100. That is ${p}%.` };
+      return { html: "", text: `Tyson counts <b>${W}</b> animals on a ridge. <b>${x}</b> are bison and the rest are pronghorn. What percent of the animals are bison?`, choices: textCards(p, [100 - p, p * 2, p + 10, p + 20, x, p - 10, p + 5].filter(k => k > 0 && k < 100), k => `${k}%`), why: `${x} out of ${W} is ${x * 100 / W} out of 100. That is ${p}%.` };
     },
     sg_decline() { // percent change: reading a fall, soberly
       const kind = rand(3);
       if (kind === 0) { const S = pick([200, 400, 500, 800, 1000]), p = pick([5, 10, 20, 25, 40, 50]), E = S * p / 100;
-        return { html: "", text: `Imagine one herd of <b>${fmt(S)}</b> bison. Hide hunters came, and only <b>${fmt(E)}</b> were left. What percent of the herd was left?`, choices: textCards(p, [100 - p, p * 2, p + 10, p + 20, E], k => `${k}%`), why: `${E} ÷ ${S} = ${p / 100}, which is ${p}%.` }; }
+        return { html: "", text: `Imagine one herd of <b>${fmt(S)}</b> bison. Hide hunters came, and only <b>${fmt(E)}</b> were left. What percent of the herd was left?`, choices: textCards(p, [100 - p, p * 2, p + 10, p + 20, E, p - 10, p + 5].filter(k => k > 0 && k < 100), k => `${k}%`), why: `${E} ÷ ${S} = ${p / 100}, which is ${p}%.` }; }
       if (kind === 1) { const f = pick([50, 60, 75, 80, 90]), S = pick([500, 1000, 2000]), E = S * (100 - f) / 100;
         return { html: "", text: `Imagine a herd of <b>${fmt(S)}</b> bison was cut down to <b>${fmt(E)}</b>. By what percent did the herd fall?`, choices: textCards(f, [100 - f, f - 10, f + 10, f - 5, f + 5], k => `${k}%`), why: `It fell by ${fmt(S)} − ${fmt(E)} = ${fmt(S - E)}. ${fmt(S - E)} out of ${fmt(S)} is ${f}%.` }; }
       const q = pick([50, 75, 80, 90]), E = pick([50, 100, 150, 200, 250]), S = E * 100 / (100 - q);

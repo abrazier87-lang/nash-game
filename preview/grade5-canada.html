@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Comes Home</title>
-<link rel="stylesheet" href="shared/kit.css?v=57">
-<link rel="stylesheet" href="shared/inked.css?v=57">
-<link rel="stylesheet" href="shared/chapters.css?v=57">
+<link rel="stylesheet" href="shared/kit.css?v=58">
+<link rel="stylesheet" href="shared/inked.css?v=58">
+<link rel="stylesheet" href="shared/chapters.css?v=58">
 <style>
   /* Grade 5's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
@@ -16,11 +16,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=57"></script>
-<script src="shared/story.js?v=57"></script>
-<script src="shared/newowl.js?v=57"></script>
-<script src="shared/inkart.js?v=57"></script>
-<script src="shared/chapters.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
+<script src="shared/story.js?v=58"></script>
+<script src="shared/newowl.js?v=58"></script>
+<script src="shared/inkart.js?v=58"></script>
+<script src="shared/chapters.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -263,12 +263,12 @@ const CHAPTERS = [
     { art: "night", say: ["In the middle of winter here, the sun only comes up for a few hours. The rest is night. So how did people find their way?",
       "They read the land and the sky. The shapes the wind carves in the snow. The inuksuk on the hill. And the stars.",
       "One star hardly moves at all, and the others slowly turn around it, like the hands of my clock. I like that star.",
-      "Inuit call it <em>Nuutuittuq</em>. That means the one that never moves. You say it like this: noo-TOO-it-took."] },
+      "Inuit call it <em>Nuutuittuq</em>. That means the one that never moves. You say it like this: <em>noo-TOO-it-took</em>."] },
     { ask: "stars", intro: "Read the stars. Three right answers finishes the chapter." },
-    { art: "town", say: ["The window is closed. This is Nina's town, today. Bright houses, a school, and snowmobiles parked beside the sleds.",
+    { art: "town", say: ["The window is closed. This is Nina's city, today. Bright houses, a school, and snowmobiles parked beside the sleds.",
       "<em>Nunavut</em> means <em>our land</em>. It became Canada's newest territory in 1999. Nina's grandmother remembers the day.",
       "Nakurmiik, Nina. I have learned that snow can be warm, that stones can give directions, and that I need a much bigger scarf.",
-      "I have been all the way to the top of my country. There is only one place left to go. Home. Tick tock!"] }
+      "I have been all the way to the far north of my country. There is only one place left to go. Home. Tick tock!"] }
   ] },
   { title: "Home Again", where: "The Grand River", beats: [
     { art: "homeair", say: ["Home at last. I started this trip right here in southern Ontario, and I have come all the way around.",
@@ -371,7 +371,7 @@ Object.assign(ASK, {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"], step = pick([5, 10, 20]), vals = shuffle([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 5).map(k => k * step), kind = rand(3);
     if (kind === 0) { const [i, j] = shuffle([0, 1, 2, 3, 4]), hi = Math.max(vals[i], vals[j]), lo = Math.min(vals[i], vals[j]), n = hi - lo, hd = vals[i] > vals[j] ? days[i] : days[j], ld = vals[i] > vals[j] ? days[j] : days[i];
       return { html: barGraph(days, vals, step), text: `Geese counted each morning. How many <b>more</b> geese were counted on <b>${hd}</b> than on <b>${ld}</b>?`, choices: cards(n, [hi, lo, hi + lo, n + step, n - step]), why: `${hd} shows ${hi} and ${ld} shows ${lo}. ${hi} − ${lo} = ${n}.` }; }
-    if (kind === 1) { const n = vals.reduce((a, b) => a + b, 0); return { html: barGraph(days, vals, step), text: `Geese counted each morning. How many geese were counted in the <b>whole week</b>?`, choices: cards(n, [n + step, n - step, n + 10 * step, n - vals[0], Math.max(...vals)]), why: `Add all five bars. ${vals.join(" + ")} = ${n}.` }; }
+    if (kind === 1) { const n = vals.reduce((a, b) => a + b, 0); return { html: barGraph(days, vals, step), text: `Geese counted each morning. How many geese were counted <b>from Monday to Friday</b>?`, choices: cards(n, [n + step, n - step, n + 10 * step, n - vals[0], Math.max(...vals)]), why: `Add all five bars. ${vals.join(" + ")} = ${n}.` }; }
     const m = 20 + 4 * rand(10), offs = pick([[-8, 0, 8], [-12, 4, 8], [-4, -4, 8], [-16, 4, 12]]), three = shuffle(offs.map(o => m + o)), sum = three.reduce((a, b) => a + b, 0);
     return { html: "", text: `On three mornings he counted <b>${three[0]}</b>, <b>${three[1]}</b> and <b>${three[2]}</b> geese. What is the <b>mean</b> (the average) for one morning?`, choices: cards(m, [sum, m + 4, m - 4, Math.max(...three), m + 1]), why: `Add them, then share by 3. ${three.join(" + ")} = ${sum}, and ${sum} ÷ 3 = ${m}.` };
   },
@@ -383,7 +383,7 @@ Object.assign(ASK, {
   },
   snow() { // how long, how far, how many
     const kind = rand(3);
-    if (kind === 0) { const start = 60 * (7 + rand(3)) + 5 * rand(12), mins = 65 + 5 * rand(30), end = start + mins, hrs = Math.floor(mins / 60), rest = mins % 60;
+    if (kind === 0) { const mins = 65 + 5 * rand(30), start = 420 + 5 * rand((775 - mins - 420) / 5 + 1), end = start + mins, hrs = Math.floor(mins / 60), rest = mins % 60;
       return { html: "", text: `They leave camp at <b>${clockText(start)}</b> and reach the next camp at <b>${clockText(end)}</b>. How many <b>minutes</b> did the walk take?`, choices: cards(mins, [mins + 60, mins - 60, mins + 10, mins - 10, mins + 5]), why: `That is ${hrs} hour${hrs > 1 ? "s" : ""}${rest ? ` and ${rest} minutes` : ""}. ${hrs} × 60${rest ? ` + ${rest}` : ""} = ${mins} minutes.` }; }
     if (kind === 1) { const s = pick([4, 6]), h2 = 3 + 2 * rand(4), n = s * h2 / 2; return { html: "", text: `On snowshoes they walk <b>${s} km</b> every hour. How far do they go in <b>${tenths(h2 * 5)} hours</b>?`, choices: cards(n, [n + s, n - s, s * Math.floor(h2 / 2), n + 1, n + 10]), why: `${s} × ${tenths(h2 * 5)}: that is ${s} × ${Math.floor(h2 / 2)} = ${s * Math.floor(h2 / 2)}, plus half of ${s}, which is ${s / 2}. ${n} km.` }; }
     const each = pick([8, 12, 15]), n = 6 + rand(9), total = each * n; return { html: "", text: `A toboggan carries <b>${total} kg</b>, packed in bundles of <b>${each} kg</b>. How many bundles are on it?`, choices: cards(n, [n + 1, n - 1, n + 2, total - each, n + 10]), why: `How many ${each}s are in ${total}? ${total} ÷ ${each} = ${n} bundles.` };
@@ -410,7 +410,7 @@ Object.assign(ASK, {
   blocks() { // building with snow blocks: patterns, multiplying, measuring
     const kind = rand(3);
     if (kind === 0) { const first = 16 + 2 * rand(5), rings = [0, 1, 2, 3, 4].map(i => first - 2 * i), n = rings.reduce((a, b) => a + b, 0); return { html: "", text: `Each ring of an iglu needs 2 fewer blocks than the ring below: <b>${rings.join(", ")}</b>. How many blocks is that for all five rings?`, choices: cards(n, [n + 2, n - 2, n + 10, first * 5, n - first]), why: `Add the five rings. ${rings.join(" + ")} = ${n} blocks.` }; }
-    if (kind === 1) { const w = 12 + rand(8), b = 21 + rand(18), n = w * b, tens = w * 10 * Math.floor(b / 10), ones = w * (b % 10); return { html: "", text: `One snow block weighs about <b>${w} kg</b>. An iglu uses <b>${b} blocks</b>. About how many kilograms of snow is that?`, choices: cards(n, [n + w, n - w, n + 100, n - 10, w + b]), why: `Split ${b} into ${b - b % 10} and ${b % 10}. ${w} × ${b - b % 10} = ${tens}, and ${w} × ${b % 10} = ${ones}. ${tens} + ${ones} = ${n} kg.` }; }
+    if (kind === 1) { const w = 12 + rand(8), b0 = 21 + rand(17), b = b0 < 30 ? b0 : b0 + 1, n = w * b, tens = w * 10 * Math.floor(b / 10), ones = w * (b % 10); return { html: "", text: `One snow block weighs about <b>${w} kg</b>. An iglu uses <b>${b} blocks</b>. About how many kilograms of snow is that?`, choices: cards(n, [n + w, n - w, n + 100, n - 10, w + b]), why: `Split ${b} into ${b - b % 10} and ${b % 10}. ${w} × ${b - b % 10} = ${tens}, and ${w} × ${b % 10} = ${ones}. ${tens} + ${ones} = ${n} kg.` }; }
     const len = 5 + rand(4), k = 12 + rand(9), n = len * k; return { html: "", text: `Each block is <b>${tenths(len)} metres</b> long. The bottom ring has <b>${k} blocks</b>. How far is it around the bottom of the iglu?`, choices: dcards(n, [n + len, n - len, n + 10, k * 10 + len], " m"), why: `${k} blocks, each ${tenths(len)} m. ${k} × ${tenths(len)} = ${tenths(n)} metres.` };
   },
   sled() { // food, distance and sharing a load
@@ -448,7 +448,7 @@ Object.assign(ASK, {
     if (kind === 0) { const n = now - 1785; return { html: "", text: `The chapel was built in <b>1785</b>. This year is <b>${now}</b>. How many years old is it?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Count from 1785 to ${now}. ${now} − 1785 = ${n} years.` }; }
     if (kind === 1) return { html: "", text: `Joseph Brant was born in about <b>1743</b>. He led the families to the Grand River in <b>1784</b>. About how old was he then?`, choices: cards(41, [31, 51, 43, 39, 40]), why: `1784 − 1743 = 41. He was about 41 years old.` };
     if (kind === 2) return { html: "", text: `For a long time there were five Haudenosaunee nations. The Tuscarora joined in about <b>1722</b>, making six. How many years was that before <b>1784</b>?`, choices: cards(62, [52, 72, 60, 64, 162]), why: `1784 − 1722 = 62 years.` };
-    const add = pick([200, 250, 300]), n = 1784 + add; return { html: "", text: `The families arrived in <b>1784</b>. In what year is it exactly <b>${add} years</b> since they came?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Add ${add} to 1784. 1784 + ${add} = ${n}.` };
+    const add = pick([250, 300, 350]), n = 1784 + add; return { html: "", text: `The families arrived in <b>1784</b>. In what year is it exactly <b>${add} years</b> since they came?`, choices: cards(n, [n + 10, n - 10, n + 100, n - 100, n + 1]), why: `Add ${add} to 1784. 1784 + ${add} = ${n}.` };
   },
   home(g) { // the finale: one question from each friend, in the order we met them
     const [who, kinds] = FRIENDS[Math.min(g ? g.stars : 0, FRIENDS.length - 1)], q = ASK[pick(kinds)]();

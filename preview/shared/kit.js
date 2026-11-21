@@ -57,7 +57,7 @@ const Kit = (() => {
     if (!name) return null;
     const list = players(), n = get("storyShelf.nextId", 1), p = { id: "p" + n, name }; if (age > 0) p.born = new Date().getFullYear() - Math.round(age);
     // The very first child on a device takes over anything that was played before a name was asked for, so nothing is lost.
-    if (!list.length) try {
+    if (!list.length && n === 1) try { // (only the first child ever added: a later child must not take over a removed child's progress)
       const keys = []; for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
       keys.filter(k => /^(storyShelf\.(stamps|progress)|(dotsBusyTrain|grade\d+[A-Za-z]*)\.v\d+|pipsLostEggs\.v1)$/.test(k)).forEach(k => {
         if (k === "pipsLostEggs.v1" && p.id === "p1") return; // Pip already keeps the first child's eggs under this name
@@ -74,7 +74,7 @@ const Kit = (() => {
   const ageOf = p => p && p.born ? new Date().getFullYear() - p.born : null; // about how old (the birthday itself is not known)
   function removePlayer(id) {
     const list = players().filter(p => p.id !== id); put("storyShelf.players", list);
-    if (!list.find(p => p.id === (currentPlayer() || {}).id)) setCurrent(list[0] ? list[0].id : "");
+    if (!reviewing() && !list.find(p => p.id === (currentPlayer() || {}).id)) setCurrent(list[0] ? list[0].id : ""); // (a grown-up's review stays on; it goes back to a child when it ends)
   }
   // The name a game saves under. Each player gets a separate copy.
   const saveKey = base => { const p = currentPlayer(); return base + (p ? "." + p.id : ""); };
@@ -238,7 +238,8 @@ const Kit = (() => {
   const niceDate = d => new Date(d).toLocaleString("en-CA", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
   function makeBackup() {
     const data = {};
-    shelfKeys().forEach(k => { if (k !== "storyShelf.lastBackup" && !/\.review$/.test(k)) data[k] = localStorage.getItem(k); }); // a grown-up's review is never part of a backup
+    shelfKeys().forEach(k => { if (k !== "storyShelf.lastBackup" && !/\.review$/.test(k)) data[k] = localStorage.getItem(k); });
+    if (data["storyShelf.current"] === "review") data["storyShelf.current"] = (get("storyShelf.review", null) || {}).before || ""; // made during a review: the backup remembers the child who was playing // a grown-up's review is never part of a backup
     const names = players().map(p => p.name), made = new Date();
     const code = "SSB1." + toB64(JSON.stringify({ app: "story-shelf", v: 1, made: made.toISOString(), names, data }));
     const text = `Story Shelf backup\nMade: ${niceDate(made)}\nChildren: ${names.join(", ") || "(no names added)"}\n\n` +
@@ -476,7 +477,7 @@ const Kit = (() => {
   // When talking is switched off, a question still has to make sense, so its words are shown in writing.
   // A picture that only means "listen" (the ear) is replaced by the words; a passage already holds its own question.
   function writtenBubble(q, always) { // always: the grade writes the question under the picture even when talking is on (older readers)
-    if ((settings.voice && !always) || q.bubble.includes('class="passage"')) return { html: q.bubble, quiet: false };
+    if ((settings.voice && (!always || q.bubble.includes("👂"))) || q.bubble.includes('class="passage"')) return { html: q.bubble, quiet: false }; // a listening question (the ear) is heard, not shown, or the screen would give away the spelling
     const words = q.read !== undefined ? q.read : q.say;
     return { html: (q.bubble.includes("👂") ? "" : `<div class="rowx">${q.bubble}</div>`) + `<div class="said">${words}</div>`, quiet: true };
   }
@@ -486,7 +487,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "57"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  const VERSION = "58"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
   return { reviewing, startReview, endReview, needsChild, guard, VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, setAge, ageOf, startBook, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

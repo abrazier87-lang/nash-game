@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient China</title>
-<link rel="stylesheet" href="shared/kit.css?v=57">
+<link rel="stylesheet" href="shared/kit.css?v=58">
 <style>
   /* Misty mountains, green hills and a red pagoda. */
   :root { --sky1:#bfe6ef; --sky2:#fdf3dc; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#b03a2e; --strip:rgba(255,255,255,.45); --strip-line:rgba(60,110,70,.6); }
@@ -33,8 +33,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=57"></script>
-<script src="shared/story.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
+<script src="shared/story.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -58,7 +58,7 @@ const near = (ans, list) => numCards(ans, 0, 1200, 4, list);
 // pick-the-word questions: a sentence with a gap
 function gapQuestion(item, ask, count) {
   const [s, a, wrongs] = item, cols = shuffle(INK), full = w => s.replace("___", w);
-  return { bubble: `<div class="sentence">${blank(s)}</div>`, key: s, say: `${s.replace("___", "blank")} ${ask}`, again: ask, yay: `Yes! ${full(a)}`,
+  return { bubble: `<div class="sentence">${blank(s)}</div>`, key: s, say: `${s.replace("___", "blank")} ${ask}`, read: ask, again: ask, yay: `Yes! ${full(a)}`,
     choices: shuffle(shuffle(wrongs).slice(0, count - 1).concat(a)).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === a, wrong: "Not quite." })) };
 }
 // fractions
@@ -102,8 +102,8 @@ const coin = c => `<i class="coin c${c}">${c < 100 ? c + "¢" : "$" + c / 100}</
 const fmt = c => c < 100 ? `${c}¢` : c % 100 ? `$${(c / 100).toFixed(2)}` : `$${c / 100}`;                        // how an amount is written
 const moneySaid = c => { const d = Math.floor(c / 100), r = c % 100; return d ? `${d} dollar${d > 1 ? "s" : ""}${r ? ` and ${r} cents` : ""}` : `${r} cents`; }; // how it is said
 // Money answer cards: the right amount and three believable wrong ones (always real coin amounts, never odd cents).
-function moneyCards(c, list) {
-  const wrong = shuffle([...new Set(list.concat([c + 5, c + 10, c + 15]))].filter(x => x >= 5 && x !== c)).slice(0, 3);
+function moneyCards(c, list, pad = [c + 5, c + 10, c + 15]) {
+  const wrong = shuffle([...new Set(list.concat(pad))].filter(x => x >= 5 && x !== c)).slice(0, 3);
   return wrong.concat(c).sort((a, b) => a - b).map(x => ({ html: `<span style="font-size:6vmin">${fmt(x)}</span>`, ok: x === c, wrong: `That is ${moneySaid(x)}.` }));
 }
 // A bar graph: one bar for each name. "scale" is how much each line on the side is worth.
@@ -122,7 +122,7 @@ const SOUND_SAME = [["I have ___ apples.", "two", ["to", "too"]], ["We went ___ 
   ["What will you ___ to the festival?", "wear", ["where", "were"]], ["___ is the dragon?", "Where", ["Wear", "Were"]], ["She ate the ___ dumpling.", "whole", ["hole", "hold"]], ["The cook needs ___ to make noodles.", "flour", ["flower", "floor"]],
   ["A ___ grew in the garden.", "flower", ["flour", "floor"]], ["The dog wagged ___ tail.", "its", ["it's", "is"]], ["___ time for tea.", "It's", ["Its", "Is"]], ["Is that ___ kite?", "your", ["you're", "yore"]], ["___ a good friend.", "You're", ["Your", "Yore"]]];
 const WORD_PARTS = [["unhappy", "not happy", ["very happy", "happy again"]], ["rewrite", "write again", ["not write", "write badly"]], ["careless", "without care", ["full of care", "caring again"]], ["helpful", "full of help", ["without help", "not helping"]],
-  ["preheat", "heat before", ["heat again", "not hot"]], ["unlock", "open the lock", ["lock again", "lock tightly"]], ["teacher", "a person who teaches", ["to teach again", "not teaching"]], ["fearless", "without fear", ["full of fear", "afraid again"]],
+  ["preheat", "heat before", ["heat again", "not hot"]], ["unkind", "not kind", ["very kind", "kind again"]], ["teacher", "a person who teaches", ["to teach again", "not teaching"]], ["fearless", "without fear", ["full of fear", "afraid again"]],
   ["replay", "play again", ["not play", "play before"]], ["joyful", "full of joy", ["without joy", "joy again"]], ["dislike", "not like", ["like again", "like a lot"]], ["painter", "a person who paints", ["paint again", "without paint"]],
   ["misspell", "spell wrongly", ["spell again", "spell well"]], ["quickly", "in a quick way", ["not quick", "quick again"]]];
 const CLUES = [
@@ -131,7 +131,7 @@ const CLUES = [
   ["The traveller was exhausted after walking all day. She fell asleep at once.", "exhausted", "very tired", ["very hungry", "very fast", "very clean"]],
   ["Silk is a delicate cloth. It can tear easily.", "delicate", "easily damaged", ["very heavy", "very cheap", "very loud"]],
   ["The market was bustling. People were rushing everywhere.", "bustling", "busy and full of people", ["quiet and empty", "dark and cold", "small and tidy"]],
-  ["The ancient vase was made long, long ago.", "ancient", "very old", ["very shiny", "very tall", "very new"]],
+  ["The vase is ancient. It was made long, long ago.", "ancient", "very old", ["very shiny", "very tall", "very new"]],
   ["The panda devoured the bamboo. Soon there was none left.", "devoured", "ate quickly", ["planted carefully", "looked at", "hid away"]],
   ["The lanterns glowed in the dark. They lit up the whole street.", "glowed", "gave off light", ["fell down", "made noise", "got wet"]],
   ["The path was treacherous. One wrong step and you could fall.", "treacherous", "dangerous", ["pretty", "short", "flat"]],
@@ -156,7 +156,7 @@ const SCROLLS = [
   ["The Great Wall of China is thousands of kilometres long. It was built to keep enemies out. It took many, many years to build.", "Why was the Great Wall built?", "to keep enemies out", ["to grow rice", "to hold back the sea", "to fly kites from"]],
   ["Silk is a soft, shiny cloth. It is made from the thread of tiny silkworms. For a long time, only people in China knew how to make it.", "What makes the thread for silk?", "silkworms", ["sheep", "spiders", "cotton plants"]],
   ["Paper was invented in China about two thousand years ago. Before that, people wrote on bamboo strips or silk. Paper was lighter and cheaper.", "What did people write on before paper?", "bamboo strips or silk", ["only stone", "leaves and sand", "glass"]],
-  ["Much later, about a thousand years ago, the compass was invented in China. Its needle always points the same way. Sailors used it to find their way at sea.", "Who used the compass to find their way?", "sailors", ["farmers", "painters", "cooks"]],
+  ["Much later, about a thousand years ago, sailors in China began using a compass with a magnetic needle to find their way at sea. Its needle always points the same way.", "Who used the compass to find their way?", "sailors", ["farmers", "painters", "cooks"]],
   ["Kites were first flown in China. Some were made of silk and bamboo. Long ago, armies even used kites to send signals.", "What were early kites made of?", "silk and bamboo", ["metal and rope", "leaves and mud", "glass and string"]],
   ["Giant pandas live in the mountains of China. They eat bamboo for most of the day. A panda can eat for more than ten hours!", "What do pandas eat most?", "bamboo", ["rice", "fish", "tea leaves"]],
   ["People in China have drunk tea for thousands of years. Tea is made by putting dried leaves in hot water. Later, tea spread all around the world.", "How is tea made?", "dried leaves in hot water", ["rice in cold water", "flowers in milk", "bamboo in soup"]],
@@ -169,7 +169,7 @@ const SCROLLS = [
   ["At the New Year festival, dancers carry a long dragon on poles. The dragon is a sign of good luck. Drums and cymbals play as it dances.", "What is the dragon a sign of?", "good luck", ["bad weather", "a long winter", "a lost battle"]]
 ];
 const SHARE = [
-  (n, b) => `${n} rolls of silk are shared equally between ${b} traders. How many rolls does each trader get?`,
+  (n, b) => `${n} rolls of silk are shared equally ${b > 2 ? "among" : "between"} ${b} traders. How many rolls does each trader get?`,
   (n, b) => `${n} dumplings go on ${b} plates, with the same number on each plate. How many dumplings are on each plate?`,
   (n, b) => `${n} lanterns hang in ${b} equal rows. How many lanterns are in each row?`,
   (n, b) => `${n} bundles of tea are packed into boxes of ${b}. How many boxes are needed?`
@@ -227,7 +227,7 @@ const GAMES = {
       return { bubble: `<span class="sum">${a} × ${b} = <b>?</b></span>`, key: a + "x" + b, say: `What is ${a} times ${b}?`, yay: `Yes! ${a} times ${b} is ${n}!`, choices: near(n, [n + a, n - a, n + b, n - b, a + b]),
         hint: H => known && o > 5 ? H.say(`Use a fact you know. What is ${t} times 5? Then add more ${t}s.`) : H.say(`Count by ${t}s, ${o} times. ${t}, ${2 * t}, and keep going.`),
         explain: async H => (await talkThrough(H, known && o > 5
-            ? [[`${t} × 5 = ${t * 5}`, `${t} times 5 is ${t * 5}.`], [`${t * 5} + ${o - 5} × ${t} = <b>${n}</b>`, `Then add ${o - 5} more ${t}s. ${skipList(t, o).slice(5).join(", ")}.`]]
+            ? [[`${t} × 5 = ${t * 5}`, `${t} times 5 is ${t * 5}.`], [`${t * 5} + ${o - 5} × ${t} = <b>${n}</b>`, `Then add ${o - 5} more ${t}${o - 5 > 1 ? "s" : ""}. ${skipList(t, o).slice(5).join(", ")}.`]]
             : [[skipList(t, o).join(", "), `Count by ${t}s, ${o} times. ${skipList(t, o).join(", ")}.`]])) && pointTo(H, `So ${a} times ${b} is ${n}.`) };
     }
   },
@@ -292,7 +292,7 @@ const GAMES = {
         [`345 + 100 = 445`, "Add the hundreds. 345 plus 100 is 445."], [`445 + 30 = 475`, "Add the tens. 445 plus 30 is 475."], [`475 + 2 = <b>477</b>`, "Add the ones. 475 plus 2 is 477!"]]),
     makeQuestion(step) {
       if (step === 4) { // rounding
-        const place = pick([10, 100]), n = 101 + rand(898), r = Math.round(n / place) * place, down = Math.floor(n / place) * place, up = down + place, otherWay = r === down ? down + place : down, otherPlace = Math.round(n / (place === 10 ? 100 : 10)) * (place === 10 ? 100 : 10);
+        const place = pick([10, 100]), n = (() => { let v; do { v = 101 + rand(898); } while (v % place === 0); return v; })(), r = Math.round(n / place) * place, down = Math.floor(n / place) * place, up = down + place, otherWay = r === down ? down + place : down, otherPlace = Math.round(n / (place === 10 ? 100 : 10)) * (place === 10 ? 100 : 10);
         const digit = place === 10 ? n % 10 : Math.floor(n / 10) % 10, dname = place === 10 ? "ones" : "tens";
         return { bubble: `<div class="col">${big(n, 10)}<div class="cap">nearest ${place}</div></div>`, key: n + "r" + place, say: `Round ${n} to the nearest ${place}.`, yay: `Yes! ${n} rounds to ${r}.`,
           hint: H => H.say(`${n} is between ${down} and ${up}. Look at the ${dname} digit. Five or more rounds up.`),
@@ -331,13 +331,13 @@ const GAMES = {
         return q;
       }
       if (step === 3) { const [w, a, wrongs] = pick(WORD_PARTS); // beginnings and endings of words: un-, re-, -less, -ful...
-        return { bubble: big(w, 8), key: w, say: `What does, ${w}, mean?`, yay: `Yes! ${cap(w)} means ${a}.`,
+        return { bubble: big(w, 8), key: w, say: `What does, ${w}, mean?`, read: `What does ${w} mean?`, yay: `Yes! ${cap(w)} means ${a}.`,
           hint: H => H.say("Look at the start and the end of the word. Un and dis mean not. Re means again. Less means without. Ful means full of."),
           explain: H => pointTo(H, `${partRule(w)} So ${w} means ${a}.`),
           choices: shuffle(wrongs.concat(a)).map(x => ({ html: ansCard(x), ok: x === a, wrong: "Not quite. Look at the start and the end of the word." })) }; }
       const [text, w, a, wrongs] = pick(CLUES); // work out a hard word from the words around it
       const clue = (text.match(/[^.!?]+[.!?]/g) || [text]).map(s => s.trim()).find(s => !s.toLowerCase().includes(w)) || text;
-      return { bubble: `<div class="passage">${text}<b>What does "${w}" mean?</b></div>`, tall: true, key: w, say: `Read the clue. What does, ${w}, mean?`, yay: `Yes! ${cap(w)} means ${a}.`,
+      return { bubble: `<div class="passage">${text}<b>What does "${w}" mean?</b></div>`, tall: true, key: w, say: `Read the clue. What does, ${w}, mean?`, read: `Read the clue. What does ${w} mean?`, yay: `Yes! ${cap(w)} means ${a}.`,
         hint: H => H.say("Read the other sentence. It gives you a clue about the hard word."),
         explain: H => pointTo(H, `The clue is: ${clue} So ${w} means ${a}.`),
         choices: shuffle(wrongs.concat(a)).map(x => ({ html: ansCard(x), ok: x === a, wrong: "Not quite. Read the clue again." })) };
@@ -363,7 +363,7 @@ const GAMES = {
         const ask = { noun: "the noun, the naming word", verb: "the verb, the action word", adjective: "the adjective, the describing word" }, what = { [noun]: "a noun", [verb]: "a verb", [adj]: "an adjective" };
         return { bubble: `<div class="col"><div class="sentence">${s}</div><div class="cap">${kind}</div></div>`, key: s + kind, say: `${s} Which word is ${ask[kind]}?`, again: `Which word is ${ask[kind]}?`, yay: `Yes! ${cap(right)} is ${what[right]}.`,
           hint: H => H.say("A noun names a person, place or thing. A verb is an action. An adjective describes something."),
-          explain: H => pointTo(H, `${cap(noun)} names a thing, so it's the noun. ${cap(verb)} is the action, the verb. ${cap(adj)} describes it, the adjective.`),
+          explain: H => pointTo(H, `${cap(noun)} is the naming word, so it's the noun. ${cap(verb)} is the action, the verb. ${cap(adj)} describes it, the adjective.`),
           choices: shuffle([noun, verb, adj]).map((w, i) => ({ html: wordCard(w, cols[i]), ok: w === right, wrong: `${cap(w)} is ${what[w]}.` })) };
       }
       if (step === 2 || step === 3) {
@@ -377,8 +377,8 @@ const GAMES = {
       }
       const [right, x, y] = pick(WRITTEN_RIGHT); // capital letters and punctuation
       return { bubble: big("🖌️", 12), key: right, say: "Which sentence is written correctly? Look at the capital letters and the punctuation.", yay: "Yes! It starts with a capital letter and ends with the right mark.",
-        hint: H => H.say("Check three things. A capital letter at the start. Capitals for names. And a mark at the end."),
-        explain: H => pointTo(H, "This one has a capital letter at the start, capitals for names, and the right mark at the end."),
+        hint: H => H.say("Check three things. A capital letter at the start. Capitals for names. A mark at the end. And apostrophes in short words like can't."),
+        explain: H => pointTo(H, "This one has a capital letter at the start, capitals for names, apostrophes in short words like can't, and the right mark at the end."),
         choices: shuffle([right, x, y]).map(s => ({ html: ansCard(s), ok: s === right, wrong: "Look again at the capital letters and the end of the sentence." })) };
     }
   },
@@ -406,7 +406,7 @@ const GAMES = {
     makeQuestion(step) { // Grade 3 finds area by counting squares (multiplying the sides is Grade 4)
       const perimeterWhy = (w, h) => `Yes! ${w} plus ${h} plus ${w} plus ${h} is ${2 * (w + h)}.`;
       const perimHint = (w, h) => H => H.say(`Add all four sides. Two sides are ${w}, and two sides are ${h}.`);
-      const perimExplain = (w, h) => async H => (await talkThrough(H, [[`${w} + ${h} + ${w} + ${h}`, `${w} plus ${h} is ${w + h}.`], [`${w + h} + ${w + h} = <b>${2 * (w + h)}</b>`, `Twice is ${2 * (w + h)}.`]])) && pointTo(H, `The perimeter is ${2 * (w + h)} metres.`);
+      const perimExplain = (w, h) => async H => (await talkThrough(H, [[`${w} + ${h} + ${w} + ${h}`, `${w} plus ${h} is ${w + h}.`], [`${w + h} + ${w + h} = <b>${2 * (w + h)}</b>`, `Twice that is ${2 * (w + h)}.`]])) && pointTo(H, `The perimeter is ${2 * (w + h)} metres.`);
       if (step === 2 || step === 3) { const w = 2 + rand(step === 2 ? 5 : 7), h = 2 + rand(step === 2 ? 4 : 5), n = w * h; // count the squares, row by row
         return { bubble: `<div class="shapebox">${garden(w, h, true)}</div>`, key: "a" + w + "x" + h, say: step === 2 ? "How many squares cover the garden? That is its area." : "What is the area? Count the squares in one row, then count by rows.", yay: `Yes! ${h} rows of ${w} squares make ${n}.`,
           hint: H => H.say(`Count the squares in one row. There are ${h} rows. Count by that number.`),
@@ -444,14 +444,14 @@ const GAMES = {
         const a = 2 + rand(14), b = 1 + rand(9), total = a + b, text = `A ${thing} costs $${a}. A cup of tea costs $${b}. How much do they cost altogether?`;
         return { bubble: `<div class="passage">${text}</div>`, tall: true, key: a + "+" + b, say: `A ${thing} costs ${a} dollars. A cup of tea costs ${b} dollar${b > 1 ? "s" : ""}. How much do they cost altogether?`, yay: `Yes! ${total} dollars.`,
           hint: H => H.say(`Add the two prices. ${a} plus ${b}.`), explain: H => pointTo(H, `${a} dollars plus ${b} dollar${b > 1 ? "s" : ""} is ${total} dollars.`),
-          choices: moneyCards(total * 100, [total * 100 + 100, total * 100 - 100, total * 100 + 200, (a - b) * 100].filter(x => x > 0)) };
+          choices: moneyCards(total * 100, [total * 100 + 100, total * 100 - 100, total * 100 + 200, (a - b) * 100].filter(x => x > 0), [total * 100 + 300, total * 100 - 200, total * 100 + 400]) };
       }
       const paid = step === 3 ? pick([5, 10, 20]) : pick([20, 50]), cost = 1 + rand(paid - 2), change = paid - cost, text = `A ${thing} costs $${cost}. You pay with $${paid}. How much change do you get?`;
       return { bubble: `<div class="passage">${text}</div>`, tall: true, key: cost + "from" + paid, say: `A ${thing} costs ${cost} dollar${cost > 1 ? "s" : ""}. You pay with ${paid} dollars. How much change do you get?`, yay: `Yes! ${change} dollar${change > 1 ? "s" : ""} change.`,
         hint: H => H.say(`Count up from ${cost} dollars to ${paid} dollars. The jump is your change.`),
         explain: async H => { const ten = Math.ceil(cost / 10) * 10, jumps = ten > cost && ten < paid ? [[cost, ten], [ten, paid]] : [[cost, paid]];
           return (await talkThrough(H, jumps.map(([x, y]) => [`$${x} → $${y}: <b>$${y - x}</b>`, `From ${x} to ${y} is ${y - x}.`]))) && pointTo(H, `So your change is ${change} dollar${change > 1 ? "s" : ""}.`); },
-        choices: moneyCards(change * 100, [change * 100 + 100, change * 100 - 100, change * 100 + 200, cost * 100].filter(x => x > 0)) };
+        choices: moneyCards(change * 100, [change * 100 + 100, change * 100 - 100, change * 100 + 200, cost * 100].filter(x => x > 0), [change * 100 + 300, change * 100 - 200, change * 100 + 400]) };
     }
   },
   graphs: {
@@ -463,7 +463,7 @@ const GAMES = {
       const names = ["tea", "silk", "rice", "salt"], vals = shuffle([1, 2, 3, 4, 5, 6, 7, 8]).slice(0, 4), scale = step === 1 ? 1 : step === 2 ? pick([2, 5, 10]) : step === 3 ? pick([1, 2]) : pick([2, 5]);
       const [i, j] = shuffle([0, 1, 2, 3]), a = vals[i] * scale, b = vals[j] * scale, box = `<div class="col"><div class="graphbox">${barGraph(names, vals, scale)}</div><div class="cap" style="font-size:3vmin">baskets sold</div></div>`;
       const base = { bubble: box, tall: true, key: vals.join() + scale + i + j }, scaleTip = scale > 1 ? ` The side counts by ${scale}s.` : "";
-      if (step <= 2) return { ...base, say: `How many baskets of ${names[i]} were sold?`, yay: `Yes! ${a} baskets of ${names[i]}.`, choices: near(a, [a + scale, a - scale, b, a + 2 * scale]),
+      if (step <= 2) return { ...base, say: `How many baskets of ${names[i]} were sold?`, yay: `Yes! ${a} basket${a === 1 ? "" : "s"} of ${names[i]}.`, choices: near(a, [a + scale, a - scale, b, a + 2 * scale]),
         hint: H => H.say(`Find the top of the ${names[i]} bar. Look straight across to the numbers on the side.${scaleTip}`),
         explain: H => pointTo(H, `The ${names[i]} bar reaches ${a}.${scaleTip}`) };
       const read = `The ${names[i]} bar reaches ${a}. The ${names[j]} bar reaches ${b}.`;
@@ -484,13 +484,13 @@ const GAMES = {
         [`3 → 7 → 11 → 15`, "3 to 7 is 4 more. 7 to 11 is 4 more. 11 to 15 is 4 more. The rule is add 4."], [tiles([3, 7, 11, 15, 19]), "So the next number is 15 plus 4, which is 19!"]]),
     makeQuestion(step) {
       if (step === 4) { // what number goes in the box?
-        const kind = rand(4); let show, said, ans, how;
+        const kind = rand(4); let show, said, ans, how, mul;
         if (kind === 0) { const b = 2 + rand(18), c = b + 2 + rand(30); ans = c - b; show = `<b>?</b> + ${b} = ${c}`; said = `Something plus ${b} equals ${c}.`; how = `Do the opposite. ${c} take away ${b} is ${ans}.`; }
         else if (kind === 1) { const a = 12 + rand(40), c = 2 + rand(a - 4); ans = a - c; show = `${a} − <b>?</b> = ${c}`; said = `${a} minus something equals ${c}.`; how = `Count up from ${c} to ${a}. That's ${ans}.`; }
-        else if (kind === 2) { const a = 2 + rand(9); ans = 2 + rand(9); show = `${a} × <b>?</b> = ${a * ans}`; said = `${a} times something equals ${a * ans}.`; how = `Count by ${a}s to ${a * ans}. That's ${ans} jumps.`; }
+        else if (kind === 2) { const a = mul = 2 + rand(9); ans = 2 + rand(9); show = `${a} ×<b>?</b> = ${a * ans}`; said = `${a} times something equals ${a * ans}.`; how = `Count by ${a}s to ${a * ans}. That's ${ans} jumps.`; }
         else { const a = 5 + rand(15), b = 3 + rand(12), d = 1 + rand(a + b - 2); ans = a + b - d; show = `${a} + ${b} = <b>?</b> + ${d}`; said = `${a} plus ${b} equals something plus ${d}. Both sides must be the same.`; how = `${a} plus ${b} is ${a + b}. So the other side must make ${a + b} too. ${a + b} take away ${d} is ${ans}.`; }
         return { bubble: `<span class="sum" style="font-size:8vmin">${show}</span>`, key: show, say: `${said} What is the missing number?`, yay: `Yes! The missing number is ${ans}.`, choices: near(ans, [ans + 1, ans - 1, ans + 2, ans + 10, ans - 2]),
-          hint: H => H.say(kind === 3 ? "Work out the side you can. Both sides must make the same number." : "Use the opposite. Adding and taking away undo each other."),
+          hint: H => H.say(kind === 3 ? "Work out the side you can. Both sides must make the same number." : kind === 2 ? `Think of your times tables, or count by ${mul}s until you reach ${mul * ans}.` : "Use the opposite. Adding and taking away undo each other."),
           explain: H => pointTo(H, `${how} The missing number is ${ans}.`) };
       }
       if (step === 3) { // name the rule
@@ -526,11 +526,11 @@ const GAMES = {
         if (rand(2)) { text = `There are ${g} tables. Each table has ${k} bowls. How many bowls are there altogether?`; ans = g * k; trap = g + k; work = [[`${g} × ${k} = <b>${ans}</b>`, `${g} groups of ${k}, so multiply. ${g} times ${k} is ${ans}.`]]; }
         else { text = `${g * k} dumplings are shared equally by ${g} children. How many dumplings does each child get?`; ans = k; trap = g * k - g; work = [[`${g * k} ÷ ${g} = <b>${k}</b>`, `Shared equally, so divide. ${g * k} divided by ${g} is ${k}.`]]; } }
       else if (step === 3) { const kind = rand(3);
-        if (kind === 0) { const b = 1 + rand(g * k - 2); text = `Mei has ${g} bags with ${k} buns in each bag. She gives away ${b} buns. How many buns are left?`; ans = g * k - b; trap = g * k;
+        if (kind === 0) { const b = 1 + rand(g * k - 2); text = `Mei has ${g} bags with ${k} buns in each bag. She gives away ${b} bun${b === 1 ? "" : "s"}. How many buns are left?`; ans = g * k - b; trap = g * k;
           work = [[`${g} × ${k} = ${g * k}`, `Step one. ${g} bags of ${k} is ${g * k} buns.`], [`${g * k} − ${b} = <b>${ans}</b>`, `Step two. ${g * k} take away ${b} is ${ans}.`]]; }
         else if (kind === 1) { const a = 20 + rand(40), b = 5 + rand(30), c = 5 + rand(a + b - 10); text = `Lin has ${a} coins. He earns ${b} more, then spends ${c}. How many coins does he have now?`; ans = a + b - c; trap = a + b;
           work = [[`${a} + ${b} = ${a + b}`, `Step one. ${a} plus ${b} is ${a + b}.`], [`${a + b} − ${c} = <b>${ans}</b>`, `Step two. ${a + b} take away ${c} is ${ans}.`]]; }
-        else { const total = g * k, a = 1 + rand(total - 1); text = `A farmer picks ${a} baskets of tea in the morning and ${total - a} in the afternoon. She packs them equally into ${g} carts. How many baskets go in each cart?`; ans = k; trap = total;
+        else { const total = g * k, a = 1 + rand(total - 1); text = `A farmer picks ${a} basket${a === 1 ? "" : "s"} of tea in the morning and ${total - a} in the afternoon. She packs them equally into ${g} carts. How many baskets go in each cart?`; ans = k; trap = total;
           work = [[`${a} + ${total - a} = ${total}`, `Step one. ${a} plus ${total - a} is ${total} baskets.`], [`${total} ÷ ${g} = <b>${k}</b>`, `Step two. ${total} shared into ${g} carts is ${k} each.`]]; } }
       else { const kind = rand(3);
         if (kind === 0) { const b = 10 + rand(31); text = `A wall has ${g} rows of ${k} stones. Workers add ${b} more stones. How many stones are in the wall now?`; ans = g * k + b; trap = g * k;

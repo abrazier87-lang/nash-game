@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=57">
+<link rel="stylesheet" href="shared/kit.css?v=58">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -377,9 +377,9 @@ const GAMES = {
     makeQuestion(step) {
       if (step <= 2 && rand(3) === 0) { // dice dots: see how many at a glance
         const n = 1 + rand(step === 1 ? 5 : 6);
-        return { bubble: dice(n), key: "dice" + n, say: "Dice dots! How many dots do you see?", yay: `Yes! ${cap(NUM[n])} dots!`, pause: 2400, choices: numberCards(n, 1, 6),
+        return { bubble: dice(n), key: "dice" + n, say: "Dice dots! How many dots do you see?", yay: `Yes! ${cap(NUM[n])} dot${n === 1 ? "" : "s"}!`, pause: 2400, choices: numberCards(n, 1, 6),
           hint: H => H.say("Look at the shape the dots make. You might know it without counting!"),
-          explain: async P => (await countThese(P, P.items(".dice i.on"))) && (P.glow(P.right().el, true), P.say(`${cap(NUM[n])} dots. Next time, you might know it at a glance!`)) };
+          explain: async P => (await countThese(P, P.items(".dice i.on"))) && (P.glow(P.right().el, true), P.say(`${cap(NUM[n])} dot${n === 1 ? "" : "s"}. Next time, you might know it at a glance!`)) };
       }
       const max = [5, 10, 15, 20][step - 1], min = [1, 3, 8, 11][step - 1];
       const n = min + rand(max - min + 1), th = snack();
@@ -461,7 +461,7 @@ const GAMES = {
           hint: H => { H.glow(H.items(".tenframe i.empty")[0], true); return H.say("Ten boxes make ten. Count the empty boxes!"); },
           explain: async P => { const empty = P.items(".tenframe i.empty");
             for (let i = 0; i < empty.length; i++) { empty[i].dataset.n = i + 1; empty[i].classList.add("counted"); P.glow(empty[i], true); if (!(await P.say(String(i + 1), numClip(i + 1)))) return false; }
-            P.glow(P.right().el, true); return P.say(`${cap(NUM[more])} more make ten!`); } };
+            P.glow(P.right().el, true); return P.say(`${cap(NUM[more])} more make${more === 1 ? "s" : ""} ten!`); } };
       }
       const away = step === 3 || (step === 4 && rand(2) === 0), top = step === 1 || step === 3 ? 5 : 10;
       const size = top === 5 ? 6 : 4.4;
@@ -591,7 +591,7 @@ function nextQuestion(intro) { // "intro" is the station's id, only for the very
   const queue = REVIEW[G.id] || [], due = queue.findIndex(r => r.due <= G.count);
   if (due >= 0) { q = queue.splice(due, 1)[0].q; q.reviewed = true; q.explained = false; lead = "Let's try this one again!"; } // bring it back
   else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 14 && (String(q.key !== undefined ? q.key : q.say + q.bubble) === G.last || G.seen.has(String(q.key !== undefined ? q.key : q.say + q.bubble)))); // not one already asked this round
-  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble); G.seen.add(G.last); G.hinted = false; G.asked = false;
+  G.last = String(q.key !== undefined ? q.key : q.say + q.bubble); G.seen.add(G.last); G.hinted = false; G.asked = false; G.auto = false;
   G.q = q; G.first = true; G.busy = false; G.wrongs = 0;
   const shown = Kit.writtenBubble(q); // with talking off, the question is also shown in writing
   $("bubble").className = "bubble"; $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("quiet", shown.quiet); animate($("bubble"), "pop");
@@ -604,7 +604,7 @@ function nextQuestion(intro) { // "intro" is the station's id, only for the very
   });
   pieces(q.yay).forEach(p => Kit.loadClip(lineUrl(p)).catch(() => {})); // get the cheer ready too
   const guide = G.guided > 0 && (q.hint || q.teach); // "Try together"
-  if (guide) { G.guided--; G.hinted = true; }
+  if (guide) { G.guided--; G.hinted = true; G.auto = true; }
   const g = G, parts = (lead ? [lead] : []).concat(q.sayParts || q.say), still = () => G === g && g.q === q && !g.busy;
   const asked = intro ? (async () => { // the passenger's wish (unless they are already on the train), then Dot's welcome, then the question - each only if the one before played to its end
     if (!S.aboard[intro] && !(await speak("wish-" + G.p.name, G.p.wish))) return false;
@@ -623,8 +623,8 @@ async function choose(el, ch) {
     if ((!G.first || G.asked) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help (a wrong tap or a hint the child asked for): try it again a little later
     if (G.first && !G.asked) { G.run++; if (G.run === 3 || (G.run === 5 && G.need >= 5)) { sfx.sparkle(); cheer("⭐".repeat(G.run) + " " + G.run + " in a row!"); } } else G.run = 0;
     const spoken = talkAndWait(q.yay, q.pause || 2300); // waits for Dot to finish; with the voice off, a short pause
-    Kit.track("k", "Dot's Busy Train", G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
-    adjust(G.first && !G.hinted); // an answer found with help does not make the station harder
+    Kit.track("k", "Dot's Busy Train", G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && (!G.hinted || (G.auto && !G.asked)), G.hinted && !(G.auto && G.first && !G.asked)); // for the progress report (Dot's own "try together" help is not the child asking)
+    if (!(G.auto && G.first && !G.asked)) adjust(G.first && !G.hinted); // an answer found with help does not make the station harder
     await spoken;
     if (!G || G.q !== q) return;
     if (G.stars >= G.need) {
