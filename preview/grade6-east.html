@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Goes East</title>
-<link rel="stylesheet" href="shared/kit.css?v=51">
-<link rel="stylesheet" href="shared/inked.css?v=51">
-<link rel="stylesheet" href="shared/chapters.css?v=51">
+<link rel="stylesheet" href="shared/kit.css?v=52">
+<link rel="stylesheet" href="shared/inked.css?v=52">
+<link rel="stylesheet" href="shared/chapters.css?v=52">
 <style>
   /* Grade 6's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2a6fa8; }
@@ -17,11 +17,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=51"></script>
-<script src="shared/story.js?v=51"></script>
-<script src="shared/newowl.js?v=51"></script>
-<script src="shared/inkart.js?v=51"></script>
-<script src="shared/chapters.js?v=51"></script>
+<script src="shared/kit.js?v=52"></script>
+<script src="shared/story.js?v=52"></script>
+<script src="shared/newowl.js?v=52"></script>
+<script src="shared/inkart.js?v=52"></script>
+<script src="shared/chapters.js?v=52"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -169,7 +169,7 @@ const ASK = {
   climb() { // percents of an amount
     const kind = rand(3);
     if (kind === 0) { const [pc, len] = pick([[25, 64], [50, 64], [75, 64], [25, 80], [75, 80], [10, 60], [20, 60], [30, 60]]), n = len * pc / 100; return { html: "", text: `The track up the cliff is <b>${len} metres</b> long. The cabin has gone <b>${pc}%</b> of the way. How many metres has it gone?`, choices: cards(n, [len - n, n + 4, n - 4, pc, n * 2]), why: `${pc}% of ${len}. ${pc === 25 ? `One quarter: ${len} ÷ 4` : pc === 50 ? `One half: ${len} ÷ 2` : pc === 75 ? `Three quarters: ${len} ÷ 4 = ${len / 4}, times 3` : `10% is ${len / 10}, so ${pc / 10} lots of that`} = ${n} metres.` }; }
-    if (kind === 1) { const [pc, done] = pick([[25, 15], [50, 30], [75, 45], [20, 12], [40, 24], [60, 36], [80, 48], [10, 6], [90, 54]]); return { html: "", text: `Léa has climbed <b>${done}</b> of the <b>60</b> steps. What percent of the way up is she?`, choices: textCards(pc + "%", [pc + 10, pc - 10, done, 100 - pc, pc + 5].filter(k => k > 0 && k < 100).map(k => k + "%")), why: `${done} out of 60. ${done} ÷ 60 = ${(done / 60).toFixed(2).replace(/0$/, "")}, which is ${pc} percent.` }; }
+    if (kind === 1) { const [pc, done] = pick([[25, 15], [50, 30], [75, 45], [20, 12], [40, 24], [60, 36], [80, 48], [10, 6], [90, 54]]); return { html: "", text: `Another staircase in the old city has <b>60</b> steps. Léa has climbed <b>${done}</b> of them. What percent of the way up is she?`, choices: textCards(pc + "%", [pc + 10, pc - 10, done, 100 - pc, pc + 5].filter(k => k > 0 && k < 100).map(k => k + "%")), why: `${done} out of 60. ${done} ÷ 60 = ${(done / 60).toFixed(2).replace(/0$/, "")}, which is ${pc} percent.` }; }
     const price = pick([4, 5, 6]), people = pick([4, 5, 6, 8, 10]), total = price * people, pc = pick([10, 20, 50]), off = total * pc / 100, n = total - off;
     return { html: "", text: `A ride up costs <b>$${price}</b> each. A group of <b>${people}</b> gets <b>${pc}% off</b> the total. How much do they pay altogether?`, choices: textCards(`$${n % 1 ? n.toFixed(2) : n}`, [total, total - pc, n + price, off, n - price].filter(k => k > 0).map(k => `$${k % 1 ? k.toFixed(2) : k}`)), why: `The total is ${people} × $${price} = $${total}. ${pc}% of $${total} is $${off % 1 ? off.toFixed(2) : off}. $${total} − $${off % 1 ? off.toFixed(2) : off} = $${n % 1 ? n.toFixed(2) : n}.` };
   }
@@ -177,11 +177,11 @@ const ASK = {
 
 </script>
 <!-- Chapters 2 to 6 each live in their own file. Each one adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g6-ch2.js?v=51"></script>
-<script src="shared/g6-ch3.js?v=51"></script>
-<script src="shared/g6-ch4.js?v=51"></script>
-<script src="shared/g6-ch5.js?v=51"></script>
-<script src="shared/g6-ch6.js?v=51"></script>
+<script src="shared/g6-ch2.js?v=52"></script>
+<script src="shared/g6-ch3.js?v=52"></script>
+<script src="shared/g6-ch4.js?v=52"></script>
+<script src="shared/g6-ch5.js?v=52"></script>
+<script src="shared/g6-ch6.js?v=52"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
