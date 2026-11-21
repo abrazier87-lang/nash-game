@@ -135,8 +135,8 @@
   // FACT CHECK: French words: la montagne (the mountain), le chemin de fer (the railway), le tunnel (the tunnel), le pont (the bridge)
   // FACT CHECK: Cantonese for railway is 鐵路, said teet-loh. The workers came from Guangdong and spoke Cantonese (or Taishanese). Changed from Mandarin tiělù per Shane's review notes (November 2026); a Cantonese reader should still confirm. Dates changed to month-day-year style
   // READERS: Chinese Canadian readers (ideally descendants of railway workers or a Chinese Canadian historical society); Secwépemc, Ktunaxa or Sinixt readers for the land line.
-  CHAPTERS[0] = { title: "The Last Spike", where: "The Rocky Mountains", beats: [
-    { art: "ls_arrive", word: ["la montagne", "the mountain"], say: ["The prairie is behind us, and look at what the clock was pointing at! My balloon is climbing into the Rocky Mountains of British Columbia. My ears have popped three times already.",
+  CHAPTERS[0] = { title: "The Last Spike", where: "The mountains of British Columbia", beats: [
+    { art: "ls_arrive", word: ["la montagne", "the mountain"], say: ["The prairie is behind us, and look at what the clock was pointing at! My balloon is climbing into the mountains of British Columbia. My ears have popped three times already.",
       "<em>La montagne</em> is the French word for a mountain, and these are very big ones. The peaks are sharp and white at the top, and the slopes below are dark with evergreen trees. This is the land of the Secwépemc, the Ktunaxa, the Sinixt and other nations, who live here today.",
       "You say them suh-WEP-muhc, k-too-NAH-ha and sin-AYKST.",
       "Down in the valley a long train is climbing the grade. Freight trains still haul goods through these passes every day. Why is there a railway in such steep mountains? Let us find out."] },

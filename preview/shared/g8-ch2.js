@@ -144,7 +144,7 @@
   // FACT CHECK: when smallpox reached Victoria in 1862, the colony's officials forced the First Nations people camped there to leave, and the sickness travelled north along the coast with them (added from Shane's review notes, November 2026); pronunciation guides for Stó:lō, Nlaka'pamux and Halq'eméylem also added from the same notes
   // READERS: Stó:lō and Nlaka'pamux readers.
   CHAPTERS[1] = { title: "The River of Gold", where: "The Fraser River", beats: [
-    { art: "rg_arrive", word: ["la rivière", "the river"], say: ["Goodbye, Mei, and goodbye, railway! My clock balloon has floated down out of the Rocky Mountains, and now I am drifting between two steep walls of rock.",
+    { art: "rg_arrive", word: ["la rivière", "the river"], say: ["Goodbye, Mei, and goodbye, railway! My clock balloon has floated down out of the mountains, and now I am drifting between two steep walls of rock.",
       "Far below, a wide river is rushing through the gap. This is the <em>Fraser River</em>, in British Columbia. Look at the water! Something red keeps leaping out of it.",
       "A river is <em>la rivière</em> in French. I am looking for a boy who knows this river better than anyone. I think I will land on that gravel bank."] },
     { art: "rg_jordan", word: ["Stó:lō", "people of the river (say STAW-low)"], say: ["This is Jordan. He is a Stó:lō boy, and he lives near Hope, where the river comes out of the canyon. His family has fished this river for as long as anyone can remember.",
@@ -168,7 +168,7 @@
       "That summer there was fighting in the canyon. People on both sides were killed, and villages were burned. It is called the Fraser Canyon War. In the end our leaders made a peace. We are still here, and so is the river."] },
     { art: "rg_after", say: ["The clock is quiet, and so am I. Here is what came next, plainly. In 1858, Britain made the mainland a colony, <em>British Columbia</em>, to keep control of the gold fields.",
       "No treaties were made for almost all of this land. It was never sold or given up, and that is still being worked out today, in courts and in new agreements.",
-      "Then, in 1862, smallpox came up the coast and through the province. It killed tens of thousands of First Nations people, and some communities lost more than half of their people in a single year."] },
+      "Then, in 1862, smallpox came up the coast and through the colony. It killed tens of thousands of First Nations people, and some communities lost more than half of their people in a single year."] },
     { art: "rg_after", say: ["When smallpox reached Victoria in 1862, the colony's officials forced the First Nations people camped there to leave, and the sickness travelled north along the coast with them.",
       "The Stó:lō and the Nlaka'pamux are still here, and so is the river. Jordan's family still fishes it."] },
     { ask: "rg_case", intro: "A case file in three steps: did a gold miner of 1858 end up ahead or behind? Three right answers, one step at a time, and then you choose how we spend the afternoon." },

@@ -168,7 +168,7 @@
       { label: "Pan for gold at a creek claim", art: "gs_pan", word: ["la balance", "the scales"], say: ["Dana shows us how to pan. You scoop gravel and water into the pan and swirl it round and round. The heavy gold sinks, and the light gravel washes away. I mostly got wet.",
         "A tiny heap of dust goes onto a little set of <em>scales</em>, la balance in French. Gold is sold by its mass, so the scales matter a great deal."] }] },
     { ask: "gs_last", intro: "Cam and Dana have some last puzzles from the afternoon. Three right answers and we say goodbye." },
-    { art: "gs_goodbye", say: ["We walk back to the boardwalk in the long evening light, and the sun is still up. Dana says in summer it hardly sets at all. I hope it does not mind me borrowing a little of it for my balloon.",
+    { art: "gs_goodbye", say: ["The clock hops us back to Dawson, and we walk along the boardwalk in the long evening light. The sun is still up. Dana says in summer it hardly sets at all. I hope it does not mind me borrowing a little of it for my balloon.",
       "The Tr'ondëk Hwëch'in are still here, where the Klondike meets the Yukon, and Dana is growing up on this land. The gold rush lasted a few years. The river and the people have been here far longer.",
       "Thank you, Dana, and thank you, Cam. Now the clock turns north, past the last of the trees, to the top of the world. An old friend is waiting there, and I think you know her. It is <em>The Top of the World</em>, in Nunavut, where Nina lives. Tick tock!"] }
   ] };
