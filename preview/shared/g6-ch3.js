@@ -91,6 +91,7 @@
   // FACT CHECK: The Acadian flag has blue, white and red vertical bands (the French tricolour) with a gold star in the blue band. Acadians still live in Nova Scotia, New Brunswick, Prince Edward Island and elsewhere, and speak French.
   // FACT CHECK: A tidal bore is a wave made by the incoming tide moving up a river against the current, and it can make the river flow the other way for a while. Bores happen on rivers that drain into the Minas Basin, such as the Salmon River at Truro and the Shubenacadie River.
   // FACT CHECK: French words: la digue (the dyke), la famille (the family), l'aboiteau (the dyke gate), la marée (the tide), le drapeau (the flag), la boue (the mud), la mer (the sea). Also le Grand Dérangement.
+  // FACT CHECK: Reworded after an outside review (Gemini, November 2026), checked against The Canadian Encyclopedia: soldiers burned Acadian houses and barns; estimates of Acadians who died from disease and shipwreck run to about 5,000; the marsh farming line now says 'mostly'.
   CHAPTERS[2] = { title: "Holding Back the Sea", where: "The Acadian shore, Nova Scotia", beats: [
     { art: "ac_arrive", word: ["la digue", "the dyke"], say: ["Down the river, out to sea, and then south! The clock has brought us to the Bay of Fundy, where the tides are the biggest in the world.",
       "This is the <em>Acadian shore</em> of Nova Scotia. The sea goes out so far here that the boats sit on the mud. I landed in a puddle. A very big puddle.",
@@ -103,7 +104,7 @@
       "So they build a wall of earth to hold the sea back. Through the wall is a wooden gate called an <em>aboiteau</em>. Rain water flows out at low tide, and the rising tide pushes the gate shut.",
       "Once rain washes the salt away, the soil grows rich crops. The Acadians live as neighbours of the <em>Mi'kmaq</em>. You say it MEEG-mah. They have lived here for thousands of years."] },
     { art: "ac_window1", say: ["The Acadians and the Mi'kmaq lived side by side for more than a hundred years. They traded, shared what they knew, and some families married into each other.",
-      "The Acadians farmed the salt marshes, which left the Mi'kmaw hunting grounds alone. How long does a dyke take?"] },
+      "The Acadians farmed the salt marshes, which mostly left the Mi'kmaw hunting grounds alone. How long does a dyke take?"] },
     { ask: "ac_dyke", intro: "Help build the dyke. Three right answers and we meet the tides." },
     { art: "ac_tides", word: ["la marée", "the tide"], say: ["Back to today. Look at the boats! They are sitting on the mud, and the sea has gone far away. Did somebody pull the plug?",
       "No, it is the <em>tide</em>. Twice a day the sea rises and falls. In the Minas Basin it can change by as much as about 16 metres, as tall as a five-storey building.",
@@ -111,7 +112,7 @@
     { ask: "ac_gauge", intro: "Read Élodie's tide gauge. Three right answers and the window opens again." },
     { art: "ac_window2", who: "The clock", say: ["Tick, tock. The window opens again."] },
     { art: "ac_window2", word: ["le drapeau", "the flag"], say: ["The window shows a sadder time. The year is <em>1755</em>. Britain and France are rivals for this land, and British soldiers have come to the Acadian villages.",
-      "The soldiers order the Acadians to leave their homes. Families are put on ships, and many are split up. This is called the <em>Deportation</em>, or le Grand Dérangement.",
+      "The soldiers order the Acadians to leave their homes. Families are put on ships, and many are split up. The soldiers burn the houses and barns so that nobody can come back.", "This is called the <em>Deportation</em>, or le Grand Dérangement. Thousands of Acadians died of sickness and shipwreck on the way.",
       "Some Acadian families escaped into the woods. Mi'kmaw families sheltered them and helped them survive.",
       "The window fades. About <em>10,000</em> people were sent away over the next years. Some found their way back, years later. Others made new homes far away, as far as Louisiana."] },
     { art: "ac_elodie", say: ["But look at Élodie's flag! Acadians are still here, still speaking French, with a flag of blue, white and red and a gold star. A flag is <em>le drapeau</em>."] },

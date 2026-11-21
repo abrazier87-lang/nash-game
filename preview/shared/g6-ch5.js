@@ -107,6 +107,7 @@
   // FACT CHECK: The Halifax to Dartmouth ferry is described as the oldest saltwater ferry service in North America, running since 1752.
   // FACT CHECK: French words: bienvenue (welcome), le port (the harbour), le bateau (the boat), la valise (the suitcase), le traversier (the ferry, Canadian French), midi (noon, also the middle of the day), le phare (the lighthouse).
   // FACT CHECK: Every number in the questions (arrivals, populations, fares, tour times, discounts) is made up for practice and is not a real figure.
+  // FACT CHECK: Reworded after an outside review (Gemini, November 2026), checked against The Canadian Encyclopedia: many Black Loyalists waited years and never received land; about 1,200 (1,196 by one count) sailed from Halifax to Sierra Leone in 1792. A reader should confirm the 'never came' wording.
   CHAPTERS[4] = { title: "The Harbour of Arrivals", where: "Halifax", beats: [
     { art: "hx_arrive", word: ["bienvenue", "welcome"], say: ["Down the coast we float, and the clock has found a harbour. A big one! Ships are sliding in and out, and a red and white lighthouse is watching them go.",
       "This is <em>Halifax</em>, in Nova Scotia. It is one of the great natural harbours of the world, and its water stays free of ice all year.",
@@ -119,7 +120,7 @@
     { art: "hx_window1783", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "hx_window1783", word: ["le bateau", "the boat"], say: ["The window into the past. The year is <em>1783</em>. The American Revolution is over, and ships are bringing thousands of people to Nova Scotia.",
       "About 3,000 of them are <em>Black Loyalists</em>. They are people of African descent who were promised freedom and land if they sided with Britain. Many cross by boat, <em>le bateau</em> in French.",
-      "Many settle at a place called Birchtown. They were given less land than they were promised, and poorer land too. They built their homes and communities anyway.",
+      "Many settle at a place called Birchtown. Many waited years for land that never came. Others got less than they were promised, and poorer land too.", "They built their homes and communities anyway. But they were not treated fairly, and in 1792 about 1,200 Black Loyalists left Nova Scotia and sailed to Sierra Leone, in Africa. Many others stayed, and their families are here today.",
       "Black Nova Scotians have been part of this province for well over 200 years, and they are here today. Harbour clerks had to count everyone who came ashore, so let's count too."] },
     { ask: "hx_numbers", intro: "Count the people stepping off the ships. Three right answers and we climb the hill." },
     { art: "hx_citadel", say: ["Now up Citadel Hill! At the top sits the <em>Citadel</em>, a star-shaped fort with thick walls, built to guard the harbour. The view is enormous.",

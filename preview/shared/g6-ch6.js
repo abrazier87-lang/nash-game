@@ -130,6 +130,7 @@
   // FACT CHECK: Brightly painted wooden houses are a well-known sight of St. John's (the "Jellybean Row" houses). The harbour opens to the sea through a narrow channel (the Narrows) between high cliffs.
   // FACT CHECK: The plane trip from Halifax to St. John's is made up for the math question (a real flight is about 1.5 hours). Iceberg heights, counts, class sizes, crate sizes and bird counts in the questions are all made up for practice.
   // FACT CHECK: In the goodbye the guides are named as Léa, Olivier, Élodie, Sadie, Amara and Declan, and the picture draws their hoodie colours as guesses: match them to Chapters 1 to 5 if they differ.
+  // FACT CHECK: Reworded after an outside review (Gemini, November 2026), checked against The Canadian Encyclopedia: settlers killed Beothuk people (not checked against a source this time: a reader should confirm the wording); Cape Spear is the most easterly point in Canada (Greenland is farther east in North America).
   CHAPTERS[5] = { title: "The Edge of the Map", where: "Newfoundland", beats: [
     { art: "nl_arrive", word: ["Terre-Neuve", "Newfoundland, meaning new found land"], say: ["Off we hop, over the water from Halifax. The clock keeps pointing east, and east, and east. Until there is almost nothing left to point at.",
       "This is <em>Newfoundland</em>, an island on the edge of the sea. The city below is St. John's. Look at the houses! Red, yellow, blue and green, stacked up the steep hill like a box of crayons.",
@@ -142,7 +143,7 @@
       "These are the Norse, also called Vikings. They sailed from Greenland and built a small village of sod houses at <em>L'Anse aux Meadows</em>. The roofs are made of grass!",
       "They are the first Europeans known to reach North America, about 500 years before Columbus."] },
     { art: "nl_window1", word: ["Beothuk", "the people who lived across this island for a very long time (say bee-OTH-uk)"], say: ["But this island was not empty. The <em>Beothuk</em> lived across it for a very long time. You say it bee-OTH-uk.",
-      "After Europeans settled the coasts, the Beothuk were cut off from the sea they fished. There was fighting with settlers, and new sicknesses came. Their numbers fell and fell.",
+      "After Europeans settled the coasts, the Beothuk were cut off from the sea they fished. Settlers killed Beothuk people, and hunger and new sicknesses came. Their numbers fell and fell.",
       "Shanawdithit, the last known Beothuk, died in St. John's in 1829. Before she died she drew maps and pictures, so that her people's story would not be lost."] },
     { art: "nl_declan", say: ["The Mi'kmaq have lived here too, for a long time, and they are still here today. Their name for the island is <em>Ktaqmkuk</em>.",
       "In Labrador, the mainland part of this province, the Innu and the Inuit live on their homelands today.",
@@ -165,7 +166,7 @@
       { label: "Walk the cliff to the puffins", art: "nl_puffins", word: ["le macareux", "the puffin"], say: ["We walk the cliff path, and there they are! Puffins sit on the grassy ledges, with black backs, white fronts, orange feet and great big orange beaks.",
         "In French a puffin is <em>le macareux</em>. Declan says it looks like it is wearing a clown's nose. I say it is the best beak I have ever seen."] }] },
     { ask: "nl_review", intro: "One last set of questions for this grade. Three right answers and we reach the very edge." },
-    { art: "nl_goodbye", say: ["Cape Spear! This is the very edge of the map. It is the most easterly point in North America, and the sun rises here first. There is no more east to go.",
+    { art: "nl_goodbye", say: ["Cape Spear! This is the very edge of the map. It is the most easterly point in Canada, and the sun rises here before anywhere else in the country. There is no more east to go.",
       "So thank you, Léa, Olivier, Élodie, Sadie, Amara and Declan. Each of you showed me a piece of the east, and I learned so much.",
       "Wait! The clock on the balloon is spinning! Its hands swing all the way round and point <em>west</em>. The prairies and the mountains are waiting for us.",
       "But that is another story. Tick tock!"] }

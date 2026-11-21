@@ -109,6 +109,7 @@
   // FACT CHECK: maple taffy poured on clean snow is a real sugar shack treat, and many sugar shacks offer horse-drawn sleigh rides
   // FACT CHECK: the water of the St. Lawrence gets wider and saltier as it nears the Gulf and the sea
   // FACT CHECK: French words: la ferme (the farm), le champ (the field), l'érable (the maple tree), le sirop d'érable (maple syrup), la cabane à sucre (the sugar shack), la tire (maple taffy), le traîneau (the sleigh)
+  // FACT CHECK: Reworded after an outside review (Gemini, November 2026), checked against The Canadian Encyclopedia: First Nations along the St. Lawrence are spoken of in the present tense.
   CHAPTERS[1] = { title: "The Long Farms", where: "Along the St. Lawrence", beats: [
     { art: "lf_arrive", say: ["Goodbye, Léa! My clock balloon is drifting downriver, and the St. Lawrence is slowly getting wider.",
       "Look at the land along the shore. The fields are not squares. They are <em>long thin strips</em>, like ribbons, all running back from the water.",
@@ -119,7 +120,7 @@
     { art: "lf_window1", who: "The clock", say: ["Tick, tock. Time to look back. My window is open."] },
     { art: "lf_window1", say: ["The window into the past! The year is about <em>1700</em>, in New France. See the land? It is cut into long, narrow lots, and every lot touches the river.",
       "Each lot was farmed by a family of <em>habitants</em>, which is what the French farmers were called. Every family got a piece of the riverbank, because the river was the road.",
-      "These long farms were laid out along riverbanks that were already the homelands of First Nations. They had lived, fished and travelled along this river for thousands of years.",
+      "These long farms were laid out along riverbanks that were already the homelands of First Nations. They have lived, fished and travelled along this river for thousands of years, and they still do.",
       "Boats carried people and goods, and in winter the frozen river was a road too. So the houses stood close together along the shore, and neighbours could wave. Let's measure these lots."] },
     { ask: "lf_ribbon", intro: "Measure the long thin lots. Three right answers and we fly over the fields of today." },
     { art: "lf_today", word: ["le champ", "the field"], say: ["Back to today! From up here the fields still look like <em>ribbons</em>. Some are strawberries, some are hay, and some are just having a nap.",
