@@ -68,10 +68,13 @@
   // FACT CHECK: In 2021 the Tk'emlúps te Secwépemc Nation announced that a search of the grounds of the former Kamloops Indian Residential School had found signs of about 200 possible unmarked graves (described as possible, found by ground-penetrating radar). Other nations have since searched the grounds of other schools.
   // FACT CHECK: Spellings: Secwépemc (the people), Secwepemctsín (their language), Tk'emlúps te Secwépemc (the Nation at Kamloops). Pronunciation guides for Secwépemc and Tk'emlúps te Secwépemc were added in November 2026 (see above), and no Secwepemctsín word is collected (kyé7e, "grandmother", was left out because the spelling could not be confirmed).
   // FACT CHECK: The balloon turns north to the Klondike (Chapter 5, The Golden Stairs). Chapter 3 was Vancouver with Simran, the Komagata Maru and the Coast Salish nations.
-  CHAPTERS[3] = { title: "Every Child Matters", where: "The interior of British Columbia", quiet: true, beats: [
+  // This chapter has its own reader. Dr. Somebody (an older British voice) says only his own arrival and goodbye; a plain Canadian voice reads what Hannah and her grandmother tell him,
+  // because a British voice passing on a survivor's story can sound like the voice of the people who ran the schools. Recordings: audio/g8/ch4/. Readers have not yet heard this choice.
+  CHAPTERS[3] = { title: "Every Child Matters", where: "The interior of British Columbia", quiet: true, voice: "audio/g8/ch4/", beats: [
     { art: "ec_arrive", say: ["We have left Simran and Vancouver behind. The balloon drifts inland, over the mountains, until the land turns dry and golden. There are tan hills, tall pines and a slow river.",
       "This is the interior of British Columbia, near the city of <em>Kamloops</em>. Before we land, I need to tell you that this chapter is different.",
-      "There are no puzzles today and no prizes. There is only a story that every child in Canada should hear. I am going to listen more than I talk."] },
+      "There are no puzzles today and no prizes. There is only a story that every child in Canada should hear. I am going to listen more than I talk.",
+      "So a friend will read the rest of this chapter for me. I am listening."] },
     { art: "ec_meet", say: ["A girl is waiting on a porch with her grandmother. This is Hannah. She is <em>Secwépemc</em>, and her people have lived in these hills and valleys for thousands of years.",
       "You say it suh-WEP-muhc.",
       "Hannah is wearing an orange shirt, and so is her grandmother. Hannah tells me the shirts are for remembering.",

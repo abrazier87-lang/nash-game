@@ -14,6 +14,8 @@ BOOK = os.path.join(ROOT, "audio", "lines.json")
 def who_says(path):
     """Whose voice a sound file is in, worked out from its folder."""
     parts = path.split("/")
+    if "ch4" in parts:  # Grade 8 chapter 4 has its own reader (Dr. Somebody's own few lines there are marked by hand in lines.json)
+        return "g8-ch4-reader"
     if "clock" in parts:  # words read aloud by the balloon's clock (Grade 5 and up)
         return "clock"
     if "doc" in parts:  # Dr. Somebody's guest lines inside Pip's and Dot's games
