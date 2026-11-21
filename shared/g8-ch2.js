@@ -81,7 +81,7 @@
           choices: textCards(sn(a, k), [sn(a, k + 1), sn(a, k - 1), sn(a, k + 2), sn(a, k - 2), sn(a, k + 3)]), why: `The decimal point moves ${k} places: ${fmt(n)} = ${snp(a, k)}.` }; }
       if (kind === 1) {
         if (rand(2)) return { html: "", text: `In 1858 about <b>${sn(3, 4)}</b> miners rushed to the Fraser River. Write that as an ordinary number.`,
-          choices: textCards(fmt(30000), [fmt(3000), fmt(300000), fmt(34), fmt(3000000), fmt(340000)]), why: `${snp(3, 4)} means 3 × 10 000, so move the decimal point 4 places: ${fmt(30000)}.` };
+          choices: textCards(fmt(30000), [fmt(3000), fmt(300000), fmt(34), fmt(3000000), fmt(340000)]), why: `${snp(3, 4)} means 3 × 10,000, so move the decimal point 4 places: ${fmt(30000)}.` };
         const at = pick([12, 24, 31, 45, 52, 68]), k = pick([4, 5, 6]), n = at * 10 ** (k - 1), a = tenths(at);
         return { html: "", text: `One year the run was <b>${sn(a, k)}</b> salmon. Write that as an ordinary number.`,
           choices: textCards(fmt(n), [fmt(n * 10), fmt(n / 10), fmt(n * 100), fmt(n / 100), fmt(at * k)]), why: `Move the decimal point ${k} places to the right: ${snp(a, k)} = ${fmt(n)}.` }; }
@@ -115,7 +115,7 @@
       }
       if (kind === 0) { const n = pick([6, 8, 10, 12]), mt = pick([2, 4, 5]), tot = n * mt;
         return { html: "", text: `On the gravel bar, Jordan's uncle finds <b>${n} flakes</b>. Each weighs about <b>0.${mt} g</b>. What is the total mass of gold?`,
-          choices: textCards(`${tenths(tot)} g`, [`${tenths(tot * 10)} g`, `${tot} g`, `${tenths(n + mt)} g`, `${tenths(tot + mt)} g`, `${tenths(tot - mt)} g`]), why: `${n} × 0.${mt} g = ${tenths(tot)} g.` }; }
+          choices: textCards(`${tenths(tot)} g`, [`${tenths(tot * 10)} g`, `${tenths(tot * 100)} g`, `${tenths(n + mt)} g`, `${tenths(tot + mt)} g`, `${tenths(tot - mt)} g`]), why: `${n} × 0.${mt} g = ${tenths(tot)} g.` }; }
       if (kind === 1) { const gm = pick([2, 3, 4, 5]), P = pick([80, 100, 120]), v = gm * P;
         return { html: "", text: `A jar holds <b>${gm} grams</b> of gold. Pretend gold sells for <b>$${P}</b> a gram. What is the jar worth?`,
           choices: textCards(v, [gm + P, v + P, v - P, v * 10, gm * 10], dol), why: `${gm} × $${P} = $${v}.` }; }

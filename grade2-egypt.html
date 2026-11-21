@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Egypt</title>
-<link rel="stylesheet" href="shared/kit.css?v=57">
+<link rel="stylesheet" href="shared/kit.css?v=58">
 <style>
   /* Desert look: blue sky fading to sand, pyramids, dunes. */
   :root { --sky1:#7fd0f5; --sky2:#ffe7b0; --grass:#f2c66d; --grass2:#e0a94a; --title-shadow:#b5651d; --strip:rgba(255,255,255,.4); --strip-line:rgba(120,80,30,.55); }
@@ -29,8 +29,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=57"></script>
-<script src="shared/story.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
+<script src="shared/story.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -69,8 +69,8 @@ const SAME = [["big", "large"], ["small", "tiny"], ["happy", "glad"], ["fast", "
   ["pretty", "beautiful"], ["gift", "present"], ["rock", "stone"], ["boat", "ship"]];
 const KINDS = {
   noun: { words: ["pyramid", "river", "king", "boat", "sand", "cat", "temple", "crown"], ask: "a naming word", why: "It names a person, place or thing. It is a noun." },
-  verb: { words: ["run", "dig", "swim", "build", "carry", "climb", "write", "sail"], ask: "an action word", why: "It is something you do. It is a verb." },
-  adjective: { words: ["golden", "tall", "dusty", "ancient", "heavy", "shiny", "brave", "huge"], ask: "a describing word", why: "It tells us what something is like. It is an adjective." }
+  verb: { words: ["run", "dig", "swim", "build", "carry", "climb", "write", "bake"], ask: "an action word", why: "It is something you do. It is a verb." },
+  adjective: { words: ["golden", "tall", "dusty", "ancient", "heavy", "shiny", "mighty", "huge"], ask: "a describing word", why: "It tells us what something is like. It is an adjective." }
 };
 const SPELL_EASY = [["rain", "rane", "rayn"], ["boat", "bote", "bowt"], ["tree", "trea", "trie"], ["cake", "caik", "kake"], ["night", "nite", "niht"], ["play", "plai", "pley"], ["green", "grean", "grene"], ["snow", "sno", "snoe"],
   ["moon", "mune", "moun"], ["bird", "berd", "burd"], ["sheep", "sheap", "shepe"], ["light", "lite", "lihgt"]];
@@ -151,7 +151,7 @@ function addSteps(a, b) {
   return [
     [`<span class="big">${a} + ${b}</span>`, `Let's add ${a} and ${b}. Split the numbers into tens and ones.`],
     [tens, bt ? `Add the tens. ${at} plus ${bt} is ${t}.` : `${b} has no tens, so the tens stay ${at}.`],
-    [`${tens}<br>${ones}`, `Add the ones. ${ao} plus ${bo} is ${o}.${o >= 10 ? " That's more than 10, so it makes one more ten." : ""}`],
+    [`${tens}<br>${ones}`, `Add the ones. ${ao} plus ${bo} is ${o}.${o === 10 ? " That makes one more ten." : o > 10 ? " That's more than 10, so it makes one more ten." : ""}`],
     [`${T(t)} + ${O(o)} = <b>${a + b}</b>`, `${t} and ${o}, make ${a + b}!`]];
 }
 // Taking away by splitting into tens and ones (when no borrowing is needed): 47 − 25 is 40 − 20, then 7 − 5.
@@ -202,7 +202,7 @@ function pastRule(now, then) {
   return { hint: `${cap(now)} is a word that changes instead of adding e d. Say each one in the sentence and listen for the one that sounds right.`, why: `${cap(now)} changes to ${then}. Today I ${now}. Yesterday I ${then}.`, irregular: true };
 }
 // Reading: find the sentence in the scroll that holds the answer (the one sharing the most words with the answer and the question).
-const STOP = new Set("the a an and of to in on is was were it its they them their what who why where which how did do does for with from that this there be by at as are has have most most".split(" "));
+const STOP = new Set("the a an and of to in on is was were it its they them their what who why where which how did do does for with from that this there be by at as are has have most".split(" "));
 function answerSentence(text, ask, ans) {
   const sents = text.match(/[^.!?]+[.!?]/g) || [text], words = s => s.toLowerCase().replace(/'s\b/g, "").match(/[a-z]+/g) || [];
   const keys = [...words(ans).map(w => [w, 2]), ...words(ask).map(w => [w, 1])].filter(([w]) => w.length > 2 && !STOP.has(w));
@@ -226,16 +226,16 @@ const GAMES = {
       if (step === 4) { // the missing number
         b = 5 + rand(36); a = 10 + rand(91 - b); const total = a + b;
         return { bubble: `<span class="sum">${a} + <b>?</b> = ${total}</span>`, say: `${a} plus what, makes ${total}?`, yay: `Yes! It's ${b}!`, choices: sumCards(b),
-          hint: H => { H.show(`${a} → ${total}`); return H.say(`Count up from ${a}, to ${total}. Jump to the next ten first, then add up your jumps.`); },
+          hint: H => { H.show(`${a} → ${total}`); return H.say(`Count up from ${a}, to ${total}. ${a % 10 ? "Jump to the next ten first, then add up your jumps." : "Add up your jumps."}`); },
           explain: async H => (await talkThrough(H, jumpSteps(a, total))) && pointTo(H, `So the missing number is ${b}.`) };
       }
       if (step === 1) { const o = rand(9); a = (1 + rand(8)) * 10 + o; b = 1 + rand(9 - o); }               // 34 + 5
       else if (step === 2) { const at = 1 + rand(7), ao = rand(9); a = at * 10 + ao; b = (1 + rand(8 - at)) * 10 + rand(10 - ao); } // 34 + 25
-      else { const ao = 2 + rand(8), at = 1 + rand(6); a = at * 10 + ao; b = rand(8 - at) * 10 + (10 - ao) + rand(ao); }             // 37 + 28 (carrying)
+      else { const ao = 2 + rand(8), at = 1 + rand(6); a = at * 10 + ao; b = (1 + rand(7 - at)) * 10 + (10 - ao) + rand(ao); }             // 37 + 28 (carrying)
       const bt = b - b % 10;
       return { bubble: `<span class="sum">${a} + ${b} = <b>?</b></span>`, say: `What is ${a}, plus ${b}?`, yay: `Yes! It's ${a + b}!`, choices: sumCards(a + b),
         hint: H => { H.show(bt ? `${T(a - a % 10)} + ${T(bt)} &nbsp; ${O(a % 10)} + ${O(b % 10)}` : `${T(a - a % 10)} &nbsp; ${O(a % 10)} + ${O(b)}`);
-          return H.say(bt ? "Split the numbers into tens and ones. Add the tens. Then add the ones. Then put them together." : `The tens stay the same. Just add the ones, ${a % 10}, plus ${b}.`); },
+          return H.say(bt || a % 10 + b >= 10 ? "Split the numbers into tens and ones. Add the tens. Then add the ones. Then put them together." : `The tens stay the same. Just add the ones, ${a % 10}, plus ${b}.`); },
         explain: async H => (await talkThrough(H, addSteps(a, b).slice(1))) && pointTo(H, `So the answer is ${a + b}.`) };
     }
   },
@@ -279,7 +279,7 @@ const GAMES = {
         const text = `A ${thing} costs ${fmt(cost)}. You pay with a loonie, which is $1. How much change do you get?`;
         return { bubble: `<div class="passage">${text}</div>`, tall: true, key: "change" + cost, say: `A ${thing} costs ${moneySaid(cost)}. You pay with a loonie, which is 1 dollar. How much change do you get?`, yay: `Yes! ${cap(moneySaid(change))} change.`,
           choices: moneyCards(change, [change + 10, change - 10, change + 5, change - 5, cost]),
-          hint: H => { H.show(`${fmt(cost)} → $1`); return H.say(`Count up from ${moneySaid(cost)}, to 1 dollar. Jump to the next ten first.`); },
+          hint: H => { H.show(`${fmt(cost)} → $1`); return H.say(`Count up from ${moneySaid(cost)}, to 1 dollar.${cost % 10 ? " Jump to the next ten first." : ""}`); },
           explain: async H => (await talkThrough(H, jumpSteps(cost, 100, fmt, moneySaid))) && pointTo(H, `So your change is ${moneySaid(change)}.`) };
       }
       let t = 0, l = 0, q = 0, d, n, c, count;
@@ -314,7 +314,7 @@ const GAMES = {
       if (step === 1) { // seconds, minutes or hours?
         const e = pick(EVENTS), [what, pic, n, u] = e;
         return { bubble: `<div class="col">${big(pic, 11)}<div class="sentence">${cap(what)} takes about ${n} <u>&nbsp;</u></div></div>`, tall: true, key: what,
-          say: `${cap(what)} takes about ${n}, what? Seconds, minutes, or hours?`, again: `${cap(what)} takes about ${n}, what?`, read: "Seconds, minutes, or hours?", yay: `Yes! ${cap(what)} takes about ${howLong(e)}.`,
+          say: `${cap(what)} takes about ${n}, what? ${cap(unitWord(0, n))}, ${unitWord(1, n)}, or ${unitWord(2, n)}?`, again: `${cap(what)} takes about ${n}, what?`, read: `${cap(unitWord(0, n))}, ${unitWord(1, n)}, or ${unitWord(2, n)}?`, yay: `Yes! ${cap(what)} takes about ${howLong(e)}.`,
           choices: [0, 1, 2].map(k => ({ html: wordCard(unitWord(k, n), INK[k]), ok: k === u, wrong: k < u ? `${n} ${unitWord(k, n)} would be much too quick.` : `${n} ${unitWord(k, n)} would be much too long!` })),
           hint: H => H.say("A second is as quick as a clap. A minute is about as long as counting slowly to 60. An hour is much longer, like baking a loaf of bread."),
           explain: H => pointTo(H, `${cap(what)} takes about ${howLong(e)}.`) };
@@ -399,7 +399,7 @@ const GAMES = {
       if (step <= 2) { const [w, x, y] = pick(step === 1 ? SPELL_EASY : SPELL_TRICKY), tm = team(w), heart = HEART[w];
         const q = { bubble: big("👂", 12), key: w, say: `Which one spells, ${w}, the right way?`, read: `Which one spells "${w}" the right way?`, yay: `Yes! ${spelled(w)}. That spells, ${w}!`, choices: cards(w, [x, y], "That is not how we spell it.") };
         if (step === 1 && tm) {
-          q.hint = H => H.say(tm.magic ? `Say ${w} slowly. Listen for the ${tm.sound} sound. A silent E at the end can make a vowel say its name.` : `Say ${w} slowly. Listen for the ${tm.sound} sound in the middle. In this word, it's spelled with the letters ${tm.letters.toUpperCase().split("").join(" ")}.`);
+          q.hint = H => H.say(tm.magic ? `Say ${w} slowly. Listen for the ${tm.sound} sound. A silent E at the end can make a vowel say its name.` : `Say ${w} slowly. Listen for the ${tm.sound} sound ${tm.at + tm.len === w.length ? "at the end" : "in the middle"}. In this word, it's spelled with the letters ${tm.letters.toUpperCase().split("").join(" ")}.`);
           q.explain = H => { H.show(big(tm.magic ? marked(w.slice(0, -1), tm.at, 1) + "<b>e</b>" : marked(w, tm.at, tm.len), 9)); return pointTo(H, `${spelled(w)}. ${tm.magic ? `The E at the end makes the ${w[tm.at].toUpperCase()} say its name.` : `${tm.letters.toUpperCase().split("").join(" ")} makes the ${tm.sound} sound.`}`); };
         }
         if (step === 2 && heart) {
@@ -451,8 +451,8 @@ const GAMES = {
             return pointTo(H, `${g} groups of ${k} make ${n}.`); } };
       }
       const r = 2 + rand(4), c = step === 2 ? 2 + rand(4) : pick([2, 3, 4, 5, 10]), n = r * c, near = [n + c, n - c, n + r, r + c, n + 1];
-      const tip = H => H.say(`Count by ${c}s. ${c}, ${2 * c}, and keep going, once for each ${step === 3 ? c + " you see" : "row"}.`);
-      const worked = async H => (await talkThrough(H, skipSteps(c, r))) && pointTo(H, `${r} ${step === 3 ? "lots" : "rows"} of ${c} make ${n}.`);
+      const tip = H => H.say(`Count by ${c}s. ${r > 2 ? `${c}, ${2 * c}, and keep going` : `${c}, and then the next one`}, once for each ${step === 3 ? c + " you see" : "row"}.`);
+      const worked = async H => (await talkThrough(H, skipSteps(c, r))) && pointTo(H, `${r} ${step === 3 ? "groups" : "rows"} of ${c} make ${n}.`);
       if (step === 2) return { bubble: `<div class="stones" style="grid-template-columns:repeat(${c}, auto)">${"<span>🧱</span>".repeat(n)}</div>`, key: r + "x" + c,
         say: `${r} rows of ${c}. How many stones altogether?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near),
         hint: H => { [...H.bubble.querySelectorAll(".stones span")].slice(0, c).forEach(x => H.glow(x, true)); return tip(H); },
@@ -460,7 +460,7 @@ const GAMES = {
           for (let i = 0; i < r; i++) { st.forEach((x, j) => H.glow(x, Math.floor(j / c) === i)); if (!(await H.say(String((i + 1) * c)))) return false; }
           return pointTo(H, `${r} rows of ${c} make ${n}.`); } };
       if (step === 3) return { bubble: `<span class="sum" style="font-size:${Math.min(10, 95 / (r * (String(c).length + 3) + 1)).toFixed(1)}vmin">${Array(r).fill(c).join(" + ")} = <b>?</b></span>`, key: r + "x" + c,
-        say: `What is ${Array(r).fill(c).join(" plus ")}?`, yay: `Yes! ${r} lots of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near), hint: tip, explain: worked };
+        say: `What is ${Array(r).fill(c).join(" plus ")}?`, yay: `Yes! ${r} groups of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near), hint: tip, explain: worked };
       return { bubble: `<div class="sentence">${r} rows of ${c} stones</div>`, key: r + "x" + c, say: `A wall has ${r} rows of ${c} stones. How many stones is that?`, yay: `Yes! ${r} rows of ${c} make ${n}!`, choices: numCards(n, 1, 100, 4, near), hint: tip, explain: worked };
     }
   }

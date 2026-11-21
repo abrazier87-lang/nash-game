@@ -195,7 +195,7 @@ function StoryGame(C) {
     else do { q = GAMES[G.id].makeQuestion(S.skill[G.id]); tries++; } while (tries < 14 && (keyOf(q) === G.last || G.seen.has(keyOf(q)))); // not one already asked this round
     const guide = C.lessons && G.guided > 0 && q.hint; // "Try together": show the help straight after asking
     q.golden = !q.reviewed && !guide && G.count > 0 && G.stars < STARS - 1 && rand(7) === 0; // now and then, a golden question: right first time wins two stars
-    G.seen.add(keyOf(q)); G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.wrongs = 0;
+    G.seen.add(keyOf(q)); G.last = keyOf(q); G.q = q; G.first = true; G.busy = false; G.hinted = false; G.asked = false; G.wrongs = 0;
     const shown = Kit.writtenBubble(q, C.written); // with talking off (or in a grade with C.written), the question is also shown in writing
     $("gameHost").classList.toggle("mute", !Kit.settings.voice); // the little speaker on the host only shows when there is something to hear
     $("bubble").innerHTML = shown.html; $("bubble").classList.toggle("tall", !!q.tall); $("bubble").classList.toggle("quiet", shown.quiet); $("bubble").classList.remove("lessonframe"); animate($("bubble"), "pop");
@@ -224,13 +224,14 @@ function StoryGame(C) {
       animate($("gameHost"), "bounce");
       el.classList.add("right"); [...box.children].forEach(b => { if (b !== el) b.classList.add("dim"); }); $("bubble").classList.remove("golden");
       G.stars++; $("stars").children[G.stars - 1].classList.add("got"); G.count++;
-      const clean = G.first && (!G.hinted || q.guided); // right first time (the "try together" help does not spoil it)
+      const helped = q.guided ? G.asked : G.hinted; // a "try together" question shows its help by itself: that is not the child asking for a hint
+      const clean = G.first && !helped; // right first time (the "try together" help does not spoil it)
       if (clean) { G.run++; if (G.run === 3 || G.run === 5) { sfx.sparkle(); cheer(G.run + " in a row!"); } } else { G.run = 0; G.perfect = false; }
       if (q.golden && clean && G.stars < STARS) { G.stars++; $("stars").children[G.stars - 1].classList.add("got", "gold"); $("stars").children[G.stars - 2].classList.add("gold"); S.gold = (S.gold || 0) + 1; confetti(25); cheer("Golden star!"); }
-      if (C.lessons && (!G.first || (G.hinted && !q.guided)) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: ask it again a little later
+      if (C.lessons && (!G.first || helped) && !q.reviewed) (REVIEW[G.id] || (REVIEW[G.id] = [])).push({ q, due: G.count + 2 }); // it needed help: ask it again a little later
       const spoken = sayAndWait(q.yay, q.pause || 2500); // waits for the voice to finish; with the voice off, a short pause
-      Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
-      adjust(G.first && !G.hinted); // an answer found with a hint does not make the place harder
+      Kit.track(C.medal, C.title, G.id, GAMES[G.id].name, S.skill[G.id], q, clean, helped); // for the progress report
+      if (!(q.guided && clean)) adjust(clean); // an answer found with a hint does not make the place harder (and a "try together" question answered right moves the step neither way)
       await spoken;
       if (!G || G.q !== q) return;
       if (G.stars >= STARS) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.party(); confetti(40); cheer("Perfect round!"); await wait(1500); if (!G || G.q !== q) return; } finishGame(); } else nextQuestion();
@@ -389,7 +390,7 @@ function StoryGame(C) {
   // (each question's own "hint"; a question without one just hears the question again).
   $("hintBtn").addEventListener("click", async () => {
     if (!C.hints || !G || G.busy || !G.q || G.hints <= 0) return;
-    const q = G.q; G.hints--; G.hinted = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
+    const q = G.q; G.hints--; G.hinted = true; G.asked = true; $("hintBtn").classList.add("used"); sfx.tap(); Kit.hush();
     Kit.dropOneWrong($("choices"));
     const H = helperFor(q, () => G && G.q === q && !G.busy);
     if (q.hint) await q.hint(H); else await H.say(q.help || q.say);

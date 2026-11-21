@@ -81,7 +81,7 @@
     mk_symmetry() { // transformations in words: symmetry, turns, and perimeter of regular shapes
       const kind = rand(3);
       if (kind === 0) { const n = pick([4, 5, 6, 8, 10, 12]);
-        if (rand(2)) return { html: "", text: `The star on Sadie's jacket has <b>${n} points</b>, all the same size. How many lines of symmetry does it have?`, choices: cards(n, [n / 2, n * 2, n + 1, n - 1, 1, 2]), why: `A regular star with ${n} points can be folded exactly in half in ${n} ways. It has ${n} lines of symmetry.` };
+        if (rand(2)) return { html: "", text: `Sadie draws a star with <b>${n} points</b>, all the same size. How many lines of symmetry does it have?`, choices: cards(n, [n / 2, n * 2, n + 1, n - 1, 1, 2]), why: `A regular star with ${n} points can be folded exactly in half in ${n} ways. It has ${n} lines of symmetry.` };
         return { html: "", text: `Turn a star with <b>${n} points</b> one full turn. How many times does it fit exactly onto itself, counting the finish?`, choices: cards(n, [n / 2, n * 2, n + 1, n - 1, 1, 2]), why: `It fits again after every ${360 / n} degrees. 360 ÷ ${360 / n} = ${n} times in one full turn.` }; }
       if (kind === 1) { const k = 1 + rand(3), cw = rand(2) === 0, dirs = ["up", "right", "down", "left"], right = dirs[cw ? k % 4 : (4 - k) % 4], words = ["one", "two", "three"][k - 1];
         return { html: "", text: `An arrow on Sadie's jacket points <b>up</b>. Turn it <b>${words} quarter turn${k > 1 ? "s" : ""}</b> <b>${cw ? "clockwise" : "counterclockwise"}</b>. Which way does it point now?`, choices: textCards(right, dirs.filter(d => d !== right)), why: `${k} quarter turn${k > 1 ? "s are" : " is"} ${k * 90} degrees. Turning ${cw ? "clockwise" : "counterclockwise"} from up, it points ${right}.` }; }
@@ -105,7 +105,7 @@
   // FACT CHECK: Bald eagles live and nest around the Bras d'Or Lake.
   // FACT CHECK: Halifax is the next stop, along the coast.
   CHAPTERS[3] = { title: "The People of the Dawn", where: "Mi'kmaw country, Cape Breton", beats: [
-    { art: "mk_arrive", word: ["Unama'ki", "Cape Breton Island (say oo-nah-MAH-gee)"], say: ["East we go again! The clock followed the coast, and now we float over an island with a great blue lake right in the middle. Hold on to your hat. I landed on a goose last time.",
+    { art: "mk_arrive", word: ["Unama'ki", "Cape Breton Island (say oo-nah-MAH-gee)"], say: ["East we go again! The clock followed the coast, and now we float over an island with a great blue lake right in the middle. Hold on to your hat. I landed in a puddle last time.",
       "The Mi'kmaq call this island <em>Unama'ki</em>. You say Mi'kmaq like MEEG-mah, and Unama'ki like oo-nah-MAH-gee.",
       "You may know it as Cape Breton Island. The Mi'kmaq have lived here for more than 10,000 years, and they live here today.",
       "That blue lake is the <em>Bras d'Or Lake</em>. It is salty like the sea, even though it sits in the middle of the island. Down we go!"] },

@@ -121,7 +121,7 @@
     { art: "fw_window2", who: "The clock", say: ["Tick, tock. The window opens again."] },
     { art: "fw_window2", word: ["le canot", "the canoe"], say: ["The window again. Now let us look at whose trade it really was. It depended on <em>First Nations and Métis people</em>.",
       "You say Métis like this: may-TEE.",
-      "Anishinaabe families built the birchbark canoes, a canoe is <em>un canot</em>. They supplied food such as wild rice and maple sugar, and they guided the brigades. They also trapped furs and traded them.",
+      "Anishinaabe families built the birchbark canoes. A canoe is <em>un canot</em>. They supplied food such as wild rice and maple sugar, and they guided the brigades. They also trapped furs and traded them.",
       "Métis people worked as guides, interpreters and canoe crews too. Without all of them the canoes went nowhere. That is just a plain fact."] },
     { ask: "fw_swap", intro: "Solve the canoe sums. Three right answers and then we pick a canoe to ride in." },
     { art: "fw_choice", pick: "Through the window we can ride with a crew. Which canoe shall we climb into?", options: [

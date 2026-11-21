@@ -50,7 +50,7 @@ function ChapterGame(C) {
   // ---------- the page ----------
   $("app").innerHTML = `
   <div class="layer">${backdrop()}</div><div class="layer" id="fx"></div>
-  <div class="screen on" id="title"><h1>${C.title}</h1><p class="sub">${C.sub}${NAME ? " for " + NAME : ""}${REVIEW ? " · grown-up review" : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
+  <div class="screen on" id="title"><h1>${C.title}</h1><p class="sub">${C.sub}${NAME ? " for " + Kit.esc(NAME) : ""}${REVIEW ? " · grown-up review" : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
     <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
   <div class="screen" id="intro"><div class="panel" id="introPanel"></div><div class="caption" id="introCap"></div>
     <div class="nextrow"><button class="bigbtn small" id="introNext" aria-label="Next"><span class="tri"></span></button></div></div>
@@ -115,7 +115,7 @@ function ChapterGame(C) {
   // ---------- the certificate: every chapter finished ----------
   const allDone = () => CHAPTERS.every((c, i) => c.beats && S.done.includes(i));
   function showCert() {
-    $("certPanel").innerHTML = `<div class="certowl">${NEW_OWL}</div><h2>${C.certificate.title}</h2><p class="certname">${NAME || "A brave traveller"}</p><p>${C.certificate.line}</p>
+    $("certPanel").innerHTML = `<div class="certowl">${NEW_OWL}</div><h2>${C.certificate.title}</h2><p class="certname">${NAME ? Kit.esc(NAME) : "A brave traveller"}</p><p>${C.certificate.line}</p>
       <div class="certstamps">${CHAPTERS.map((c, i) => `<span>${ICON.star}<small>${c.title}</small></span>`).join("")}</div><button class="again" id="certClose">OK</button>`;
     $("cert").classList.add("on"); $("certClose").addEventListener("click", () => { sfx.tap(); $("cert").classList.remove("on"); });
   }
@@ -186,7 +186,7 @@ function ChapterGame(C) {
     if (at.line < sceneAt().say.length - 1) { at.line++; drawLine(); return; }
     if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
     const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } Kit.finish(C.medal, "ch" + (at.c + 1)); /* the chapter is a finished lesson (for the progress report) */ const quietOne = CHAPTERS[at.c].quiet; Kit.hush(); if (!quietOne) confetti(80); // the chapter is finished
-    if (CHAPTERS.every((c, i) => !c.beats || S.done.includes(i)) && CHAPTERS.every(c => c.beats)) { const had = Kit.stamps().includes(C.medal); Kit.stamp(C.medal); confetti(120); if (had && !quietOne && !Kit.music("chapter-complete")) sfx.party(); } // every chapter done: the medal goes on the book shelf (a new medal plays its own tune)
+    if (CHAPTERS.every((c, i) => !c.beats || S.done.includes(i)) && CHAPTERS.every(c => c.beats)) { const had = Kit.stamps().includes(C.medal); Kit.stamp(C.medal); if (!quietOne) confetti(120); if (had && !quietOne && !Kit.music("chapter-complete")) sfx.party(); } // every chapter done: the medal goes on the book shelf (a new medal plays its own tune)
     else if (!quietOne && !Kit.music("chapter-complete")) sfx.party();
     showMap(); if (C.certificate && first && allDone()) showCert(); });
   $("backBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); if (at.line > 0) { at.line--; drawLine(); return; }
@@ -207,7 +207,7 @@ function ChapterGame(C) {
   let G = null;
   function cheer(text) { const c = $("cheer"); c.textContent = text; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); }
   function startAsk(beat) {
-    G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true, choice: S.picks[at.c] || 0, case: {}, quiet: !!beat.quiet };
+    G = { beat, need: beat.need || NEED, stars: 0, wrongs: 0, busy: false, last: "", perfect: true, choice: S.picks[at.c] || 0, case: {}, quiet: !!(beat.quiet || CHAPTERS[at.c].quiet) };
     $("stars").innerHTML = Array(G.need).fill('<div class="star">⭐</div>').join(""); $("stars").classList.remove("perfect");
     show("game"); nextAsk(beat.intro); if (beat.intro) speakLine(beat.intro, null, CHAPTERS[at.c].voice); else Kit.hush();
   }

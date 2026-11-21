@@ -91,7 +91,7 @@
   <p class="foot" id="foot"></p>
 </div>
 
-<script src="shared/kit.js?v=57"></script>
+<script src="shared/kit.js?v=58"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -142,7 +142,7 @@ function poolTag(list) {
   if (!list.length || !asked) return { tag: "Not started", color: "var(--grey)", rate: 0, shown: false };
   const rate = n ? right / n : 0, ready = list.filter(x => x.s.asked >= 6);
   if (asked < 6 || !n) return { tag: "Just started", color: "var(--grey)", rate, shown: false };
-  if (ready.length && ready.every(x => x.j.tag === "Mastered")) return { tag: "Mastered", color: "var(--gold)", rate, shown: true };
+  if (rate >= 0.8 && ready.length && ready.every(x => x.j.tag === "Mastered")) return { tag: "Mastered", color: "var(--gold)", rate, shown: true };
   if (rate >= 0.8) return { tag: "Doing well", color: "var(--green)", rate, shown: true };
   if (rate >= 0.6) return { tag: "Practising", color: "var(--blue)", rate, shown: true };
   return { tag: "Needs help", color: "var(--orange)", rate, shown: true };

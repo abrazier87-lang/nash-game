@@ -813,6 +813,7 @@ function nextQuestion(intro) { // "intro" is the place's id, only for the very f
   }
   loadClip(lineUrl(q.yay)).catch(() => {}); // get the cheer ready too
   const guide = G.guided > 0 && q.hint; // "Try together"
+  G.guide = !!guide;
   if (guide) { G.guided--; G.hinted = true; }
   const g = G, parts = (lead ? [lead] : []).concat(q.sayParts || q.say);
   const asked = intro ? speak("intro-" + intro, GAMES[intro].intro).then(finished => finished && G === g && g.q === q ? talk(parts) : false) // asks only if the welcome played to its end
@@ -834,8 +835,9 @@ async function choose(el, ch, part) {
     const last = G.stars >= STARS_TO_WIN;
     if (!(last && G.perfect) && (G.run === 3 || (G.run === 4 && STARS_TO_WIN === 4))) { cheer("⭐".repeat(G.run)); sfx.sparkle(); }
     const spoken = talkAndWait(q.yay, q.pause || 2100); // waits for Pip to finish; with the voice off, a short pause
-    track(G.id, GAMES[G.id].name, S.skill[G.id], q, G.first && !G.hinted, G.hinted); // for the progress report
-    adjust(G.first && !G.hinted);
+    const easy = G.guide && G.first && !G.asked; // a "try together" question answered right first time without the hint button: counts as right, and leaves the step alone
+    track(G.id, GAMES[G.id].name, S.skill[G.id], q, easy || (G.first && !G.hinted), !easy && G.hinted); // for the progress report
+    if (!easy) adjust(G.first && !G.hinted);
     await spoken;
     if (q.after) await wait(q.after); // extra time when Pip asks the child to do something ("Where is your tummy?")
     if (!G || G.q !== q) return;
@@ -1038,9 +1040,9 @@ gb.addEventListener("blur", endHold);
 function openGrown() {
   endHold(); hush();
   const stepNames = {
-    colors: ["2 colors", "3 colors", "3 of 6 colors", "4 colors"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"],
+    colors: ["2 colours", "3 colours", "3 of 6 colours", "4 colours"], shadows: ["dino or object", "2 dinos + object", "3 dinos", "4 dinos"],
     sizes: ["find big", "big or small", "biggest / smallest of 3", "biggest / smallest of 4"], count: ["count to 2", "count to 3", "count to 4", "count to 5"],
-    shapes: ["circle, square, triangle", "adds star and heart", "8 shapes", "8 shapes, by name only"], patterns: ["2 colors taking turns", "2 things taking turns", "3 choices", "two-then-one pattern"],
+    shapes: ["circle, square, triangle", "adds star and heart", "8 shapes", "8 shapes, by name only"], patterns: ["2 colours taking turns", "2 things taking turns", "3 choices", "two-then-one pattern"],
     body: ["head, tummy, tail", "adds feet and eye", "adds arm and nose", "adds mouth"], sounds: ["4 animals, 2 choices", "6 animals, 3 choices", "10 animals, 3 choices", "10 animals, 4 choices"]
   };
   $("grownPanel").innerHTML = `<h2>Grown-ups</h2>
