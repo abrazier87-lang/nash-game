@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=59">
+<link rel="stylesheet" href="shared/kit.css?v=60">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -16,6 +16,11 @@
   .shelfTitle { font-size:clamp(34px,7vw,64px); color:#8a4f1d; text-align:center; margin:6px 0 4px; text-shadow:0 3px 0 #fff; letter-spacing:1px; }
   .who { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; margin:14px 0 22px; font-size:20px; }
   .who b { margin-right:4px; }
+  /* "Things to print": the printable books, on a small shelf of their own under the story books */
+  .printh { text-align:center; font-size:24px; color:#8a4f1d; margin:34px 0 12px; }
+  .prints { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin:0 auto 10px; max-width:760px; }
+  .pbook { flex:1 1 260px; max-width:360px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:16px 14px; border-radius:18px; background:#fffaf0; border:3px dashed #c9a46a; color:#3a3226; text-decoration:none; text-align:center; box-shadow:0 5px 0 rgba(0,0,0,.12); }
+  .pbook .pp { font-size:44px; line-height:1; } .pbook b { font-size:22px; } .pbook small { font-size:14px; color:#7a6a58; }
   .who .review { background:#fff7d6; border:2px solid #e2c44f; border-radius:16px; padding:10px 16px; font-size:17px; line-height:1.4; max-width:640px; text-align:center; color:#4a3d1c; }
   .who .review .chip { margin:8px 0 0; }
   #pop .need { color:#b3261e; font-weight:bold; min-height:1.2em; margin:6px 0 0; }
@@ -96,6 +101,11 @@
   <div class="who" id="who"></div>
   <p id="startLine"></p>
   <div class="shelf" id="shelf"></div>
+  <h2 class="printh">Things to print</h2>
+  <div class="prints">
+    <a class="pbook" href="book-colouring.html?g=k"><span class="pp">🖍️</span><b>Colouring Book</b><small>Sample pages: Kindergarten and Grade 3</small></a>
+    <a class="pbook" href="book-activities.html?g=k"><span class="pp">🧩</span><b>Activity Book</b><small>Mazes, dot to dot, word search, crossword</small></a>
+  </div>
   <p id="backupNudge" style="text-align:center;margin:36px 0 0;font-size:15px;color:#7a5520"></p>
   <p id="version" style="text-align:center;margin:12px 0 0;font-size:13px;color:#a08a6c"></p>
 </div>
@@ -103,7 +113,7 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=59"></script>
+<script src="shared/kit.js?v=60"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -281,6 +291,7 @@ function openGrown() {
     <p>Each child gets their own saved progress. It is kept only on this device, so make a backup now and then (below).</p>
     ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b>${Kit.ageOf(p) ? ` · about ${Kit.ageOf(p)}` : ""}</div><button data-act="age" data-id="${p.id}">${Kit.ageOf(p) ? "Age" : "Add age"}</button><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
+    <div class="line"><div><b>🧩 Activity book answers</b><br><span class="soon">The answer sheets for the printable puzzles. They are kept here so a child's printout has no answers in it.</span></div><button data-act="answers">Open</button></div>
     <div class="line"><div><b>🔎 Look through the games</b><br><span class="soon">Opens every book and every chapter, so you can read any lesson before your child does. Nothing is saved to a child. It turns off by itself after 2 hours.</span></div><button class="main" data-act="review">${Kit.reviewing() ? "Finish" : "Start"}</button></div>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
@@ -308,6 +319,7 @@ $("grownPanel").addEventListener("click", e => {
   const act = t.dataset.act;
   if (act && (act === "backup" || act === "copy" || act.startsWith("restore"))) { backupAction(act); return; }
   if (act === "age") { askAge(t.dataset.id); return; }
+  if (act === "answers") { location.href = "book-activities.html?g=k&answers=1"; return; }
   if (act === "review") { if (Kit.reviewing()) Kit.endReview(); else Kit.startReview(); $("grown").classList.remove("on"); drawWho(); window.scrollTo(0, 0); return; }
   if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;

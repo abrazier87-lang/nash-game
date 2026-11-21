@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Book</title>
+<link rel="stylesheet" href="shared/books.css">
+</head>
+<body>
+<div class="bar">
+  <a href="index.html">&larr; Book shelf</a>
+  <nav class="grades" id="grades"></nav>
+  <span class="t" id="barTitle">Activity Book</span>
+  <button type="button" onclick="window.print()">Print</button>
+</div>
+<main id="sheets"></main>
+<script src="shared/books.js"></script>
+<script>Books.start("activities");</script>
+<div style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99;background:#ff5a5f;color:#fff;font:bold 12px sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;opacity:.85">PREVIEW</div>
+</body>
+</html>
