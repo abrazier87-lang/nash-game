@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dr. Somebody and the Long Way Round</title>
+<link rel="stylesheet" href="shared/kit.css?v=53">
+<link rel="stylesheet" href="shared/inked.css?v=53">
+<link rel="stylesheet" href="shared/chapters.css?v=53">
+<style>
+  /* Grade 8's own colours. The storyboard look is in shared/chapters.css. */
+  :root { --sky1:#9cc9e8; --sky2:#e8f0f4; --grass:#7fae8a; --grass2:#4f8a6a; --title-shadow:#2f5d7a; }
+  h1 { font-size:6vmin; }
+  .choice .ratio { white-space:nowrap; }
+</style>
+</head>
+<body class="game">
+<div id="app"></div>
+
+<script src="shared/kit.js?v=53"></script>
+<script src="shared/story.js?v=53"></script>
+<script src="shared/newowl.js?v=53"></script>
+<script src="shared/inkart.js?v=53"></script>
+<script src="shared/chapters.js?v=53"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DR. SOMEBODY AND THE LONG WAY ROUND  -  the Grade 8 story, and the last one
+   Over the mountains to the Pacific, north to the Arctic, and home to the Grand River.
+   The history of these years (about 1850 to 1914) is hard, and it is told plainly.
+   New in this grade: some questions are answered by tapping a point on a graph, a "case file" is one problem solved
+   over three linked questions, the money is gold dust, and a certificate waits at the end.
+   Chapter 4 (residential schools) is a quiet chapter: no maths, no money, no cheering.
+   Each chapter lives in its own file, shared/g8-ch1.js to shared/g8-ch7.js: it adds its pictures to ART,
+   its questions to ASK and its story to CHAPTERS. The engine is shared/chapters.js; the drawing tools are shared/inkart.js.
+   Every line is shown in writing only for now: the words are recorded once they are settled.
+   ===================================================================== */
+
+// ---------- helpers every chapter can use ----------
+const cards = (n, near) => numCards(n, 1, 1000000, 4, near.filter(k => k > 0 && k !== n && Number.isInteger(k)));
+const tenths = n => (n / 10).toFixed(1);
+const textCards = (right, wrongs, make) => shuffle([...new Set(wrongs.filter(w => w !== right))].slice(0, 3).concat([right])).map(x => ({ html: make ? make(x) : x, ok: x === right }));
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const fmt = n => n.toLocaleString("en-CA");
+// A graph to read, or to answer on by tapping. o = { xmax, ymax, xstep, ystep, xl, yl, line: [slope, start], dots: [[x, y]], spots: [[x, y]] }
+// "line" draws y = slope × x + start across the graph. "dots" are plain black points. "spots" are the points the child can tap:
+// spot number i gets data-pick="i", so the question is { tap: true, html: graph(o), choices: o.spots.map((s, i) => ({ pick: String(i), ok: i === right })) }.
+const graph = o => { const W = 230, H = 176, L = 34, B = 30, T = 10, R = 12, xs = o.xstep || 1, ys = o.ystep || 1;
+  const px = x => +(L + x / o.xmax * (W - L - R)).toFixed(1), py = y => +(H - B - y / o.ymax * (H - B - T)).toFixed(1); let s = "";
+  for (let x = 0; x <= o.xmax; x += xs) s += `<line x1="${px(x)}" y1="${py(0)}" x2="${px(x)}" y2="${py(o.ymax)}" stroke="#d9d0c0" stroke-width="1"/><text x="${px(x)}" y="${H - B + 11}" text-anchor="middle">${x}</text>`;
+  for (let y = 0; y <= o.ymax; y += ys) s += `<line x1="${px(0)}" y1="${py(y)}" x2="${px(o.xmax)}" y2="${py(y)}" stroke="#d9d0c0" stroke-width="1"/>${y ? `<text x="${L - 4}" y="${py(y) + 3}" text-anchor="end">${y}</text>` : ""}`;
+  s += `<path d="M${px(0)} ${py(o.ymax)} V${py(0)} H${px(o.xmax)}" fill="none" stroke="#2b1a10" stroke-width="2.4" stroke-linecap="round"/>`;
+  if (o.line) { const [m, b] = o.line, x1 = Math.min(o.xmax, m > 0 ? (o.ymax - b) / m : o.xmax); s += `<line x1="${px(0)}" y1="${py(b)}" x2="${px(x1)}" y2="${py(m * x1 + b)}" stroke="#d62839" stroke-width="3" stroke-linecap="round"/>`; }
+  (o.dots || []).forEach(([x, y]) => { s += `<circle cx="${px(x)}" cy="${py(y)}" r="4" fill="#2b1a10"/>`; });
+  (o.spots || []).forEach(([x, y], i) => { s += `<circle data-pick="${i}" cx="${px(x)}" cy="${py(y)}" r="8" fill="#ffd84d" stroke="#2b1a10" stroke-width="2.4"/>`; });
+  return `<svg class="graph" viewBox="0 0 ${W} ${H}" font-size="9" font-weight="bold" fill="#2b1a10">${s}<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">${o.xl || ""}</text><text x="9" y="${(T + H - B) / 2}" text-anchor="middle" transform="rotate(-90 9 ${(T + H - B) / 2})">${o.yl || ""}</text></svg>`; };
+// how each guide of Grades 5 to 8 looks (the options of kidAt), so the same child is drawn the same way everywhere
+const WHO = { lily: LILY, noah: NOAH, maya: MAYA, nina: NINA,
+  lea: { hood: "#f4b942" }, olivier: { hood: "#58b368", short: true }, elodie: { hood: "#e0533d" }, sadie: { hood: "#d94f70" }, amara: { hood: "#e0559a" }, declan: { hood: "#e8742c", short: true },
+  zoe: { hood: "#f2a73b" }, kai: { hood: "#f4b942", short: true }, jade: { hood: "#2a9d8f" }, tyson: { hood: "#d9822b", short: true }, priya: { hood: "#2a9d8f" }, lukas: { hood: "#f0b429", short: true },
+  mei: { hood: "#e63946" }, jordan: { hood: "#3b82c4", short: true }, simran: { hood: "#8e5bd0" }, hannah: { hood: "#f28c28" }, dana: { hood: "#58b368" } };
+
+// each chapter file fills these in
+const ART = {}, ASK = {}, CHAPTERS = [
+  { title: "The Last Spike", where: "The mountains of British Columbia" }, { title: "The River of Gold", where: "The Fraser River" }, { title: "The Harbour and the Cedar", where: "Vancouver" },
+  { title: "Every Child Matters", where: "The interior of British Columbia" }, { title: "The Golden Stairs", where: "The Klondike, Yukon" }, { title: "The Top of the World", where: "Nunavut" }, { title: "Home", where: "The Grand River, Ontario" }];
+
+// ---------- the map: west, north, and the long way home ----------
+const northMap = () => `<svg viewBox="0 0 400 240" preserveAspectRatio="none"><rect width="400" height="240" fill="#6cc0ea"/>
+  <g ${INKED}><path d="M30 250 Q14 214 22 180 Q10 150 26 120 Q12 90 30 60 Q40 34 70 30 Q120 10 180 24 Q230 6 290 30 Q330 26 352 60 Q380 90 372 130 Q396 160 410 170 V250 Z" fill="#a9cf86"/>
+  <path d="M30 60 Q40 34 70 30 Q120 10 180 24 Q230 6 290 30 Q330 26 352 60 Q300 72 240 64 Q170 74 110 62 Q70 70 30 60 Z" fill="#eef4f6"/>
+  <path d="M96 250 Q84 200 96 160 Q88 120 100 84 L112 84 Q104 124 114 160 Q104 204 116 250 Z" fill="#b9b3a6"/>
+  <path d="M100 222 L106 200 L112 222 M98 176 L104 154 L110 176 M100 130 L106 108 L112 130" fill="#fff" stroke-width="2"/>
+  <path d="M250 96 Q290 86 320 104 Q330 140 300 150 Q262 146 250 96 Z" fill="#6cc0ea"/></g>
+  <g fill="none" stroke="#2b1a10" stroke-width="2.4" stroke-dasharray="2 7" stroke-linecap="round" opacity=".55"><path d="M250 54 Q330 110 340 196"/></g>
+  <g font-size="10" font-weight="bold" fill="#2b1a10" opacity=".7"><text x="34" y="150">British</text><text x="34" y="162">Columbia</text><text x="44" y="52">Yukon</text><text x="130" y="48">Northwest Territories</text><text x="262" y="48">Nunavut</text>
+  <text x="316" y="230">Ontario</text><text x="150" y="150">the prairies</text><text x="258" y="126" fill="#fff" opacity="1" font-size="9">Hudson Bay</text><text x="2" y="20" fill="#fff" opacity="1" font-size="9">Pacific</text><text x="150" y="12" fill="#fff" opacity="1" font-size="9">Arctic Ocean</text></g></svg>`;
+
+// ---------- gold dust, and the outfitter where it is spent ----------
+const GOLD = `<svg viewBox="0 0 40 40"><path d="M8 30 Q4 18 14 12 Q22 4 30 12 Q38 20 32 30 Q20 38 8 30 Z" fill="#f4b942" stroke="#2b1a10" stroke-width="3.4" stroke-linejoin="round"/><path d="M14 18 q4 -5 9 -2 M16 26 q6 3 10 -2" fill="none" stroke="#fff3c9" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+const thing = inner => `<svg viewBox="0 0 70 55"><g ${INKED}>${inner}</g></svg>`;
+const SHOP = { title: "The outfitter", items: [
+  { id: "socks", name: "Wool socks", cost: 4, art: () => thing(`<path d="M22 8 H36 V30 L48 38 Q52 46 42 48 H28 Q20 46 22 34 Z" fill="#e63946"/><path d="M22 14 H36" fill="none" stroke="#fff" stroke-width="3"/>`) },
+  { id: "pan", name: "A gold pan", cost: 6, art: () => thing(`<ellipse cx="35" cy="26" rx="26" ry="14" fill="#8d877b"/><ellipse cx="35" cy="28" rx="17" ry="8" fill="#6a6f7a"/><circle cx="30" cy="29" r="2" fill="#f4b942" stroke-width="1"/><circle cx="38" cy="30" r="1.6" fill="#f4b942" stroke-width="1"/>`) },
+  { id: "beans", name: "A sack of beans", cost: 8, art: () => thing(`<path d="M20 18 Q16 44 24 48 H46 Q54 44 50 18 Q44 22 35 18 Q26 22 20 18 Z" fill="#e8d2a0"/><path d="M26 16 Q35 8 44 16" fill="none"/><path d="M28 32 h14" stroke-width="2"/>`) },
+  { id: "shovel", name: "A shovel", cost: 10, art: () => thing(`<path d="M16 12 L44 36" fill="none" stroke-width="5"/><path d="M40 30 L52 28 Q60 40 52 48 Q42 50 38 42 Z" fill="#8d877b"/><path d="M10 14 L20 6" fill="none" stroke-width="5"/>`) },
+  { id: "pick", name: "A pickaxe", cost: 10, art: () => thing(`<path d="M35 14 V48" fill="none" stroke-width="5"/><path d="M10 22 Q35 2 60 22 Q35 12 10 22 Z" fill="#8d877b"/>`) },
+  { id: "flour", name: "A barrel of flour", cost: 14, art: () => thing(`<path d="M20 10 H50 Q56 28 50 46 H20 Q14 28 20 10 Z" fill="#c89a5e"/><path d="M18 20 H52 M18 36 H52" fill="none" stroke-width="3"/>`) },
+  { id: "tent", name: "A canvas tent", cost: 18, art: () => thing(`<path d="M8 46 L35 8 L62 46 Z" fill="#fbf6ea"/><path d="M35 8 V46 M35 46 L26 46 L35 26 L44 46 Z" fill="#d9c7a0"/>`) },
+  { id: "sled", name: "A sled", cost: 30, art: () => thing(`<path d="M8 24 H52 L58 34 H10 Z" fill="#c89a5e"/><path d="M6 44 H54 Q64 44 64 34" fill="none" stroke-width="4"/><path d="M16 34 V44 M44 34 V44" fill="none"/>`) }] };
+</script>
+<!-- The seven chapters. Each file adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
+<script src="shared/g8-ch1.js?v=53"></script>
+<script src="shared/g8-ch2.js?v=53"></script>
+<script src="shared/g8-ch3.js?v=53"></script>
+<script src="shared/g8-ch4.js?v=53"></script>
+<script src="shared/g8-ch5.js?v=53"></script>
+<script src="shared/g8-ch6.js?v=53"></script>
+<script src="shared/g8-ch7.js?v=53"></script>
+<script>
+"use strict";
+// ---------- start the game (the engine is shared/chapters.js) ----------
+// How a voice should say the hard names (the guides came from Shane's review notes, November 2026, checked against the nations' own guides where I could; a speaker of each language should still hear them before recording).
+// The recordings live in audio/g8/s/. Chapter 4 (residential schools) has no recording on purpose: Dr. Somebody's voice does not suit it (an older British accent telling a survivor's story), so it waits for a different voice and for its readers. A trial recording is kept in reviews/gemini/ch4-listen.
+const SAY = [["tuh-kem-LOOPS", "tuh-kem-loops"], ["suh-WEP-muhc", "suh-wep-muhc"], ["k-too-NAH-ha", "ktoo nahha"], ["sin-AYKST", "sin-aykst"], ["STAW-low", "staw-low"], ["halk-uh-MAY-lem", "halk-uh-may-lem"], ["ing-kla-KAP-muh", "ing-kla-kapma"], ["MUS-kwee-um", "mus-kwee-um"], ["SLAY-wah-tuth", "slay-wah-tuth"], ["TRON-dek", "tron-dek"], ["HWITCH-in", "hwitchin"], ["TROH-chek", "troh-chek"], ["uh-KAAL", "akaal"], ["Tk'emlúps te Secwépemc", "Tuh-kem-loops tuh Suh-wep-muhc"], ["Secwépemc", "Suh-wep-muhc"], ["Ktunaxa", "Ktoo nahha"], ["Sinixt", "Sin-aykst"], ["Stó:lō", "Staw-low"], ["Halq'eméylem", "Halk-uh-may-lem"], ["Nlaka'pamux", "Ing-kla-kapma"], ["Musqueam", "Mus-kwee-um"], ["Tsleil-Waututh", "Slay-wah-tuth"], ["Tr'ondëk Hwëch'in", "Tron-dek Hwitchin"], ["Tr'ochëk", "Troh-chek"], ["sat sri akal", "sut sree akaal"], ["Sat sri akal", "Sut sree akaal"], ["Craigellachie", "Kray-gell-uh-kee"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kamoo-teek"], ["Inuktitut", "Innook-tih-toot"], ["Inuit", "Innoo-it"], ["Inuk", "Innook"], ["Tlingit", "Klink-it"], ["Shaaw Tláa", "Shaw Tlah"], ["Káa Goox", "Kah Gokh"], ["Keish", "Kaysh"], ["Nia:wen", "Nyah-wen"], ["Secwepemctsín", "Suh-wep-muhc-tseen"], ["Métis", "May-tee"]];
+window.Chapters = ChapterGame({ title: "Dr. Somebody and the Long Way Round", sub: "A Grade 8 story", saveKey: "grade8North.v1", medal: "g8",
+  chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "audio/g8/s/", clockVoice: "audio/g8/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t), coin: { name: "gold dust", icon: GOLD }, shop: SHOP,
+  certificate: { title: "Across Canada with Dr. Somebody", line: "travelled from the Grand River to three oceans and home again, and finished the long way round." },
+  map: { art: northMap, stops: [[30, 74], [19, 80], [8, 90], [16, 58], [13, 24], [70, 20], [84, 84]] } });
+</script>
+</body>
+</html>
