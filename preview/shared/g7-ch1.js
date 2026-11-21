@@ -103,10 +103,10 @@
   // FACT CHECK: from Fort William the north canoes went on west by rivers and lakes, toward Lake Winnipeg and the Red and Assiniboine rivers, where The Forks lies
   CHAPTERS[0] = { title: "Where the Canoes Met", where: "Fort William, Thunder Bay", beats: [
     { art: "fw_arrive", say: ["The clock on my balloon swung round and pointed west! So off we float, from Newfoundland, back over Quebec and Ontario, past forests and lakes without end. West is a long way.",
-      "Ahead is the biggest lake of them all, Lake <em>Superior</em>. At its western end a river called the Kaministiquia runs into it, and the city of <em>Thunder Bay</em> sits beside the water.",
+      "Ahead is the biggest lake of them all, Lake <em>Superior</em>. On its northwest shore a river called the Kaministiquia runs into it, and the city of <em>Thunder Bay</em> sits beside the water.",
       "See that flat-topped headland out on the lake? People call it the Sleeping Giant. And near the river is a wooden fort with a flag. Down we go!"] },
     { art: "fw_zoe", word: ["le voyageur", "the canoe man of the fur trade"], say: ["This is Zoe, and she lives right here in Thunder Bay. She says the lake is so cold in July that even the fish wear scarves.",
-      "Zoe tells me the Anishinaabe, who are also called the Ojibwe, have lived around this lake since long before there was any fort. Fort William First Nation is right beside the city today.",
+      "Zoe tells me the Ojibwe, one of the Anishinaabe nations, have lived around this lake since long before there was any fort. Fort William First Nation is right beside the city today.",
       "You say Anishinaabe like this: ah-nish-ih-NAH-bay.",
       "That wooden fort is Fort William Historical Park. It was built again, just the way it was. Its canoe crews were called <em>les voyageurs</em>. Clock, show us!"] },
     { art: "fw_window1", word: ["le rendez-vous", "the meeting"], say: ["The window into the past! The year is about <em>1815</em>, and this is Fort William, the great inland headquarters of the North West Company, a fur trade company.",
