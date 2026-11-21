@@ -99,7 +99,17 @@ const signalShape = (x, y, h, dir) => { const d = dir || 1; return shape(`<rect 
 const duckShape = (x, y, s, flip) => `<g transform="translate(${x} ${y}) scale(${flip ? -s : s} ${s})">${shape(`<path d="M-26 6 Q-28 -10 -12 -10 H12 Q28 -10 26 4 Q24 16 0 16 Q-22 16 -26 6 Z"/><path d="M-24 2 L-34 -8 L-18 -6 Z"/><circle cx="18" cy="-16" r="13"/><path d="M29 -17 L41 -13 L29 -10 Z"/><path d="M-10 -2 Q2 -8 12 2 Q2 10 -10 4" fill="none"/>`, LINE / s)}<circle cx="22" cy="-19" r="2.8" fill="#000"/></g>`;
 // A layered pine tree for Grade 3 mountain and garden scenes.
 const pineShape = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${shape(`<rect x="-4" y="2" width="8" height="18" rx="2"/><polygon points="0,-46 15,-22 8,-22 20,-4 10,-4 24,10 -24,10 -10,-4 -20,-4 -8,-22 -15,-22"/>`, LINE / s)}</g>`;
-const SCENE_TOOLS = { shape, cloud: cloudShape, sun: sunShape, hill: hillShape, peak: peakShape, tree: treeShape, flower: flowerShape, track: trackShape, tuft: tuftShape, bush: bushShape, bird: birdShape, sparkle: sparkleShape, burst: burstShape, butterfly: butterflyShape, signal: signalShape, duck: duckShape, pine: pineShape };
+// Space objects for Grade 1, drawn fresh in the same bold style (the game only shows these as emoji): a five point star, a crescent moon,
+// a rocket, a comet and a satellite. Objects only: no robot, alien or astronaut.
+const starShape = (x, y, r) => shape(`<polygon points="${Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, d = i % 2 ? r * .45 : r; return (x + d * Math.cos(a)).toFixed(1) + "," + (y + d * Math.sin(a)).toFixed(1); }).join(" ")}"/>`);
+const crescentShape = (x, y, r) => shape(`<path d="M${x} ${y - r} A${r} ${r} 0 0 0 ${x} ${y + r} A${r * 1.5} ${r * 1.5} 0 0 1 ${x} ${y - r} Z"/>`);
+// A rocket pointing up, centred on x, y (about 92 wide and 120 tall at scale 1): flame, two fins, body, round window and a band.
+const rocketShape = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${shape(`<path d="M-12 36 Q0 82 12 36 Z"/><path d="M-22 4 L-46 40 V58 L-22 38 Z M22 4 L46 40 V58 L22 38 Z"/><path d="M0 -62 Q26 -34 26 24 V42 H-26 V24 Q-26 -34 0 -62 Z"/><circle cx="0" cy="-8" r="12"/><path d="M-26 28 H26" fill="none"/>`, LINE / s)}</g>`;
+// A comet: a round head at x, y with a pointed tail of the given length trailing behind it. `ang` turns it (0 is flying to the right).
+const cometShape = (x, y, r, len, ang) => `<g transform="translate(${x} ${y}) rotate(${ang})">${shape(`<path d="M0 ${-r} Q${-len / 2} ${-r * 1.1} ${-len} 0 Q${-len / 2} ${r * 1.1} 0 ${r} Z"/><circle cx="0" cy="0" r="${r}"/><path d="M${-r * 1.3} ${-r * .4} H${-len * .7} M${-r * 1.3} ${r * .4} H${-len * .7}" fill="none"/>`)}</g>`;
+// A satellite: a square body, two solar panels, a small dish on a stick (about 124 wide at scale 1).
+const satelliteShape = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${shape(`<path d="M0 -14 V-34" fill="none"/><circle cx="0" cy="-38" r="5"/><rect x="-62" y="-12" width="38" height="24"/><rect x="24" y="-12" width="38" height="24"/><path d="M-50 -12 V12 M-37 -12 V12 M37 -12 V12 M50 -12 V12 M-24 0 H-14 M14 0 H24" fill="none"/><rect x="-14" y="-14" width="28" height="28" rx="4"/>`, LINE / s)}</g>`;
+const SCENE_TOOLS = { star: starShape, crescent: crescentShape, rocket: rocketShape, comet: cometShape, satellite: satelliteShape, shape, cloud: cloudShape, sun: sunShape, hill: hillShape, peak: peakShape, tree: treeShape, flower: flowerShape, track: trackShape, tuft: tuftShape, bush: bushShape, bird: birdShape, sparkle: sparkleShape, burst: burstShape, butterfly: butterflyShape, signal: signalShape, duck: duckShape, pine: pineShape };
 
 // ---------- one sheet of paper ----------
 function sheet(G, bookName, pageNo, body) {
@@ -134,8 +144,10 @@ function countWord(grid, word) {
   return found;
 }
 // Hides the words across, down and diagonally down to the right (never backwards), then fills the gaps.
-function makeWordSearch(words, size, seed) {
-  const rng = mulberry32(seed), dirs = [[1, 0], [0, 1], [1, 1]];
+// A younger grade can pass its own `directions` (across and down only) and a `banned` list: a short list of rude or unkind words.
+// If the random filler letters ever spell one of those (in any direction), the whole grid is rolled again.
+function makeWordSearch(words, size, seed, directions, banned) {
+  const rng = mulberry32(seed), dirs = directions || [[1, 0], [0, 1], [1, 1]];
   const order = words.slice().sort((a, b) => b.length - a.length);
   for (let attempt = 0; attempt < 500; attempt++) {
     const grid = Array.from({ length: size }, () => Array(size).fill(""));
@@ -157,6 +169,7 @@ function makeWordSearch(words, size, seed) {
     }
     if (!allFit) continue;
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!grid[y][x]) grid[y][x] = ABC[Math.floor(rng() * 26)];
+    if (banned && banned.some(b => countWord(grid, b) > 0)) continue;           // the filler spelled a banned word: roll again
     if (words.every(w => countWord(grid, w) === 1)) return { grid, placed };   // no word hiding twice by accident
   }
   throw new Error("could not build the word search");
@@ -342,19 +355,22 @@ const ICONS = {
 function iconAt(G, kind, x, y, k) {
   const pic = G.pictures[kind];
   k = k || 1;
-  if (pic) { const w = (kind === "car" ? 58 : 52) * k; return place(pic, x - w / 2, y - picHeight(pic, w) / 2, w, 2.6); }
+  if (pic) { const w = (kind === "car" ? 58 : 52) * k; return place(pic, x - w / 2, y - picHeight(pic, w) / 2, w, G.iconLine || 2.6); }   // G.iconLine: a grade can ask for thicker lines
   return `<g transform="translate(${x} ${y}) scale(${k})" fill="#fff" stroke="#000" stroke-width="${(4 / k).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round">${ICONS[kind]}</g>`;
 }
 
 // ---------- dot to dot ----------
 // A.points are the corners of the picture's outline in order, A.extras is the printed part (wheels, window and so on).
 // Each number goes on the outside of the outline, so it never sits on a line.
+// A.viewBox (optional) is a different picture area, as [x, y, width, height] (the usual one is 0 46 600 490).
+// A.labels (optional) is a list of [x, y] centres for the numbers, for a picture with tight corners where outside numbers would collide.
 function dotToDotSvg(A, answers) {
   const poly = A.points, n = poly.length;
   let area = 0; poly.forEach((p, i) => { const q = poly[(i + 1) % n]; area += p[0] * q[1] - q[0] * p[1]; });
   const sign = area > 0 ? 1 : -1;
   const normal = i => { const p = poly[i], q = poly[(i + 1) % n], dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy); return [sign * dy / l, -sign * dx / l]; };
-  let s = `<svg viewBox="0 46 600 490" width="680" height="555">${A.extras || ""}`;
+  const frame = A.viewBox ? { v: A.viewBox.join(" "), h: Math.round(680 * A.viewBox[3] / A.viewBox[2]) } : { v: "0 46 600 490", h: 555 };   // A.viewBox: a bigger picture area
+  let s = `<svg viewBox="${frame.v}" width="680" height="${frame.h}">${A.extras || ""}`;
   if (answers) s += `<polygon points="${poly.map(p => p.join(",")).join(" ")}" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/>`;
   poly.forEach((p, i) => {
     const a = normal((i + n - 1) % n), b = normal(i);
@@ -362,31 +378,39 @@ function dotToDotSvg(A, answers) {
     s += `<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="#000"/>`;
     if (i === 0) s += `<circle cx="${p[0]}" cy="${p[1]}" r="19" fill="none" stroke="#000" stroke-width="3"/>`;   // a ring round dot 1 shows where to start
     const off = i === 0 ? 46 : 38;
-    s += `<text x="${(p[0] + nx * off).toFixed(1)}" y="${(p[1] + ny * off + 12).toFixed(1)}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">${i + 1}</text>`;
+    const lab = A.labels && A.labels[i], tx = lab ? lab[0] : p[0] + nx * off, ty = lab ? lab[1] + 12 : p[1] + ny * off + 12;
+    s += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">${i + 1}</text>`;
   });
   return s + `</svg>`;
 }
 
 // ---------- count and colour ----------
 // Groups of 1 to 10 things, each with an empty box beside it. A.kinds are the things (one per group), A.colourKind is the thing in the bottom line.
+// Settings a younger grade can add (all optional, so the older books come out exactly as before):
+// A.max (the biggest group, 10), A.rowH (128), A.bigK and A.step (the size and spacing of the things in a group),
+// A.noColourLine (leave out the "Colour 3 wheels" line at the bottom) and A.circles (five empty circles to colour
+// that many of, instead of a box to write the number in).
 function countColourSvg(G, A) {
-  const rng = mulberry32(A.seed), rowH = 128;
-  const groups = shuffled([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], rng).slice(0, A.kinds.length).map((n, i) => ({ n, kind: A.kinds[i] }));
-  const colourN = 3 + Math.floor(rng() * 4), H = groups.length * rowH + 140;
+  const rng = mulberry32(A.seed), rowH = A.rowH || 128, max = A.max || 10, bigK = A.bigK || 1.58, bigStep = A.step || 104;
+  const groups = shuffled(Array.from({ length: max }, (_, i) => i + 1), rng).slice(0, A.kinds.length).map((n, i) => ({ n, kind: A.kinds[i] }));
+  const colourN = 3 + Math.floor(rng() * 4), H = groups.length * rowH + (A.noColourLine ? 24 : 140);
   let s = `<svg viewBox="0 0 720 ${H}" width="720" height="${H}">`;
   groups.forEach((g, i) => {
     const cy = i * rowH + rowH / 2;
-    const twoRows = g.n > 5, k = twoRows ? 1.15 : 1.58, step = twoRows ? 98 : 104, x0 = 66;
+    const twoRows = g.n > 5, k = twoRows ? 1.15 : bigK, step = twoRows ? 98 : bigStep, x0 = 66;
     for (let j = 0; j < g.n; j++) {
       const col = j % 5, row = Math.floor(j / 5), rowShift = twoRows ? (row ? 31 : -31) : 0;
       s += iconAt(G, g.kind, x0 + col * step, cy + rowShift, k);
     }
-    s += `<rect x="566" y="${cy - 47}" width="134" height="94" rx="14" fill="#fff" stroke="#000" stroke-width="5"/>`;
+    if (A.circles) [[590, -26], [636, -26], [682, -26], [613, 26], [659, 26]].forEach(([x, dy]) => { s += `<circle cx="${x}" cy="${cy + dy}" r="19" fill="#fff" stroke="#000" stroke-width="4"/>`; });
+    else s += `<rect x="566" y="${cy - 47}" width="134" height="94" rx="14" fill="#fff" stroke="#000" stroke-width="5"/>`;
     if (i < groups.length - 1) s += `<line x1="20" y1="${(i + 1) * rowH}" x2="700" y2="${(i + 1) * rowH}" stroke="#000" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>`;
   });
-  const by = groups.length * rowH;
-  s += `<text x="360" y="${by + 42}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">Colour ${colourN} ${A.colourName}.</text>`;
-  for (let i = 0; i < 8; i++) s += iconAt(G, A.colourKind, 56 + i * 87, by + 98, 1.38);
+  if (!A.noColourLine) {
+    const by = groups.length * rowH;
+    s += `<text x="360" y="${by + 42}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">Colour ${colourN} ${A.colourName}.</text>`;
+    for (let i = 0; i < 8; i++) s += iconAt(G, A.colourKind, 56 + i * 87, by + 98, 1.38);
+  }
   return { svg: s + `</svg>`, groups };
 }
 // The answers: each group's picture and its number.
@@ -429,17 +453,74 @@ function patternTrainSvg(G, A, answers) {
   return s + `</svg>`;
 }
 
+// ---------- trace the path (Preschool) ----------
+// A.rows is a list of { waves, amp }: one wavy line from the hero (left) to the goal (right) for each row. The seed changes each wave a little.
+// The puzzle line is dashed (to trace with a finger or a fat crayon), the answer line is solid.
+function traceSvg(G, A, answers) {
+  const rng = mulberry32(A.seed), rowH = 240, x0 = 150, x1 = 598, H = A.rows.length * rowH;
+  const hero = G.pictures[A.start], goal = G.pictures[A.end], heroW = 146, goalW = 130;
+  let s = `<svg viewBox="0 0 720 ${H}" width="720" height="${H}">`;
+  A.rows.forEach((row, i) => {
+    const cy = i * rowH + rowH / 2, seg = (x1 - x0) / row.waves, amp = row.amp + Math.floor(rng() * 7), up = rng() < .5 ? -1 : 1;
+    let d = `M${x0} ${cy} Q${(x0 + seg / 2).toFixed(1)} ${cy + up * 2 * amp} ${(x0 + seg).toFixed(1)} ${cy}`;
+    for (let k = 2; k <= row.waves; k++) d += ` T${(x0 + seg * k).toFixed(1)} ${cy}`;
+    s += `<path d="${d}" fill="none" stroke="#000" stroke-width="14" stroke-linecap="round"${answers ? "" : ' stroke-dasharray="24 34"'}/>`;
+    s += place(hero, 8, cy - picHeight(hero, heroW) / 2, heroW, 4) + place(goal, 650 - goalW / 2, cy - picHeight(goal, goalW) / 2, goalW, 4);
+  });
+  return s + `</svg>`;
+}
+
+// ---------- big and small (Preschool) ----------
+// Six rows, each with a big and a small picture of the same thing. The first three rows ask for the big one, the last three for the small one.
+function bigSmallSvg(G, A, answers) {
+  const rng = mulberry32(A.seed), kinds = shuffled(A.kinds, rng), rowH = 128, bigW = 140, smallW = 80, H = kinds.length * rowH + 8;
+  let s = `<svg viewBox="0 0 720 ${H}" width="720" height="${H}">`;
+  kinds.forEach((kind, i) => {
+    const pic = G.pictures[kind], cy = i * rowH + rowH / 2 + 4, askBig = i < kinds.length / 2, bigLeft = rng() < .5;
+    s += `<text x="28" y="${cy + (askBig ? 18 : 10)}" font-size="${askBig ? 56 : 30}" font-weight="900" fill="#000">${askBig ? "BIG" : "small"}</text>`;
+    (bigLeft ? [[340, bigW], [580, smallW]] : [[340, smallW], [580, bigW]]).forEach(([x, w]) => {
+      const h = picHeight(pic, w);
+      s += place(pic, x - w / 2, cy - h / 2, w, 2.8);
+      if (answers && (askBig ? w === bigW : w === smallW)) s += `<ellipse cx="${x}" cy="${cy}" rx="${w / 2 + 8}" ry="${(h / 2 + 2).toFixed(1)}" fill="none" stroke="#000" stroke-width="5"/>`;
+    });
+    if (i < kinds.length - 1) s += `<line x1="20" y1="${(i + 1) * rowH + 4}" x2="700" y2="${(i + 1) * rowH + 4}" stroke="#000" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>`;
+  });
+  return s + `</svg>`;
+}
+
+// ---------- number bonds to 10 (Grade 1) ----------
+// Nine bonds in three rows of three: a big circle holding 10 and two smaller circles below it. One of the two is filled in (1 to 9, each used once)
+// and the other is left empty (dashed) for the child. The seed decides the order and which side is empty.
+function bondsSvg(A, answers) {
+  const rng = mulberry32(A.seed), shown = shuffled([1, 2, 3, 4, 5, 6, 7, 8, 9], rng), cw = 240, ch = 250;
+  const num = (x, y, n) => `<text x="${x}" y="${y + 14}" font-size="42" font-weight="bold" text-anchor="middle" fill="#000">${n}</text>`;
+  let s = `<svg viewBox="0 0 720 ${3 * ch + 10}" width="720" height="${3 * ch + 10}">`;
+  shown.forEach((n, i) => {
+    const ox = (i % 3) * cw, oy = Math.floor(i / 3) * ch + 8, blankLeft = rng() < .5, top = [ox + 120, oy + 56], lo = [[ox + 58, oy + 176], [ox + 182, oy + 176]];
+    s += `<path d="M${top[0]} ${top[1]} L${lo[0][0]} ${lo[0][1]} M${top[0]} ${top[1]} L${lo[1][0]} ${lo[1][1]}" fill="none" stroke="#000" stroke-width="4"/>`;
+    s += `<circle cx="${top[0]}" cy="${top[1]}" r="42" fill="#fff" stroke="#000" stroke-width="5"/>` + num(top[0], top[1], 10);
+    lo.forEach(([x, y], j) => {
+      const empty = (j === 0) === blankLeft;
+      s += `<circle cx="${x}" cy="${y}" r="40" fill="#fff" stroke="#000" stroke-width="5"${empty && !answers ? ' stroke-dasharray="9 8"' : ""}/>`;
+      if (!empty) s += num(x, y, n); else if (answers) s += num(x, y, 10 - n);
+    });
+  });
+  return s + `</svg>`;
+}
+
 // ---------- activity pages ----------
 // Each kind of puzzle page is one builder. It gets the grade and that page's data (G.activities[name]) and returns
 // { body: the page, answer: { label, html }: its piece of the answers page }.
 // A grade chooses its pages, in order, with G.activities.pages (for example ["maze", "dotToDot", "countColour"]).
 const ACTIVITY_BUILDERS = {
+  // Settings a younger grade can add (all optional): size (12), dirs (across, down and slanting), banned (words the filler letters must not spell),
+  // title, instruction, cell and answerCell (the square sizes), listStyle (extra style for the word list under the grid).
   wordSearch(G, A) {
-    const ws = makeWordSearch(A.words, 12, A.seed);
+    const ws = makeWordSearch(A.words, A.size || 12, A.seed, A.dirs, A.banned), title = A.title || "Word Search";
     return {
-      body: `<h2 class="pt">Word Search</h2><p class="pi">Find all ten words. They go across, down, and slanting down to the right. Circle each one.</p>
-        <div class="puz">${wordSearchSvg(ws, 50, false)}<div class="wl">${A.words.map(w => `<span>${w}</span>`).join("")}</div></div>`,
-      answer: { label: "Word Search", html: wordSearchSvg(ws, 27, true) }
+      body: `<h2 class="pt">${title}</h2><p class="pi">${A.instruction || "Find all ten words. They go across, down, and slanting down to the right. Circle each one."}</p>
+        <div class="puz">${wordSearchSvg(ws, A.cell || 50, false)}<div class="wl"${A.listStyle ? ` style="${A.listStyle}"` : ""}>${A.words.map(w => `<span>${w}</span>`).join("")}</div></div>`,
+      answer: { label: title, html: wordSearchSvg(ws, A.answerCell || 27, true) }
     };
   },
   crossword(G, A) {
@@ -467,10 +548,10 @@ const ACTIVITY_BUILDERS = {
     };
   },
   countColour(G, A) {
-    const c = countColourSvg(G, A);
+    const c = countColourSvg(G, A), title = A.title || "Count and Colour";
     return {
-      body: `<h2 class="pt">Count and Colour</h2><p class="pi">Count each group. Write how many in the box.</p><div class="puz">${c.svg}</div>`,
-      answer: { label: "Count and Colour", html: countAnswerSvg(G, c.groups) }
+      body: `<h2 class="pt">${title}</h2><p class="pi">${A.instruction || "Count each group. Write how many in the box."}</p><div class="puz">${c.svg}</div>`,
+      answer: { label: title, html: A.answerWidth ? resize(countAnswerSvg(G, c.groups), A.answerWidth) : countAnswerSvg(G, c.groups) }
     };
   },
   patternTrain(G, A) {
@@ -489,6 +570,27 @@ const ACTIVITY_BUILDERS = {
       body: `<h2 class="pt">Secret Code</h2><p class="pi">Use the key to find each letter. Write the letter in the box above its number.</p>
         <div class="puz"><div class="key">${key}</div>${facts}</div>`,
       answer: { label: "Secret Code", html: `<div class="dec">${A.facts.map(f => `<p>${f}.</p>`).join("")}</div>` }
+    };
+  },
+  // Preschool: dashed wavy lines from the hero to the goal, to trace.
+  tracePath(G, A) {
+    return {
+      body: `<h2 class="pt">${A.title}</h2><p class="pi">${A.instruction}</p><div class="puz">${traceSvg(G, A, false)}</div>`,
+      answer: { label: A.title, html: resize(traceSvg(G, A, true), A.answerWidth || 300) }
+    };
+  },
+  // Preschool: circle the big one or the small one in each row.
+  bigSmall(G, A) {
+    return {
+      body: `<h2 class="pt">${A.title}</h2><p class="pi">${A.instruction}</p><div class="puz">${bigSmallSvg(G, A, false)}</div>`,
+      answer: { label: A.title, html: resize(bigSmallSvg(G, A, true), A.answerWidth || 270) }
+    };
+  },
+  // Grade 1: number bonds that make 10.
+  numberBonds(G, A) {
+    return {
+      body: `<h2 class="pt">${A.title}</h2><p class="pi">${A.instruction}</p><div class="puz">${bondsSvg(A, false)}</div>`,
+      answer: { label: A.title, html: resize(bondsSvg(A, true), A.answerWidth || 330) }
     };
   }
 };
@@ -519,7 +621,35 @@ function start(kind) {
   document.title = name + ": " + G.story;
   document.getElementById("barTitle").textContent = name + ": " + G.gradeLabel;
   root.innerHTML = (kind === "colouring" ? colouringPages(G, name) : activityPages(G, name, answers)).join("");
+  pickers(root);
   fitSheets(); window.addEventListener("resize", fitSheets);
+}
+
+// ---------- choosing which pages to print ----------
+// Above every sheet (on screen only) is its name, a box to tick, and a "Print just this page" button. The big Print button prints the
+// ticked pages, or every page when none is ticked. Sheets that are not wanted get the class "skip" for the moment of printing.
+function pickers(root) {
+  const wraps = [...root.querySelectorAll(".sheetwrap")], big = document.querySelector(".bar button");
+  const nameOf = w => { const el = w.querySelector(".cap, .pt"); return el ? el.textContent.trim() : ""; };
+  const chosen = () => wraps.filter(w => w.previousElementSibling.querySelector("input").checked);
+  const label = () => { const n = chosen().length; if (big) big.textContent = n ? `Print ${n} page${n === 1 ? "" : "s"}` : wraps.length > 1 ? `Print all ${wraps.length} pages` : "Print"; };
+  const print = list => {
+    wraps.forEach(w => { w.classList.toggle("skip", !list.includes(w)); w.classList.remove("lastp"); });
+    if (list.length) list[list.length - 1].classList.add("lastp");
+    const tidy = () => wraps.forEach(w => w.classList.remove("skip", "lastp"));
+    window.addEventListener("afterprint", tidy, { once: true }); setTimeout(tidy, 60000);
+    window.print();
+  };
+  wraps.forEach((w, i) => {
+    const bar = document.createElement("div"); bar.className = "pick";
+    bar.innerHTML = `<label><input type="checkbox"> <b>Page ${i + 1}</b><span></span></label><button type="button">Print just this page</button>`;
+    bar.querySelector("span").textContent = nameOf(w) ? " · " + nameOf(w) : "";
+    bar.querySelector("input").addEventListener("change", label);
+    bar.querySelector("button").addEventListener("click", () => print([w]));
+    w.parentNode.insertBefore(bar, w);
+  });
+  if (big) { big.removeAttribute("onclick"); big.onclick = () => print(chosen().length ? chosen() : wraps); }
+  label();
 }
 
 // =====================================================================
@@ -960,6 +1090,215 @@ BOOK.k = {
     dotToDot: { points: ENGINE_DOTS, extras: ENGINE_PRINTED },
     countColour: { seed: 11, kinds: ["pig", "wheel", "ticket", "panda", "car"], colourKind: "wheel", colourName: "wheels" },
     patternTrain: { seed: 4 }
+  }
+};
+
+// ---------- Preschool: Pip's Lost Eggs ----------
+// Pip, the other dinosaurs, the egg and the berry are copied from ART in Pips Lost Eggs.html. The game colours them with CSS classes
+// (.m .d .b .e .p, in that file), so classFills turns every class white except .p (the pupils), which stays black.
+// The little white eye circles are cut out so each eye is one clear black dot, and Pip's tiny nose dot is cut out too.
+const PIP_SVG = `<svg viewBox="0 0 200 160"><path class="d" d="M72 108 Q30 115 14 92 Q38 132 82 136 Z"/><rect class="d" x="80" y="136" width="18" height="20" rx="8"/><rect class="d" x="108" y="136" width="18" height="20" rx="8"/>
+  <ellipse class="m" cx="100" cy="104" rx="38" ry="42"/><ellipse class="b" cx="109" cy="112" rx="22" ry="28"/><ellipse class="d" cx="136" cy="98" rx="12" ry="6"/>
+  <ellipse class="m" cx="118" cy="48" rx="36" ry="30"/><ellipse class="m" cx="146" cy="57" rx="20" ry="15"/>
+  <circle class="e" cx="128" cy="40" r="8"/><circle class="p" cx="130" cy="41" r="4"/><circle class="p" cx="158" cy="52" r="1.8"/>
+  <path d="M138 64 Q150 72 162 62" fill="none" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/></svg>`;
+// (the neck is drawn before the body here, so the body hides the straight edge at the bottom of the neck)
+const LONGNECK_SVG = `<svg viewBox="0 0 200 160"><path class="d" d="M42 98 Q12 100 4 78 Q26 96 52 86 Z"/><rect class="d" x="55" y="114" width="17" height="38" rx="7"/><rect class="d" x="100" y="114" width="17" height="38" rx="7"/>
+  <path class="m" d="M112 88 Q134 60 139 24 L160 28 Q156 72 130 108 Z"/><ellipse class="m" cx="85" cy="100" rx="50" ry="30"/><ellipse class="m" cx="156" cy="24" rx="21" ry="14"/>
+  <circle class="e" cx="161" cy="20" r="5"/><circle class="p" cx="162" cy="20" r="2.5"/></svg>`;
+const SPIKY_SVG = `<svg viewBox="0 0 200 160"><polygon class="d" points="58,76 71,42 85,70"/><polygon class="d" points="84,68 100,30 116,68"/><polygon class="d" points="115,70 129,42 142,77"/>
+  <path class="m" d="M46 98 Q14 94 4 116 Q30 116 52 116 Z"/><rect class="d" x="64" y="118" width="17" height="32" rx="7"/><rect class="d" x="120" y="118" width="17" height="32" rx="7"/>
+  <ellipse class="m" cx="100" cy="100" rx="60" ry="32"/><ellipse class="m" cx="168" cy="112" rx="23" ry="14"/>
+  <circle class="e" cx="174" cy="107" r="5"/><circle class="p" cx="175" cy="107" r="2.5"/></svg>`;
+const HORNED_SVG = `<svg viewBox="0 0 200 160"><path class="m" d="M36 94 Q10 94 4 110 Q24 113 42 112 Z"/><rect class="d" x="52" y="118" width="17" height="32" rx="7"/><rect class="d" x="104" y="118" width="17" height="32" rx="7"/>
+  <ellipse class="m" cx="85" cy="100" rx="55" ry="32"/><circle class="d" cx="138" cy="78" r="31"/><ellipse class="m" cx="160" cy="96" rx="27" ry="19"/>
+  <polygon class="b" points="148,80 153,46 162,80"/><polygon class="b" points="168,82 177,52 180,86"/><polygon class="b" points="182,92 198,80 188,102"/>
+  <circle class="e" cx="162" cy="94" r="5"/><circle class="p" cx="163" cy="94" r="2.5"/></svg>`;
+const LEAF_SVG = `<svg viewBox="0 0 200 160"><path class="m" d="M100 14 Q170 64 100 146 Q30 64 100 14 Z"/><path d="M100 30 L100 156" stroke="#2f7d44" stroke-width="6" stroke-linecap="round"/></svg>`;
+const EGG_SVG = `<svg viewBox="0 0 200 160"><ellipse class="b" cx="100" cy="84" rx="46" ry="60"/><circle class="m" cx="82" cy="60" r="9"/><circle class="m" cx="118" cy="92" r="12"/><circle class="m" cx="86" cy="112" r="7"/></svg>`;
+const BERRY_SVG = `<svg viewBox="0 0 200 160"><circle class="m" cx="100" cy="92" r="56"/><circle cx="80" cy="72" r="12" fill="#fff" opacity=".55"/><path d="M100 40 Q96 22 108 12" stroke="#6b4a2b" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="122" cy="30" rx="18" ry="9" fill="#58b368" transform="rotate(-20 122 30)"/></svg>`;
+const PRE_FIX = { black: ["#2b2d42"], classFills: { m: "#fff", d: "#fff", b: "#fff", e: "#fff", p: "#2b2d42" } };
+const PRE_EYE_WHITES = /<circle class="e"[^>]*\/>/g, PIP_NOSE = /<circle class="p" cx="158" cy="52" r="1.8"\/>/;
+const EGG_SPOTS = /<circle class="m"[^>]*\/>/g;            // the game's three small spots: too small to colour, so cut out
+const EGG_BIG_SPOTS = `<circle cx="82" cy="58" r="14"/><circle cx="118" cy="94" r="15"/><circle cx="84" cy="114" r="11"/>`;   // three big spots to colour instead
+const PIP_DROP = [PRE_EYE_WHITES, PIP_NOSE];
+
+BOOK.pre = {
+  story: "Pip's Lost Eggs",
+  gradeLabel: "Preschool",
+  order: -1,
+  lineWidth: 6,
+  iconLine: 4,
+  pictures: {
+    pip: Object.assign({ svg: PIP_SVG, drop: PIP_DROP }, PRE_FIX),
+    pipHead: Object.assign({ svg: PIP_SVG, viewBox: "56 12 120 72", clip: true, drop: PIP_DROP }, PRE_FIX),         // head and shoulders, cropped: Pip hatching
+    longneck: Object.assign({ svg: LONGNECK_SVG, drop: [PRE_EYE_WHITES] }, PRE_FIX),
+    spiky: Object.assign({ svg: SPIKY_SVG, drop: [PRE_EYE_WHITES] }, PRE_FIX),
+    horned: Object.assign({ svg: HORNED_SVG, drop: [PRE_EYE_WHITES] }, PRE_FIX),
+    leaf: Object.assign({ svg: LEAF_SVG }, PRE_FIX),
+    egg: Object.assign({ svg: EGG_SVG, drop: [EGG_SPOTS], extra: EGG_BIG_SPOTS }, PRE_FIX),
+    eggPlain: Object.assign({ svg: EGG_SVG, drop: [EGG_SPOTS] }, PRE_FIX),
+    berry: Object.assign({ svg: BERRY_SVG }, PRE_FIX),
+    berryPlain: Object.assign({ svg: BERRY_SVG, drop: [/<ellipse cx="122" cy="30"[^>]*\/>/] }, PRE_FIX)   // no little leaf, for the small counting pictures
+  },
+  colouring: [
+    { // Page 1: Pip, huge (pip)
+      caption: "Hello, I am Pip the dinosaur!",
+      scene: (P, S) => [
+        S.sun(326, 76, 30), S.cloud(104, 80, 1.3),
+        S.hill("M-20 394 Q110 374 220 390 T420 378"),
+        P("pip", 4, 100, 420)
+      ].join("")
+    },
+    { // Page 2: Pip's head and shoulders (the real Pip, cropped) hatching from a big egg shell drawn fresh (pipHead)
+      caption: "Pip is hatching from her egg!",
+      scene: (P, S) => {
+        const teeth = Array.from({ length: 7 }, (_, k) => `L${68 + k * 44} 204 L${90 + k * 44} 230`).join(" ");
+        return [
+          S.sun(330, 64, 26), S.cloud(78, 62, 1),
+          P("pipHead", 50, 40, 300),
+          S.shape(`<path d="M46 230 ${teeth} C376 330 330 432 200 432 C70 432 24 330 46 230 Z"/><circle cx="116" cy="330" r="24"/><circle cx="276" cy="318" r="28"/><circle cx="226" cy="394" r="18"/>`)
+        ].join("");
+      }
+    },
+    { // Page 3: Pip watching over three eggs in a nest (pip, egg)
+      caption: "Pip looks after her three eggs!",
+      scene: (P, S) => [
+        S.sun(340, 56, 24), S.cloud(74, 66, 1.1),
+        P("pip", 90, 36, 250),
+        S.shape(`<ellipse cx="200" cy="352" rx="168" ry="34"/>`),
+        P("egg", 15, 258.6, 170), P("egg", 115, 258.6, 170), P("egg", 215, 258.6, 170),
+        S.shape(`<path d="M32 352 Q36 424 200 428 Q364 424 368 352 Q200 392 32 352 Z"/><path d="M64 388 Q132 412 200 412 Q268 412 336 388" fill="none"/>`)
+      ].join("")
+    },
+    { // Page 4: a long neck dinosaur reaching up high (longneck)
+      caption: "A long neck dinosaur reaches up high!",
+      scene: (P, S) => [
+        S.sun(70, 70, 28), S.cloud(250, 64, 1.15),
+        S.hill("M-20 386 Q110 366 230 382 T420 372"),
+        P("longneck", 40, 110, 370),
+        S.tuft(56, 432), S.tuft(344, 430)
+      ].join("")
+    },
+    { // Page 5: one big round berry (berry)
+      caption: "Pip loves a big round berry!",
+      scene: (P, S) => [
+        S.sun(330, 64, 28), S.cloud(94, 68, 1.25),
+        S.hill("M-20 372 Q120 350 230 366 T420 356"),
+        P("berry", 10, 85, 380),
+        S.tuft(62, 428), S.tuft(340, 430)
+      ].join("")
+    }
+  ],
+  activities: {
+    pages: ["maze", "tracePath", "countColour", "bigSmall"],
+    maze: { cols: 5, rows: 6, seed: 3, cs: 96, ox: 120, oy: 40, wall: 10, start: "pip", end: "eggPlain", startW: 112, endW: 120, icon: 4, answerWidth: 300,
+      title: "Pip's Egg Maze", instruction: "Help Pip find her egg." },
+    tracePath: { seed: 5, start: "pip", end: "eggPlain", rows: [{ waves: 3, amp: 24 }, { waves: 4, amp: 34 }, { waves: 6, amp: 38 }], answerWidth: 300,
+      title: "Trace the Path", instruction: "Trace each wavy line from Pip to her egg." },
+    countColour: { seed: 8, kinds: ["eggPlain", "leaf", "berryPlain", "pip", "star"], max: 5, rowH: 146, bigK: 1.75, step: 106, noColourLine: true, circles: true, answerWidth: 430,
+      title: "Count to Five", instruction: "Count each group. Colour that many circles." },
+    bigSmall: { seed: 9, kinds: ["longneck", "spiky", "horned", "pip", "eggPlain", "berryPlain"], answerWidth: 270,
+      title: "Big and Small", instruction: "Circle the big one. Then circle the small one." }
+  }
+};
+
+// ---------- Grade 1: Dr. Somebody's Space Balloon ----------
+// The owl and balloon are the Grade 3 copies above (the same drawings from shared/story.js), without the straw hat.
+// The planets, the Earth and the Moon are copied from planetArt() and SPACE_ART in grade1-space.html. Stars, the rocket, the comet and the
+// satellite are drawn fresh (the game only shows them as emoji). The game's planet bands are see-through, so outline() would lose them:
+// they are added again as plain lines. No robot, alien or astronaut: the game only has those as emoji.
+const planetArt = (c1, c2, ring) => `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="40" fill="${c1}"/><path d="M24 50 Q60 40 96 50" stroke="${c2}" stroke-width="7" fill="none" opacity=".7"/><path d="M22 70 Q60 62 98 70" stroke="${c2}" stroke-width="5" fill="none" opacity=".6"/>${ring ? `<ellipse cx="60" cy="62" rx="58" ry="14" fill="none" stroke="#e9d8a6" stroke-width="6" transform="rotate(-12 60 62)"/>` : ""}</svg>`;
+const SPACE_EARTH = `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="#3fa9e0"/><path d="M34 38 Q48 30 56 40 T60 62 Q48 70 38 60 Z" fill="#58b368"/><path d="M70 66 Q84 60 90 74 T76 96 Q66 86 70 66 Z" fill="#58b368"/><path d="M62 22 Q74 18 82 28" stroke="#fff" stroke-width="5" fill="none" opacity=".8"/></svg>`;
+const SPACE_MOON = `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="#d9dbe6"/><circle cx="44" cy="46" r="9" fill="#b9bed2"/><circle cx="74" cy="70" r="12" fill="#b9bed2"/><circle cx="72" cy="38" r="5" fill="#b9bed2"/><circle cx="44" cy="78" r="6" fill="#b9bed2"/></svg>`;
+const PLANET_BANDS = `<path d="M21.3 50 Q60 40 98.7 50" fill="none"/><path d="M21.3 70 Q60 62 98.7 70" fill="none"/>`;
+// Saturn's ring as a flat band (two ellipses, the space between them white) lying across the planet, tilted like the game's ring.
+const SATURN_RING = `<path fill-rule="evenodd" d="M2 62 a58 14 0 1 0 116 0 a58 14 0 1 0 -116 0 Z M12 62 a48 8 0 1 0 96 0 a48 8 0 1 0 -96 0 Z" transform="rotate(-12 60 62)"/>`;
+
+// The dot to dot: a five point star, 30 dots (three along each of its ten edges). The numbers sit by their dots, outside the star on the
+// points and inside it at the deep corners, so they never touch a line or each other.
+const STAR_DOTS = [[300, 70], [321, 119], [342, 168], [363, 217], [417, 222], [470, 227], [523, 232], [483, 267], [443, 302], [403, 337], [414, 389], [426, 441], [438, 493], [392, 466], [346, 439], [300, 412], [254, 439], [208, 466], [162, 493], [174, 441], [186, 389], [197, 337], [157, 302], [117, 267], [77, 232], [130, 227], [183, 222], [237, 217], [258, 168], [279, 119]];
+const STAR_LABELS = [[300, 25], [349, 107], [370, 156], [349, 247], [420, 192], [473, 197], [552, 223], [512, 283], [472, 318], [366, 325], [452, 381], [464, 432], [453, 523], [380, 497], [328, 470], [300, 382], [266, 470], [215, 501], [147, 523], [136, 432], [148, 381], [234, 325], [138, 333], [98, 298], [40, 220], [127, 197], [180, 192], [251, 247], [219, 151], [241, 110]];
+// Two small planets printed in the top corners, so the page is not just a star.
+const STAR_PRINTED = `<g fill="#fff" stroke="#000" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><circle cx="86" cy="92" r="32"/><path d="M54 86 Q86 76 118 86 M56 102 Q86 96 116 102" fill="none"/><circle cx="516" cy="92" r="32"/><circle cx="504" cy="82" r="8"/><circle cx="526" cy="104" r="10"/></g>`;
+// Words that the random filler letters must never spell in a word search (rude or unkind). If they do, the grid is rolled again.
+const BANNED_WORDS = ["ASS", "BUM", "SEX", "TIT", "DIE", "POO", "PEE", "HATE", "HELL", "DAMN", "FART", "BUTT", "SUCK", "DUMB", "UGLY", "KILL", "SHIT", "CRAP", "FUCK", "DICK", "PISS"];
+
+BOOK.g1 = {
+  story: "Dr. Somebody's Space Balloon",
+  gradeLabel: "Grade 1",
+  order: 1,
+  lineWidth: 3.5,
+  pictures: {
+    owl: { svg: owlSvg("", ""), black: ["#2b2d42"], drop: [/<circle cx="(?:80|120)" cy="48" r="14" fill="#fff"\/>/g] },   // the same settings as Grade 3: eye whites cut out
+    balloon: { svg: BALLOON, extra: BALLOON_EXTRA, drop: [/<g stroke="#39405a" stroke-width="4"[^>]*>[\s\S]*?<\/g>/, /<circle cx="\d+" cy="15[24]"[^>]*\/>/g] },
+    earth: { svg: SPACE_EARTH },
+    moon: { svg: SPACE_MOON },
+    mars: { svg: planetArt("#e76f51", "#b5452c"), extra: PLANET_BANDS },
+    saturn: { svg: planetArt("#f2d388", "#d4a84a", true), drop: [/<ellipse cx="60" cy="62" rx="58" ry="14"[^>]*\/>/], extra: PLANET_BANDS + SATURN_RING }
+  },
+  colouring: [
+    { // Page 1: Dr. Somebody says hello, standing on the Moon's surface (owl, earth)
+      caption: "Dr. Somebody says hello from space!",
+      scene: (P, S) => [
+        S.star(200, 66, 22), S.star(150, 128, 15), S.star(262, 140, 16), S.star(62, 236, 18), S.star(338, 226, 16),
+        S.sparkle(100, 160, 11), S.sparkle(300, 176, 12),
+        P("earth", 28, 40, 96), S.crescent(326, 100, 36),
+        S.hill("M-20 380 Q100 350 200 372 T420 362"),
+        S.shape(`<ellipse cx="62" cy="412" rx="30" ry="10"/><ellipse cx="308" cy="404" rx="38" ry="11"/><ellipse cx="196" cy="426" rx="24" ry="7"/>`),
+        P("owl", 75, 176, 250)
+      ].join("")
+    },
+    { // Page 2: the clock balloon floating past stars, a comet and Mars (balloon, mars)
+      caption: "The clock balloon floats past the stars!",
+      scene: (P, S) => [
+        S.star(56, 68, 22), S.star(64, 170, 15), S.star(50, 268, 20), S.star(350, 292, 18), S.star(70, 380, 20), S.star(190, 410, 14),
+        S.sparkle(190, 56, 10), S.sparkle(120, 330, 10), S.sparkle(350, 200, 11),
+        S.comet(338, 128, 18, 120, 28),
+        P("balloon", 100, 98, 200),
+        P("mars", 272, 330, 90)
+      ].join("")
+    },
+    { // Page 3: Dr. Somebody visits the big grey Moon, with the Earth far away (moon, owl, earth)
+      caption: "Dr. Somebody visits the big grey Moon!",
+      scene: (P, S) => [
+        S.star(56, 80, 24), S.star(60, 176, 14), S.star(352, 182, 16), S.star(40, 408, 18), S.star(360, 404, 18),
+        S.sparkle(110, 100, 11), S.sparkle(270, 120, 10),
+        P("moon", 0, 85, 400),
+        P("earth", 300, 30, 76),
+        P("owl", 135, 38, 130)
+      ].join("")
+    },
+    { // Page 4: Saturn with its big ring and a little moon (saturn, moon)
+      caption: "Saturn has beautiful rings to colour!",
+      scene: (P, S) => [
+        S.star(60, 60, 22), S.star(150, 96, 14), S.star(262, 52, 22), S.star(342, 100, 16), S.star(330, 392, 20), S.star(262, 414, 14),
+        S.sparkle(64, 196, 11),
+        P("saturn", 20, 70, 360),
+        P("moon", 30, 362, 80)
+      ].join("")
+    },
+    { // Page 5: a rocket, a comet and a satellite among the stars, with Mars (mars)
+      caption: "A rocket zooms past a bright comet!",
+      scene: (P, S) => [
+        S.star(52, 66, 22), S.star(130, 112, 15), S.star(52, 220, 16), S.star(362, 330, 16), S.star(222, 410, 14), S.star(46, 408, 16),
+        S.sparkle(250, 190, 11), S.sparkle(362, 190, 10),
+        S.comet(322, 112, 20, 150, 28),
+        S.satellite(322, 262, .8),
+        S.rocket(150, 262, 1.9),
+        P("mars", 250, 330, 100)
+      ].join("")
+    }
+  ],
+  activities: {
+    pages: ["maze", "dotToDot", "numberBonds", "wordSearch"],
+    maze: { cols: 10, rows: 12, seed: 8, cs: 52, ox: 100, oy: 40, wall: 6, startW: 84, endW: 76, icon: 2.4, answerWidth: 340,
+      title: "Help Dr. Somebody find his balloon!", instruction: "Start at the owl. Find the way to the balloon." },
+    dotToDot: { points: STAR_DOTS, labels: STAR_LABELS, extras: STAR_PRINTED, viewBox: [0, -10, 600, 580] },
+    numberBonds: { seed: 6, title: "Number Bonds", instruction: "Fill in the missing number. Each pair makes 10." },
+    wordSearch: { seed: 12, size: 6, dirs: [[1, 0], [0, 1]], banned: BANNED_WORDS, words: ["SUN", "CAT", "DOG", "MOON", "STAR", "FROG"],   // all six are spelling words in grade1-space.html
+      instruction: "Find the six words. They go across or down. Circle each one.", cell: 96, answerCell: 40,
+      listStyle: "grid-template-columns:repeat(3,1fr);font-size:26px;gap:14px 6px" }
   }
 };
 

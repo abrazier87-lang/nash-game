@@ -14,6 +14,14 @@ body { font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif; color: #000; 
 .bar button { font: inherit; font-size: 22px; font-weight: bold; padding: 10px 30px; border: 0; border-radius: 999px; background: #e8613c; color: #fff; cursor: pointer; }
 .bar button:active { transform: scale(.97); }
 
+/* ---------- the name, tick box and button above each sheet (screen only) ---------- */
+.pick { max-width: 8.5in; margin: 0 auto 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 10px; background: #fff8ea; border: 2px solid #e2c99d; border-radius: 12px; font-size: 17px; color: #4a2c0a; }
+.pick label { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; min-width: 0; }
+.pick input { width: 24px; height: 24px; flex: none; accent-color: #e8613c; }
+.pick span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick button { font: inherit; font-size: 15px; font-weight: bold; padding: 7px 14px; border: 2px solid #e8613c; border-radius: 999px; background: #fff; color: #c2461f; cursor: pointer; white-space: nowrap; }
+.pick button:active { transform: scale(.97); }
+
 /* ---------- sheets on screen ---------- */
 #sheets { padding: 18px 8px 40px; }
 .sheetwrap { width: 8.5in; height: 11in; margin: 0 auto 22px; }          /* JS shrinks width and height on narrow screens */
@@ -67,6 +75,8 @@ body { font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif; color: #000; 
 @media print {
   html, body { background: #fff !important; }
   .bar { display: none !important; }
+  .pick, .sheetwrap.skip { display: none !important; }
+  .sheetwrap.lastp { break-after: auto !important; page-break-after: auto !important; }
   body > div[style*="position:fixed"] { display: none !important; } /* the PREVIEW badge is not printed */
   #sheets { padding: 0; }
   .sheetwrap { width: 7.5in !important; height: 9.9in !important; margin: 0 !important; break-after: page; page-break-after: always; }
