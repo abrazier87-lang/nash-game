@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient Rome</title>
-<link rel="stylesheet" href="shared/kit.css?v=50">
+<link rel="stylesheet" href="shared/kit.css?v=51">
 <style>
   /* Blue sky, olive hills, a temple and an aqueduct. */
   :root { --sky1:#8fd3f4; --sky2:#fdebd0; --grass:#a9b665; --grass2:#7d9a4b; --title-shadow:#8e2f25; --strip:rgba(255,255,255,.45); --strip-line:rgba(90,100,40,.6); }
@@ -46,9 +46,9 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=50"></script>
-<script src="shared/story.js?v=50"></script>
-<script src="shared/newowl.js?v=50"></script>
+<script src="shared/kit.js?v=51"></script>
+<script src="shared/story.js?v=51"></script>
+<script src="shared/newowl.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -197,6 +197,9 @@ const COUNT_WORDS = [["How many wheels does a tricycle have?", 3, "Tri means thr
 const ROOTS = [["aqua", "water", ["aquarium", "aquatic"]], ["port", "to carry", ["transport", "portable"]], ["spect", "to look", ["spectator", "inspect"]], ["scrib", "to write", ["scribble", "describe"]],
   ["aud", "to hear", ["audience", "audio"]], ["ped", "foot", ["pedal", "pedestrian"]], ["dict", "to say", ["dictate", "dictionary"]], ["terr", "earth or land", ["territory", "terrain"]],
   ["vis", "to see", ["visible", "vision"]], ["nav", "ship", ["navy", "navigate"]], ["mar", "the sea", ["marine", "submarine"]], ["sol", "the sun", ["solar", "solstice"]]];
+// "scribble and describe are both about writing" (not "about to write"): the way to say what a word part is about
+const ABOUT = { "to carry": "carrying", "to look": "looking", "to write": "writing", "to hear": "hearing", "foot": "feet", "to say": "saying", "to see": "seeing", "ship": "ships" };
+const about = m => ABOUT[m] || m;
 const ROOT_SENTENCES = [["The Romans built an ___ to carry water into the city.", "aqueduct", ["audience", "orbit", "manual"]], ["A ___ walks along the road on foot.", "pedestrian", ["spectator", "navigator", "scribe"]],
   ["The ___ cheered at the chariot race.", "spectators", ["pedals", "aquariums", "dictionaries"]], ["The sailors used the stars to ___ their ship.", "navigate", ["dictate", "inspect", "describe"]],
   ["The emperor would ___ his letters to a scribe.", "dictate", ["navigate", "pedal", "inspect"]], ["Carts were used to ___ grain to Rome.", "transport", ["inspect", "predict", "describe"]],
@@ -221,7 +224,7 @@ const SCROLLS = [
   ["Rome began as a small village beside the River Tiber. Over hundreds of years it grew into a huge empire. At its largest, the empire stretched across three continents. Millions of people lived under Roman rule.", "How did Rome begin?", "as a small village", ["as a huge empire", "as an island", "as a desert camp"]],
   ["The Romans built long, straight roads. The roads were made of layers of stone so they would last. Soldiers could march quickly along them. Some Roman roads are still used today.", "Why were the roads built from layers of stone?", "so they would last", ["so they looked pretty", "so carts would go slowly", "so rain would collect"]],
   ["Aqueducts carried fresh water into Roman cities. The water flowed gently downhill through stone channels. Some aqueducts were built on tall arches to cross valleys. The water filled fountains and public baths.", "What did aqueducts carry?", "fresh water", ["soldiers", "grain", "stone blocks"]],
-  ["The Colosseum was a giant arena in Rome. It could hold about fifty thousand people. Crowds came to watch shows and contests. It had eighty entrances so people could get in and out quickly.", "Why did the Colosseum have so many entrances?", "so crowds could move quickly", ["to let in more light", "to keep animals out", "for decoration only"]],
+  ["The Colosseum was a giant arena in Rome. It could hold about fifty thousand people. Crowds came to watch gladiators fight. It had eighty entrances so people could get in and out quickly.", "Why did the Colosseum have so many entrances?", "so crowds could move quickly", ["to let in more light", "to keep animals out", "for decoration only"]],
   ["Roman soldiers were called legionaries. They marched long distances carrying heavy packs. Each night they built a camp with a ditch and a wall. Their training made the army very strong.", "What did legionaries do each night?", "built a camp", ["sailed a ship", "planted crops", "wrote poems"]],
   ["Romans spoke a language called Latin. Many English words come from Latin. French, Spanish and Italian grew out of Latin too. That is why some words look alike in those languages.", "Which languages grew out of Latin?", "French, Spanish and Italian", ["Chinese and Japanese", "only English", "Greek and Egyptian"]],
   ["Wealthy Romans decorated their floors with mosaics. A mosaic is a picture made from tiny coloured tiles. Some mosaics showed animals, gods or sea creatures. Thousands of tiles were needed for one floor.", "What is a mosaic made from?", "tiny coloured tiles", ["painted cloth", "melted glass sheets", "carved wood"]],
@@ -394,7 +397,7 @@ const GAMES = {
     }
   },
   decimals: {
-    name: "Market Decimals", icon: `<svg viewBox="0 0 100 100" style="width:1.6em;height:1.6em;vertical-align:middle"><g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M38 10h24v8H38z" fill="#d4c4a4"/><path d="M42 18h16v14c18 6 22 22 20 38-2 14-12 22-28 22S24 84 22 70c-2-16 2-32 20-38z" fill="#ff9f43"/><path d="M26 58h48v10H26z" fill="#b03a2e" stroke="none"/><path d="M40 20C18 14 14 40 30 46M60 20c22-6 26 20 10 26" fill="none"/></g></svg>`, intro: "At the market, things are measured in tenths. The number after the point counts tenths.",
+    name: "Market Decimals", icon: `<svg viewBox="0 0 100 100" style="width:1.6em;height:1.6em;vertical-align:middle"><g stroke="#2b2d42" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M38 10h24v8H38z" fill="#d4c4a4"/><path d="M42 18h16v14c18 6 22 22 20 38-2 14-12 22-28 22S24 84 22 70c-2-16 2-32 20-38z" fill="#ff9f43"/><path d="M26 58h48v10H26z" fill="#b03a2e" stroke="none"/><path d="M40 20C18 14 14 40 30 46M60 20c22-6 26 20 10 26" fill="none"/></g></svg>`, intro: "At the market, let's measure in tenths. The number after the point counts tenths.",
     lesson: (L, step) => frames(L, step >= 3 ? [
         [`<span class="big">2.3 + 1.5</span>`, "Watch me add decimals. I line up the points."],
         [`2 + 1 = 3 &nbsp; 0.3 + 0.5 = 0.8`, "Add the whole numbers: 2 plus 1 is 3. Add the tenths: 3 tenths plus 5 tenths is 8 tenths."], [`<b>3.8</b>`, "So 2.3 plus 1.5 is 3.8!"]]
@@ -828,12 +831,12 @@ const GAMES = {
         return q; }
       const picks = shuffle(ROOTS).slice(0, 4), [root, means, words] = picks[0];
       if (step === 2) { const w = pick(words); // which word has this root?
-        return { bubble: `<div class="col">${big(root, 9)}<div class="cap">means ${means}</div></div>`, key: root + w, say: `The Latin word part, ${root.split("").join(" ")}, means ${means}. Which word is about that?`, again: `Which word is about ${means}?`, yay: `Yes! ${cap(w)} has ${root} in it.`,
-          hint: H => H.say(`Look inside each word for the letters ${root.split("").join(", ")}.`), explain: H => pointTo(H, `${cap(w)} has ${root.split("").join(", ")} in it. It's about ${means}.`),
+        return { bubble: `<div class="col">${big(root, 9)}<div class="cap">means ${means}</div></div>`, key: root + w, say: `The Latin word part, ${root.split("").join(" ")}, means ${means}. Which word is about that?`, again: `Which word is about ${about(means)}?`, yay: `Yes! ${cap(w)} has ${root} in it.`,
+          hint: H => H.say(`Look inside each word for the letters ${root.split("").join(", ")}.`), explain: H => pointTo(H, `${cap(w)} has ${root.split("").join(", ")} in it. It's about ${about(means)}.`),
           choices: pickCards(w, picks.slice(1).map(p => pick(p[2])), ansCard, "Not quite. Look for the word part inside the word.") }; }
       return { bubble: `<div class="col"><div class="sentence">${words.join(" &nbsp;·&nbsp; ")}</div><div class="cap">What does <b>${root}</b> mean?</div></div>`, tall: true, key: root, say: `${cap(words[0])} and ${words[1]} share a word part. What does it mean?`, yay: `Yes! ${cap(root)} means ${means}.`,
         hint: H => H.say(`What do ${words[0]} and ${words[1]} have in common? Think about what each one is about.`),
-        explain: H => pointTo(H, `${cap(words[0])} and ${words[1]} are both about ${means}. So ${root.split("").join(", ")} means ${means}.`),
+        explain: H => pointTo(H, `${cap(words[0])} and ${words[1]} are both about ${about(means)}. So ${root.split("").join(", ")} means ${means}.`),
         choices: pickCards(means, picks.slice(1).map(p => p[1]), ansCard, "Not quite. Think about what both words have in common.") };
     }
   },
@@ -843,8 +846,8 @@ const GAMES = {
         [`<div class="sentence">We stayed inside <u>&nbsp;</u> it was cold.</div>`, "Watch me pick a joining word. Each one does a different job."],
         [`because = the reason`, "Because gives the reason. Why did we stay inside? It was cold."], [`<div class="sentence">We stayed inside <b>because</b> it was cold.</div>`, "We stayed inside because it was cold!"]]
       : step === 4 ? [
-        [`<div class="sentence">Marcus said, "Follow me."</div>`, "Watch me check the punctuation. The words someone says go inside speech marks."],
-        [`said<b>,</b> "Follow me<b>."</b>`, "A comma comes before the speech marks. The period goes inside them."], [`✓`, "Every mark is in the right place!"]]
+        [`<div class="sentence">Marcus said, "Follow me."</div>`, "Watch me check the punctuation. The words someone says go inside quotation marks."],
+        [`said<b>,</b> "Follow me<b>."</b>`, "A comma comes before the quotation marks. The period goes inside them."], [`✓`, "Every mark is in the right place!"]]
       : [[`<div class="sentence">The brave soldiers marched quickly.</div>`, "Watch me find the parts of a sentence."],
         [`soldiers = noun &nbsp; marched = verb`, "Soldiers names who. It's the noun. Marched is the action. It's the verb."], [`brave = adjective &nbsp; quickly = adverb`, "Brave describes the soldiers. It's an adjective. Quickly tells how they marched. It's an adverb."]]),
     makeQuestion(step) {
@@ -860,10 +863,10 @@ const GAMES = {
           : async H => { if (!(await H.say("Try each word in the sentence. Which one sounds right?"))) return false; for (const c of H.cards()) { H.glow(c.el, true); const ok = await H.say(full(c.el.textContent.trim())); H.glow(c.el, false); if (!ok) return false; } return true; };
         q.explain = H => pointTo(H, step === 2 ? `${full(item[1])} ${JOIN_MEANS[item[1]] || ""}` : `${full(item[1])} That's the right form.`);
         return q; }
-      const [right, x, y] = pick(WRITTEN_RIGHT); // commas, apostrophes and speech marks
-      return { bubble: big("✒️", 12), key: right, say: "Which sentence is written correctly? Look at the commas, the apostrophes and the speech marks.", yay: "Yes! Every mark is in the right place.",
-        hint: H => H.say("Check the capital letters, the commas in lists, the apostrophes that show who owns something, and the speech marks around what people say."),
-        explain: H => pointTo(H, "This one has every capital letter, comma, apostrophe and speech mark in the right place."),
+      const [right, x, y] = pick(WRITTEN_RIGHT); // commas, apostrophes and quotation marks
+      return { bubble: big("✒️", 12), key: right, say: "Which sentence is written correctly? Look at the commas, the apostrophes and the quotation marks.", yay: "Yes! Every mark is in the right place.",
+        hint: H => H.say("Check the capital letters, the commas in lists, the apostrophes that show who owns something, and the quotation marks around what people say."),
+        explain: H => pointTo(H, "This one has every capital letter, comma, apostrophe and quotation mark in the right place."),
         choices: pickCards(right, [x, y], ansCard, "Look again at the capital letters and the punctuation marks.") };
     }
   },
@@ -898,14 +901,14 @@ const ROME_FACTS = [
   { say: "Fun fact! Roman aqueducts carried water for many kilometres, using only gravity to make it flow downhill!", show: [["aqueduct", 0, 6, 54], ["amphora", 64, 6, 14]] },
   { say: "Fun fact! The Romans built more than eighty thousand kilometres of stone roads!", show: [["road", 0, 0, 10, true], ["temple", 14, 12, 34], ["shield", 58, 12, 14]] },
   { say: "Fun fact! Many English words come from Latin, the language of the Romans!", show: [["scroll", 16, 8, 26], ["book", 48, 8, 18]] },
-  { say: "Fun fact! The volcano Vesuvius buried the town of Pompeii in ash, and kept it safe for us to explore today!", show: [["volcano", 14, 6, 38], ["temple", 54, 6, 22]] },
+  { say: "In the year 79, the volcano Vesuvius buried the town of Pompeii in ash. Many people died. The ash kept the town just as it was, so we can learn how they lived.", show: [["volcano", 14, 6, 38], ["temple", 54, 6, 22]] },
   { say: "Fun fact! The Romans made concrete so strong that some of their buildings are still standing after two thousand years!", show: [["temple", 8, 6, 36], ["colosseum", 46, 6, 30]] },
   { say: "Fun fact! The month of July is named after a famous Roman leader, Julius Caesar!", show: [["calendar", 18, 10, 22], ["laurel", 46, 14, 16]] },
   { say: "Fun fact! Each Roman soldier carried a heavy pack with tools, food and a cooking pot!", show: [["shield", 12, 8, 22], ["backpack", 36, 8, 18], ["amphora", 58, 8, 14]] }
 ];
 const ROME_TOUR = [
   { say: "Hooray! The clock ticks again! Let's take one last look at Rome before we fly home.", show: [["sun", 70, 60, 12], ["laurel", 14, 10, 14], ["grapes", 56, 8, 14]] },
-  { say: "Here is the Colosseum, where huge crowds came to watch shows and games.", show: [["colosseum", 8, 6, 56]] },
+  { say: "Here is the Colosseum, where huge crowds watched gladiators fight. Many gladiators were enslaved people who had no choice.", show: [["colosseum", 8, 6, 56]] },
   { say: "Here is an aqueduct, carrying fresh water into the city.", show: [["aqueduct", 0, 6, 58]] },
   { say: "And here is the Forum, where Romans met to shop, talk and make decisions.", show: [["temple", 8, 6, 34], ["temple", 44, 6, 26], ["amphora", 66, 6, 12]] },
   { say: "Goodbye, Rome! Tick tock. Time to fly!", show: [["colosseum", 24, 6, 34]] }
@@ -934,7 +937,7 @@ window.Story = StoryGame({
     problems: ["one step, numbers to 10,000", "one step, multiplying or dividing", "two steps", "harder two-step problems"],
     market: ["adding up prices", "buying and selling several", "change from a bill", "money words, ways to pay, and the better deal"],
     roots: ["number word parts (tri, oct, cent)", "find the word with a Latin part", "what a Latin part means", "use the word in a sentence"],
-    grammar: ["nouns, verbs, adjectives and adverbs", "joining words (but, so, because)", "tricky verbs", "commas, apostrophes and speech marks"],
+    grammar: ["nouns, verbs, adjectives and adverbs", "joining words (but, so, because)", "tricky verbs", "commas, apostrophes and quotation marks"],
     scroll: ["read aloud, 3 answers", "reads it alone, 3 answers", "reads it alone, 4 answers", "reads it alone, 4 answers"]
   },
   rewards: [["eagle", "🦅"], ["wolf", "🐺"], ["horse", "🐎"], ["dolphin", "🐬"], ["lion", "🦁"], ["bull", "🐂"], ["boar", "🐗"], ["peacock", "🦚"], ["elephant", "🐘"], ["dog", "🐕"], ["bee", "🐝"], ["dove", "🕊️"]],

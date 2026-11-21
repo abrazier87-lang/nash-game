@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Comes Home</title>
-<link rel="stylesheet" href="shared/kit.css?v=50">
-<link rel="stylesheet" href="shared/inked.css?v=50">
-<link rel="stylesheet" href="shared/chapters.css?v=50">
+<link rel="stylesheet" href="shared/kit.css?v=51">
+<link rel="stylesheet" href="shared/inked.css?v=51">
+<link rel="stylesheet" href="shared/chapters.css?v=51">
 <style>
   /* Grade 5's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9fd8f2; --sky2:#f4f1d8; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#2f6b3f; }
@@ -16,11 +16,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=50"></script>
-<script src="shared/story.js?v=50"></script>
-<script src="shared/newowl.js?v=50"></script>
-<script src="shared/inkart.js?v=50"></script>
-<script src="shared/chapters.js?v=50"></script>
+<script src="shared/kit.js?v=51"></script>
+<script src="shared/story.js?v=51"></script>
+<script src="shared/newowl.js?v=51"></script>
+<script src="shared/inkart.js?v=51"></script>
+<script src="shared/chapters.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -213,7 +213,7 @@ const CHAPTERS = [
   ] },
   { title: "Following the Seasons", where: "Northern Ontario", beats: [
     { art: "north", say: ["North again! The roads ran out a long time ago. Up here it is rivers, spruce trees and sky.",
-      "This is the land at the south end of James Bay, near Moose Factory, at the very top of Ontario. It is so flat and wet that the ground wobbled when I landed. People call it <em>muskeg</em>.",
+      "This is the land at the south end of James Bay, near Moose Factory, in the far north of Ontario. It is so flat and wet that the ground wobbled when I landed. People call it <em>muskeg</em>.",
       "Noah said the seasons decide everything here. I packed for four seasons. I am told that is not enough."] },
     { art: "maya", say: ["This is Maya. Her family is <em>Cree</em>. They have lived on this land for thousands of years.",
       "I told Maya I had learned to say <em>miigwech</em>. She laughed. In her language, thank you is <em>meegwetch</em>, and you say it the same way, <em>MEE-gwetch</em>. Almost the same word! Their languages are cousins.",
@@ -273,7 +273,7 @@ const CHAPTERS = [
     { art: "homeair", say: ["Home at last. I started this trip right here in southern Ontario, and I have come all the way around.",
       "That river below is the <em>Grand River</em>. It winds for about 280 kilometres, all the way down to Lake Erie.",
       "And there is Lily, waving! She says there is one more story, and it belongs to this very spot."] },
-    { art: "brantford", say: ["This town is called <em>Brantford</em>. Lily asked if I knew where the name came from. I guessed a man named Ford. I was half right.",
+    { art: "brantford", say: ["This city is called <em>Brantford</em>. Lily asked if I knew where the name came from. I guessed a man named Ford. I was half right.",
       "It is named for <em>Joseph Brant</em>. He was a Mohawk leader, and his Mohawk name was <em>Thayendanegea</em>. You say it <em>tie-en-da-NAY-gee-uh</em>.",
       "The Mohawk are one of the Haudenosaunee nations, like Lily's family. Clock, one last window, please!"] },
     { art: "fordwindow", say: ["The year is <em>1784</em>. Not so very long ago, this time. And look how many people!",
@@ -458,7 +458,7 @@ Object.assign(ASK, {
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How some words are said aloud. The recordings are made from the words AFTER these swaps (the writing on screen is not changed),
 // so the voice says each name the way the community reviewer gave it. tools/story-voice-lines.py reads this same list.
-const SAY = [["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "ah-nish-ih-nah-bay"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "ih-nook-sook"], ["ih-NOOK", "ih-nook"], ["IH-noo-it", "ih-noo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kah-moo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-gee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Ah-nish-ih-nah-bay"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "ih-nook-sook"], ["Inuk", "Ih-nook"], ["Inuit", "Ih-noo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kah-moo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-gee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
+const SAY = [["ho-dee-no-SHOW-nee", "ho-dee-no-show-nee"], ["nyah-WEN", "nyah-wen"], ["ah-nish-ih-NAH-bay", "anishi-nah-beh"], ["mah-NOO-min", "mah-noo-min"], ["MEE-gwetch", "mee-gwetch"], ["ih-NOOK-sook", "innooksook"], ["ih-NOOK", "innook"], ["IH-noo-it", "innoo-it"], ["IG-loo", "ig-loo"], ["KOO-lik", "koo-lik"], ["kah-MOO-teek", "kamoo-teek"], ["na-koor-MEEK", "na-koor-meek"], ["tie-en-da-NAY-gee-uh", "tie-en-da-nay-ghee-uh"], ["Haudenosaunee", "Ho-dee-no-show-nee"], ["Nia:wen", "Nyah-wen"], ["Anishinaabe", "Anishi-nah-beh"], ["manoomin", "mah-noo-min"], ["Miigwech", "Mee-gwetch"], ["miigwech", "mee-gwetch"], ["Meegwetch", "Mee-gwetch"], ["meegwetch", "mee-gwetch"], ["inuksuk", "innooksook"], ["Inuk", "Innook"], ["Inuit", "Innoo-it"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kamoo-teek"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["Thayendanegea", "Tie-en-da-nay-ghee-uh"], ["Attawandaron", "At-ta-wan-da-ron"], ["Iqaluit", "Ee-ka-loo-eet"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Comes Home", sub: "A Grade 5 story", saveKey: "grade5Canada.v1", medal: "g5",
   chapters: CHAPTERS, ask: ASK, art: ART, intro: INTRO, introVoice: "../audio/g5/intro/",
   voice: "../audio/g5/s/", clockVoice: "../audio/g5/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t) });

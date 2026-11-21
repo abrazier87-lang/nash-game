@@ -166,7 +166,7 @@
       { label: "Walk the cliff to the puffins", art: "nl_puffins", word: ["le macareux", "the puffin"], say: ["We walk the cliff path, and there they are! Puffins sit on the grassy ledges, with black backs, white fronts, orange feet and great big orange beaks.",
         "In French a puffin is <em>le macareux</em>. Declan says it looks like it is wearing a clown's nose. I say it is the best beak I have ever seen."] }] },
     { ask: "nl_review", intro: "One last set of questions for this grade. Three right answers and we reach the very edge." },
-    { art: "nl_goodbye", say: ["Cape Spear! This is the very edge of the map. It is the most easterly point in Canada, and the sun rises here before anywhere else in the country. There is no more east to go.",
+    { art: "nl_goodbye", say: ["Cape Spear! This is the very edge of the map. It is the most easterly point in Canada, one of the first places in the country to see the morning sun. There is no more east to go.",
       "So thank you, Léa, Olivier, Élodie, Sadie, Amara and Declan. Each of you showed me a piece of the east, and I learned so much.",
       "Wait! The clock on the balloon is spinning! Its hands swing all the way round and point <em>west</em>. The prairies and the mountains are waiting for us.",
       "But that is another story. Tick tock!"] }

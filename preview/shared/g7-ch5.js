@@ -141,6 +141,7 @@
   // FACT CHECK: hoodoos are pillars of soft rock (sandstone and mudstone) capped by a harder, wider stone that shields the pillar below from rain
   // FACT CHECK: about 75 million years ago (Late Cretaceous) southern Alberta was a warm, wet coastal plain beside the Western Interior Sea, with rivers, swamps and forests. Dinosaur Provincial Park rocks are about 76 to 75 million years old and the Drumheller rocks somewhat younger (about 70 million). The scene uses "about 75 million" for both.
   // FACT CHECK: Albertosaurus was a meat-eating tyrannosaur, smaller than T. rex, about 9 metres long (some sources say up to 10). Joseph Tyrrell found the skull in 1884 in the Red Deer River valley near today's Drumheller. The animal was named Albertosaurus in 1905 by Henry Fairfield Osborn.
+  // FACT CHECK: The story's meat-eater was changed from Albertosaurus to Gorgosaurus (November 2026, after an outside review, checked against The Canadian Encyclopedia): Albertosaurus lived about 73 to 70 million years ago, after Centrosaurus, while Gorgosaurus lived alongside it about 76 to 75 million years ago and was about 8 to 9 metres long. The drawing function keeps its old name.
   // FACT CHECK: hadrosaurs (duck-billed dinosaurs) and horned dinosaurs (Centrosaurus, Styracosaurus) lived here. The pictures are simple and friendly, not to scale.
   // FACT CHECK: how fossils form: quick burial in mud or sand, then minerals slowly replace the bone over millions of years. Older rock lies lower down in a layer stack. Rain and the river wear the rock away and uncover new fossils each year.
   // FACT CHECK: hadrosaur nests with eggs and babies were found at Devil's Coulee, near Warner in southern Alberta (the first eggs found in 1987)
@@ -160,7 +161,7 @@
       "Priya waved at Pip first. I am not jealous. I am a little jealous."] },
     { art: "bl_window1", say: ["The window into the past! It is about <em>75 million years ago</em>, in a time called the Late Cretaceous. This dry, dusty land is a warm, wet plain beside a shallow inland sea.",
       "There are rivers, swamps and forests. Duck-billed dinosaurs called hadrosaurs munch the leaves. Horned dinosaurs with bony frills, like Centrosaurus, wander by.",
-      "And creeping along behind them is an <em>Albertosaurus</em>, a meat-eater and a smaller cousin of T. rex. It was about 9 metres long. Pip hid behind me. I hid behind Pip. Time for some very big numbers."] },
+      "And creeping along behind them is a <em>Gorgosaurus</em>, a meat-eater and a smaller cousin of T. rex. It was about 9 metres long. Pip hid behind me. I hid behind Pip. Time for some very big numbers."] },
     { ask: "bl_big", intro: "Count the years with Priya. Three right answers and each one pays a Made Beaver, then we look at the rocks." },
     { art: "bl_today", word: ["le fossile", "the fossil"], say: ["Back to today! Priya shows us a striped cliff. Each stripe is a <em>layer</em> of rock, like the pages of a book. The lower pages are older.",
       "When a dinosaur died, mud or sand could bury it quickly. Over millions of years, minerals slowly replaced the bone and turned it to stone. That is a <em>fossil</em>, or <em>le fossile</em>.",

@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody's Space Balloon</title>
-<link rel="stylesheet" href="shared/kit.css?v=50">
+<link rel="stylesheet" href="shared/kit.css?v=51">
 <style>
   /* Space look: dark sky, stars, standing on a moon. */
   :root { --sky1:#0b1030; --sky2:#3a2470; --grass:#b9b4d6; --grass2:#8f89b8; --title-shadow:#6a3fd0; }
@@ -32,8 +32,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=50"></script>
-<script src="shared/story.js?v=50"></script>
+<script src="shared/kit.js?v=51"></script>
+<script src="shared/story.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -200,8 +200,8 @@ const GAMES = {
       if (step === 4) { // taking away tens (Grade 1 works with numbers up to 50)
         const b = 10 * (1 + rand(3)), a = b + 1 + rand(50 - b), ans = a - b, at = Math.floor(a / 10), bt = b / 10, o = a % 10;
         return { bubble: `<span class="sum">${a} − ${b} = <b>?</b></span>`, say: `What is ${a}, minus ${b}?`, yay: `Yes! It's ${ans}!`, pause: 3000, choices: numCards(ans, 0, 50, 4, [ans + 10, ans - 10, ans + 1]),
-          hint: H => { H.show(`${at} tens − ${bt} ten${bt === 1 ? "" : "s"}`); return H.say(`Take away the tens: ${at} tens take away ${bt}. The ones stay the same.`); },
-          explain: async H => (await talkThrough(H, [[`${at} tens − ${bt} = <b>${at - bt} tens</b>`, `${at} tens take away ${bt} tens leaves ${at - bt} tens. That's ${(at - bt) * 10}.`], [`${(at - bt) * 10} + ${o} = <b>${ans}</b>`, `The ${o} ones stay the same. ${(at - bt) * 10} and ${o} make ${ans}.`]])) && pointTo(H, `So the answer is ${ans}.`) };
+          hint: H => { H.show(`${at} tens − ${bt} ten${bt === 1 ? "" : "s"}`); return H.say(`Take away the tens: ${at} ten${at === 1 ? "" : "s"} take away ${bt}. The ones stay the same.`); },
+          explain: async H => (await talkThrough(H, [[`${at} ten${at === 1 ? "" : "s"} − ${bt} = <b>${at - bt} ten${at - bt === 1 ? "" : "s"}</b>`, `${at} ten${at === 1 ? "" : "s"} take away ${bt} ten${bt === 1 ? "" : "s"} leaves ${at - bt} ten${at - bt === 1 ? "" : "s"}. That's ${(at - bt) * 10}.`], [`${(at - bt) * 10} + ${o} = <b>${ans}</b>`, `The ${o} ones stay the same. ${(at - bt) * 10} and ${o} make ${ans}.`]])) && pointTo(H, `So the answer is ${ans}.`) };
       }
       if (step === 3) { // the missing number
         const a = 6 + rand(15), b = 1 + rand(Math.min(10, a - 1)), c = a - b;

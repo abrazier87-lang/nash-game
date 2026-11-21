@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dr. Somebody in Ancient China</title>
-<link rel="stylesheet" href="shared/kit.css?v=50">
+<link rel="stylesheet" href="shared/kit.css?v=51">
 <style>
   /* Misty mountains, green hills and a red pagoda. */
   :root { --sky1:#bfe6ef; --sky2:#fdf3dc; --grass:#8cc084; --grass2:#5f9e6e; --title-shadow:#b03a2e; --strip:rgba(255,255,255,.45); --strip-line:rgba(60,110,70,.6); }
@@ -33,8 +33,8 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=50"></script>
-<script src="shared/story.js?v=50"></script>
+<script src="shared/kit.js?v=51"></script>
+<script src="shared/story.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -270,7 +270,7 @@ const GAMES = {
         else { const ds = shuffle([2, 3, 4, 6, 8]); A = [1, ds[0]]; B = [1, ds[1]]; same = false; }
         const val = f => f[0] / f[1], right = (val(A) > val(B)) === bigger ? A : B, other = right === A ? B : A, word = bigger ? "bigger" : "smaller";
         return { bubble: big(word, 6), key: A.join("/") + B.join("/") + word, say: `Which fraction is ${word}?`, yay: `Yes! ${cap(fracSaid(...right))} is ${word} than ${fracSaid(...other)}.`,
-          hint: H => H.say(same ? "The parts are the same size. So the fraction with more parts is bigger." : "When a whole is cut into more parts, each part is smaller."),
+          hint: H => H.say(same ? "The parts are the same size. So the fraction with more of them is bigger." : "When a whole is cut into more parts, each part is smaller."),
           explain: H => pointTo(H, same ? `Both are cut into ${right[1]} parts. ${cap(NUM[Math.max(A[0], B[0])])} parts is more than ${NUM[Math.min(A[0], B[0])]}. So ${fracSaid(...right)} is ${word}.` : `${cap(PARTS[Math.max(A[1], B[1])][1])} are smaller pieces than ${PARTS[Math.min(A[1], B[1])][1]}. So ${fracSaid(...right)} is ${word}.`),
           choices: [A, B].map(f => ({ html: `<div class="art" style="width:52%;height:52%">${pie(f[1], f[0])}</div><span style="font-size:4.4vmin;margin-top:1vmin">${frac(f[0], f[1])}</span>`, ok: f === right, wrong: `${cap(fracSaid(...f))} is ${bigger ? "smaller" : "bigger"}. Look at the orange parts.` })) };
       }

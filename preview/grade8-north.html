@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody and the Long Way Round</title>
-<link rel="stylesheet" href="shared/kit.css?v=50">
-<link rel="stylesheet" href="shared/inked.css?v=50">
-<link rel="stylesheet" href="shared/chapters.css?v=50">
+<link rel="stylesheet" href="shared/kit.css?v=51">
+<link rel="stylesheet" href="shared/inked.css?v=51">
+<link rel="stylesheet" href="shared/chapters.css?v=51">
 <style>
   /* Grade 8's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#9cc9e8; --sky2:#e8f0f4; --grass:#7fae8a; --grass2:#4f8a6a; --title-shadow:#2f5d7a; }
@@ -18,11 +18,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=50"></script>
-<script src="shared/story.js?v=50"></script>
-<script src="shared/newowl.js?v=50"></script>
-<script src="shared/inkart.js?v=50"></script>
-<script src="shared/chapters.js?v=50"></script>
+<script src="shared/kit.js?v=51"></script>
+<script src="shared/story.js?v=51"></script>
+<script src="shared/newowl.js?v=51"></script>
+<script src="shared/inkart.js?v=51"></script>
+<script src="shared/chapters.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -91,19 +91,19 @@ const SHOP = { title: "The outfitter", items: [
   { id: "sled", name: "A sled", cost: 30, art: () => thing(`<path d="M8 24 H52 L58 34 H10 Z" fill="#c89a5e"/><path d="M6 44 H54 Q64 44 64 34" fill="none" stroke-width="4"/><path d="M16 34 V44 M44 34 V44" fill="none"/>`) }] };
 </script>
 <!-- The seven chapters. Each file adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g8-ch1.js?v=50"></script>
-<script src="shared/g8-ch2.js?v=50"></script>
-<script src="shared/g8-ch3.js?v=50"></script>
-<script src="shared/g8-ch4.js?v=50"></script>
-<script src="shared/g8-ch5.js?v=50"></script>
-<script src="shared/g8-ch6.js?v=50"></script>
-<script src="shared/g8-ch7.js?v=50"></script>
+<script src="shared/g8-ch1.js?v=51"></script>
+<script src="shared/g8-ch2.js?v=51"></script>
+<script src="shared/g8-ch3.js?v=51"></script>
+<script src="shared/g8-ch4.js?v=51"></script>
+<script src="shared/g8-ch5.js?v=51"></script>
+<script src="shared/g8-ch6.js?v=51"></script>
+<script src="shared/g8-ch7.js?v=51"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How a voice should say the hard names (the guides came from Shane's review notes, November 2026, checked against the nations' own guides where I could; a speaker of each language should still hear them before recording).
 // The recordings live in audio/g8/s/. Chapter 4 (residential schools) is not recorded until its readers have read it.
-const SAY = [["tuh-kem-LOOPS", "tuh-kem-loops"], ["suh-WEP-muhc", "suh-wep-muhc"], ["k-too-NAH-ha", "ktoo nahha"], ["sin-AYKST", "sin-aykst"], ["STAW-low", "staw-low"], ["halk-uh-MAY-lem", "halk-uh-may-lem"], ["ing-kla-KAP-muh", "ing-kla-kapma"], ["MUS-kwee-um", "mus-kwee-um"], ["SLAY-wah-tuth", "slay-wah-tuth"], ["TRON-dek", "tron-dek"], ["HWITCH-in", "hwitchin"], ["TROH-chek", "troh-chek"], ["uh-KAAL", "akaal"], ["Tk'emlúps te Secwépemc", "Tuh-kem-loops tuh Suh-wep-muhc"], ["Secwépemc", "Suh-wep-muhc"], ["Ktunaxa", "Ktoo nahha"], ["Sinixt", "Sin-aykst"], ["Stó:lō", "Staw-low"], ["Halq'eméylem", "Halk-uh-may-lem"], ["Nlaka'pamux", "Ing-kla-kapma"], ["Musqueam", "Mus-kwee-um"], ["Tsleil-Waututh", "Slay-wah-tuth"], ["Tr'ondëk Hwëch'in", "Tron-dek Hwitchin"], ["Tr'ochëk", "Troh-chek"], ["sat sri akal", "sut sree akaal"], ["Sat sri akal", "Sut sree akaal"], ["Craigellachie", "Kray-gell-uh-kee"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kah-moo-teek"], ["Inuktitut", "Ih-nook-tih-toot"], ["Inuit", "Ih-noo-it"], ["Inuk", "Ih-nook"], ["Tlingit", "Klink-it"], ["Shaaw Tláa", "Shaw Tlah"], ["Káa Goox", "Kah Gokh"], ["Keish", "Kaysh"], ["Nia:wen", "Nyah-wen"]];
+const SAY = [["tuh-kem-LOOPS", "tuh-kem-loops"], ["suh-WEP-muhc", "suh-wep-muhc"], ["k-too-NAH-ha", "ktoo nahha"], ["sin-AYKST", "sin-aykst"], ["STAW-low", "staw-low"], ["halk-uh-MAY-lem", "halk-uh-may-lem"], ["ing-kla-KAP-muh", "ing-kla-kapma"], ["MUS-kwee-um", "mus-kwee-um"], ["SLAY-wah-tuth", "slay-wah-tuth"], ["TRON-dek", "tron-dek"], ["HWITCH-in", "hwitchin"], ["TROH-chek", "troh-chek"], ["uh-KAAL", "akaal"], ["Tk'emlúps te Secwépemc", "Tuh-kem-loops tuh Suh-wep-muhc"], ["Secwépemc", "Suh-wep-muhc"], ["Ktunaxa", "Ktoo nahha"], ["Sinixt", "Sin-aykst"], ["Stó:lō", "Staw-low"], ["Halq'eméylem", "Halk-uh-may-lem"], ["Nlaka'pamux", "Ing-kla-kapma"], ["Musqueam", "Mus-kwee-um"], ["Tsleil-Waututh", "Slay-wah-tuth"], ["Tr'ondëk Hwëch'in", "Tron-dek Hwitchin"], ["Tr'ochëk", "Troh-chek"], ["sat sri akal", "sut sree akaal"], ["Sat sri akal", "Sut sree akaal"], ["Craigellachie", "Kray-gell-uh-kee"], ["Nakurmiik", "Na-koor-meek"], ["nakurmiik", "na-koor-meek"], ["iglu", "ig-loo"], ["qulliq", "koo-lik"], ["qamutiik", "kamoo-teek"], ["Inuktitut", "Innook-tih-toot"], ["Inuit", "Innoo-it"], ["Inuk", "Innook"], ["Tlingit", "Klink-it"], ["Shaaw Tláa", "Shaw Tlah"], ["Káa Goox", "Kah Gokh"], ["Keish", "Kaysh"], ["Nia:wen", "Nyah-wen"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody and the Long Way Round", sub: "A Grade 8 story", saveKey: "grade8North.v1", medal: "g8",
   chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g8/s/", clockVoice: "../audio/g8/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t), coin: { name: "gold dust", icon: GOLD }, shop: SHOP,
   certificate: { title: "Across Canada with Dr. Somebody", line: "travelled from the Grand River to three oceans and home again, and finished the long way round." },

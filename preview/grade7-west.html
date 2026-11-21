@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dr. Somebody Heads West</title>
-<link rel="stylesheet" href="shared/kit.css?v=50">
-<link rel="stylesheet" href="shared/inked.css?v=50">
-<link rel="stylesheet" href="shared/chapters.css?v=50">
+<link rel="stylesheet" href="shared/kit.css?v=51">
+<link rel="stylesheet" href="shared/inked.css?v=51">
+<link rel="stylesheet" href="shared/chapters.css?v=51">
 <style>
   /* Grade 7's own colours. The storyboard look is in shared/chapters.css. */
   :root { --sky1:#a9daf0; --sky2:#f6edc8; --grass:#d9c56a; --grass2:#b9a24a; --title-shadow:#8a5a2b; }
@@ -17,11 +17,11 @@
 <body class="game">
 <div id="app"></div>
 
-<script src="shared/kit.js?v=50"></script>
-<script src="shared/story.js?v=50"></script>
-<script src="shared/newowl.js?v=50"></script>
-<script src="shared/inkart.js?v=50"></script>
-<script src="shared/chapters.js?v=50"></script>
+<script src="shared/kit.js?v=51"></script>
+<script src="shared/story.js?v=51"></script>
+<script src="shared/newowl.js?v=51"></script>
+<script src="shared/inkart.js?v=51"></script>
+<script src="shared/chapters.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -84,17 +84,17 @@ const SHOP = { title: "The trading post", items: [
   { id: "canoe", name: "A birchbark canoe", cost: 30, art: () => thing(`<path d="M4 18 Q10 30 22 30 H48 Q60 30 66 18 Q64 42 48 46 H22 Q6 42 4 18 Z" fill="#e8d2a0"/><path d="M9 26 Q16 34 24 34 H46 Q54 34 61 26" fill="none" stroke="#8a5a2b" stroke-width="2"/>`) }] };
 </script>
 <!-- The six chapters. Each file adds its pictures to ART, its questions to ASK, and its story to CHAPTERS. -->
-<script src="shared/g7-ch1.js?v=50"></script>
-<script src="shared/g7-ch2.js?v=50"></script>
-<script src="shared/g7-ch3.js?v=50"></script>
-<script src="shared/g7-ch4.js?v=50"></script>
-<script src="shared/g7-ch5.js?v=50"></script>
-<script src="shared/g7-ch6.js?v=50"></script>
+<script src="shared/g7-ch1.js?v=51"></script>
+<script src="shared/g7-ch2.js?v=51"></script>
+<script src="shared/g7-ch3.js?v=51"></script>
+<script src="shared/g7-ch4.js?v=51"></script>
+<script src="shared/g7-ch5.js?v=51"></script>
+<script src="shared/g7-ch6.js?v=51"></script>
 <script>
 "use strict";
 // ---------- start the game (the engine is shared/chapters.js) ----------
 // How some words are said aloud (the writing on screen is not changed). tools/story-voice-lines.py reads this same list.
-const SAY = [["ah-nish-ih-nah-bay-MOH-win", "anishinahbay-mowin"], ["ah-nish-ih-NAH-bay", "anish-in-ah-bay"], ["DYAH-koo-yoo", "dyah-koo-yoo"], ["MEE-chif", "mee-chif"], ["MEE-gwetch", "mee-gwetch"], ["SOH-toh", "soh-toh"], ["TAHN-shee", "tahn-shee"], ["may-TEE", "may-tee"], ["nah-KOH-dah", "nakohda"], ["nay-HEE-yuh-wuk", "nay-hee-yuh-wuk"], ["nee-tsee-TAH-pee", "neetsee tahpee"], ["miigwech", "mee-gwetch"], ["Miigwech", "Mee-gwetch"], ["dyakuyu", "dyah-koo-yoo"], ["Dyakuyu", "Dyah-koo-yoo"], ["Métis", "May-tee"], ["Anishinaabemowin", "Anishinahbay-mowin"], ["Anishinaabe", "Anish-in-ah-bay"], ["Nêhiyawak", "Nay-hee-yuh-wuk"], ["Niitsitapi", "Neetsee tahpee"], ["Saulteaux", "Soh-toh"], ["Tsuut'ina", "Soo-tih-nah"], ["taanshi", "tahn-shee"], ["Taanshi", "Tahn-shee"], ["Michif", "Mee-chif"], ["makak", "muh-kuk"], ["Batoche", "Buh-tosh"], ["Kaministiquia", "Kam-in-iss-tih-kwah"], ["Tyrrell", "Teer-ul"], ["Assiniboine", "Uh-sin-ih-boyn"], ["Nakoda", "Nakohda"]];
+const SAY = [["ah-nish-ih-nah-bay-MOH-win", "anishinahbay-mowin"], ["ah-nish-ih-NAH-bay", "anishi-nah-beh"], ["DYAH-koo-yoo", "dyah-koo-yoo"], ["MEE-chif", "mee-chif"], ["MEE-gwetch", "mee-gwetch"], ["SOH-toh", "soh-toh"], ["TAHN-shee", "tahn-shee"], ["may-TEE", "may-tee"], ["nah-KOH-dah", "nakohda"], ["nay-HEE-yuh-wuk", "nay-hee-yuh-wuk"], ["nee-tsee-TAH-pee", "neetsee tahpee"], ["miigwech", "mee-gwetch"], ["Miigwech", "Mee-gwetch"], ["dyakuyu", "dyah-koo-yoo"], ["Dyakuyu", "Dyah-koo-yoo"], ["Métis", "May-tee"], ["Anishinaabemowin", "Anishinahbay-mowin"], ["Anishinaabe", "Anishi-nah-beh"], ["Nêhiyawak", "Nay-hee-yuh-wuk"], ["Niitsitapi", "Neetsee tahpee"], ["Saulteaux", "Soh-toh"], ["Tsuut'ina", "Soo-tih-nah"], ["taanshi", "tahn-shee"], ["Taanshi", "Tahn-shee"], ["Michif", "Mee-chif"], ["makak", "muh-kuk"], ["Batoche", "Buh-tosh"], ["Kaministiquia", "Kam-in-iss-tih-kwah"], ["Tyrrell", "Teer-ul"], ["Assiniboine", "Uh-sin-ih-boyn"], ["Nakoda", "Nakohda"]];
 window.Chapters = ChapterGame({ title: "Dr. Somebody Heads West", sub: "A Grade 7 story", saveKey: "grade7West.v1", medal: "g7",
   chapters: CHAPTERS, ask: ASK, art: ART, wordsLabel: "My new words", voice: "../audio/g7/s/", clockVoice: "../audio/g7/clock/", speak: t => SAY.reduce((s, [a, b]) => s.split(a).join(b), t), coin: { name: "Made Beaver", icon: MB }, shop: SHOP,
   map: { art: westMap, stops: [[83, 62], [66, 54], [63, 76], [41, 72], [22, 58], [17, 34]] } });
