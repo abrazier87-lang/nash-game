@@ -268,7 +268,18 @@ function shareVoice(name) { try { const s = sharedSettings(); s.voiceName = name
 // A medal on the book shelf for finishing the story (kept separately for each child).
 function stamp(id) {
   try { const k = "storyShelf.stamps" + (PLAYER ? "." + PLAYER.id : ""), list = JSON.parse(localStorage.getItem(k) || "[]");
-    if (!list.includes(id)) { list.push(id); localStorage.setItem(k, JSON.stringify(list)); } } catch (e) {}
+    if (!list.includes(id)) { list.push(id); localStorage.setItem(k, JSON.stringify(list)); finished("story"); } } catch (e) {}
+}
+// Notes the day a lesson (a place in the valley) or the whole story is first finished, for the progress report
+// (the same record as "finish" and "storyDone" in shared/kit.js). what: "finished" with a lesson's id, or "story".
+function finished(what, lesson) {
+  try {
+    const key = "storyShelf.progress" + (PLAYER ? "." + PLAYER.id : ""), P = JSON.parse(localStorage.getItem(key) || "null") || { v: 1, games: {}, days: {} };
+    const g = P.games.pre || (P.games.pre = { title: "Pip's Lost Eggs", stations: {} });
+    const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    if (what === "story") { if (g.story) return; g.story = day; } else { const f = g.finished || (g.finished = {}); if (f[lesson]) return; f[lesson] = day; }
+    localStorage.setItem(key, JSON.stringify(P));
+  } catch (e) {}
 }
 // Notes each answered question for the grown-ups' progress report (the same record the other games keep, in shared/kit.js).
 function track(station, stationName, step, q, firstTry, hinted) { // hinted: a hint (or Pip's help) was used on this question
@@ -281,6 +292,8 @@ function track(station, stationName, step, q, firstTry, hinted) { // hinted: a h
     s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift();
     const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     s.last = day; P.days[day] = (P.days[day] || 0) + 1;
+    const strand = { colors: "LB", shapes: "ME", count: "MB", patterns: "MC", shadows: "ME", sizes: "ME", body: "TB", sounds: "TB" }[station]; // the subject and strand (the same codes as STRANDS in shared/kit.js), counted month by month
+    if (strand) { const M = P.months || (P.months = {}), m = M[day.slice(0, 7)] || (M[day.slice(0, 7)] = {}), c = m[strand] || (m[strand] = [0, 0]); c[0]++; if (firstTry) c[1]++; }
     if (!firstTry) {
       const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
       const label = plain(q.say) + (answer ? " → " + answer : "") + (hinted ? " · used a hint" : "");
@@ -850,7 +863,7 @@ function adjust(firstTry) {
   save();
 }
 function finishGame() {
-  const id = G.id; G = null;
+  const id = G.id; G = null; finished("finished", id); // a round was won here: the lesson is finished (for the progress report)
   if (S.found[id]) { // already rescued this egg: just celebrate
     sfx.party(); confetti(30);
     Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the valley once Pip has finished

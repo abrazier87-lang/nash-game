@@ -31,7 +31,7 @@ function ChapterGame(C) {
   // ---------- recorded lines ----------
   const spoken = t => { const s = String(t).replace(/<[^>]+>/g, ""); return C.speak ? C.speak(s) : s; };
   const clipOf = t => C.voice + Kit.clipName(spoken(t)) + ".mp3";
-  function speakLine(t, next) { if (!C.voice || !t) return; Kit.playClip(clipOf(t), ""); if (next) Kit.loadClip(clipOf(next)).catch(() => {}); } // "next" is fetched ahead so it starts without a pause
+  function speakLine(t, next, folder) { const f = folder || C.voice; if (!f || !t) return; const clip = x => f + Kit.clipName(spoken(x)) + ".mp3"; Kit.playClip(clip(t), ""); if (next) Kit.loadClip(clip(next)).catch(() => {}); } // "next" is fetched ahead so it starts without a pause
 
   // ---------- saved progress ----------
   let S = Kit.load(C.saveKey, () => ({ beat: CHAPTERS.map(() => 0), done: [], words: [] })); // beat[c]: how far chapter c has been opened
@@ -165,7 +165,9 @@ function ChapterGame(C) {
     drawScene();
   }
   function drawScene() { const sc = sceneAt(); $("options").innerHTML = ""; $("nextRow").style.display = ""; $("panel").innerHTML = ART[sc.art](); animate($("panel"), "pop"); drawLine(); learn(sc.word); }
-  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${sc.who}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1]); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
+  // Somebody else's words (a scene with who: "...") are read aloud by the balloon's clock, when the page gives clockVoice (a folder of recordings). who: "The clock" is the clock speaking for itself.
+  const whoLabel = w => w === "The clock" || !C.clockVoice ? w : `${w}, read by the clock`;
+  function drawLine() { const sc = sceneAt(); $("caption").innerHTML = `<div>${sc.who ? `<span class="who">${whoLabel(sc.who)}</span>` : ""}${sc.say[at.line]}</div>`; fitCaption(); if (!sc.who) speakLine(sc.say[at.line], sc.say[at.line + 1]); else if (C.clockVoice) speakLine(sc.say[at.line], sc.say[at.line + 1], C.clockVoice); else Kit.hush(); $("backBtn").style.visibility = at.b === 0 && at.line === 0 && !beatAt().pick ? "hidden" : ""; }
   function fitCaption() { // a long line gets slightly smaller writing, so it never spills out of its box
     const cap = $("caption"); cap.style.fontSize = ""; const base = parseFloat(getComputedStyle(cap).fontSize);
     for (let i = 1; i <= 6 && cap.scrollHeight > cap.clientHeight + 1; i++) cap.style.fontSize = (base * (1 - .06 * i)).toFixed(2) + "px";
@@ -179,7 +181,7 @@ function ChapterGame(C) {
   $("nextBtn").addEventListener("click", () => { if (!at) return; sfx.tap(); const beats = CHAPTERS[at.c].beats;
     if (at.line < sceneAt().say.length - 1) { at.line++; drawLine(); return; }
     if (at.b < beats.length - 1) return openBeat(at.c, at.b + 1);
-    const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } const quietOne = CHAPTERS[at.c].quiet; Kit.hush(); if (!quietOne) confetti(80); // the chapter is finished
+    const first = !S.done.includes(at.c); if (first) { S.done.push(at.c); save(); } Kit.finish(C.medal, "ch" + (at.c + 1)); /* the chapter is a finished lesson (for the progress report) */ const quietOne = CHAPTERS[at.c].quiet; Kit.hush(); if (!quietOne) confetti(80); // the chapter is finished
     if (CHAPTERS.every((c, i) => !c.beats || S.done.includes(i)) && CHAPTERS.every(c => c.beats)) { const had = Kit.stamps().includes(C.medal); Kit.stamp(C.medal); confetti(120); if (had && !quietOne && !Kit.music("chapter-complete")) sfx.party(); } // every chapter done: the medal goes on the book shelf (a new medal plays its own tune)
     else if (!quietOne && !Kit.music("chapter-complete")) sfx.party();
     showMap(); if (C.certificate && first && allDone()) showCert(); });
@@ -221,7 +223,10 @@ function ChapterGame(C) {
     const q = G.q, g = G;
     if (ch.ok) {
       G.busy = true; sfx.yes(); el.classList.add("right"); (G.cards || [...$("choices").children]).forEach(b => { if (b !== el) b.classList.add("dim"); });
-      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1); $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
+      G.stars++; $("stars").children[G.stars - 1].classList.add("got"); if (!G.quiet) earn(1);
+      const strand = Kit.askStrand(C.medal, "ch" + (at.c + 1), G.beat.ask); // which part of mathematics this challenge practises
+      Kit.track(C.medal, C.title, "ch" + (at.c + 1) + "." + strand, CHAPTERS[at.c].title + " · " + Kit.STRANDS[strand][1], 0, { say: q.text, choices: q.choices }, G.wrongs === 0, false); // for the progress report (a chapter has no difficulty steps, so the step is 0)
+      $("tip").className = "tip"; $("tip").textContent = "Yes! " + q.why;
       await wait(2600); if (G !== g) return;
       if (G.stars < G.need) return nextAsk();
       if (!G.quiet) { if (G.perfect) { $("stars").classList.add("perfect"); sfx.sparkle(); cheer(C.coin ? `Perfect! +2 ${C.coin.name}` : "Perfect!"); earn(2); } const tune = Kit.music("well-done"); if (!tune) sfx.party(); confetti(40); await wait(tune ? 2100 : 0); } // with music on, the three-second jingle plays right to its end before the story moves on

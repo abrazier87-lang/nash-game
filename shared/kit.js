@@ -25,13 +25,21 @@ const Kit = (() => {
     return players().find(p => p.id === id) || null;
   }
   function setCurrent(id) { try { localStorage.setItem("storyShelf.current", id); } catch (e) {} }
-  function addPlayer(name) {
+  // age (optional): how old the child is. What is kept is the YEAR THEY WERE BORN (worked out from the age), so the
+  // suggested book moves up by itself each year. It stays on this device with the names, and travels with a backup.
+  function addPlayer(name, age) {
     name = String(name || "").trim().slice(0, 20);
     if (!name) return null;
-    const list = players(), n = get("storyShelf.nextId", 1), p = { id: "p" + n, name };
+    const list = players(), n = get("storyShelf.nextId", 1), p = { id: "p" + n, name }; if (age > 0) p.born = new Date().getFullYear() - Math.round(age);
     list.push(p); put("storyShelf.players", list); put("storyShelf.nextId", n + 1); setCurrent(p.id);
     return p;
   }
+  function setAge(id, age) { // a grown-up adds or changes a child's age later (no age: the suggestion goes away)
+    const list = players(), p = list.find(x => x.id === id); if (!p) return;
+    if (age > 0) p.born = new Date().getFullYear() - Math.round(age); else delete p.born;
+    put("storyShelf.players", list);
+  }
+  const ageOf = p => p && p.born ? new Date().getFullYear() - p.born : null; // about how old (the birthday itself is not known)
   function removePlayer(id) {
     const list = players().filter(p => p.id !== id); put("storyShelf.players", list);
     if (!list.find(p => p.id === (currentPlayer() || {}).id)) setCurrent(list[0] ? list[0].id : "");
@@ -48,7 +56,7 @@ const Kit = (() => {
   // ---------- medals (a child earns one the first time they finish a game's story) ----------
   const stampKey = () => { const p = currentPlayer(); return "storyShelf.stamps" + (p ? "." + p.id : ""); };
   const stamps = () => get(stampKey(), []);
-  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); music("new-medal"); } } // a new medal gets its own little tune
+  function stamp(id) { const list = stamps(); if (!list.includes(id)) { list.push(id); put(stampKey(), list); storyDone(id); music("new-medal"); } } // a new medal gets its own little tune (and the day goes in the progress report)
 
   // ---------- progress, for the grown-ups' progress report (progress.html) ----------
   // Every answered question is noted for the child who is playing: the game, the station, the difficulty step,
@@ -65,6 +73,8 @@ const Kit = (() => {
       s.recent.push([step, firstTry ? 1 : 0]); if (s.recent.length > 20) s.recent.shift(); // the last 20 answers
       const d = new Date(), day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
       s.last = day; P.days[day] = (P.days[day] || 0) + 1;
+      const strand = strandOf(game, station); // month by month, for each strand: [questions answered, right first time]
+      if (strand) { const M = P.months || (P.months = {}), m = M[day.slice(0, 7)] || (M[day.slice(0, 7)] = {}), c = m[strand] || (m[strand] = [0, 0]); c[0]++; if (firstTry) c[1]++; }
       if (!firstTry) {
         const right = q.choices && q.choices.find(c => c.ok), answer = right ? plain(right.html) || right.name || "" : "";
         const full = plain(q.help || (q.read !== undefined && q.read ? q.read : q.say)), asked = full.length > 110 ? full.slice(0, 107).replace(/\s+\S*$/, "") + "…" : full;
@@ -75,6 +85,115 @@ const Kit = (() => {
       put(progressKey(), P);
     } catch (e) {}
   }
+
+  // ---------- finished lessons (for the progress report, and one day for a hidden graduation scene) ----------
+  // LESSONS lists every lesson on the shelf, in shelf order. A "lesson" is one place or station (Preschool to Grade 4)
+  // or one chapter (Grades 5 to 8). WHEN YOU ADD A STATION OR A CHAPTER TO A GAME, ADD IT HERE TOO: this list is how the
+  // report knows what is still left to do in a book the child has not even opened yet.
+  // "save" is the name the game saves under (used to recognise lessons finished before this record existed).
+  // STRANDS: the school subject and strand each lesson belongs to, named as the Ontario curriculum names them
+  // (Mathematics 2020, Language 2023, Science and Technology 2022, Social Studies / History / Geography 2023).
+  // The games are close to the curriculum, not exact: where a lesson did not fit one strand cleanly, the nearest was picked.
+  // The order here is the order the progress report shows them in.
+  const STRANDS = {
+    LB: ["Language", "Foundations of Language"], LC: ["Language", "Comprehension: Understanding and Responding to Texts"],
+    MB: ["Mathematics", "Number"], MC: ["Mathematics", "Algebra"], MD: ["Mathematics", "Data"], ME: ["Mathematics", "Spatial Sense"], MF: ["Mathematics", "Financial Literacy"],
+    TB: ["Science and Technology", "Life Systems"], TE: ["Science and Technology", "Earth and Space Systems"],
+    SA: ["Social Studies", "Heritage and Identity"],
+    H7B: ["History", "Canada, 1800–1850: Conflict and Challenges"], H8A: ["History", "Creating Canada, 1850–1890"], H8B: ["History", "Canada, 1890–1914: A Changing Society"],
+    G7B: ["Geography", "Natural Resources Around the World: Use and Sustainability"]
+  };
+  // A lesson is [id, name, strand] for a place or station, and [id, name, the story's strand, { challenge: its strand }] for a chapter
+  // (a chapter's story is social studies, history, geography or science; its challenges are mathematics).
+  const chapters = list => list.map(([name, strand, asks], i) => ["ch" + (i + 1), name, strand, asks]);
+  // Books marked soon: true are on the preview copy only, for now: the real shelf does not have them, so there they are left out
+  // of every count (and of "finished everything"). WHEN A BOOK JOINS THE REAL SHELF, TAKE ITS soon: true AWAY.
+  const onPreview = /\/preview\//.test(location.pathname) || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  const LESSONS = [
+    { id: "pre", grade: "Preschool", title: "Pip's Lost Eggs", save: "pipsLostEggs.v1", lessons: [["colors", "Berry Bush", "LB"], ["shapes", "Shape Rocks", "ME"], ["count", "Egg Count", "MB"], ["patterns", "Pattern Path", "MC"], ["shadows", "Shadow Cave", "ME"], ["sizes", "Big and Small", "ME"], ["body", "Pip's Body", "TB"], ["sounds", "Animal Sounds", "TB"]] },
+    { id: "k", grade: "Kindergarten", title: "Dot's Busy Train", save: "dotsBusyTrain.v1", lessons: [["letters", "Letter Station", "LB"], ["sounds", "Sound Station", "LB"], ["rhymes", "Rhyme Station", "LB"], ["words", "Word Station", "LB"], ["count", "Counting Station", "MB"], ["moreless", "More or Less", "MB"], ["order", "What's Next?", "MB"], ["adding", "Adding Station", "MB"]] },
+    { id: "g1", grade: "Grade 1", title: "Dr. Somebody's Space Balloon", save: "grade1Space.v1", lessons: [["read", "Word World", "LB"], ["spell", "Spelling Star", "LB"], ["sentence", "Sentence Station", "LC"], ["plus", "Plus Planet", "MB"], ["minus", "Minus Moon", "MB"], ["tens", "Tens Tower", "MB"], ["clock", "Calendar Comet", "ME"], ["skip", "Skip-Count Rings", "MB"]] },
+    { id: "g2", grade: "Grade 2", title: "Dr. Somebody in Ancient Egypt", save: "grade2Egypt.v1", lessons: [["add", "Pyramid Sums", "MB"], ["sub", "Nile Take-Away", "MB"], ["tokens", "Market Coins", "MF"], ["time", "Sundial Time", "ME"], ["words", "Hieroglyph Words", "LB"], ["scribe", "Scribe School", "LB"], ["scroll", "Explorer's Scroll", "LC"], ["rows", "Stone Rows", "MB"]] },
+    { id: "g3", grade: "Grade 3", title: "Dr. Somebody in Ancient China", save: "grade3China.v1", lessons: [["times", "Great Wall Times", "MB"], ["share", "Silk Road Sharing", "MB"], ["fractions", "Dumpling Fractions", "MB"], ["abacus", "Abacus Numbers", "MB"], ["money", "Coin Counting", "MF"], ["graphs", "Market Graphs", "MD"], ["patterns", "Silk Patterns", "MC"], ["garden", "Palace Gardens", "ME"], ["problems", "Problem Bridge", "MB"], ["words", "Lantern Words", "LB"], ["grammar", "Scholar's Grammar", "LB"], ["scroll", "Explorer's Scroll", "LC"]] },
+    { id: "g4", grade: "Grade 4", title: "Dr. Somebody in Ancient Rome", save: "grade4Rome.v1", lessons: [["numerals", "Roman Numerals", "MB"], ["multiply", "Legion Lines", "MB"], ["divide", "Aqueduct Sharing", "MB"], ["fractions", "Mosaic Fractions", "MB"], ["decimals", "Market Decimals", "MB"], ["shapes", "Architect's Angles", "ME"], ["measure", "Roman Roads", "ME"], ["camp", "Legion Camp", "ME"], ["formations", "Legion Formations", "MC"], ["data", "Senate Numbers", "MD"], ["problems", "Forum Problems", "MB"], ["market", "Roman Market", "MF"], ["roots", "Latin Words", "LB"], ["grammar", "Orator's Grammar", "LB"], ["scroll", "Explorer's Scroll", "LC"]] },
+    { id: "g5", grade: "Grade 5", title: "Dr. Somebody Comes Home", save: "grade5Canada.v1", lessons: chapters([
+      ["The People of the Longhouse", "SA", { longhouse: "ME", families: "MB", sisters: "MB", years: "MB" }], ["The Canoe Routes", "SA", { route: "MB", load: "MB", speed: "MB", rice: "MB" }],
+      ["Following the Seasons", "SA", { geese: "MD", calendar: "ME", snow: "ME", daylight: "MB" }], ["The Land of Ice and Stars", "SA", { cold: "MB", blocks: "MC", sled: "MB", stars: "ME" }],
+      ["Home Again", "SA", { journey: "MB", river: "ME", dates: "MB", home: "MB" }]]) },
+    { id: "g6", soon: true, grade: "Grade 6", title: "Dr. Somebody Goes East", save: "grade6East.v1", lessons: chapters([
+      ["The City on the Cliff", "SA", { crossing: "MB", walls: "MB", trade: "MB", climb: "MB" }], ["The Long Farms", "SA", { lf_ribbon: "ME", lf_slant: "ME", lf_sap: "MB", lf_share: "MB" }],
+      ["Holding Back the Sea", "SA", { ac_dyke: "MB", ac_gauge: "MB", ac_harvest: "MD", ac_depth: "MB" }], ["The People of the Dawn", "SA", { mk_turns: "ME", mk_triangles: "ME", mk_beads: "MC", mk_symmetry: "ME" }],
+      ["The Harbour of Arrivals", "SA", { hx_numbers: "MB", hx_clock: "ME", hx_tally: "MD", hx_fares: "MF" }], ["The Edge of the Map", "SA", { nl_zones: "ME", nl_berg: "MB", nl_crates: "ME", nl_review: "MB" }]]) },
+    { id: "g7", soon: true, grade: "Grade 7", title: "Dr. Somebody Heads West", save: "grade7West.v1", lessons: chapters([
+      ["Where the Canoes Met", "H7B", { fw_pace: "MB", fw_load: "MB", fw_swap: "MC", fw_last: "MB" }], ["The Forks", "H7B", { fk_river: "MB", fk_pelts: "MF", fk_puzzle: "MC", fk_last: "MF" }],
+      ["The People of the Red River", "H7B", { rr_wheel: "ME", rr_area: "ME", rr_pemmican: "MB", rr_last: "ME" }], ["The Sea of Grass", "H7B", { sg_big: "MB", sg_share: "MB", sg_decline: "MB", sg_last: "MB" }],
+      ["The Land of Giants", "TE", { bl_big: "MB", bl_scale: "MB", bl_grid: "ME", bl_last: "MC" }], ["Wheat and Sky", "G7B", { ws_homestead: "ME", ws_bins: "ME", ws_weather: "MD", ws_last: "MB" }]]) },
+    { id: "g8", soon: true, grade: "Grade 8", title: "Dr. Somebody and the Long Way Round", save: "grade8North.v1", lessons: chapters([
+      ["The Last Spike", "H8A", { ls_climb: "MC", ls_hill: "ME", ls_pay: "MF", ls_last: "MB" }], ["The River of Gold", "H8A", { rg_graph: "MC", rg_big: "MB", rg_case: "MF", rg_last: "MB" }],
+      ["The Harbour and the Cedar", "H8B", { hc_solid: "ME", hc_ratio: "MB", hc_water: "MB", hc_last: "MB" }], ["Every Child Matters", "H8B", {}],
+      ["The Golden Stairs", "H8B", { gs_trips: "MC", gs_dust: "MF", gs_case: "MB", gs_last: "MB" }], ["The Top of the World", "TE", { tw_temps: "MB", tw_trend: "MD", tw_case: "MC", tw_last: "MC" }],
+      ["Home", "H8B", { hm_friends: "MB", hm_last: "MB" }]]) }
+  ].filter(L => onPreview || !L.soon);
+  // Which strand an answer belongs to. station is a station's id ("times"), or a chapter's id with its challenge's strand ("ch2.ME").
+  // (An answer saved for a whole chapter, as version 38 did, counts as Mathematics: Number, the commonest kind of challenge.)
+  function strandOf(game, station) {
+    const [id, code] = String(station).split("."), L = LESSONS.find(x => x.id === game), l = L && L.lessons.find(x => x[0] === id);
+    return code && STRANDS[code] ? code : !l ? null : l[3] ? "MB" : l[2];
+  }
+  const askStrand = (game, lesson, ask) => { const L = LESSONS.find(x => x.id === game), l = L && L.lessons.find(x => x[0] === lesson); return (l && l[3] && l[3][ask]) || "MB"; };
+  // Every strand a lesson touches: its own, plus (for a chapter) the strands of its challenges.
+  const lessonStrands = l => [...new Set([l[2]].concat(Object.values(l[3] || {})))];
+  const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  function gameRecord(P, game) { const L = LESSONS.find(x => x.id === game); return P.games[game] || (P.games[game] = { title: L ? L.title : game, stations: {} }); }
+  // A game calls finish(game, lesson) each time a child finishes a lesson: the first time, the day is written down
+  // (in the same record as the answers, so it is kept per child and travels with a backup).
+  function finish(game, lesson) {
+    try {
+      const P = get(progressKey(), null) || { v: 1, games: {}, days: {} }, g = gameRecord(P, game), f = g.finished || (g.finished = {});
+      if (!f[lesson]) { f[lesson] = today(); put(progressKey(), P); }
+    } catch (e) {}
+  }
+  function storyDone(game) { // the whole story was finished (the medal): the first time, the day is written down
+    try { const P = get(progressKey(), null) || { v: 1, games: {}, days: {} }, g = gameRecord(P, game); if (!g.story) { g.story = today(); put(progressKey(), P); } } catch (e) {}
+  }
+  // What a child has finished and what is left. childId: a child's id (null for "no name picked"); leave it out for whoever is playing.
+  // Lessons finished before this record existed have no day; they are recognised from the game's own save where it shows them.
+  // Hands back { games: [{ id, grade, title, lessons: [{ id, name, done, date }], done, total, story, storyDate }],
+  //              done, total (lessons), stories, everything (true or false), missing: [{ game, grade, title, lesson, name }] }
+  function finished(childId) {
+    if (childId === undefined) { const p = currentPlayer(); childId = p ? p.id : null; }
+    const end = childId ? "." + childId : "", P = get("storyShelf.progress" + end, null) || {}, medals = get("storyShelf.stamps" + end, []), missing = [];
+    const games = LESSONS.map(L => {
+      const rec = (P.games || {})[L.id] || {}, dated = rec.finished || {};
+      const S = get(L.save + (L.id === "pre" && childId === "p1" ? "" : end), null) || {}; // (Pip's game keeps the first child's save under the plain name)
+      const old = [S.found, S.aboard, S.medals].flatMap(o => Object.keys(o || {})).concat((Array.isArray(S.done) ? S.done : []).map(i => "ch" + (i + 1)));
+      const lessons = L.lessons.map(([id, name]) => ({ id, name, done: !!dated[id] || old.includes(id), date: dated[id] || null }));
+      const story = !!rec.story || (Array.isArray(medals) && medals.includes(L.id));
+      lessons.forEach(l => { if (!l.done) missing.push({ game: L.id, grade: L.grade, title: L.title, lesson: l.id, name: l.name }); });
+      if (!story) missing.push({ game: L.id, grade: L.grade, title: L.title, lesson: null, name: "Finish the story" });
+      return { id: L.id, grade: L.grade, title: L.title, lessons, done: lessons.filter(l => l.done).length, total: lessons.length, story, storyDate: rec.story || null };
+    });
+    return { games, done: games.reduce((a, g) => a + g.done, 0), total: games.reduce((a, g) => a + g.total, 0), stories: games.filter(g => g.story).length, everything: !missing.length, missing };
+  }
+  // ---------- where to start (a suggestion from the child's age, never a lock) ----------
+  // Ontario's usual ages: Kindergarten is for 4- and 5-year-olds, and Grade 1 starts in the September of the year a child
+  // turns 6 (ontario.ca/page/kindergarten); each grade after that is one year on. A school year runs from September.
+  // Younger children get the Preschool book; children past Grade 8 get the last book on the shelf.
+  // startBook(childId) hands back null when no age was given, or { id, grade, title, age, earlier }:
+  //   the suggested book, about how old the child is, and "earlier": the books before it that are not finished yet
+  //   (to gently suggest going back), each as { id, grade, title, done, total, story }.
+  function startBook(childId) {
+    const p = childId === undefined ? currentPlayer() : players().find(x => x.id === childId);
+    if (!p || !p.born) return null;
+    const d = new Date(), turns = (d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1) - p.born; // the age they reach in the year this school year began
+    const want = turns <= 3 ? "pre" : turns <= 5 ? "k" : "g" + Math.min(turns - 5, 8);
+    let at = LESSONS.findIndex(L => L.id === want); if (at < 0) at = LESSONS.length - 1; // that book is not on this shelf yet: the last one that is
+    const L = LESSONS[at], F = finished(p.id);
+    return { id: L.id, grade: L.grade, title: L.title, age: ageOf(p), earlier: F.games.slice(0, at).filter(g => !g.story || g.done < g.total) };
+  }
+  // THE ONE QUESTION for a graduation scene: has this child finished every lesson and every story, from Preschool up?
+  // Kit.finishedEverything() answers for whoever is playing (or give a child's id): { yes: true or false, missing: [what is still to do] }.
+  function finishedEverything(childId) { const f = finished(childId); return { yes: f.everything, missing: f.missing, done: f.done, total: f.total }; }
 
   // ---------- backup: everything the Story Shelf keeps on this device, as one code ----------
   // Progress lives only on the device (and an iPad keeps a separate store for each home-screen icon), so a grown-up can
@@ -335,7 +454,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "37"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "51"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, setAge, ageOf, startBook, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

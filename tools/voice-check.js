@@ -127,8 +127,8 @@ window.voiceCheckLive = async function (o) {
        // In Dot's game any animal can be waiting at any station, and the lines name that animal's snack: try every animal.
        for (const rider of (dot ? PASSENGERS : [null])) {
         ctx = id + " step " + step + (rider ? " (" + rider.name + ")" : ""); R.at = ctx; S.skill[id] = step;
-        G = dot ? { id, p: rider, need: 1e9, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0 }
-                : { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "", hints: 1, count: 0, guided: 0 };
+        G = dot ? { id, p: rider, need: 1e9, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, last: "", hints: 1, count: 0, guided: 0, seen: new Set(), run: 0, perfect: true, asked: false }
+                : { id, stars: 0, streak: 0, rough: 0, q: null, busy: false, first: true, lastSay: "", hints: 1, count: 0, guided: 0, seen: new Set(), run: 0, perfect: true, asked: false } // (the same parts the games give a round);
         if (g.lesson) for (let i = 0; i < 20; i++) await tryIt("lesson", async () => { const P = dot ? helper(null, () => true, true) : helper(() => true); await g.lesson(P, step); await P.say("Now you try!"); });
         await tryIt("try again", () => talk("Let's try this one again!"));
         for (let i = 0; i < rounds; i++) {

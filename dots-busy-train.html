@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=37">
+<link rel="stylesheet" href="shared/kit.css?v=51">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=37"></script>
+<script src="shared/kit.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -164,10 +164,10 @@ const CAR_COLORS = ["#4d9de0", "#58b368", "#ffd23f", "#a06cd5"];
 // The passengers. Each one waits at a station with a wish (their personality) and a snack, which the counting
 // games use. The child chooses whom to help by choosing a station, and meets them again at the fair.
 const PASSENGERS = [
-  { name: "lion", pic: "🦁", snack: ["orange", "oranges", "🍊"], wish: "The lion wants the very front seat, to see everything!", fair: "Roar! I want to ride the big wheel again!" },
+  { name: "lion", pic: "🦁", snack: ["orange", "oranges", "🍊"], wish: "The lion wants the very front seat, to see everything!", fair: "Roar! I want to ride the Ferris wheel again!" },
   { name: "elephant", pic: "🐘", snack: ["peanut", "peanuts", "🥜"], wish: "The elephant needs a seat with lots and lots of room!", fair: "I sprayed water on the bumper cars. Splash!" },
-  { name: "monkey", pic: "🐵", snack: ["banana", "bananas", "🍌"], wish: "The monkey wants to swing from the top of the carriage!", fair: "Ooh ooh! I climbed to the top of the slide!" },
-  { name: "panda", pic: "🐼", snack: ["bamboo shoot", "bamboo shoots", "🎋"], wish: "The panda wants a cosy seat for a nap.", fair: "I had a little nap on the merry-go-round." },
+  { name: "monkey", pic: "🐵", snack: ["banana", "bananas", "🍌"], wish: "The monkey wants to swing from the top of the train car!", fair: "Ooh ooh! I climbed to the top of the slide!" },
+  { name: "panda", pic: "🐼", snack: ["bamboo shoot", "bamboo shoots", "🎋"], wish: "The panda wants a cozy seat for a nap.", fair: "I had a little nap on the merry-go-round." },
   { name: "penguin", pic: "🐧", snack: ["fish", "fish", "🐟"], wish: "The penguin wants a cool, breezy seat by the window.", fair: "Brrr! The ice cream stand is my favourite!" },
   { name: "giraffe", pic: "🦒", snack: ["pear", "pears", "🍐"], wish: "The giraffe needs a seat with a very tall roof!", fair: "I could see the whole fair from up here!" },
   { name: "koala", pic: "🐨", snack: ["leaf", "leaves", "🍃"], wish: "The koala wants something soft to cuddle.", fair: "I won a fluffy teddy bear to cuddle!" },
@@ -671,7 +671,7 @@ function adjust(firstTry) {
   save();
 }
 function finishGame() {
-  const id = G.id; G = null;
+  const id = G.id; G = null; Kit.finish("k", id); // a round was won here: the lesson is finished (for the progress report)
   if (S.aboard[id]) { // this station's passenger is already on the train: just celebrate
     sfx.party(); confetti(30);
     Promise.all([speak("replay", "Great job! You did it again!"), wait(2600)]).then(() => { if (current === "game") showMap(); }); // back to the stations once Dot has finished
@@ -701,7 +701,7 @@ const ANIMAL_FACTS = { lion: "Fun fact! A lion's roar can be heard from far, far
   koala: "Fun fact! Koalas sleep for most of the day and night!", tiger: "Fun fact! Every tiger has its very own pattern of stripes!",
   zebra: "Fun fact! No two zebras have the same stripes!", rabbit: "Fun fact! Rabbits can hop very fast, and zig-zag to get away!",
   fox: "Fun fact! Foxes curl their big, bushy tails around them to keep warm!", bear: "Fun fact! Many bears sleep through the winter in a cozy den!",
-  frog: "Fun fact! Frogs start life as tadpoles, swimming in the water!", pig: "Fun fact! Pigs roll in the mud to stay cool!" };
+  frog: "Fun fact! Frogs hatch from eggs as tadpoles, swimming in the water!", pig: "Fun fact! Pigs roll in the mud to stay cool!" };
 let SC = null;
 async function playScene(stops, then) {
   const me = SC = { then, done: false }, alive = () => SC === me && !me.done;

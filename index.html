@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=37">
+<link rel="stylesheet" href="shared/kit.css?v=51">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -19,19 +19,38 @@
   .chip { background:#fff; border-radius:999px; padding:10px 20px; font-weight:bold; font-size:20px; box-shadow:0 4px 0 rgba(0,0,0,.15); border:3px solid #fff; }
   .chip.on { background:#ffd84d; border-color:#ff8a3d; }
   .chip.add { background:#eaffd9; }
-  .shelf { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:26px 18px; }
-  .book { position:relative; height:250px; border-radius:8px 16px 16px 8px; background:var(--c,#58b368); color:#fff; text-align:center; padding:14px 12px 12px 26px;
-    display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-shadow:0 8px 0 rgba(0,0,0,.2), 0 20px 0 -6px #c48a4a, 0 26px 0 -6px #9c6830; text-decoration:none; }
+  /* --bh is how tall a book is and --rg the space between rows: the plank is painted just under every row of books, whatever the number of books in a row */
+  .shelf { --bh:250px; --rg:32px; display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:var(--rg) 18px; padding:0 14px var(--rg); margin:0 -14px; border-radius:6px;
+    background:repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--bh) + 8px), #c48a4a calc(var(--bh) + 8px), #c48a4a calc(var(--bh) + 17px), #9c6830 calc(var(--bh) + 17px), #9c6830 calc(var(--bh) + 22px), transparent calc(var(--bh) + 22px), transparent calc(var(--bh) + var(--rg))); }
+  .book { position:relative; height:var(--bh); border-radius:8px 16px 16px 8px; background:var(--c,#58b368); color:#fff; text-align:center; padding:14px 12px 12px 26px;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-shadow:0 5px 0 #f7efdc, 0 8px 0 rgba(0,0,0,.28); text-decoration:none; }
   .book::before { content:""; position:absolute; left:0; top:0; bottom:0; width:16px; background:rgba(0,0,0,.18); border-radius:8px 0 0 8px; }
+  .book { transition:transform .15s ease; }
+  @media (hover:hover) { .book:hover { transform:translateY(-3px); } }
   .book:active { transform:translateY(4px); }
   .book .grade { font-size:19px; font-weight:bold; background:rgba(255,255,255,.25); border-radius:999px; padding:4px 14px; }
   .book .pic { font-size:74px; line-height:1.1; }
+  .book.little .pic { font-size:104px; line-height:1.05; } /* Preschool and Kindergarten: a child who cannot read finds the book by its picture */
   .book .name { font-size:21px; font-weight:bold; line-height:1.15; }
+  .book .name small { display:block; font-size:.66em; font-weight:normal; opacity:.92; margin-bottom:2px; }
   .book .ages { font-size:14px; opacity:.9; }
   .book .medal { position:absolute; top:-14px; right:-10px; font-size:44px; line-height:1; }
   .book.soon { background:#cbbfae; cursor:default; }
+  @media (max-width:480px) {
+    .wrap { padding:14px 12px 50px; }
+    .shelf { --bh:206px; --rg:30px; grid-template-columns:1fr 1fr; gap:var(--rg) 12px; padding:0 8px var(--rg); margin:0 -8px; }
+    .book { padding:10px 8px 10px 20px; }
+    .book::before { width:12px; }
+    .book .grade { font-size:15px; padding:3px 10px; }
+    .book .pic { font-size:56px; }
+    .book.little .pic { font-size:80px; }
+    .book .name { font-size:16px; }
+    .book .name small { font-size:11.5px; }
+    .book .ages { font-size:12px; }
+    .book .ribbon { font-size:13px; padding:4px 10px; }
+  }
   .book.soon .pic { opacity:.6; }
-  .gear { position:fixed; top:10px; right:10px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.75); font-size:24px; opacity:.6; z-index:5; }
+  .gear { position:fixed; top:10px; right:10px; width:52px; height:52px; border-radius:50%; background:#fff; font-size:24px; opacity:.9; box-shadow:0 3px 0 rgba(0,0,0,.15); z-index:5; }
   /* a friendly pop-up card: adding a name, and "coming soon" for the books that are not written yet */
   #pop { position:fixed; inset:0; background:rgba(43,45,66,.55); display:none; align-items:center; justify-content:center; z-index:30; padding:16px; }
   #pop.on { display:flex; }
@@ -46,6 +65,17 @@
   #pop .row button.main { background:#58b368; color:#fff; }
   #pop .row button:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
   .book.soon { cursor:pointer; }
+  /* the age buttons (adding a name, and changing an age later) */
+  #pop .ageLabel { margin:16px 0 8px; font-size:18px; font-weight:bold; color:#8a4f1d; }
+  #pop .ages { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  #pop .ages button { min-width:46px; padding:9px 8px; font-size:20px; font-weight:bold; border-radius:14px; background:#fff; border:3px solid #fff; box-shadow:0 3px 0 rgba(0,0,0,.15); color:inherit; }
+  #pop .ages button.on { background:#ffd84d; border-color:#ff8a3d; }
+  #pop .tiny { margin:12px 0 0; font-size:14px; color:#7a5520; }
+  #pop .row.three { gap:8px; } #pop .row.three button { font-size:18px; padding:12px 6px; }
+  /* "Start here": a suggestion only, nothing is locked */
+  #startLine { text-align:center; color:#8a4f1d; font-size:18px; line-height:1.4; margin:-8px auto 20px; max-width:640px; }
+  .book.start { outline:5px solid #ffd84d; outline-offset:3px; box-shadow:0 0 22px 6px rgba(255,216,77,.8), 0 5px 0 #f7efdc, 0 8px 0 rgba(0,0,0,.28); }
+  .book .ribbon { position:absolute; top:-14px; left:-8px; background:#ffd84d; color:#7a4a00; font-size:16px; font-weight:bold; padding:5px 14px; border-radius:999px; box-shadow:0 3px 0 #e0a800; z-index:1; }
   .gear.holding { background:#ffd84d; opacity:1; transition:background 1.5s; }
 </style>
 </head>
@@ -53,6 +83,7 @@
 <div class="wrap">
   <h1 class="shelfTitle">Story Shelf</h1>
   <div class="who" id="who"></div>
+  <p id="startLine"></p>
   <div class="shelf" id="shelf"></div>
   <p id="backupNudge" style="text-align:center;margin:36px 0 0;font-size:15px;color:#7a5520"></p>
   <p id="version" style="text-align:center;margin:12px 0 0;font-size:13px;color:#a08a6c"></p>
@@ -61,24 +92,26 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=37"></script>
+<script src="shared/kit.js?v=51"></script>
 <script>
 "use strict";
 /* =====================================================================
    THE STORY SHELF - the front page. Pick who is playing, then pick a book.
    To add a new grade's game: fill in its "file" below.
    ===================================================================== */
+// "Dr. Somebody in Ancient Egypt" is shown as a small "Dr. Somebody in" above a big "Ancient Egypt", so the part that tells the books apart is the part you see first.
+const twoPart = n => { const m = /^(Dr\. Somebody(?:'s| in| and the)?) (.+)$/.exec(n); return m ? `<small>${m[1]}</small>${m[2]}` : n; };
 const BOOKS = [
-  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", color: "#58b368", file: "Pips%20Lost%20Eggs.html", medal: "pre" },
-  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", color: "#ff5a5f", file: "dots-busy-train.html", medal: "k" },
+  { grade: "Preschool",    ages: "Ages 2-4",   name: "Pip's Lost Eggs",  pic: "🦕", little: true, color: "#58b368", file: "Pips%20Lost%20Eggs.html", medal: "pre" },
+  { grade: "Kindergarten", ages: "Ages 5-6",   name: "Dot's Busy Train", pic: "🚂", little: true, color: "#ff5a5f", file: "dots-busy-train.html", medal: "k" },
   { grade: "Grade 1",      ages: "Ages 6-7",   name: "Dr. Somebody's Space Balloon", pic: "🦉", color: "#4b3aa8", file: "grade1-space.html", medal: "g1" },
   { grade: "Grade 2",      ages: "Ages 7-8",   name: "Dr. Somebody in Ancient Egypt", pic: "🏺", color: "#c98a2b", file: "grade2-egypt.html", medal: "g2" },
   { grade: "Grade 3",      ages: "Ages 8-9",   name: "Dr. Somebody in Ancient China", pic: "🐉", color: "#c0392b", file: "grade3-china.html", medal: "g3" },
-  { grade: "Grade 4",      ages: "Ages 9-10",  name: "Dr. Somebody in Ancient Rome", pic: "🏛️", color: "#8e2f25", file: "grade4-rome.html", medal: "g4" },
+  { grade: "Grade 4",      ages: "Ages 9-10",  name: "Dr. Somebody in Ancient Rome", pic: "🏛️", color: "#6d2e5b", file: "grade4-rome.html", medal: "g4" },
   { grade: "Grade 5",      ages: "Ages 10-11", name: "Dr. Somebody Comes Home", pic: "🍁", color: "#2f6b3f", file: "grade5-canada.html", medal: "g5" },
-  { grade: "Grade 6",      ages: "Ages 11-12" },
-  { grade: "Grade 7",      ages: "Ages 12-13" },
-  { grade: "Grade 8",      ages: "Ages 13-14" }
+  { grade: "Grade 6", ages: "Ages 11-12" },
+  { grade: "Grade 7", ages: "Ages 12-13" },
+  { grade: "Grade 8", ages: "Ages 13-14" }
 ];
 
 function drawWho() {
@@ -100,15 +133,46 @@ $("who").addEventListener("click", e => {
 const closePop = () => { $("pop").classList.remove("on"); $("popCard").innerHTML = ""; };
 $("pop").addEventListener("click", e => { if (e.target === $("pop")) closePop(); }); // a tap outside the card closes it
 // "+ Add a name": a card with a box to type in (instead of the browser's plain grey pop-up)
+// A row of age buttons (2 to 14+). Tap one to pick it, tap it again to unpick. Returns a function that says which age is picked (or undefined).
+const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+function ageButtons(box, picked) {
+  box.innerHTML = AGES.map(a => `<button type="button" data-age="${a}" class="${a === picked ? "on" : ""}">${a === 14 ? "14+" : a}</button>`).join("");
+  box.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    Kit.sfx.tap();
+    const was = t.classList.contains("on");
+    box.querySelectorAll("button").forEach(b => b.classList.remove("on"));
+    if (!was) t.classList.add("on");
+  });
+  return () => { const on = box.querySelector("button.on"); return on ? +on.dataset.age : undefined; };
+}
 function askName() {
   $("popCard").innerHTML = `<div class="big">👋</div><h2>Who is playing?</h2><p>Type the child's first name.</p>
     <input id="popName" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="The child's name">
+    <div class="ageLabel">How old are they? (optional)</div><div class="ages" id="popAges"></div>
+    <p class="tiny">Used only to suggest a book to start with. It stays on this device.</p>
     <div class="row"><button id="popNo">Cancel</button><button class="main" id="popYes">Save</button></div>`;
   $("pop").classList.add("on");
-  const box = $("popName"), save = () => { const name = box.value.trim(); closePop(); if (name) { const p = Kit.addPlayer(name); if (p) Kit.playClip(HELLO, ""); } drawWho(); };
+  const getAge = ageButtons($("popAges"));
+  const box = $("popName"), save = () => { const name = box.value.trim(), age = getAge(); closePop(); if (name) { const p = Kit.addPlayer(name, age); if (p) Kit.playClip(HELLO, ""); } drawWho(); };
   $("popYes").addEventListener("click", () => { Kit.sfx.tap(); save(); }); $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
   box.addEventListener("keydown", e => { if (e.key === "Enter") save(); else if (e.key === "Escape") closePop(); });
   box.focus();
+}
+// A grown-up changes a child's age: a card above the grown-ups panel
+function askAge(id) {
+  const p = Kit.players().find(x => x.id === id); if (!p) return;
+  const now = Kit.ageOf(p);
+  $("popCard").innerHTML = `<h2>How old is ${Kit.esc(p.name)}?</h2>
+    <div class="ages" id="popAges"></div>
+    <p class="tiny">Used only to suggest a book to start with. It stays on this device.</p>
+    <div class="row three"><button id="popNo">Cancel</button><button id="popNone">No age</button><button class="main" id="popYes">Save</button></div>`;
+  $("pop").classList.add("on");
+  const getAge = ageButtons($("popAges"), now === null ? undefined : Math.min(now, 14));
+  const done = age => { Kit.sfx.tap(); Kit.setAge(id, age); closePop(); drawWho(); openGrown(); };
+  $("popYes").addEventListener("click", () => done(getAge()));
+  $("popNone").addEventListener("click", () => done(0));
+  $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
 }
 // A book that is not written yet: a friendly "coming soon" (no hints about the story!)
 function comingSoon(grade) {
@@ -120,10 +184,22 @@ function comingSoon(grade) {
 $("shelf").addEventListener("click", e => { const b = e.target.closest(".book.soon"); if (b) { Kit.audio(); Kit.sfx.tap(); comingSoon(b.dataset.grade); } });
 
 // A medal shows on a book once the child who is playing has finished that story.
+// A "Start here" ribbon marks the suggested book for the child's age. It is only a suggestion: every book stays open.
 function drawShelf() {
-  const medals = Kit.stamps();
+  const medals = Kit.stamps(), start = Kit.startBook();
+  let at = start ? BOOKS.findIndex(b => b.medal === start.id) : -1;
+  while (at > 0 && !BOOKS[at].file) at--; // a book that is "coming soon" cannot be opened, so use the last real one before it
+  if (at >= 0 && !BOOKS[at].file) at = -1;
+  const sb = at >= 0 ? BOOKS[at] : null;
+  let line = "";
+  if (sb) {
+    const gr = start.earlier.map(e => e.grade), n = gr.length;
+    line = `Start here: ${Kit.esc(sb.grade)}. Every book is open, so look around!`;
+    if (n) line += ` It is a great idea to go back and finish ${n > 3 ? "the earlier books" : n === 1 ? Kit.esc(gr[0]) : Kit.esc(gr.slice(0, -1).join(", ")) + " and " + Kit.esc(gr[n - 1])} too.`;
+  }
+  $("startLine").innerHTML = line;
   $("shelf").innerHTML = BOOKS.map(b => b.file
-    ? `<a class="book" href="${b.file}" style="--c:${b.color}">${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${b.name}</span><span class="ages">${b.ages}</span></a>`
+    ? `<a class="book${b === sb ? " start" : ""}${b.little ? " little" : ""}" href="${b.file}" style="--c:${b.color}">${b === sb ? `<span class="ribbon">Start here</span>` : ""}${medals.includes(b.medal) ? `<span class="medal">🏅</span>` : ""}<span class="grade">${b.grade}</span><span class="pic">${b.pic}</span><span class="name">${twoPart(b.name)}</span><span class="ages">${b.ages}</span></a>`
     : `<div class="book soon" data-grade="${b.grade}"><span class="grade">${b.grade}</span><span class="pic">🔒</span><span class="name">Coming soon</span><span class="ages">${b.ages}</span></div>`).join("");
 }
 drawShelf();
@@ -137,7 +213,7 @@ function openGrown() {
   const list = Kit.players();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
     <p>Each child gets their own saved progress. It is kept only on this device, so make a backup now and then (below).</p>
-    ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b></div><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
+    ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b>${Kit.ageOf(p) ? ` · about ${Kit.ageOf(p)}` : ""}</div><button data-act="age" data-id="${p.id}">${Kit.ageOf(p) ? "Age" : "Add age"}</button><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
@@ -161,6 +237,7 @@ $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act;
   if (act && (act === "backup" || act === "copy" || act.startsWith("restore"))) { backupAction(act); return; }
+  if (act === "age") { askAge(t.dataset.id); return; }
   if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
   if (act === "sound") Kit.settings.sound = !Kit.settings.sound;
