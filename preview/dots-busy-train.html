@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=55">
+<link rel="stylesheet" href="shared/kit.css?v=56">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=55"></script>
+<script src="shared/kit.js?v=56"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -133,6 +133,7 @@
 const { say, sfx, animate, confetti } = Kit;
 // Dot's story lines are recorded (audio/dot/). If a recording is missing or cannot play, the device voice says the words instead.
 const speak = (name, words) => Kit.playClip("../audio/dot/" + name + ".mp3", words);
+Kit.guard(); // no name or no age yet: back to the shelf, which asks
 const PLAYER = Kit.currentPlayer();
 const NAME = PLAYER ? PLAYER.name : "";
 

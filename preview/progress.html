@@ -91,7 +91,7 @@
   <p class="foot" id="foot"></p>
 </div>
 
-<script src="shared/kit.js?v=55"></script>
+<script src="shared/kit.js?v=56"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -115,7 +115,8 @@ const dayKey =d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, 
 
 const kids = Kit.players().map(p => ({ id: p.id, name: p.name }));
 if (read(null)) kids.push({ id: null, name: "No name picked" });
-let chosen = (Kit.currentPlayer() || kids[0] || { id: null }).id;
+const nowPlaying = Kit.currentPlayer(); // (a grown-up's review is not a child, so it has no report)
+let chosen = (nowPlaying && !nowPlaying.review ? nowPlaying : kids[0] || { id: null }).id;
 
 // How a station is going, from the last 20 answers.
 function judge(s) {

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Story Shelf">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Story Shelf</title>
-<link rel="stylesheet" href="shared/kit.css?v=55">
+<link rel="stylesheet" href="shared/kit.css?v=56">
 <style>
   /* The bookshelf: one "book" per grade. */
   body { background:#f6e7cf; overflow:auto; min-height:100%; height:auto; }
@@ -16,6 +16,10 @@
   .shelfTitle { font-size:clamp(34px,7vw,64px); color:#8a4f1d; text-align:center; margin:6px 0 4px; text-shadow:0 3px 0 #fff; letter-spacing:1px; }
   .who { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; margin:14px 0 22px; font-size:20px; }
   .who b { margin-right:4px; }
+  .who .review { background:#fff7d6; border:2px solid #e2c44f; border-radius:16px; padding:10px 16px; font-size:17px; line-height:1.4; max-width:640px; text-align:center; color:#4a3d1c; }
+  .who .review .chip { margin:8px 0 0; }
+  #pop .need { color:#b3261e; font-weight:bold; min-height:1.2em; margin:6px 0 0; }
+  #pop .who { margin:10px 0 4px; }
   .chip { background:#fff; border-radius:999px; padding:10px 20px; font-weight:bold; font-size:20px; box-shadow:0 4px 0 rgba(0,0,0,.15); border:3px solid #fff; }
   .chip.on { background:#ffd84d; border-color:#ff8a3d; }
   .chip.add { background:#eaffd9; }
@@ -99,7 +103,7 @@
 <div id="grown"><div class="panel" id="grownPanel"></div></div>
 <div id="pop"><div class="card" id="popCard"></div></div>
 
-<script src="shared/kit.js?v=55"></script>
+<script src="shared/kit.js?v=56"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -123,7 +127,8 @@ const BOOKS = [
 
 function drawWho() {
   const cur = Kit.currentPlayer(), list = Kit.players();
-  $("who").innerHTML = `<b>Who is playing?</b>` +
+  if (Kit.reviewing()) $("who").innerHTML = `<div class="review">🔎 <b>Grown-up review is on.</b> Every book and chapter is open, and nothing is saved to a child. It turns off by itself after 2 hours.<br><button class="chip on" data-end="1">Finish review</button></div>`;
+  else $("who").innerHTML = `<b>Who is playing?</b>` +
     list.map(p => `<button class="chip${cur && cur.id === p.id ? " on" : ""}" data-id="${p.id}">${Kit.esc(p.name)}</button>`).join("") +
     `<button class="chip add" data-add="1">+ Add a name</button>`;
   if ($("shelf").firstChild) drawShelf(); // medals belong to whoever is playing
@@ -131,6 +136,7 @@ function drawWho() {
 $("who").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   Kit.audio(); Kit.sfx.tap();
+  if (t.dataset.end) { Kit.endReview(); drawWho(); return; }
   if (t.dataset.add) { askName(); return; }
   Kit.setCurrent(t.dataset.id); Kit.playClip(HELLO, "");
   drawWho();
@@ -153,32 +159,51 @@ function ageButtons(box, picked) {
   });
   return () => { const on = box.querySelector("button.on"); return on ? +on.dataset.age : undefined; };
 }
-function askName() {
+// A book cannot open until we know who is playing: a card with the names to tap (or the "add a name" card when there are none yet).
+// "then" is what to do once a child with an age is picked (open the book that was tapped).
+function pickWho(then) {
+  const list = Kit.players(); if (!list.length) { askName(then); return; }
+  $("popCard").innerHTML = `<div class="big">👋</div><h2>Who is playing?</h2><p>Tap your name first. Then your stars and medals are saved for you.</p>
+    <div class="who" id="popWho">${list.map(p => `<button class="chip" data-id="${p.id}">${Kit.esc(p.name)}</button>`).join("")}<button class="chip add" data-add="1">+ Add a name</button></div>
+    <div class="row"><button id="popNo">Cancel</button></div>`;
+  $("pop").classList.add("on");
+  $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
+  $("popWho").addEventListener("click", e => { const t = e.target.closest("button"); if (!t) return; Kit.sfx.tap();
+    if (t.dataset.add) { askName(then); return; }
+    Kit.setCurrent(t.dataset.id); closePop(); drawWho();
+    const p = Kit.currentPlayer(); if (p && !Kit.ageOf(p)) askAge(p.id, then); else if (then) then(); });
+}
+function askName(then) {
   $("popCard").innerHTML = `<div class="big">👋</div><h2>Who is playing?</h2><p>Type the child's first name.</p>
     <input id="popName" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="The child's name">
-    <div class="ageLabel">How old are they? (optional)</div><div class="ages" id="popAges"></div>
-    <p class="tiny">Used only to suggest a book to start with. It stays on this device.</p>
+    <div class="ageLabel">How old are they?</div><div class="ages" id="popAges"></div>
+    <p class="need" id="popNeed"></p>
+    <p class="tiny">A name and an age keep each child's progress apart and suggest a book to start with. They stay on this device.</p>
     <div class="row"><button id="popNo">Cancel</button><button class="main" id="popYes">Save</button></div>`;
   $("pop").classList.add("on");
   const getAge = ageButtons($("popAges"));
-  const box = $("popName"), save = () => { const name = box.value.trim(), age = getAge(); closePop(); if (name) { const p = Kit.addPlayer(name, age); if (p) Kit.playClip(HELLO, ""); } drawWho(); };
+  const box = $("popName"), save = () => { const name = box.value.trim(), age = getAge();
+    if (!name || !age) { $("popNeed").textContent = !name ? "Please type a name." : "Please pick an age."; return; } // both are needed
+    closePop(); const p = Kit.addPlayer(name, age); if (p && !then) Kit.playClip(HELLO, ""); drawWho(); if (p && then) then(); };
   $("popYes").addEventListener("click", () => { Kit.sfx.tap(); save(); }); $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
   box.addEventListener("keydown", e => { if (e.key === "Enter") save(); else if (e.key === "Escape") closePop(); });
   box.focus();
 }
 // A grown-up changes a child's age: a card above the grown-ups panel
-function askAge(id) {
+// With "then", it is the one-time question for a child who was added before ages were asked for (then: open the book that was tapped).
+function askAge(id, then) {
   const p = Kit.players().find(x => x.id === id); if (!p) return;
   const now = Kit.ageOf(p);
   $("popCard").innerHTML = `<h2>How old is ${Kit.esc(p.name)}?</h2>
     <div class="ages" id="popAges"></div>
-    <p class="tiny">Used only to suggest a book to start with. It stays on this device.</p>
-    <div class="row three"><button id="popNo">Cancel</button><button id="popNone">No age</button><button class="main" id="popYes">Save</button></div>`;
+    <p class="need" id="popNeed"></p>
+    <p class="tiny">${then ? "Grown-ups: this is asked only once. " : ""}An age keeps each child's progress apart and suggests a book to start with. It stays on this device.</p>
+    <div class="row"><button id="popNo">Cancel</button><button class="main" id="popYes">Save</button></div>`;
   $("pop").classList.add("on");
   const getAge = ageButtons($("popAges"), now === null ? undefined : Math.min(now, 14));
-  const done = age => { Kit.sfx.tap(); Kit.setAge(id, age); closePop(); drawWho(); openGrown(); };
+  const done = age => { Kit.sfx.tap(); if (!age) { $("popNeed").textContent = "Please pick an age."; return; }
+    Kit.setAge(id, age); closePop(); drawWho(); if (then) then(); else openGrown(); };
   $("popYes").addEventListener("click", () => done(getAge()));
-  $("popNone").addEventListener("click", () => done(0));
   $("popNo").addEventListener("click", () => { Kit.sfx.tap(); closePop(); });
 }
 // A book that is not written yet: a friendly "coming soon" (no hints about the story!)
@@ -216,9 +241,13 @@ function olderCard(b) {
   ["pointerup", "pointerleave", "pointercancel"].forEach(ev => h.addEventListener(ev, stop));
   h.addEventListener("contextmenu", e => e.preventDefault());
 }
-$("shelf").addEventListener("click", e => { const a = e.target.closest("a.book[data-older]"); if (!a) return;
-  const b = BOOKS.find(x => x.medal === a.dataset.older); if (!b || !tooYoungFor(b)) return;
-  e.preventDefault(); Kit.audio(); Kit.sfx.tap(); olderCard(b); });
+// Tapping a book. A grown-up's review opens anything. Otherwise we need to know who is playing and their age first; then the "older kids" card may show.
+$("shelf").addEventListener("click", e => { const a = e.target.closest("a.book"); if (!a) return;
+  const b = BOOKS.find(x => x.file === a.getAttribute("href")); if (!b || Kit.reviewing()) return;
+  const p = Kit.currentPlayer(), open = () => { if (tooYoungFor(b)) olderCard(b); else location.href = b.file; };
+  if (p && Kit.ageOf(p) && !tooYoungFor(b)) return; // all set: the link opens the book
+  e.preventDefault(); Kit.audio(); Kit.sfx.tap();
+  if (!p) pickWho(open); else if (!Kit.ageOf(p)) askAge(p.id, open); else olderCard(b); });
 
 // A medal shows on a book once the child who is playing has finished that story.
 // A "Start here" ribbon marks the suggested book for the child's age. It is only a suggestion: every book stays open.
@@ -252,6 +281,7 @@ function openGrown() {
     <p>Each child gets their own saved progress. It is kept only on this device, so make a backup now and then (below).</p>
     ${list.length ? list.map(p => `<div class="line"><div><b>${Kit.esc(p.name)}</b>${Kit.ageOf(p) ? ` · about ${Kit.ageOf(p)}` : ""}</div><button data-act="age" data-id="${p.id}">${Kit.ageOf(p) ? "Age" : "Add age"}</button><button class="warn" data-act="remove" data-id="${p.id}">Remove</button></div>`).join("") : `<p class="soon">No names added yet.</p>`}
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
+    <div class="line"><div><b>🔎 Look through the games</b><br><span class="soon">Opens every book and every chapter, so you can read any lesson before your child does. Nothing is saved to a child. It turns off by itself after 2 hours.</span></div><button class="main" data-act="review">${Kit.reviewing() ? "Finish" : "Start"}</button></div>
     <div class="line"><div>Talking voice</div><button data-act="voice">${Kit.settings.voice ? "On" : "Off"}</button></div>
     <div class="line"><div>Sound effects</div><button data-act="sound">${Kit.settings.sound ? "On" : "Off"}</button></div>
     <div class="line"><div>Music</div><button data-act="music">${Kit.settings.music ? "On" : "Off"}</button></div>
@@ -270,11 +300,15 @@ function openGrown() {
   $("grown").classList.add("on");
 }
 Kit.hold($("grownBtn"), openGrown);
+// A game page that was opened with no name or no age sends the child back here with "?who=1": ask straight away.
+if (/[?&]who=1/.test(location.search)) { try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  if (Kit.needsChild()) { const p = Kit.currentPlayer(); if (p) askAge(p.id, () => {}); else pickWho(); } }
 $("grownPanel").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const act = t.dataset.act;
   if (act && (act === "backup" || act === "copy" || act.startsWith("restore"))) { backupAction(act); return; }
   if (act === "age") { askAge(t.dataset.id); return; }
+  if (act === "review") { if (Kit.reviewing()) Kit.endReview(); else Kit.startReview(); $("grown").classList.remove("on"); drawWho(); window.scrollTo(0, 0); return; }
   if (act === "remove") { if (!confirm("Remove this name? Their saved progress stays on the device but will no longer be used.")) return; Kit.removePlayer(t.dataset.id); }
   if (act === "voice") Kit.settings.voice = !Kit.settings.voice;
   if (act === "sound") Kit.settings.sound = !Kit.settings.sound;

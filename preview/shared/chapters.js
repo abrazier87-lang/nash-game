@@ -40,15 +40,17 @@ function ChapterGame(C) {
   if (!S.words) S.words = [];
   if (!S.coins) S.coins = 0; if (!S.bought) S.bought = []; if (!S.picks) S.picks = {};
   const save = () => Kit.save(C.saveKey, S);
+  Kit.guard(); // no name or no age yet: back to the shelf, which asks
   const PLAYER = Kit.currentPlayer(), NAME = PLAYER ? PLAYER.name : "";
+  const REVIEW = !!(PLAYER && PLAYER.review); // a grown-up looking through the book: every chapter is open, and a math break can be skipped
   const { sfx, confetti, animate } = Kit;
   const ALL_WORDS = CHAPTERS.flatMap(c => (c.beats || []).flatMap(b => [b.word].concat((b.options || []).map(o => o.word)).filter(Boolean)));
-  const isOpen = i => !!CHAPTERS[i].beats && (i === 0 || S.done.includes(i - 1));
+  const isOpen = i => !!CHAPTERS[i].beats && (REVIEW || i === 0 || S.done.includes(i - 1));
 
   // ---------- the page ----------
   $("app").innerHTML = `
   <div class="layer">${backdrop()}</div><div class="layer" id="fx"></div>
-  <div class="screen on" id="title"><h1>${C.title}</h1><p class="sub">${C.sub}${NAME ? " for " + NAME : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
+  <div class="screen on" id="title"><h1>${C.title}</h1><p class="sub">${C.sub}${NAME ? " for " + NAME : ""}${REVIEW ? " · grown-up review" : ""}</p><div class="host big" style="width:32vmin;height:37vmin">${NEW_OWL}</div>
     <button class="bigbtn" id="playBtn" aria-label="Play"><span class="tri"></span></button></div>
   <div class="screen" id="intro"><div class="panel" id="introPanel"></div><div class="caption" id="introCap"></div>
     <div class="nextrow"><button class="bigbtn small" id="introNext" aria-label="Next"><span class="tri"></span></button></div></div>
@@ -57,7 +59,7 @@ function ChapterGame(C) {
   <div class="screen" id="story"><div class="dots" id="dots"></div><div class="panel" id="panel"></div><div class="caption" id="caption"></div>
     <div class="nextrow" id="nextRow"><button class="bigbtn small back" id="backBtn" aria-label="Back"><span class="tri"></span></button><button class="bigbtn small" id="nextBtn" aria-label="Next"><span class="tri"></span></button></div>
     <div class="options" id="options"></div><div class="cheer wordcheer" id="wordCheer"></div></div>
-  <div class="screen" id="game"><div class="stars" id="stars"></div><div class="cheer" id="cheer"></div>
+  <div class="screen" id="game">${REVIEW ? `<button id="reviewSkip" style="position:fixed;left:2vmin;top:17vmin;z-index:9;font:inherit;font-size:max(14px,2.2vmin);font-weight:bold;padding:1.2vmin 2.4vmin;border:0;border-radius:999px;background:#fff;color:#3a3226;box-shadow:0 .5vmin 0 rgba(0,0,0,.25);cursor:pointer" title="Grown-up review: skip this math break">Review: skip ▶</button>` : ""}<div class="stars" id="stars"></div><div class="cheer" id="cheer"></div>
     <div class="ask"><div class="host">${NEW_OWL}</div><div class="bubble" id="bubble"></div></div><div class="tip" id="tip"></div><div class="choices" id="choices"></div></div>
   <button class="corner left" id="homeBtn" aria-label="Back to the chapters" style="display:none">${ICON.home}</button>
   <button class="corner left" id="shelfBtn" aria-label="Back to the book shelf">${ICON.shelf}</button>
@@ -108,6 +110,7 @@ function ChapterGame(C) {
   $("introAgain").addEventListener("click", () => { sfx.tap(); playIntro(); });
   $("shelfBtn").addEventListener("click", () => { introRun++; Kit.hush(); location.href = "index.html"; });
   $("homeBtn").addEventListener("click", () => { sfx.tap(); Kit.hush(); G = null; showMap(); });
+  if (REVIEW) $("reviewSkip").addEventListener("click", () => { if (!G) return; sfx.tap(); Kit.hush(); G = null; openBeat(at.c, at.b + 1); });
 
   // ---------- the certificate: every chapter finished ----------
   const allDone = () => CHAPTERS.every((c, i) => c.beats && S.done.includes(i));

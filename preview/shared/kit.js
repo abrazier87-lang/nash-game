@@ -21,9 +21,34 @@ const Kit = (() => {
   // ---------- players (each child gets their own saved progress on this device) ----------
   const players = () => get("storyShelf.players", []);
   function currentPlayer() {
+    if (reviewing()) return { id: "review", name: "", review: true };
     let id = null; try { id = localStorage.getItem("storyShelf.current"); } catch (e) {}
     return players().find(p => p.id === id) || null;
   }
+  // ---------- grown-up review ----------
+  // A grown-up can look through any book and any chapter without playing up to it. While review is on, "who is playing" is a pretend
+  // player called "review": every game saves under names ending ".review", so no child's progress, medals or report are touched, and
+  // all of it is thrown away when review ends. It ends by itself after two hours, in case it is left on and a child picks up the device.
+  const REVIEW_MS = 2 * 60 * 60 * 1000;
+  function reviewing() {
+    let id = null; try { id = localStorage.getItem("storyShelf.current"); } catch (e) {}
+    if (id !== "review") return false;
+    const r = get("storyShelf.review", null);
+    if (r && Date.now() - r.since < REVIEW_MS) return true;
+    endReview(); return false;
+  }
+  function startReview() {
+    if (reviewing()) return;
+    const p = currentPlayer(); put("storyShelf.review", { since: Date.now(), before: p ? p.id : "" }); setCurrent("review");
+  }
+  function endReview() {
+    const r = get("storyShelf.review", null), before = r ? r.before : "";
+    try { const gone = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/\.review$/.test(k)) gone.push(k); } gone.forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    setCurrent(players().some(p => p.id === before) ? before : "");
+  }
+  // A book needs to know who is playing and how old they are (so progress belongs to a child). A game page opened without that goes back to the shelf, which asks.
+  const needsChild = () => { const p = currentPlayer(); return !p || (!p.review && !p.born); };
+  function guard() { if (!needsChild()) return false; try { location.replace("index.html?who=1"); } catch (e) {} return true; }
   function setCurrent(id) { try { localStorage.setItem("storyShelf.current", id); } catch (e) {} }
   // age (optional): how old the child is. What is kept is the YEAR THEY WERE BORN (worked out from the age), so the
   // suggested book moves up by itself each year. It stays on this device with the names, and travels with a backup.
@@ -31,6 +56,13 @@ const Kit = (() => {
     name = String(name || "").trim().slice(0, 20);
     if (!name) return null;
     const list = players(), n = get("storyShelf.nextId", 1), p = { id: "p" + n, name }; if (age > 0) p.born = new Date().getFullYear() - Math.round(age);
+    // The very first child on a device takes over anything that was played before a name was asked for, so nothing is lost.
+    if (!list.length) try {
+      const keys = []; for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+      keys.filter(k => /^(storyShelf\.(stamps|progress)|(dotsBusyTrain|grade\d+[A-Za-z]*)\.v\d+|pipsLostEggs\.v1)$/.test(k)).forEach(k => {
+        if (k === "pipsLostEggs.v1" && p.id === "p1") return; // Pip already keeps the first child's eggs under this name
+        const mine = k + "." + p.id; if (localStorage.getItem(mine) === null) localStorage.setItem(mine, localStorage.getItem(k)); });
+    } catch (e) {}
     list.push(p); put("storyShelf.players", list); put("storyShelf.nextId", n + 1); setCurrent(p.id);
     return p;
   }
@@ -206,7 +238,7 @@ const Kit = (() => {
   const niceDate = d => new Date(d).toLocaleString("en-CA", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
   function makeBackup() {
     const data = {};
-    shelfKeys().forEach(k => { if (k !== "storyShelf.lastBackup") data[k] = localStorage.getItem(k); });
+    shelfKeys().forEach(k => { if (k !== "storyShelf.lastBackup" && !/\.review$/.test(k)) data[k] = localStorage.getItem(k); }); // a grown-up's review is never part of a backup
     const names = players().map(p => p.name), made = new Date();
     const code = "SSB1." + toB64(JSON.stringify({ app: "story-shelf", v: 1, made: made.toISOString(), names, data }));
     const text = `Story Shelf backup\nMade: ${niceDate(made)}\nChildren: ${names.join(", ") || "(no names added)"}\n\n` +
@@ -454,7 +486,7 @@ const Kit = (() => {
   document.addEventListener("gesturestart", e => e.preventDefault());
   document.addEventListener("dblclick", e => e.preventDefault());
 
-  const VERSION = "55"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
-  return { VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, setAge, ageOf, startBook, removePlayer, load, save, stamps, stamp, settings, saveSettings,
+  const VERSION = "56"; // shown in the grown-ups panel, so you can tell which copy a device is running. Go up by one with each published change.
+  return { reviewing, startReview, endReview, needsChild, guard, VERSION, makeBackup, readBackup, restoreBackup, markBackedUp, lastBackup, niceDate, track, LESSONS, STRANDS, strandOf, askStrand, lessonStrands, finish, finished, finishedEverything,dropOneWrong, hintHelper, lessonHelper, writtenBubble, sayAndWait, playClip, loadClip, clipName, players, currentPlayer, setCurrent, addPlayer, setAge, ageOf, startBook, removePlayer, load, save, stamps, stamp, settings, saveSettings,
     englishVoices, chooseVoice, currentVoice: () => voice, say, hush, music, stopMusic, audio, sfx, animate, confetti, hold, esc };
 })();

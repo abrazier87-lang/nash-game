@@ -234,7 +234,10 @@ const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 // ---------- saved progress (kept on this device) ----------
 // Who is playing? (picked on the book shelf page). The first child added keeps the original saved progress.
 let PLAYER = null;
-try { const cur = localStorage.getItem("storyShelf.current"); PLAYER = JSON.parse(localStorage.getItem("storyShelf.players") || "[]").find(p => p.id === cur) || null; } catch (e) {}
+try { const cur = localStorage.getItem("storyShelf.current");
+  if (cur === "review") { const r = JSON.parse(localStorage.getItem("storyShelf.review") || "null"); if (r && Date.now() - r.since < 2 * 60 * 60 * 1000) PLAYER = { id: "review", name: "", review: true }; } // a grown-up looking through the game: saved apart, and thrown away afterwards
+  else PLAYER = JSON.parse(localStorage.getItem("storyShelf.players") || "[]").find(p => p.id === cur) || null; } catch (e) {}
+if (!PLAYER || (!PLAYER.review && !PLAYER.born)) try { location.replace("index.html?who=1"); } catch (e) {} // no name or no age yet: back to the shelf, which asks
 const NAME = PLAYER ? PLAYER.name : "";
 const SAVE_KEY = "pipsLostEggs.v1" + (PLAYER && PLAYER.id !== "p1" ? "." + PLAYER.id : "");
 const fresh = () => ({ skill: { colors: 1, shapes: 1, count: 1, patterns: 1, shadows: 1, sizes: 1, body: 1, sounds: 1 }, found: {}, friends: [], clutches: 0, learned: {}, auto: true, voice: true, sound: true, voiceName: "" });
