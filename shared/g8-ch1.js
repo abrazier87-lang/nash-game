@@ -109,7 +109,7 @@
         return { html: "", text: `A train <b>${tr} m</b> long goes through a tunnel <b>${L} m</b> long at <b>${v} m/s</b>. How many seconds from its front entering to its tail leaving?`, choices: cards(t, [L / v, tr / v, t + 10, t - 10, (L - tr) / v]), why: `The front must go ${L} + ${tr} = ${fmt(L + tr)} m. ${fmt(L + tr)} ÷ ${v} = ${t} s.` };
       }
       if (kind === 0) { const d = pick([2, 3, 6]), v = pick([3, 4, 6]), m = d * 60 / v;
-        return { html: "", text: `The trail to the cairn is <b>${d} km</b> long. Walking at <b>${v} km/h</b>, how many minutes does the walk take?`, choices: cards(m, [d * v, 60 / v, m + 10, m - 10, m * 2]), why: `${d} km ÷ ${v} km/h = ${d}/${v} of an hour. Times 60 gives ${m} minutes.` }; }
+        return { html: "", text: `The valley trail beside the track is <b>${d} km</b> long. Walking at <b>${v} km/h</b>, how many minutes does the walk take?`, choices: cards(m, [d * v, 60 / v, m + 10, m - 10, m * 2]), why: `${d} km ÷ ${v} km/h = ${d}/${v} of an hour. Times 60 gives ${m} minutes.` }; }
       if (kind === 1) { const p = pick([5, 8, 10]), d = pick([200, 500, 1000]), up = p * d / 100;
         return { html: "", text: `The trail climbs at a grade of <b>${p}%</b>. How many metres higher are you after walking <b>${d} m</b> across the ground?`, choices: cards(up, [up + p, up - p, d / 100, up * 10, up / 2]), why: `${p}% means ${p} m up for every 100 m. ${d / 100} × ${p} = ${up} m.` }; }
       const gm = pick([20, 25, 30]), k = pick([3, 4, 5, 6]), H = gm * k;
@@ -164,11 +164,11 @@
       "In 1923 a new law shut out almost all Chinese immigration. It stayed until 1947. Families were kept apart for decades, a husband in Canada and a wife and children in China.",
       "In 2006 the government of Canada formally apologized. Mei's family is here today, and she tells this story so that it is remembered. Now, the numbers. They are worth looking at carefully."] },
     { ask: "ls_pay", intro: "This is a case file: three steps about one worker's pay, and each answer is used in the next. Three right answers and we go on." },
-    { art: "ls_choice", pick: "Mei has two places to show us. We can ride a train through the Spiral Tunnels, or walk the trail to the cairn at Craigellachie where the last spike was driven. Which shall we do?", options: [
-      { label: "Ride the train through the Spiral Tunnels", art: "ls_train", word: ["le tunnel", "the tunnel"], say: ["We climb aboard with Mei, and the train rumbles into the mountain. Inside it is dark and loud, and the track circles round until we come out higher up, with the same valley far below us.",
+    { art: "ls_choice", pick: "Mei has two places to show us, and the clock can hop us to either one. We can ride a train through the Spiral Tunnels, or visit the cairn at Craigellachie where the last spike was driven. Which shall we do?", options: [
+      { label: "Ride the train through the Spiral Tunnels", art: "ls_train", word: ["le tunnel", "the tunnel"], say: ["The clock hops us to the Spiral Tunnels. We climb aboard with Mei, and the train rumbles into the mountain. Inside it is dark and loud, and the track circles round until we come out higher up, with the same valley far below us.",
         "A tunnel is <em>le tunnel</em> in French. Mei says that the first builders of this railway worked on mountains like these with hand tools and explosives, and she is quiet for a while as we ride."] },
-      { label: "Walk the trail to the last-spike cairn", art: "ls_trail", word: ["le pont", "the bridge"], say: ["We walk the trail to Craigellachie with Mei leading the way. At the end stands a stone cairn with a plaque that marks the place where the last spike was driven, and the tracks run right past it.",
-        "Along the way Mei points up at a railway bridge high over a creek. A bridge is <em>le pont</em> in French. Mei says she has walked this trail many times, and she still stops at the cairn to read the plaque."] }] },
+      { label: "Visit the last-spike cairn", art: "ls_trail", word: ["le pont", "the bridge"], say: ["The clock hops us to Craigellachie with Mei beside us. Next to the track stands a stone cairn with a plaque that marks the place where the last spike was driven.",
+        "Mei says trains cross railway bridges high over creeks all through these mountains. A bridge is <em>le pont</em> in French. Mei says she has been here many times, and she still stops at the cairn to read the plaque."] }] },
     { ask: "ls_last", intro: "Mei has one more set of questions about the way we chose. Three right answers and we say goodbye to the mountains." },
     { art: "ls_goodbye", say: ["The sun is going down behind the peaks, and the rails run on, across a high wooden bridge and down the canyon of a great river, toward the sea.",
       "Thank you, Mei. He was not in the photograph, but you keep his story, and now we do too.",
