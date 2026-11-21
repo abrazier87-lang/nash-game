@@ -51,7 +51,10 @@ function outline(svg, o) {
     .replace(/\s(?:class|style|stroke|stroke-width|stroke-linecap|stroke-linejoin|stroke-opacity|fill-opacity)="[^"]*"/g, "")
     .replace(/\sfill="([^"]*)"/g, (all, c) => c === "none" ? all : black.includes(c.toLowerCase()) ? ' fill="#000"' : ' fill="#fff"');
   const w = (o.stroke || 3.5).toFixed(2);
-  return `<svg viewBox="${viewBox}"${o.attrs || ""}><g fill="#fff" stroke="#000" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round">${inner}</g></svg>`;
+  // options.mask is a list of points (the picture's own units) for a plain white shape drawn first, so lines from things
+  // behind never show through the gaps in a picture (between the roofs of a pagoda, say)
+  const mask = o.mask ? `<polygon points="${o.mask}" fill="#fff" stroke="none"/>` : "";
+  return `<svg viewBox="${viewBox}"${o.attrs || ""}><g fill="#fff" stroke="#000" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round">${mask}${inner}</g></svg>`;
 }
 
 // Puts a picture from a grade's list onto a scene: x and y are the top left corner and w is the width,
@@ -59,9 +62,11 @@ function outline(svg, o) {
 function place(pic, x, y, w, target) {
   const vb = (pic.viewBox || pic.svg.match(/viewBox="([^"]*)"/)[1]).trim().split(/\s+/).map(Number);
   const h = w * vb[3] / vb[2];
-  return outline(pic.svg, {
-    viewBox: vb.join(" "), stroke: (target || 3.5) * vb[2] / w, black: pic.black, drop: pic.drop, classFills: pic.classFills,
-    attrs: ` x="${x}" y="${y}" width="${w}" height="${h.toFixed(1)}" overflow="visible"`
+  // pic.extra is more drawing added to the game's picture (stripes, joints, leaves); pic.clip crops to the view box (a head and shoulders)
+  const svg = pic.extra ? pic.svg.replace(/<\/svg>\s*$/, pic.extra + "</svg>") : pic.svg;
+  return outline(svg, {
+    viewBox: vb.join(" "), stroke: (target || 3.5) * vb[2] / w, black: pic.black, drop: pic.drop, classFills: pic.classFills, mask: pic.mask,
+    attrs: ` x="${x}" y="${y}" width="${w}" height="${h.toFixed(1)}" overflow="${pic.clip ? "hidden" : "visible"}"`
   });
 }
 
@@ -71,10 +76,24 @@ const shape = (inner, w) => `<g fill="#fff" stroke="#000" stroke-width="${w || L
 // (the cloud outline comes from cloud() in shared/inkart.js)
 const cloudShape = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${shape(`<path d="M-30 10 Q-44 10 -40 -2 Q-38 -14 -24 -12 Q-18 -28 0 -24 Q12 -34 24 -20 Q42 -22 42 -4 Q46 10 30 10 Z"/>`, LINE / s)}</g>`;
 const sunShape = (x, y, r) => shape(Array.from({ length: 8 }, (_, i) => { const a = i / 8 * 2 * Math.PI; return `<line x1="${(x + (r + 7) * Math.cos(a)).toFixed(1)}" y1="${(y + (r + 7) * Math.sin(a)).toFixed(1)}" x2="${(x + (r + 17) * Math.cos(a)).toFixed(1)}" y2="${(y + (r + 17) * Math.sin(a)).toFixed(1)}"/>`; }).join("") + `<circle cx="${x}" cy="${y}" r="${r}"/>`);
-const hillShape = d => shape(`<path d="${d}"/>`);
+// A hill: give only the top edge (from x -20 to x 420). It is closed far below the picture, so no line shows along the bottom edge.
+const hillShape = d => shape(`<path d="${d} V450 H-20 Z"/>`);
+const pts = (r, n, f) => Array.from({ length: n }, (_, i) => f(i, i * 2 * Math.PI / n)).join("");
+// A round tree: trunk first, then the round top over it.
+const treeShape = (x, y, r) => shape(`<rect x="${x - r * .22}" y="${y + r * .5}" width="${r * .44}" height="${r * 1.1}"/><circle cx="${x}" cy="${y}" r="${r}"/>`);
+// A flower: six round petals round a middle, with a stem that runs down to y + stem.
+const flowerShape = (x, y, s, stem) => shape((stem ? `<path d="M${x} ${y + 16 * s} V${y + stem}" fill="none"/>` : "") + pts(0, 6, (i, a) => `<circle cx="${(x + 17 * s * Math.cos(a)).toFixed(1)}" cy="${(y + 17 * s * Math.sin(a)).toFixed(1)}" r="${(12 * s).toFixed(1)}"/>`) + `<circle cx="${x}" cy="${y}" r="${(9 * s).toFixed(1)}"/>`);
+// Railway track: sleepers from x0 to x1 with their tops at y, and two rails across them.
+const trackShape = (x0, x1, y) => { let d = ""; for (let x = x0; x < x1; x += 36) d += `<rect x="${x}" y="${y}" width="22" height="30"/>`; return shape(d) + shape(`<path d="M${x0} ${y + 6} H${x1} M${x0} ${y + 22} H${x1}" fill="none"/>`); };
+const tuftShape = (x, y) => shape(`<path d="M${x} ${y} q-2 -14 -10 -22 M${x} ${y} q0 -18 4 -28 M${x} ${y} q4 -12 14 -18" fill="none"/>`);
+const bushShape = (x, y, s) => shape([[-14, 0, 11], [0, -6, 14], [14, 0, 11]].map(([dx, dy, r]) => `<circle cx="${x + dx * s}" cy="${y + dy * s}" r="${r * s}"/>`).join(""));
+const birdShape = (x, y) => shape(`<path d="M${x} ${y} q7 -9 14 0 q7 -9 14 0" fill="none"/>`);
+const sparkleShape = (x, y, r) => shape(`<polygon points="${x},${y - r} ${x + r * .26},${y - r * .26} ${x + r},${y} ${x + r * .26},${y + r * .26} ${x},${y + r} ${x - r * .26},${y + r * .26} ${x - r},${y} ${x - r * .26},${y - r * .26}"/>`);
+// A firework burst: lines out from a middle, a long one and a short one in turn.
+const burstShape = (x, y, r) => shape(pts(0, 12, (i, a) => { const a0 = r * .35, a1 = i % 2 ? r * .75 : r; return `<line x1="${(x + a0 * Math.cos(a)).toFixed(1)}" y1="${(y + a0 * Math.sin(a)).toFixed(1)}" x2="${(x + a1 * Math.cos(a)).toFixed(1)}" y2="${(y + a1 * Math.sin(a)).toFixed(1)}"/>`; }));
 // A mountain with the same outline as the game's misty peaks (the .peak shapes in grade3-china.html): x, y, width, height.
 const peakShape = (x, y, w, h) => shape(`<polygon points="${[[0, 1], [.28, .22], [.44, .52], [.62, 0], [1, 1]].map(([a, b]) => (x + a * w).toFixed(1) + "," + (y + b * h).toFixed(1)).join(" ")}"/>`);
-const SCENE_TOOLS = { shape, cloud: cloudShape, sun: sunShape, hill: hillShape, peak: peakShape };
+const SCENE_TOOLS = { shape, cloud: cloudShape, sun: sunShape, hill: hillShape, peak: peakShape, tree: treeShape, flower: flowerShape, track: trackShape, tuft: tuftShape, bush: bushShape, bird: birdShape, sparkle: sparkleShape, burst: burstShape };
 
 // ---------- one sheet of paper ----------
 function sheet(G, bookName, pageNo, body) {
@@ -90,7 +109,7 @@ function colouringPages(G, bookName) {
   LINE = G.lineWidth || 3.5;
   const P = (name, x, y, w, target) => place(G.pictures[name], x, y, w, target || LINE);
   return G.colouring.map((page, i) => sheet(G, bookName, i + 1,
-    `<div class="art"><svg viewBox="0 0 400 420" preserveAspectRatio="xMidYMid meet">${page.scene(P, SCENE_TOOLS)}</svg></div>
+    `<div class="art"><svg viewBox="0 0 400 420" preserveAspectRatio="xMidYMid slice">${page.scene(P, SCENE_TOOLS)}</svg></div>
      <p class="cap">${page.caption}</p><p class="by">Coloured by: <span class="ul"></span></p>`));
 }
 
@@ -300,78 +319,98 @@ function mazeSvg(G, m, solution) {
   return s + `</svg>`;
 }
 
-// ---------- dot to dot ----------
-// n points spaced equally round a closed outline (a list of [x, y] corners). Each point remembers which edge it is on.
-function pointsAlong(poly, n) {
-  const segs = poly.map((p, i) => { const q = poly[(i + 1) % poly.length]; return { p, q, len: Math.hypot(q[0] - p[0], q[1] - p[1]) }; });
-  const total = segs.reduce((a, s) => a + s.len, 0), pts = [];
-  for (let k = 0; k < n; k++) {
-    let d = k * total / n, i = 0;
-    while (d > segs[i].len + 1e-9) { d -= segs[i].len; i++; }
-    let t = d / segs[i].len;
-    if (t > 1 - 1e-6) { i = (i + 1) % segs.length; t = 0; }
-    pts.push({ x: segs[i].p[0] + (segs[i].q[0] - segs[i].p[0]) * t, y: segs[i].p[1] + (segs[i].q[1] - segs[i].p[1]) * t, seg: i, corner: t < 1e-6 });
-  }
-  return { pts, segs };
+// ---------- plain icons (for counting and patterns) ----------
+// Outlines about 50 wide, centred on 0,0, drawn in code.
+const starPoints = (R, r) => Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R; return (rad * Math.cos(a)).toFixed(1) + "," + (rad * Math.sin(a)).toFixed(1); }).join(" ");
+const ICONS = {
+  star: `<polygon points="${starPoints(26, 11)}"/>`,
+  heart: `<path d="M0 20 C-32 -2 -24 -24 -11 -24 C-5 -24 0 -19 0 -14 C0 -19 5 -24 11 -24 C24 -24 32 -2 0 20 Z"/>`,
+  circle: `<circle cx="0" cy="0" r="22"/>`,
+  square: `<rect x="-20" y="-20" width="40" height="40" rx="4"/>`,
+  triangle: `<polygon points="0,-24 25,18 -25,18"/>`,
+  wheel: `<circle cx="0" cy="0" r="23"/><circle cx="0" cy="0" r="9"/><path d="M0 -23 V-9 M0 9 V23 M-23 0 H-9 M9 0 H23" fill="none"/>`,
+  ticket: `<path d="M-27 -16 H27 V-5 a5 5 0 0 0 0 10 V16 H-27 V5 a5 5 0 0 0 0 -10 Z"/><path d="M12 -10 V10" fill="none" stroke-dasharray="3 5"/>`
+};
+// One icon at x, y. Kinds that are pictures in the grade's list (the animal faces, the train car) are placed as outlines.
+function iconAt(G, kind, x, y, k) {
+  const pic = G.pictures[kind];
+  k = k || 1;
+  if (pic) { const w = (kind === "car" ? 58 : 52) * k; return place(pic, x - w / 2, y - picHeight(pic, w) / 2, w, 2.6); }
+  return `<g transform="translate(${x} ${y}) scale(${k})" fill="#fff" stroke="#000" stroke-width="${(4 / k).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round">${ICONS[kind]}</g>`;
 }
-// The star: ten corners, alternately far from and near to the middle. Twenty dots land on the ten corners and the middle of each edge.
-function dotToDotSvg(seed, answers) {
-  const rng = mulberry32(seed), cx = 300, cy = 320, R = 250, r = 105, corners = [];
-  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R; corners.push([cx + rad * Math.cos(a), cy + rad * Math.sin(a)]); }
-  const first = 2 * Math.floor(rng() * 5);                                  // dot 1 is one of the five points of the star
-  const poly = corners.slice(first).concat(corners.slice(0, first));
-  const { pts, segs } = pointsAlong(poly, 20);
-  // the side of each edge that faces away from the middle: the numbers go there so they never sit on a line
-  const normals = segs.map(s => { const dx = s.q[0] - s.p[0], dy = s.q[1] - s.p[1], l = s.len; let nx = dy / l, ny = -dx / l; if (nx * ((s.p[0] + s.q[0]) / 2 - cx) + ny * ((s.p[1] + s.q[1]) / 2 - cy) < 0) { nx = -nx; ny = -ny; } return [nx, ny]; });
-  let s = `<svg viewBox="0 0 600 600" width="640" height="640">`;
-  if (answers) s += `<polygon points="${pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ")}" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/>`;
-  pts.forEach((p, k) => {
-    let nx = normals[p.seg][0], ny = normals[p.seg][1];
-    if (p.corner) { const b = normals[(p.seg + segs.length - 1) % segs.length]; nx += b[0]; ny += b[1]; const l = Math.hypot(nx, ny); nx /= l; ny /= l; }
-    s += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="9" fill="#000"/>`;
-    if (k === 0) s += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="19" fill="none" stroke="#000" stroke-width="3"/>`;   // a ring round dot 1 shows where to start
-    const off = k === 0 ? 40 : 31;
-    s += `<text x="${(p.x + nx * off).toFixed(1)}" y="${(p.y + ny * off + 12).toFixed(1)}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">${k + 1}</text>`;
+
+// ---------- dot to dot ----------
+// A.points are the corners of the picture's outline in order, A.extras is the printed part (wheels, window and so on).
+// Each number goes on the outside of the outline, so it never sits on a line.
+function dotToDotSvg(A, answers) {
+  const poly = A.points, n = poly.length;
+  let area = 0; poly.forEach((p, i) => { const q = poly[(i + 1) % n]; area += p[0] * q[1] - q[0] * p[1]; });
+  const sign = area > 0 ? 1 : -1;
+  const normal = i => { const p = poly[i], q = poly[(i + 1) % n], dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy); return [sign * dy / l, -sign * dx / l]; };
+  let s = `<svg viewBox="0 0 600 600" width="640" height="640">${A.extras || ""}`;
+  if (answers) s += `<polygon points="${poly.map(p => p.join(",")).join(" ")}" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/>`;
+  poly.forEach((p, i) => {
+    const a = normal((i + n - 1) % n), b = normal(i);
+    let nx = a[0] + b[0], ny = a[1] + b[1]; const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l;
+    s += `<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="#000"/>`;
+    if (i === 0) s += `<circle cx="${p[0]}" cy="${p[1]}" r="19" fill="none" stroke="#000" stroke-width="3"/>`;   // a ring round dot 1 shows where to start
+    const off = i === 0 ? 46 : 40;
+    s += `<text x="${(p[0] + nx * off).toFixed(1)}" y="${(p[1] + ny * off + 12).toFixed(1)}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">${i + 1}</text>`;
   });
   return s + `</svg>`;
 }
 
 // ---------- count and colour ----------
-// Plain objects drawn in code, centred on 0,0 and about 50 wide. They are outlines only.
-const starPoints = (R, r) => Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R; return (rad * Math.cos(a)).toFixed(1) + "," + (rad * Math.sin(a)).toFixed(1); }).join(" ");
-const COUNT_OBJECTS = {
-  star: `<polygon points="${starPoints(26, 11)}"/>`,
-  ball: `<circle cx="0" cy="0" r="22"/><path d="M-21 -6 Q0 12 21 -6" fill="none"/>`,
-  heart: `<path d="M0 20 C-32 -2 -24 -24 -11 -24 C-5 -24 0 -19 0 -14 C0 -19 5 -24 11 -24 C24 -24 32 -2 0 20 Z"/>`
-};
-const countObject = (kind, x, y, k) => `<g transform="translate(${x} ${y})${k ? " scale(" + k + ")" : ""}" fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">${COUNT_OBJECTS[kind]}</g>`;
-const COUNT_NAMES = { star: "stars", ball: "balls", heart: "hearts" };
-// Groups of 1 to 10 objects, each with an empty box beside it. Returns the drawing and the list of groups.
-function countColourSvg(seed) {
-  const rng = mulberry32(seed), kinds = ["star", "ball", "heart"], rowH = 120;
-  const groups = shuffled([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], rng).slice(0, 5).map((n, i) => ({ n, kind: kinds[i % 3] }));
+// Groups of 1 to 10 things, each with an empty box beside it. A.kinds are the things (one per group), A.colourKind is the thing in the bottom line.
+function countColourSvg(G, A) {
+  const rng = mulberry32(A.seed), rowH = 120;
+  const groups = shuffled([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], rng).slice(0, A.kinds.length).map((n, i) => ({ n, kind: A.kinds[i] }));
   const colourN = 3 + Math.floor(rng() * 4), H = groups.length * rowH + 125;
   let s = `<svg viewBox="0 0 720 ${H}" width="720" height="${H}">`;
   groups.forEach((g, i) => {
     const cy = i * rowH + rowH / 2;
     for (let j = 0; j < g.n; j++) {
       const col = j % 5, row = Math.floor(j / 5), rowShift = g.n > 5 ? (row ? 28 : -28) : 0;
-      s += countObject(g.kind, 80 + col * 76, cy + rowShift, 1);
+      s += iconAt(G, g.kind, 80 + col * 76, cy + rowShift, 1);
     }
     s += `<rect x="500" y="${cy - 45}" width="120" height="90" rx="14" fill="#fff" stroke="#000" stroke-width="5"/>`;
     if (i < groups.length - 1) s += `<line x1="20" y1="${(i + 1) * rowH}" x2="700" y2="${(i + 1) * rowH}" stroke="#000" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>`;
   });
   const by = groups.length * rowH;
-  s += `<text x="360" y="${by + 42}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">Colour ${colourN} stars.</text>`;
-  for (let i = 0; i < 8; i++) s += countObject("star", 90 + i * 77, by + 90, 1);
-  return { svg: s + `</svg>`, groups, colourN };
+  s += `<text x="360" y="${by + 42}" font-size="34" font-weight="bold" text-anchor="middle" fill="#000">Colour ${colourN} ${A.colourName}.</text>`;
+  for (let i = 0; i < 8; i++) s += iconAt(G, A.colourKind, 90 + i * 77, by + 92, 1);
+  return { svg: s + `</svg>`, groups };
 }
 // The answers: each group's picture and its number.
-function countAnswerSvg(groups) {
+function countAnswerSvg(G, groups) {
   let s = `<svg viewBox="0 0 700 120" width="700" height="120">`;
   groups.forEach((g, i) => {
     const x = 70 + i * 140;
-    s += countObject(g.kind, x, 32, .8) + `<rect x="${x - 34}" y="62" width="68" height="50" rx="10" fill="#fff" stroke="#000" stroke-width="3"/><text x="${x}" y="100" font-size="38" font-weight="bold" text-anchor="middle" fill="#000">${g.n}</text>`;
+    s += iconAt(G, g.kind, x, 30, .8) + `<rect x="${x - 34}" y="62" width="68" height="50" rx="10" fill="#fff" stroke="#000" stroke-width="3"/><text x="${x}" y="100" font-size="38" font-weight="bold" text-anchor="middle" fill="#000">${g.n}</text>`;
+  });
+  return s + `</svg>`;
+}
+
+// ---------- pattern trains ----------
+// Three trains of six cars. The pattern shows on the first four cars and the child draws what comes next on the last two.
+function patternTrainSvg(G, A, answers) {
+  const rng = mulberry32(A.seed), pool = shuffled(["circle", "square", "triangle", "star", "heart"], rng);
+  const second = rng() < .5 ? [0, 0, 1, 0, 0, 1] : [0, 1, 1, 0, 1, 1];                       // AAB or ABB
+  const rows = [{ shapes: [pool[0], pool[1]], seq: [0, 1, 0, 1, 0, 1] }, { shapes: [pool[2], pool[3]], seq: second }, { shapes: [pool[4], pool[0], pool[1]], seq: [0, 1, 2, 0, 1, 2] }];   // AB, AAB or ABB, ABC
+  const rowH = 140, H = rows.length * rowH + 30, engine = G.pictures.engineSimple;
+  let s = `<svg viewBox="0 0 720 ${H}" width="720" height="${H}">`;
+  rows.forEach((row, r) => {
+    const y0 = r * rowH + 34;
+    s += `<path d="M0 ${y0 + 82} H720" fill="none" stroke="#000" stroke-width="4"/>`;
+    for (let i = 0; i < 6; i++) {
+      const x = 8 + i * 96;
+      s += `<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><rect x="${x + 2}" y="${y0 + 6}" width="88" height="56" rx="8"/><circle cx="${x + 22}" cy="${y0 + 68}" r="12"/><circle cx="${x + 70}" cy="${y0 + 68}" r="12"/>`;
+      if (i < 5) s += `<path d="M${x + 90} ${y0 + 52} h6" fill="none"/>`;
+      if (i >= 4 && !answers) s += `<rect x="${x + 14}" y="${y0 + 14}" width="64" height="40" rx="8" fill="none" stroke-dasharray="6 6" stroke-width="3"/>`;
+      s += `</g>`;
+      if (i < 4 || answers) s += iconAt(G, row.shapes[row.seq[i]], x + 46, y0 + 34, .75);
+    }
+    s += `<path d="M578 ${y0 + 52} H593" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/>` + place(engine, 586, y0 - 14, 124, 2.6);
   });
   return s + `</svg>`;
 }
@@ -407,16 +446,35 @@ const ACTIVITY_BUILDERS = {
     };
   },
   dotToDot(G, A) {
+    const n = A.points.length;
     return {
-      body: `<h2 class="pt">Dot to Dot</h2><p class="pi">Join the dots from 1 to 20.</p><div class="puz">${dotToDotSvg(A.seed, false)}</div>`,
-      answer: { label: "Dot to Dot", html: resize(dotToDotSvg(A.seed, true), 330) }
+      body: `<h2 class="pt">Dot to Dot</h2><p class="pi">Join the dots from 1 to ${n}. Then join back to 1.</p><div class="puz">${dotToDotSvg(A, false)}</div>`,
+      answer: { label: "Dot to Dot", html: resize(dotToDotSvg(A, true), 310) }
     };
   },
   countColour(G, A) {
-    const c = countColourSvg(A.seed);
+    const c = countColourSvg(G, A);
     return {
       body: `<h2 class="pt">Count and Colour</h2><p class="pi">Count each group. Write how many in the box.</p><div class="puz">${c.svg}</div>`,
-      answer: { label: "Count and Colour", html: countAnswerSvg(c.groups) }
+      answer: { label: "Count and Colour", html: countAnswerSvg(G, c.groups) }
+    };
+  },
+  patternTrain(G, A) {
+    return {
+      body: `<h2 class="pt">Pattern Trains</h2><p class="pi">What comes next? Draw it on the empty cars.</p><div class="puz">${patternTrainSvg(G, A, false)}</div>`,
+      answer: { label: "Pattern Trains", html: resize(patternTrainSvg(G, A, true), 440) }
+    };
+  },
+  // A code key (each letter is a number) and true facts from the game written in numbers. The child writes the letter above each number.
+  secretCode(G, A) {
+    const rng = mulberry32(A.seed), numbers = shuffled(Array.from({ length: 26 }, (_, i) => i + 1), rng), codeOf = ch => numbers[ABC.indexOf(ch)];
+    const needed = Array.from(new Set(A.facts.join("").replace(/ /g, "").split(""))).sort();
+    const key = needed.map(ch => `<div class="kc"><b>${ch}</b><i>${codeOf(ch)}</i></div>`).join("");
+    const facts = A.facts.map(f => `<div class="code-fact">${f.split(" ").map(w => `<span class="cw">${w.split("").map(ch => `<span class="cc"><u></u><i>${codeOf(ch)}</i></span>`).join("")}</span>`).join("")}</div>`).join("");
+    return {
+      body: `<h2 class="pt">Secret Code</h2><p class="pi">Use the key to find each letter. Write the letter in the box above its number.</p>
+        <div class="puz"><div class="key">${key}</div>${facts}</div>`,
+      answer: { label: "Secret Code", html: `<div class="dec">${A.facts.map(f => `<p>${f}.</p>`).join("")}</div>` }
     };
   }
 };
@@ -452,12 +510,33 @@ function start(kind) {
 
 // =====================================================================
 // THE BOOKS, ONE ENTRY PER GRADE
+// Each grade says: its story and grade names, `order` (where it sits in the switcher), `lineWidth` (the colouring line
+// thickness on a 400 wide drawing: thick for little ones, thin for older children), its `pictures`, its three `colouring`
+// scenes, and its `activities` (the list of `pages` and the data each page needs).
 // =====================================================================
 const BOOK = {};
+const innerOf = svg => svg.replace(/^\s*<svg[^>]*>|<\/svg>\s*$/g, "");
+const bumps = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join("");
+
+// ---------- shared drawings: the animal faces, copied from dots-busy-train.html ----------
+// Copied from pD, pE, pM and PASSENGER_ART (panda, bear and pig faces) in dots-busy-train.html.
+const pD = "#2b2d42", pE = (y = 52) => `<circle cx="36" cy="${y}" r="4.5" fill="${pD}"/><circle cx="64" cy="${y}" r="4.5" fill="${pD}"/>`;
+const pM = d => `<path d="${d}" fill="none" stroke="${pD}" stroke-width="3" stroke-linecap="round"/>`;
+// The game paints the panda's ears, eye patches and nose dark. In a colouring book only pupils stay solid, so those become outlines:
+// the two white dots in the patches turn into black pupils, and every other dark colour becomes white.
+const FACE_PANDA = `<svg viewBox="0 0 100 100"><circle cx="22" cy="24" r="13" fill="${pD}"/><circle cx="78" cy="24" r="13" fill="${pD}"/><circle cx="50" cy="56" r="35" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="34" cy="52" rx="9" ry="11" fill="${pD}"/><ellipse cx="66" cy="52" rx="9" ry="11" fill="${pD}"/><circle cx="35" cy="51" r="3.5" fill="#fff"/><circle cx="65" cy="51" r="3.5" fill="#fff"/><ellipse cx="50" cy="65" rx="6" ry="4" fill="${pD}"/>${pM("M44 72q6 5 12 0")}</svg>`.replace(/fill="#fff"/g, 'fill="#000000"');
+const FACE_BEAR = `<svg viewBox="0 0 100 100"><circle cx="22" cy="24" r="13" fill="#a0714f"/><circle cx="78" cy="24" r="13" fill="#a0714f"/><circle cx="22" cy="24" r="6" fill="#d9a37a"/><circle cx="78" cy="24" r="6" fill="#d9a37a"/><circle cx="50" cy="56" r="34" fill="#a0714f"/><ellipse cx="50" cy="68" rx="15" ry="12" fill="#f3d2a6"/>${pE()}<ellipse cx="50" cy="63" rx="6" ry="4.5" fill="#fff"/>${pM("M50 67v5M43 73q7 5 14 0")}</svg>`;
+const FACE_PIG = `<svg viewBox="0 0 100 100"><path d="M18 18L42 26L24 44z" fill="#ff9eb5"/><path d="M82 18L58 26L76 44z" fill="#ff9eb5"/><circle cx="50" cy="54" r="34" fill="#ffb3c1"/>${pE(46)}<ellipse cx="50" cy="64" rx="15" ry="11" fill="#ff8fa3"/></svg>`;
+const FACES = {
+  panda: { svg: FACE_PANDA, black: ["#000000"] },
+  bear: { svg: FACE_BEAR, black: [pD], drop: [/<circle cx="(?:22|78)" cy="24" r="6" fill="#d9a37a"\/>/g] },
+  pig: { svg: FACE_PIG, black: [pD] }
+};
 
 // ---------- Grade 3: Dr. Somebody in Ancient China ----------
 // The pictures below are copied from the game and shared files. outline() turns each one into a colouring outline.
-// `black` lists fills that stay black (eye pupils), `drop` lists tiny details to cut out.
+// `black` lists fills that stay black (eye pupils), `drop` lists tiny details to cut out, `extra` adds more detail drawn
+// on top of the game's picture for the older children, and `mask` is a white shape behind it that hides lines from behind.
 
 // Copied from owl() in shared/story.js: Dr. Somebody. The hat is HOST in grade3-china.html (a pointed straw hat drawn in front).
 const owlSvg = (behind, front) => `<svg viewBox="0 0 200 160"><ellipse cx="84" cy="152" rx="12" ry="5" fill="#ff9f43"/><ellipse cx="116" cy="152" rx="12" ry="5" fill="#ff9f43"/>
@@ -473,6 +552,12 @@ const CHINA_HAT = `<polygon points="50,32 100,-8 150,32" fill="#e8c26a"/><ellips
 // Copied from tier() and PAGODA in grade3-china.html.
 const tier = (y, w) => `<path d="M${42 - w} ${y + 16} Q50 ${y - 6} ${58 + w} ${y + 16} L${50 + w} ${y + 22} L${50 - w} ${y + 22} Z" fill="#c0392b"/><rect x="${54 - w}" y="${y + 22}" width="${2 * w - 8}" height="16" fill="#f6e3c5"/>`;
 const PAGODA = `<svg class="pagoda" viewBox="0 0 100 140"><line x1="50" y1="0" x2="50" y2="14" stroke="#c0392b" stroke-width="3"/>${tier(8, 14)}${tier(44, 22)}${tier(80, 30)}<rect x="16" y="118" width="68" height="8" fill="#8d6e63"/></svg>`;
+// More detail for Grade 3: roof tile lines on every roof, a window in each storey and a doorway.
+const PAGODA_EXTRA = [[8, 14], [44, 22], [80, 30]].map(([y, w]) => [.3, .5, .7].map(t => {
+  const x = (1 - t) * (1 - t) * (42 - w) + 2 * t * (1 - t) * 50 + t * t * (58 + w), yc = (1 - t) * (1 - t) * (y + 16) + 2 * t * (1 - t) * (y - 6) + t * t * (y + 16);
+  return `<path d="M${x.toFixed(1)} ${yc.toFixed(1)} L${x.toFixed(1)} ${y + 22}" fill="none"/>`;
+}).join("")).join("") + `<rect x="46" y="33" width="8" height="10" rx="3"/><rect x="38" y="69" width="8" height="10" rx="3"/><rect x="54" y="69" width="8" height="10" rx="3"/><rect x="30" y="105" width="8" height="10" rx="3"/><rect x="62" y="105" width="8" height="10" rx="3"/><path d="M43 118 V110 Q50 100 57 110 V118" />`;
+const PAGODA_MASK = "50,0 55,12 72,26 66,36 80,58 72,70 88,94 82,104 84,118 84,126 16,126 16,118 18,104 12,94 28,70 20,58 34,36 28,26 45,12";
 
 // Copied from BALLOON in shared/story.js: the clock balloon.
 const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26 112 56 132 80 140 C104 132 134 112 140 82 C146 50 132 6 80 6 Z" fill="#ff5a5f"/>
@@ -483,67 +568,108 @@ const BALLOON = `<svg viewBox="0 0 160 200"><path d="M80 6 C28 6 14 50 20 82 C26
   <line x1="56" y1="130" x2="62" y2="162" stroke="#c9a37a" stroke-width="3"/><line x1="104" y1="130" x2="98" y2="162" stroke="#c9a37a" stroke-width="3"/>
   <circle cx="80" cy="154" r="13" fill="#9c6b3f"/><circle cx="75" cy="152" r="5" fill="#fff"/><circle cx="85" cy="152" r="5" fill="#fff"/><circle cx="75" cy="152" r="2" fill="#2b2d42"/><circle cx="85" cy="152" r="2" fill="#2b2d42"/>
   <rect x="56" y="160" width="48" height="32" rx="7" fill="#c48a4a"/><rect x="56" y="160" width="48" height="7" rx="3" fill="#9c6830"/></svg>`;
+// More detail for Grade 3: panel seams, a band of diamonds, twelve clock ticks, two more ropes, a woven basket.
+const BALLOON_EXTRA = `<path d="M80 6 C36 20 24 90 80 140 M80 6 C124 20 136 90 80 140" fill="none"/><path d="M26 98 Q80 118 134 98" fill="none"/>`
+  + bumps(12, i => { const a = i * Math.PI / 6, c = Math.cos(a), s = Math.sin(a); return `<line x1="${(80 + 25 * c).toFixed(1)}" y1="${(70 + 25 * s).toFixed(1)}" x2="${(80 + 30 * c).toFixed(1)}" y2="${(70 + 30 * s).toFixed(1)}"/>`; })
+  + `<path d="M70 134 L72 160 M90 134 L88 160" fill="none"/><path d="M64 167 V192 M72 167 V192 M80 167 V192 M88 167 V192 M96 167 V192 M56 179 H104" fill="none"/>`;
 
-// Copied from CHINA_ART.wall and CHINA_ART.bamboo in grade3-china.html.
-const WALL = `<svg viewBox="0 0 240 110"><path d="M0 92 Q40 56 80 66 T160 46 T240 36 L240 50 Q200 54 160 62 T80 82 T0 104 Z" fill="#b08968"/>
-    <g fill="#9c7656">${Array.from({ length: 12 }, (_, i) => { const x = 8 + i * 20, y = 96 - 60 * (i / 11) - 6 * Math.sin(i); return `<rect x="${x}" y="${(y - 6).toFixed(0)}" width="8" height="8"/>`; }).join("")}</g><rect x="150" y="26" width="22" height="30" fill="#9c7656"/><polygon points="146,26 176,26 161,14" fill="#7a5a3c"/></svg>`;
+// Copied from CHINA_ART.bamboo in grade3-china.html. Grade 3 adds a joint across each stalk and leaves.
 const BAMBOO = `<svg viewBox="0 0 80 140"><g fill="#58b368"><rect x="14" y="10" width="10" height="130" rx="4"/><rect x="40" y="30" width="9" height="110" rx="4"/><rect x="60" y="0" width="8" height="140" rx="4"/></g><g fill="#2f7d44"><rect x="14" y="50" width="10" height="3"/><rect x="14" y="94" width="10" height="3"/><rect x="40" y="70" width="9" height="3"/><rect x="60" y="40" width="8" height="3"/><rect x="60" y="90" width="8" height="3"/></g><path d="M24 30 Q40 20 44 34" stroke="#58b368" stroke-width="5" fill="none"/></svg>`;
+const leaf = (x, y, ang, len) => `<path d="M0 0 Q${len * .5} ${-len * .3} ${len} 0 Q${len * .5} ${len * .22} 0 0 Z" transform="translate(${x} ${y}) rotate(${ang})"/>`;
+const BAMBOO_EXTRA = [[14, 24, 40, 70, 100, 128], [40, 9, 55, 85, 115], [60, 8, 25, 55, 85, 115]].map(([x, w, ...ys]) => ys.map(y => `<path d="M${x - 1} ${y} H${x + w + 1}" fill="none"/>`).join("")).join("")
+  + leaf(24, 52, -25, 26) + leaf(14, 82, 205, 24) + leaf(49, 70, -28, 26) + leaf(40, 100, 200, 24) + leaf(68, 40, -20, 22) + leaf(60, 70, 205, 22) + leaf(68, 100, -22, 22) + leaf(24, 122, -30, 22);
 
-// The game only shows lanterns and kites as emoji, so these two are simple drawings in the same bold style.
-const LANTERN = `<svg viewBox="-24 0 48 82"><ellipse cx="0" cy="32" rx="21" ry="24" fill="#e63946"/><path d="M0 8 Q-10 32 0 56 M0 8 Q10 32 0 56" fill="none" stroke="#7a1f1f" stroke-width="2"/><rect x="-9" y="3" width="18" height="7" fill="#d4a017"/><rect x="-9" y="54" width="18" height="7" fill="#d4a017"/><path d="M0 61 V80" fill="none" stroke="#d4a017" stroke-width="3"/></svg>`;
-const KITE = `<svg viewBox="0 0 60 140"><polygon points="30,0 58,30 30,70 2,30" fill="#ffd23f"/><path d="M30 0 V70 M2 30 H58" fill="none" stroke="#c0392b" stroke-width="2"/><path d="M30 70 Q12 88 30 104 Q48 120 30 138" fill="none" stroke="#2b2d42" stroke-width="2"/><polygon points="30,84 38,92 30,100 22,92" fill="#e63946"/><polygon points="30,108 38,116 30,124 22,116" fill="#e63946"/></svg>`;
+// A panda sitting down: a simple round body under the panda face copied from dots-busy-train.html.
+const PANDA_SITTING = `<svg viewBox="0 0 100 150"><ellipse cx="50" cy="112" rx="34" ry="34" fill="#fff"/><ellipse cx="22" cy="106" rx="10" ry="20" fill="#fff" transform="rotate(15 22 106)"/><ellipse cx="78" cy="106" rx="10" ry="20" fill="#fff" transform="rotate(-15 78 106)"/><ellipse cx="32" cy="140" rx="14" ry="8" fill="#fff"/><ellipse cx="68" cy="140" rx="14" ry="8" fill="#fff"/><ellipse cx="50" cy="116" rx="20" ry="20" fill="#fff"/>${innerOf(FACE_PANDA)}</svg>`;
+
+// The game only shows lanterns and kites as emoji, so these two are drawn in the same bold style, with patterns for the older children.
+const LANTERN = `<svg viewBox="-24 0 48 90"><ellipse cx="0" cy="32" rx="21" ry="24" fill="#e63946"/><path d="M-16 18 Q0 25 16 18 M-20 32 Q0 40 20 32 M-16 46 Q0 53 16 46" fill="none"/><path d="M0 8 Q-10 32 0 56 M0 8 Q10 32 0 56 M0 8 V56" fill="none"/><rect x="-9" y="3" width="18" height="7" fill="#d4a017"/><rect x="-9" y="54" width="18" height="7" fill="#d4a017"/><path d="M0 61 V78 M-5 61 L-7 76 M5 61 L7 76" fill="none"/><path d="M-8 78 H8 L5 88 H-5 Z" fill="#d4a017"/></svg>`;
+const KITE = `<svg viewBox="0 0 60 152"><polygon points="30,0 58,30 30,70 2,30" fill="#ffd23f"/><path d="M30 0 V70 M2 30 H58" fill="none"/><path d="M30 14 L46 30 L30 54 L14 30 Z" fill="#e63946"/><path d="M30 70 Q14 82 30 94 Q46 106 30 118 Q14 130 30 144" fill="none"/><path d="M30 94 L39 88 V100 Z M30 94 L21 88 V100 Z M30 118 L39 112 V124 Z M30 118 L21 112 V124 Z M30 142 L39 136 V148 Z M30 142 L21 136 V148 Z" fill="#e63946"/></svg>`;
 
 BOOK.g3 = {
   story: "Dr. Somebody in Ancient China",
   gradeLabel: "Grade 3",
+  order: 3,
+  lineWidth: 2.3,
   pictures: {
     owl: { svg: owlSvg("", CHINA_HAT), viewBox: "0 -12 200 172", black: ["#2b2d42"], drop: [/<circle cx="(?:80|120)" cy="48" r="14" fill="#fff"\/>/g] },   // eye whites cut out so the eyes are not crowded
-    balloon: { svg: BALLOON, drop: [/<g stroke="#39405a" stroke-width="4"[^>]*>[\s\S]*?<\/g>/, /<circle cx="80" cy="70" r="4"[^>]*\/>/, /<circle cx="\d+" cy="15[24]"[^>]*\/>/g] },  // clock ticks, centre dot and the little face in the basket cut out
-    pagoda: { svg: PAGODA },
-    wall: { svg: WALL },
-    bamboo: { svg: BAMBOO, drop: [/<g fill="#2f7d44">[\s\S]*?<\/g>/] },   // the tiny stalk joints cut out
+    balloon: { svg: BALLOON, extra: BALLOON_EXTRA, drop: [/<g stroke="#39405a" stroke-width="4"[^>]*>[\s\S]*?<\/g>/, /<circle cx="\d+" cy="15[24]"[^>]*\/>/g] },   // the four clock ticks and the little face in the basket are cut out (the extra detail replaces them)
+    pagoda: { svg: PAGODA, extra: PAGODA_EXTRA, mask: PAGODA_MASK },
+    bamboo: { svg: BAMBOO, extra: BAMBOO_EXTRA, drop: [/<g fill="#2f7d44">[\s\S]*?<\/g>/] },
+    panda: { svg: PANDA_SITTING, black: ["#000000"] },
     lantern: { svg: LANTERN },
     kite: { svg: KITE }
   },
   colouring: [
-    { // Page 1: Dr. Somebody beside his clock balloon, with bamboo (owl, balloon, bamboo)
+    { // Page 1: Dr. Somebody beside his clock balloon with a panda in the bamboo (owl, balloon, bamboo, panda face)
       caption: "Dr. Somebody and his balloon are ready to fly!",
       scene: (P, S) => [
-        S.sun(70, 62, 28), S.cloud(300, 70, 1), S.cloud(215, 140, .7),
-        S.hill("M0 330 Q100 290 210 322 T400 300 V420 H0 Z"), S.hill("M0 385 Q140 350 260 378 T400 365 V420 H0 Z"),
-        P("bamboo", 305, 185, 90), P("bamboo", 352, 225, 50),
-        P("balloon", 20, 150, 160), P("owl", 185, 232, 150)
+        S.sun(335, 52, 22), S.cloud(105, 58, 1.1), S.cloud(255, 100, .75),
+        S.hill("M-20 255 Q50 215 130 245 T290 228 T420 240"), S.hill("M-20 292 Q110 250 220 284 T420 268"),
+        S.shape(`<path d="M30 268 q8 -7 16 0 M70 275 q8 -7 16 0 M150 262 q8 -7 16 0 M235 275 q8 -7 16 0" fill="none"/>`),
+        P("bamboo", 292, 118, 96), P("bamboo", 338, 146, 80), P("bamboo", 368, 132, 70),
+        S.hill("M-20 352 Q120 330 230 348 T420 338"),
+        P("balloon", 10, 138, 165), P("owl", 178, 262, 132), P("panda", 312, 262, 82),
+        S.tuft(60, 402), S.tuft(150, 410), S.tuft(300, 412), S.tuft(385, 408), S.tuft(105, 372), S.tuft(250, 395)
       ].join("")
     },
-    { // Page 2: the Great Wall, mountains and a pagoda (wall, pagoda, owl; mountains copied from the .peak shapes)
+    { // Page 2: the Great Wall over layered mountains with a watchtower, a path, the pagoda and the balloon above (pagoda, balloon, owl; the wall is drawn here)
       caption: "The Great Wall winds over the mountains.",
-      scene: (P, S) => [
-        S.sun(330, 52, 24), S.cloud(110, 62, 1), S.cloud(250, 112, .7),
-        S.peak(0, 170, 300, 180), S.peak(120, 220, 280, 130),
-        S.hill("M0 345 Q120 325 240 345 T400 335 V420 H0 Z"), S.hill("M0 398 Q150 375 280 395 T400 388 V420 H0 Z"),
-        P("wall", 0, 150, 400), P("pagoda", 285, 272, 100), P("owl", 40, 335, 90)
-      ].join("")
+      scene: (P, S) => {
+        // the top edge of the wall has real battlements: a block, a gap, a block, a gap
+        let top = "M-30 306 V268"; for (let x = -30; x < 430; x += 24) top += " V258 h14 V268 h10"; top += " V306 Z";
+        let bricks = "M-30 281 H430 M-30 293.5 H430";
+        for (let x = -30; x < 430; x += 20) bricks += ` M${x} 268 V281 M${x} 293.5 V306 M${x + 10} 281 V293.5`;
+        let tower = "M155 310 V215"; for (let x = 155; x < 235; x += 20) tower += " V205 h12 V215 h8"; tower += " V310 Z";
+        let towerBricks = ""; [228, 246, 264, 282, 300].forEach((y, i) => { towerBricks += `M155 ${y} H235 `; for (let x = 155 + (i % 2) * 10 + 10; x < 235; x += 20) towerBricks += `M${x} ${y - 18 < 215 ? 215 : y - 18} V${y} `; });
+        return [
+          S.sun(55, 50, 20),
+          S.shape(`<path d="M-20 235 L35 165 L80 210 L140 132 L215 222 L275 158 L340 205 L420 145 V330 H-20 Z"/>`),
+          S.shape(`<path d="M140 132 L150 165 L136 190 M275 158 L284 188 L270 210 M35 165 L42 190" fill="none"/><path d="M127 152 L140 132 L153 152 L146 158 L140 150 L134 159 Z M263 176 L275 158 L287 176 L281 181 L275 173 L269 182 Z"/>`),
+          S.shape(`<path d="M-20 275 L50 205 L105 255 L175 190 L255 262 L320 215 L420 270 V340 H-20 Z"/>`),
+          S.shape(`<path d="M175 190 L186 215 L172 238 M50 205 L58 230 M320 215 L330 240 L318 258" fill="none"/>`),
+          S.cloud(130, 62, .75), S.cloud(335, 52, 1),
+          P("balloon", 165, 38, 78),
+          S.bird(268, 92), S.bird(292, 108), S.bird(62, 112),
+          S.hill("M-20 296 Q100 280 200 292 T420 284"),
+          `<g transform="rotate(-3 200 290)">${S.shape(`<path d="${top}"/>`)}${S.shape(`<path d="${bricks}" fill="none"/>`, 1.3)}</g>`,
+          S.shape(`<path d="${tower}"/>`), S.shape(`<path d="${towerBricks}" fill="none"/>`, 1.3),
+          S.shape(`<rect x="170" y="170" width="50" height="45"/><rect x="178" y="184" width="10" height="16" rx="4"/><rect x="202" y="184" width="10" height="16" rx="4"/><path d="M156 174 Q195 144 234 174 L224 182 H166 Z"/><path d="M170 172 L174 181 M184 164 L186 177 M195 161 V176 M206 164 L204 177 M220 172 L216 181" fill="none"/><path d="M195 146 V138" fill="none"/>`),
+          S.shape(`<path d="M180 310 V284 Q195 262 210 284 V310 Z"/><rect x="164" y="236" width="12" height="18" rx="5"/><rect x="214" y="236" width="12" height="18" rx="5"/>`),
+          S.hill("M-20 338 Q100 322 200 338 T420 326"),
+          S.shape(`<path d="M118 430 C95 395 190 390 168 358 C150 332 188 326 180 310 L210 310 C220 330 195 336 212 356 C238 388 150 392 176 430 Z"/><path d="M148 395 q8 -3 14 0 M190 372 q6 -3 12 0 M180 340 q5 -2 10 0" fill="none"/>`),
+          S.tree(352, 322, 15), S.tree(300, 332, 12), S.bush(255, 356, 1), S.bush(110, 372, .8), S.bush(386, 376, .8),
+          P("pagoda", 28, 212, 92), P("owl", 292, 354, 76)
+        ].join("");
+      }
     },
-    { // Page 3: a festival with lanterns and kites (lanterns, kites, pagoda, owl)
+    { // Page 3: the festival: patterned lanterns and kites, fireworks, stars and the pagoda (lantern, kite, pagoda, owl)
       caption: "Lanterns glow and kites soar at the festival.",
-      scene: (P, S) => [
-        S.cloud(205, 172, .6),
-        S.hill("M0 385 Q100 355 200 380 T400 370 V420 H0 Z"),
-        S.shape(`<path d="M-5 30 Q100 70 200 30 Q300 70 405 30" fill="none"/>`),
-        [50, 150, 250, 350].map(x => P("lantern", x - 29, 40, 58)).join(""),
-        [100, 200, 300].map(x => P("lantern", x - 16, 47, 32)).join(""),
-        P("kite", 290, 150, 62), P("kite", 30, 165, 52),
-        P("pagoda", 135, 205, 125), P("owl", 275, 305, 115)
-      ].join("")
+      scene: (P, S) => {
+        const sag = x => 18 + 108 * ((x % 200) / 200) * (1 - (x % 200) / 200);       // how far down the string hangs at x
+        return [
+          S.cloud(100, 268, .6), S.cloud(300, 268, .5),
+          S.burst(205, 122, 30), S.burst(152, 168, 18), S.burst(262, 176, 14),
+          S.sparkle(28, 112, 9), S.sparkle(385, 112, 9), S.sparkle(250, 150, 7), S.sparkle(30, 175, 7), S.sparkle(380, 190, 7), S.sparkle(165, 100, 6),
+          S.hill("M-20 372 Q100 350 200 368 T420 358"),
+          S.shape(`<path d="M-5 18 Q100 72 200 18 Q300 72 405 18" fill="none"/>`),
+          [25, 75, 125, 175, 225, 275, 325, 375].map(x => P("lantern", x - 12, sag(x) - 1, 24)).join(""),
+          S.shape(`<path d="M38 232 V372 M372 232 V372" fill="none"/>`),
+          P("lantern", 15, 238, 46), P("lantern", 349, 238, 46),
+          P("kite", 296, 100, 58), P("kite", 68, 108, 52),
+          P("pagoda", 140, 200, 120), P("owl", 262, 300, 86)
+        ].join("");
+      }
     }
   ],
   activities: {
+    pages: ["wordSearch", "crossword", "maze", "secretCode"],
     wordSearch: { seed: 31, words: ["PANDA", "SILK", "KITE", "DRAGON", "LANTERN", "EMPEROR", "BAMBOO", "PAPER", "COMPASS", "RIVER"] },
     crossword: {
       seed: 7,
-      entries: [   // each clue is based on a fact in the game
+      entries: [   // each clue is based on a fact in the game, and agrees in number with its answer
         { word: "SILKWORM", clue: "A tiny creature that spins the thread for silk" },
-        { word: "SOLDIER", clue: "Thousands of clay ones were buried near an emperor's tomb" },
+        { word: "SOLDIER", clue: "A clay one was buried near an emperor's tomb" },
         { word: "PALACE", clue: "The huge home where the emperor lived" },
         { word: "ABACUS", clue: "A frame with sliding beads that helps you count" },
         { word: "CAMELS", clue: "Traders travelled with these animals along the Silk Road" },
@@ -554,11 +680,10 @@ BOOK.g3 = {
         { word: "TEA", clue: "A drink made by putting dried leaves in hot water" }
       ]
     },
-    maze: { seed: 2024, title: "Help Dr. Somebody find his balloon!", instruction: "Start at the owl. Find the way through to the balloon. Be careful of dead ends!" }
+    maze: { seed: 2024, title: "Help Dr. Somebody find his balloon!", instruction: "Start at the owl. Find the way through to the balloon. Be careful of dead ends!", answerWidth: 330 },
+    secretCode: { seed: 17, facts: ["PAPER WAS INVENTED IN CHINA", "SILK IS A SOFT SHINY CLOTH", "PANDAS EAT BAMBOO"] }   // each is stated in grade3-china.html
   }
 };
-BOOK.g3.order = 3;
-BOOK.g3.activities.pages = ["wordSearch", "crossword", "maze"];
 
 // ---------- Kindergarten: Dot's Busy Train ----------
 // Dot, the engine and the animal faces are copied from dots-busy-train.html. Lines are thicker and details fewer than in Grade 3.
@@ -581,16 +706,18 @@ const ENGINE_SVG = `<svg viewBox="0 0 200 160"><circle cx="150" cy="20" r="9" fi
   <circle cx="46" cy="132" r="20" fill="#39405a"/><circle cx="46" cy="132" r="8" fill="#8d93ab"/>
   <circle cx="106" cy="136" r="16" fill="#39405a"/><circle cx="106" cy="136" r="6" fill="#8d93ab"/>
   <circle cx="152" cy="136" r="16" fill="#39405a"/><circle cx="152" cy="136" r="6" fill="#8d93ab"/></svg>`;
-// Copied from pD, pE, pM and PASSENGER_ART (panda, bear and pig faces) in dots-busy-train.html.
-const pD = "#2b2d42", pE = (y = 52) => `<circle cx="36" cy="${y}" r="4.5" fill="${pD}"/><circle cx="64" cy="${y}" r="4.5" fill="${pD}"/>`;
-const pM = d => `<path d="${d}" fill="none" stroke="${pD}" stroke-width="3" stroke-linecap="round"/>`;
-const FACE_PANDA = `<svg viewBox="0 0 100 100"><circle cx="22" cy="24" r="13" fill="${pD}"/><circle cx="78" cy="24" r="13" fill="${pD}"/><circle cx="50" cy="56" r="35" fill="#f4f4f8" stroke="#cfd3e0" stroke-width="2"/><ellipse cx="34" cy="52" rx="9" ry="11" fill="${pD}"/><ellipse cx="66" cy="52" rx="9" ry="11" fill="${pD}"/><circle cx="35" cy="51" r="3.5" fill="#fff"/><circle cx="65" cy="51" r="3.5" fill="#fff"/><ellipse cx="50" cy="65" rx="6" ry="4" fill="${pD}"/>${pM("M44 72q6 5 12 0")}</svg>`;
-const FACE_BEAR = `<svg viewBox="0 0 100 100"><circle cx="22" cy="24" r="13" fill="#a0714f"/><circle cx="78" cy="24" r="13" fill="#a0714f"/><circle cx="22" cy="24" r="6" fill="#d9a37a"/><circle cx="78" cy="24" r="6" fill="#d9a37a"/><circle cx="50" cy="56" r="34" fill="#a0714f"/><ellipse cx="50" cy="68" rx="15" ry="12" fill="#f3d2a6"/>${pE()}<ellipse cx="50" cy="63" rx="6" ry="4.5" fill="${pD}"/>${pM("M50 67v5M43 73q7 5 14 0")}</svg>`;
-const FACE_PIG = `<svg viewBox="0 0 100 100"><path d="M18 18L42 26L24 44z" fill="#ff9eb5"/><path d="M82 18L58 26L76 44z" fill="#ff9eb5"/><circle cx="50" cy="54" r="34" fill="#ffb3c1"/>${pE(46)}<ellipse cx="50" cy="64" rx="15" ry="11" fill="#ff8fa3"/><ellipse cx="44" cy="64" rx="2.5" ry="4" fill="${pD}"/><ellipse cx="56" cy="64" rx="2.5" ry="4" fill="${pD}"/></svg>`;
 // The game draws its train cars with page styling (a coloured box and two wheels), so this simple car is drawn the same way: an object, not a character.
 const CAR_SVG = `<svg viewBox="0 0 120 100"><rect x="4" y="40" width="112" height="42" rx="8" fill="#4d9de0"/><circle cx="32" cy="86" r="12" fill="#39405a"/><circle cx="88" cy="86" r="12" fill="#39405a"/></svg>`;
 const TINY_DOT_IN_WINDOW = [/<ellipse cx="45" cy="68"[^>]*\/>/, /<ellipse cx="59" cy="72"[^>]*\/>/, /<circle cx="5[01]" cy="65"[^>]*\/>/g, /<path d="M31 60 Q45 46 59 59 Z"[^>]*\/>/];
 const ENGINE_BARE = [/<rect x="66" y="92"[^>]*\/>/, /<circle cx="\d+" cy="13[26]" r="[68]" fill="#8d93ab"\/>/g];   // the yellow stripe and the wheel hubs are too fine to colour
+const DOT_FIXES = { black: ["#2b2d42"], classFills: { m: "#a06cd5", d: "#7445a8", b: "#fff3c9", e: "#fff", p: "#2b2d42" }, drop: [/<circle class="p" cx="158" cy="52" r="1.8"\/>/] };
+// The cab window is made bigger so Dot's head and shoulders (the real Dot, cropped) fit in it and her face reads clearly.
+const ENGINE_BIG_WINDOW = ENGINE_SVG.replace('<rect x="26" y="46" width="46" height="38" rx="6" fill="#cfefff"/>', '<rect x="20" y="40" width="58" height="52" rx="8" fill="#cfefff"/>');
+
+// The dot to dot: a side view of Dot's engine. These are the 13 dots, in order, round the body.
+// The wheels, window, stripe, lamp and smoke are already printed, so the child only joins the body outline.
+const ENGINE_DOTS = [[80, 210], [240, 210], [240, 290], [340, 290], [340, 200], [420, 200], [420, 290], [540, 290], [540, 420], [380, 420], [240, 420], [80, 420], [80, 315]];
+const ENGINE_PRINTED = `<g fill="#fff" stroke="#000" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><circle cx="175" cy="466" r="34"/><circle cx="310" cy="466" r="34"/><circle cx="445" cy="466" r="34"/><circle cx="175" cy="466" r="11"/><circle cx="310" cy="466" r="11"/><circle cx="445" cy="466" r="11"/><rect x="110" y="240" width="100" height="60" rx="10"/><path d="M240 360 H540" fill="none"/><circle cx="515" cy="325" r="16"/><circle cx="380" cy="140" r="22"/><circle cx="402" cy="94" r="16"/><path d="M40 504 H560" fill="none"/></g>`;
 
 BOOK.k = {
   story: "Dot's Busy Train",
@@ -598,51 +725,62 @@ BOOK.k = {
   order: 0,
   lineWidth: 5,
   pictures: {
-    dot: { svg: DOT_SVG, black: ["#2b2d42"], classFills: { m: "#a06cd5", d: "#7445a8", b: "#fff3c9", e: "#fff", p: "#2b2d42" } },
-    engine: { svg: ENGINE_SVG, black: ["#2b2d42"], drop: ENGINE_BARE.concat([/<circle cx="50" cy="65" r="4"[^>]*\/>/]) },          // Dot's head stays in the window
-    engineSimple: { svg: ENGINE_SVG, drop: ENGINE_BARE.concat(TINY_DOT_IN_WINDOW) },                                                  // empty window, for small pictures
+    dot: Object.assign({ svg: DOT_SVG }, DOT_FIXES),
+    dotHead: Object.assign({ svg: DOT_SVG, viewBox: "78 8 96 86", clip: true }, DOT_FIXES),                                  // head and shoulders, cropped
+    engine: { svg: ENGINE_BIG_WINDOW, drop: ENGINE_BARE.concat(TINY_DOT_IN_WINDOW) },                                       // big empty window: Dot's head is placed in it
+    engineSimple: { svg: ENGINE_SVG, drop: ENGINE_BARE.concat(TINY_DOT_IN_WINDOW) },                                        // small empty window, for small pictures
     car: { svg: CAR_SVG },
-    panda: { svg: FACE_PANDA, black: ["#2b2d42"], drop: [/<circle cx="(?:35|65)" cy="51" r="3.5" fill="#fff"\/>/g] },
-    bear: { svg: FACE_BEAR, black: ["#2b2d42"], drop: [/<circle cx="(?:22|78)" cy="24" r="6" fill="#d9a37a"\/>/g] },
-    pig: { svg: FACE_PIG, black: ["#2b2d42"] }
+    panda: FACES.panda, bear: FACES.bear, pig: FACES.pig
   },
   colouring: [
     { // Page 1: Dot, large (dot)
       caption: "Dot the dinosaur says hello!",
       scene: (P, S) => [
-        S.sun(330, 62, 30), S.cloud(95, 70, 1),
-        S.hill("M0 345 Q120 320 240 345 T400 335 V420 H0 Z"),
-        P("dot", 25, 105, 350)
+        S.sun(335, 52, 28), S.cloud(100, 52, 1.1), S.cloud(230, 40, .8),
+        S.hill("M-20 300 Q100 262 200 290 T420 275"),
+        S.tree(60, 205, 40), S.tree(362, 262, 36),
+        S.hill("M-20 360 Q120 335 240 358 T420 345"),
+        S.flower(45, 392, 1, 40), S.flower(222, 400, .9, 40), S.flower(350, 392, 1, 40),
+        P("dot", 25, 108, 350)
       ].join("")
     },
-    { // Page 2: Dot driving her engine (engine, with Dot at the window)
+    { // Page 2: Dot driving her engine, with her head and shoulders in a big window (engine, dotHead)
       caption: "Dot drives her big train!",
       scene: (P, S) => [
-        S.sun(65, 62, 28), S.cloud(270, 80, 1),
-        S.hill("M0 372 Q120 350 240 370 T400 360 V420 H0 Z"),
-        S.shape(`<path d="M0 392 H400" fill="none"/>`),
-        P("engine", 15, 105, 370)
+        S.sun(55, 55, 26), S.cloud(165, 48, .95), S.cloud(310, 58, 1),
+        S.hill("M-20 255 Q100 225 200 250 T420 240"),
+        S.tree(215, 200, 38),
+        S.hill("M-20 372 Q120 358 240 372 T420 364"),
+        S.track(-10, 410, 370),
+        P("engine", 30, 118, 340),
+        P("dotHead", 64, 186, 98.6, 3),
+        S.shape(`<rect x="64" y="186" width="98.6" height="88.4" rx="14" fill="none"/>`),
+        S.cloud(285, 140, .7)
       ].join("")
     },
-    { // Page 3: the whole train: engine and two cars carrying a pig and a panda (engineSimple, car, pig, panda; the bear is used in the maze book)
+    { // Page 3: the whole train: engine and two cars carrying a pig and a panda (engineSimple, car, pig, panda)
       caption: "The train has cars to colour!",
       scene: (P, S) => [
-        S.sun(60, 66, 28), S.cloud(260, 80, 1),
-        S.hill("M0 372 Q120 350 240 370 T400 360 V420 H0 Z"),
-        S.shape(`<path d="M0 334 H400" fill="none"/>`),
-        P("pig", 131, 222, 70, 3.5), P("panda", 21, 222, 70, 3.5),
-        P("car", 112, 242, 108), P("car", 2, 242, 108),
-        S.shape(`<path d="M106 300 H116 M216 300 H239" fill="none"/>`),
-        P("engineSimple", 225, 201, 170)
+        S.sun(55, 55, 26), S.cloud(200, 45, 1), S.cloud(335, 90, .8),
+        S.hill("M-20 290 Q100 262 200 285 T420 272"),
+        S.tree(330, 205, 38), S.tree(165, 188, 34),
+        S.hill("M-20 372 Q120 358 240 372 T420 364"),
+        S.track(-10, 410, 329),
+        P("pig", 130, 221, 78, 3), P("panda", 20, 221, 78, 3),
+        P("car", 117, 250, 104), P("car", 7, 250, 104),
+        S.shape(`<path d="M108 308 H121 M218 308 H236" fill="none"/>`),
+        P("engineSimple", 227, 210, 165),
+        S.flower(55, 393, 1, 40), S.flower(200, 398, .9, 40), S.flower(340, 393, 1, 40)
       ].join("")
     }
   ],
   activities: {
-    pages: ["maze", "dotToDot", "countColour"],
+    pages: ["maze", "dotToDot", "countColour", "patternTrain"],
     maze: { cols: 7, rows: 9, seed: 5, cs: 64, ox: 136, oy: 40, wall: 8, start: "dot", end: "engineSimple", startW: 112, endW: 112, icon: 2.2, answerWidth: 330,
       title: "Help Dot find her train!", instruction: "Start at Dot. Find the way to the train." },
-    dotToDot: { seed: 3 },
-    countColour: { seed: 11 }
+    dotToDot: { points: ENGINE_DOTS, extras: ENGINE_PRINTED },
+    countColour: { seed: 11, kinds: ["pig", "wheel", "ticket", "panda", "car"], colourKind: "wheel", colourName: "wheels" },
+    patternTrain: { seed: 4 }
   }
 };
 
