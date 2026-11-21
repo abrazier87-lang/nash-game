@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Dot's Train">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Dot's Busy Train</title>
-<link rel="stylesheet" href="shared/kit.css?v=58">
+<link rel="stylesheet" href="shared/kit.css?v=59">
 <style>
   :root { --sky1:#ffd9a0; --sky2:#fff6e0; --grass:#8fd694; --grass2:#5fb96a; --title-shadow:#c7383d; }
   #title .host { width:34vmin; height:28vmin; }
@@ -120,7 +120,7 @@
   <div id="grown"><div class="panel" id="grownPanel"></div></div>
 </div>
 
-<script src="shared/kit.js?v=58"></script>
+<script src="shared/kit.js?v=59"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -227,13 +227,13 @@ const STARTS = {
   B: [["bear", "🐻"], ["bee", "🐝"], ["banana", "🍌"], ["bus", "🚌"], ["book", "📖"], ["boat", "⛵"]],
   C: [["cat", "🐱"], ["cow", "🐮"], ["car", "🚗"], ["cake", "🎂"], ["carrot", "🥕"]],
   D: [["dog", "🐶"], ["duck", "🦆"], ["door", "🚪"], ["donut", "🍩"]],
-  F: [["fish", "🐟"], ["fox", "🦊"], ["fire", "🔥"], ["foot", "🦶"], ["frog", "🐸"]],
+  F: [["fish", "🐟"], ["fox", "🦊"], ["fire", "🔥"], ["foot", "🦶"], ["football", "🏈"]],
   H: [["hat", "🎩"], ["horse", "🐴"], ["house", "🏠"], ["heart", "❤️"], ["hammer", "🔨"]],
   L: [["lion", "🦁"], ["leaf", "🍃"], ["lemon", "🍋"], ["ladybug", "🐞"]],
   M: [["moon", "🌙"], ["mouse", "🐭"], ["monkey", "🐵"], ["milk", "🥛"], ["mushroom", "🍄"]],
   P: [["pig", "🐷"], ["pizza", "🍕"], ["penguin", "🐧"], ["pencil", "✏️"], ["pumpkin", "🎃"]],
   R: [["rabbit", "🐰"], ["rainbow", "🌈"], ["rocket", "🚀"], ["ring", "💍"], ["robot", "🤖"]],
-  S: [["sun", "☀️"], ["sock", "🧦"], ["snake", "🐍"], ["star", "⭐"], ["spider", "🕷️"]],
+  S: [["sun", "☀️"], ["sock", "🧦"], ["soap", "🧼"], ["seal", "🦭"], ["sandwich", "🥪"]],
   T: [["tiger", "🐯"], ["turtle", "🐢"], ["tomato", "🍅"], ["taco", "🌮"], ["tooth", "🦷"]]
 };
 const RHYMES = [[["cat", "🐱"], ["hat", "🎩"]], [["dog", "🐶"], ["frog", "🐸"]], [["bee", "🐝"], ["tree", "🌳"]], [["star", "⭐"], ["car", "🚗"]], [["moon", "🌙"], ["spoon", "🥄"]], [["fox", "🦊"], ["box", "📦"]],
@@ -243,7 +243,7 @@ const WORDS = [["I", "a", "the", "see", "go", "to", "me", "my", "we", "up"], ["a
 // ---------- hints ----------
 // A word for every letter, used by the letter hints ("Tiger starts with T").
 const LETTER_WORDS = { A: ["apple", "🍎"], B: ["bear", "🐻"], C: ["cat", "🐱"], D: ["dog", "🐶"], E: ["egg", "🥚"], F: ["fish", "🐟"], G: ["goat", "🐐"], H: ["hat", "🎩"],
-  I: ["insect", "🐞"], J: ["juice", "🧃"], K: ["kite", "🪁"], L: ["lion", "🦁"], M: ["moon", "🌙"], N: ["nose", "👃"], O: ["octopus", "🐙"], P: ["pig", "🐷"], Q: ["queen", "👸"],
+  I: ["igloo", "🛖"], J: ["juice", "🧃"], K: ["kite", "🪁"], L: ["lion", "🦁"], M: ["moon", "🌙"], N: ["nose", "👃"], O: ["octopus", "🐙"], P: ["pig", "🐷"], Q: ["queen", "👸"],
   R: ["rabbit", "🐰"], S: ["sun", "☀️"], T: ["tiger", "🐯"], U: ["umbrella", "☂️"], V: ["van", "🚐"], W: ["whale", "🐳"], X: ["fox", "🦊"], Y: ["yo-yo", "🪀"], Z: ["zebra", "🦓"] };
 function letterHint(H, L, lower) {
   const [w, e] = LETTER_WORDS[L], shown = lower ? L.toLowerCase() : L;
@@ -307,9 +307,9 @@ const GAMES = {
   },
   sounds: {
     name: "Sound Station", icon: ICON_EAR, intro: "Listen to how the words start!",
-    lesson: P => { const c = P.demo(emo("🐶"), [emo("🐱"), emo("🦆")]);
-      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Dog. Listen to how it starts: duh, duh, dog."],
-        [() => P.glow(c[0], true), "Cat. Cat starts with a different sound."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "Duck! Duh, duh, duck. Dog and duck start the same way!"]]); },
+    lesson: P => { const c = P.demo(emo("🌙"), [emo("🐱"), emo("🐭")]);
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Moon. Listen to how it starts: mmm, mmm, moon."],
+        [() => P.glow(c[0], true), "Cat. Cat starts with a different sound."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "Mouse! Mmm, mmm, mouse. Moon and mouse start the same way!"]]); },
     makeQuestion(step) {
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
       const ls = shuffle(Object.keys(STARTS)).slice(0, count), L = ls[0];
@@ -351,8 +351,8 @@ const GAMES = {
   words: {
     name: "Word Station", icon: `<span style="font-size:6vmin;color:#a06cd5">the</span>`, intro: "Let's read some words!",
     lesson: P => { const card = (w, c) => `<span class="word" style="color:${c}">${w}</span>`, c = P.demo(big("the", 11), [card("see", INK[1]), card("the", INK[0])]);
-      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! Some words we learn by looking at them. This word is: the. T, H, E."],
-        [() => P.glow(c[0], true), "This word is see. S, E, E. It looks different."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "T, H, E. The! It looks just the same!"]]); },
+      return steps(P, [[() => P.glow(P.bubbleArt(), true), "Watch me! This word is the. T and H together say th at the start. The E at the end is the tricky part we remember."],
+        [() => P.glow(c[0], true), "This word is see. S says sss. E, E together say ee."], [() => { P.glow(c[0], false); c[0].classList.add("dim"); P.glow(c[1], true); }, "T, H, E. The! It looks just the same!"]]); },
     makeQuestion(step) {
       const pool = step <= 2 ? WORDS[0] : step === 3 ? WORDS[0].concat(WORDS[1]) : WORDS[0].concat(WORDS[1], WORDS[2]);
       const count = step === 1 ? 2 : step === 4 ? 4 : 3;
@@ -877,7 +877,7 @@ $("shelfBtn").addEventListener("click", () => { Kit.hush(); location.href = "ind
 function openGrown() {
   Kit.hush();
   $("grownPanel").innerHTML = `<h2>Grown-ups <small class="soon" style="font-size:13px;font-weight:normal">Version ${Kit.VERSION}</small></h2>
-    <p><b>Kindergarten (ages 5-6).</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
+    <p><b>Kindergarten (ages 4-5).</b> ${NAME ? "Playing as <b>" + Kit.esc(NAME) + "</b>." : `<span class="soon">No name picked. Pick one on the book shelf to keep each child's progress separate.</span>`}</p>
     <p><a href="progress.html" style="font-weight:bold">📊 Progress report</a>: what is going well and what to practise next.</p>
     <p>Passengers picked up so far: <b>${S.stickers.length}</b> &nbsp;|&nbsp; Trains sent to the fair: <b>${S.trips}</b> &nbsp;|&nbsp; Souvenirs: <b>${(S.souvenirs || []).length}</b></p>
     <p class="soon">Rides grow as a child plays: the first ride takes 1 passenger and 3 right answers, the second takes 2 passengers, then a full train of 4.</p>

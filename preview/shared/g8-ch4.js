@@ -74,7 +74,7 @@
     { art: "ec_arrive", say: ["We have left Simran and Vancouver behind. The balloon drifts inland, over the mountains, until the land turns dry and golden. There are tan hills, tall pines and a slow river.",
       "This is the interior of British Columbia, near the city of <em>Kamloops</em>. Before we land, I need to tell you that this chapter is different.",
       "There are no puzzles today and no prizes. There is only a story that every child in Canada should hear. I am going to listen more than I talk.",
-      "So a friend will read the rest of this chapter for me. I am listening."] },
+      "So a friend will read my notes for the rest of this chapter, while I listen."] },
     { art: "ec_meet", say: ["A girl is waiting on a porch with her grandmother. This is Hannah. She is <em>Secwépemc</em>, and her people have lived in these hills and valleys for thousands of years.",
       "You say it suh-WEP-muhc.",
       "Hannah is wearing an orange shirt, and so is her grandmother. Hannah tells me the shirts are for remembering.",

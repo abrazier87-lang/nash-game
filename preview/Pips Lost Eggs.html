@@ -511,8 +511,8 @@ const bodyPip = c => svg(`
 const NUM_WORDS = ["", "One", "Two", "Three", "Four", "Five"];
 // What to look for in each shadow, and in each shape.
 const LOOKS = { longneck: "It has a long, long neck.", spiky: "It has spikes on its back.", horned: "It has horns on its head.", pip: "It's small, like me!", egg: "It's round and smooth.", leaf: "It's pointy at both ends." };
-const SHAPE_LOOKS = { circle: "round, with no corners", square: "four sides, all the same", triangle: "three sides and three points", star: "five points", heart: "the shape of a love heart",
-  rectangle: "four sides, two long and two short", oval: "round and long, like an egg", diamond: "four points, like a kite" };
+const SHAPE_LOOKS = { circle: "round, with no corners", square: "four sides all the same, and four square corners", triangle: "three sides and three points", star: "five points", heart: "two round bumps on top and a point at the bottom",
+  rectangle: "four sides and four square corners, like a door", oval: "round and long, like an egg", diamond: "four points, like a kite" };
 const WHERE = { head: "My head is at the top.", tummy: "My tummy is in the middle.", tail: "My tail is at the back.", feet: "My feet are at the bottom.", eye: "My eye is on my head.",
   arm: "My arm is on my side.", nose: "My nose is at the end of my face.", mouth: "My mouth is under my nose." };
 // Runs a little show: each step changes the picture, then Pip says the words. Stops if the child moves on.
@@ -552,7 +552,7 @@ const GAMES = {
       const cols = shuffle(["blue", "orange", "purple", "red", "teal", "green"]);
       return {
         bubble: `<div class="art shadow">${ART[target](COLORS.green)}</div>`,
-        say: "Who made this shadow?", yay: `Yes! It's the ${DINO_NAMES[target]}!`,
+        say: DINOS.includes(target) ? "Who made this shadow?" : "What made this shadow?", yay: `Yes! It's the ${DINO_NAMES[target]}!`,
         choices: shuffle(kinds).map((k, i) => ({ html: `<div class="art">${ART[k](COLORS[cols[i]])}</div>`, ok: k === target, name: DINO_NAMES[k] })),
         hint: P => { P.glow(P.bubbleArt(), true); return P.say(`Look at the shadow's shape. ${LOOKS[target]}`); },
         explain: P => { P.glow(P.right(), true); return P.say(`It's the ${DINO_NAMES[target]}. ${LOOKS[target]}`); }

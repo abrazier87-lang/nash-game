@@ -56,7 +56,7 @@
     lf_window1: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176)}<g ${INKED}><path d="M-10 212 Q100 198 210 214 T410 212 V250 H-10 Z" fill="#8cc084"/></g>${windowAt(236, 112, 92, longAgo1)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, GUIDE)}`),
     lf_today: () => frame(`${sky("#9fd8f2", "#f4f1d8", [50, 40, 20], [[300, 40, .7]])}<g ${INKED}><path d="M-10 84 H410 V210 H-10 Z" fill="#8cc084"/></g>${ribbons(-10, 410, 84, 206, 13, .8)}${water(204, "#5db7e6")}
       ${farmhouse(98, 202, .55)}${barn(146, 202, .5)}${windmill(318, 202, .5)}${riding(168, 4, 100)}`),
-    lf_window2: () => frame(`${sky("#bfdcf0", "#eef4fb", null, [[60, 40, .7]])}${snow(180)}${windowAt(236, 112, 92, longAgo2)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, GUIDE)}`),
+    lf_window2: () => frame(`${sky("#9fd8f2", "#f4f1d8", null, [[60, 40, .7]])}${water(176)}<g ${INKED}><path d="M-10 212 Q100 198 210 214 T410 212 V250 H-10 Z" fill="#8cc084"/></g>${windowAt(236, 112, 92, longAgo2)}${owlAt(18, 118, 108)}${kidAt(118, 150, .95, GUIDE)}`),
     lf_choice: () => frame(`${sky("#9fd8f2", "#f4f1d8", [60, 40, 20], [[220, 30, .8], [330, 50, .6]])}${snow(172)}${snowPine(236, 176, .75)}${shack(318, 198, 1.3)}${owlAt(30, 126, 104)}${kidAt(168, 148, .95, GUIDE)}`),
     lf_taffy: () => frame(`${sky("#9fd8f2", "#f4f1d8", [344, 40, 20], [[80, 34, .8]])}${snow(150)}${shack(332, 150, .8)}${owlAt(40, 98, 106)}${kidAt(200, 108, 1, GUIDE)}
       <g ${INKED}><path d="M50 200 H350 L338 230 H62 Z" fill="#8a5a2b"/><path d="M60 205 H340 L332 224 H68 Z" fill="#fff"/></g>
@@ -133,12 +133,12 @@
       "Olivier's family still makes maple sugar today.",
       "A maple tree is <em>l'érable</em>. It takes about <em>40 litres of sap</em> to make just 1 litre of syrup. That is a lot of buckets and a lot of boiling."] },
     { ask: "lf_sap", intro: "Do the syrup sums. Three right answers and we visit the sugar shack." },
-    { art: "lf_choice", pick: "We are at Olivier's sugar shack, which he calls la cabane à sucre. Steam is pouring out of the roof! What shall we do first?", options: [
+    { art: "lf_choice", pick: "The clock hops us to early spring, when the sap runs and snow is still on the ground. We are at Olivier's sugar shack, which he calls la cabane à sucre. Steam is pouring out of the roof! What shall we do first?", options: [
       { label: "Maple taffy on snow", art: "lf_taffy", word: ["la tire", "maple taffy"], say: ["Hot syrup is poured in lines on clean snow. It cools into chewy taffy, and you roll it up onto a stick. Olivier says it is the best part of spring.",
         "In French it is <em>la tire</em>. Mine stuck to my feathers. I may be sticky until Tuesday."] },
       { label: "A sleigh ride", art: "lf_sleigh", word: ["le traîneau", "the sleigh"], say: ["A horse pulls us through the maple wood. The snow squeaks, and the sap buckets slide by on the trees.",
         "A sleigh is <em>le traîneau</em>. The horse stayed calm the whole ride. I did not, but I am an owl, and owls are dramatic."] }] },
-    { ask: "lf_share", intro: "Time for the farm stand. Three right answers finishes the chapter." },
+    { ask: "lf_share", intro: "The clock hops us back to summer, and the farm stand is full of strawberries. Three right answers finishes the chapter." },
     { art: "lf_goodbye", word: ["le sirop d'érable", "maple syrup"], say: ["Olivier gave me a little tin of <em>le sirop d'érable</em>, which is maple syrup. It is the best thing I have ever put on a pancake.",
       "He says Quebec makes most of the maple syrup in the whole world. I believe him. I have the sticky feathers to prove it.",
       "Out on the river the water is getting wider, and it is slowly turning salty. The sea is not far now.",
